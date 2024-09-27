@@ -1,0 +1,172 @@
+.schedule-container {
+  margin: 20px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: #f9f9f9;
+}
+
+.schedule-title {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.schedule-search-filter-container {
+  margin-bottom: 20px;
+}
+
+.schedule-sectionlist-list {
+  list-style-type: none;
+  padding: 0;
+}
+
+.schedule-sectionlist-item-container {
+  display: flex;
+  flex-direction: column;
+  margin: 5px 0;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding: 10px;
+  background-color: #fff;
+  cursor: pointer;
+}
+
+.schedule-sectionlist-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0;
+  padding: 10px;
+  border-bottom: none;
+  margin-bottom: 0 !important;
+  margin-top: 0 !important;
+  border-bottom: none !important;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+.schedule-sectionlist-name {
+  margin: 5px 0;
+}
+
+.schedule-sectionlist-info {
+  margin-left: auto;
+  text-align: center;
+  flex: 1;
+  margin: 0;
+}
+
+.schedule-sectionlist-actions {
+  display: flex;
+}
+
+.schedule-sectionlist-view-button {
+  margin-left: 5px;
+  padding: 5px 10px;
+  border: none;
+  background-color: #28a745;
+  color: white;
+  cursor: pointer;
+  border-radius: 13px;
+}
+
+.schedule-sectionlist-view-button:hover {
+  background-color: #218838;
+}
+
+.schedule-sectionlist-details {
+  margin: 10px 0;
+  text-align: center;
+}
+
+.schedule-subtitle {
+  font-size: 20px;
+  font-weight: bold;
+  margin: 0;
+}
+
+.schedule-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.schedule-table th, .schedule-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: center;
+}
+
+.schedule-table th {
+  background-color: #f2f2f2;
+  font-weight: bold;
+}
+
+.schedule-table .edit-button,
+.schedule-table .save-button,
+.schedule-table .approve-button {
+  padding: 5px 10px;
+  border: none;
+  background-color: #28a745;
+  color: white;
+  cursor: pointer;
+  border-radius: 13px;
+  margin-right: 5px;
+}
+
+.schedule-table .cancel-button {
+  padding: 5px 10px;
+  border: none;
+  background-color: #dc3545;
+  color: white;
+  cursor: pointer;
+  border-radius: 13px;
+  margin-right: 5px;
+}
+
+.schedule-table .edit-button:hover,
+.schedule-table .save-button:hover,
+.schedule-table .approve-button:hover {
+  background-color: #218838;
+}
+
+.schedule-table .cancel-button:hover {
+  background-color: #c82333;
+}
+
+.schedule-table input[type="text"],
+.schedule-table input[type="time"],
+.schedule-table input[type="number"],
+.schedule-table select {
+  padding: 5px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.schedule-table input[type="text"]:focus,
+.schedule-table input[type="time"]:focus,
+.schedule-table input[type="number"]:focus,
+.schedule-table select:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+}
+
+/* New styles for action column */
+.actions-column {
+  width: 150px;
+  text-align: center;
+}
+
+.schedule-table td.actions-column {
+  text-align: center;
+  vertical-align: middle;
+}

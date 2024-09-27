@@ -1,0 +1,58 @@
+/* Student_GradesPage.css */
+
+.student-grades-container {
+  margin: 20px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: #f9f9f9;
+}
+
+.student-grades-title {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.student-grades-subtitle {
+  font-size: 20px;
+  font-weight: bold;
+  margin-top: 20px;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.student-grades-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.student-grades-table th,
+.student-grades-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: center;
+}
+
+.student-grades-table th {
+  background-color: #f2f2f2;
+  font-weight: bold;
+}
+
+.student-grades-table tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+.student-grades-table tr:hover {
+  background-color: #f1f1f1;
+}
+
+.student-grades-loading-message,
+.student-grades-error-message,
+.student-grades-no-grades-message {
+  text-align: center;
+  font-size: 18px;
+  margin-top: 20px;
+}

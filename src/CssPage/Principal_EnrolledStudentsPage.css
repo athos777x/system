@@ -1,0 +1,117 @@
+/* EnrolledStudentsPage.css */
+.enrolled-students-container {
+  margin: 20px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: #f9f9f9;
+}
+
+.enrolled-students-title {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.enrolled-students-search-filter-container {
+  margin-bottom: 20px;
+}
+
+.enrolled-students-summary {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 10px;
+  text-align: center;
+  color: #333;
+}
+
+.enrolled-students-list {
+  list-style-type: none;
+  padding: 0;
+}
+
+.enrolled-student-item-container {
+  display: flex;
+  flex-direction: column;
+  margin: 5px 0;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding: 10px;
+  background-color: #fff;
+  cursor: pointer;
+}
+
+.enrolled-student-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0;
+  padding: 10px;
+  border-bottom: none;
+  margin-bottom: 0 !important;
+  margin-top: 0 !important;
+  border-bottom: none !important;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+.enrolled-student-name {
+  margin: 5px 0;
+}
+
+.enrolled-student-info {
+  margin-left: auto;
+  text-align: center;
+  flex: 1;
+  margin: 0;
+}
+
+.enrolled-view-button {
+  margin-left: 20px;
+  padding: 5px 10px;
+  border: none;
+  background-color: #28a745;
+  color: white;
+  cursor: pointer;
+  border-radius: 13px;
+}
+
+.enrolled-view-button:hover {
+  background-color: #218838;
+}
+
+.enrolled-student-details {
+  margin: 10px 0;
+}
+
+.enrolled-student-details table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.enrolled-student-details table th, 
+.enrolled-student-details table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
+
+.enrolled-student-details table th {
+  background-color: #f2f2f2 !important; /* Grey background color for row headers with higher specificity */
+  font-weight: bold;
+}
+
+.enrolled-student-item-container::after,
+.enrolled-student-item-container::before,
+.enrolled-student-item::after,
+.enrolled-student-item::before {
+  content: '';
+  display: block;
+  height: 0;
+  border: none;
+  margin: 0;
+  padding: 0;
+}

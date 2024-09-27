@@ -1,0 +1,126 @@
+/* StudentsPage.css */
+.students-container {
+  margin: 20px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: #f9f9f9;
+}
+
+.students-title {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.students-search-filter-container {
+  margin-bottom: 20px;
+}
+
+.students-list {
+  list-style-type: none;
+  padding: 0;
+}
+
+.students-student-item-container {
+  display: flex;
+  flex-direction: column;
+  margin: 5px 0;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding: 10px;
+  background-color: #fff;
+  cursor: pointer;
+}
+
+.students-student-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0;
+  padding: 10px;
+  border-bottom: none;
+  margin-bottom: 0 !important;
+  margin-top: 0 !important;
+  border-bottom: none !important;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+.students-student-name {
+  margin: 5px 0;
+}
+
+.students-student-info {
+  margin-left: auto;
+  text-align: center;
+  flex: 1;
+  margin: 0;
+}
+
+.students-view-button {
+  margin-left: 20px;
+  padding: 5px 10px;
+  border: none;
+  background-color: #28a745;
+  color: white;
+  cursor: pointer;
+  border-radius: 13px;
+}
+
+.students-view-button:hover {
+  background-color: #218838;
+}
+
+.students-student-details {
+  margin: 10px 0;
+}
+
+.students-student-details table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.students-student-details table th, 
+.students-student-details table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
+
+.students-student-details table th {
+  background-color: #f2f2f2 !important; /* Grey background color for row headers with higher specificity */
+  font-weight: bold;
+}
+
+.students-student-item-container::after,
+.students-student-item-container::before,
+.students-student-item::after,
+.students-student-item::before {
+  content: '';
+  display: block;
+  height: 0;
+  border: none;
+  margin: 0;
+  padding: 0;
+}
+
+.students-add-student-button-container{
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.students-add-student-button{
+  padding: 8px 16px;
+  font-size: 14px;
+  color: #fff;
+  background-color: #28a745;
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  text-align: center;
+}

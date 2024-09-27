@@ -1,0 +1,108 @@
+/* AttendancePage.css */
+.attendance-container {
+  margin: 20px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: #f9f9f9;
+}
+
+.attendance-title {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.attendance-search-filter-container {
+  margin-bottom: 20px;
+}
+
+.attendance-list {
+  list-style-type: none;
+  padding: 0;
+}
+
+.attendance-student-item-container {
+  display: flex;
+  flex-direction: column;
+  margin: 5px 0;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding: 10px;
+  background-color: #fff;
+  cursor: pointer;
+}
+
+.attendance-student-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0;
+  padding: 10px;
+  border-bottom: none;
+  margin-bottom: 0 !important;
+  margin-top: 0 !important;
+  border-bottom: none !important;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+.attendance-student-name {
+  margin: 5px 0;
+}
+
+.attendance-student-info {
+  margin-left: auto;
+  text-align: center;
+  flex: 1;
+  margin: 0;
+}
+
+.attendance-view-button {
+  margin-left: 20px;
+  padding: 5px 10px;
+  border: none;
+  background-color: #28a745;
+  color: white;
+  cursor: pointer;
+  border-radius: 13px;
+}
+
+.attendance-view-button:hover {
+  background-color: #218838;
+}
+
+.attendance-student-details {
+  margin: 10px 0;
+}
+
+.attendance-student-details table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.attendance-student-details th, .attendance-student-details td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
+
+.attendance-student-details th {
+  background-color: #f2f2f2; /* Grey background color for row headers */
+  font-weight: bold;
+}
+
+.attendance-student-item-container::after,
+.attendance-student-item-container::before,
+.attendance-student-item::after,
+.attendance-student-item::before {
+  content: '';
+  display: block;
+  height: 0;
+  border: none;
+  margin: 0;
+  padding: 0;
+}

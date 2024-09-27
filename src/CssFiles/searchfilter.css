@@ -1,0 +1,55 @@
+/* searchfilter.css */
+
+.search-filter {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 20px;
+  align-items: center; /* Ensure all items are vertically aligned */
+}
+
+.search-filter .filter-input {
+  padding: 8px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  height: 40px; /* Ensure consistent height */
+  box-sizing: border-box; /* Ensure padding is included in height calculation */
+  width: 300px; /* Set a longer width for the search box */
+}
+
+.search-filter .filter-select {
+  padding: 8px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  height: 40px; /* Ensure consistent height */
+  box-sizing: border-box; /* Ensure padding is included in height calculation */
+  width: auto; /* Adjust width automatically to fit the text */
+}
+
+.search-filter .filter-button {
+  padding: 8px 12px; /* Reduced padding for smaller width */
+  background-color: #28a745; /* Changed color when not hovered */
+  color: white;
+  border: none;
+  border-radius: 28px;
+  cursor: pointer;
+  font-size: 14px;
+  height: 40px; /* Ensure consistent height */
+  box-sizing: border-box; /* Ensure padding is included in height calculation */
+  display: flex;
+  align-items: center; /* Center the text vertically */
+  width: auto; /* Adjust width automatically to fit the text */
+}
+
+.search-filter .filter-button:hover {
+  background-color: #218838; /* Changed color when hovered */
+}
+
+/* Custom styles for the select dropdown highlighted option */
+.search-filter .filter-select option:checked {
+  background-color: #28a745; /* Same color as the hovered apply filter button */
+  color: white; /* Ensure the text is readable */
+}

@@ -1,0 +1,120 @@
+.grades-container {
+    margin: 20px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+  }
+  
+  .grades-title {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+  
+  .grades-search-filter-container {
+    margin-bottom: 20px;
+  }
+  
+  .grades-list {
+    list-style-type: none;
+    padding: 0;
+  }
+  
+  .grades-student-item-container {
+    display: flex;
+    flex-direction: column;
+    margin: 5px 0;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 10px; /* Adjusted padding to reduce height */
+    background-color: #fff;
+    cursor: pointer;
+  }
+  
+  .grades-student-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 0;
+    padding: 10px; /* Remove padding from the student item */
+    border-bottom: none;
+    margin-bottom: 0 !important; /* Override any bottom margin */
+    margin-top: 0 !important; /* Override any top margin */
+    border-bottom: none !important; /* Override any bottom border */
+    -webkit-user-select: none; /* Safari */
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* Internet Explorer/Edge */
+    user-select: none; /* Non-prefixed version */
+  }
+  
+  .grades-student-name {
+    margin: 5px 0px;
+  }
+  
+  .grades-student-info {
+    margin-left: auto;
+    text-align: center;
+    flex: 1;
+    margin: 0;
+  }
+  
+  .grades-view-button,
+  .grades-print-pdf {
+    margin-left: 20px;
+    padding: 5px 10px;
+    border: none;
+    background-color: #28a745;
+    color: white;
+    cursor: pointer;
+    border-radius: 13px;
+  }
+  
+  .grades-view-button:hover {
+    background-color: #218838;
+  }
+  
+  .grades-student-details {
+    margin: 10px 0;
+  }
+  
+  .grades-student-details table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .grades-student-details th, .grades-student-details td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+  }
+  
+  .grades-student-details th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+  }
+  
+  .grades-subtitle {
+    font-size: 20px;
+    font-weight: bold;
+    margin-top: 20px;
+    margin-bottom: 10px;
+    text-align: center;
+  }
+  
+  
+  .grades-student-item-container::after,
+  .grades-student-item-container::before,
+  .grades-student-item::after,
+  .grades-student-item::before {
+    content: '';
+    display: block;
+    height: 0;
+    border: none;
+    margin: 0;
+    padding: 0;
+  }
+
+ 
+  

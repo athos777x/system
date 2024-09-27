@@ -1,0 +1,95 @@
+/* dashboard.css */
+.sidebar {
+  width: 280px; /* Adjusted width */
+  background-color: #fff; /* White background */
+  color: black;
+  transition: transform 0.3s ease;
+  padding: 0;
+  height: 100vh; /* Full height */
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1100; /* Ensure it's above the header */
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1); /* Add shadow for depth */
+  border-right: 1px solid #ddd; /* Light border on the right */
+}
+
+.sidebar.show {
+  transform: translateX(0);
+}
+
+.sidebar.hide {
+  transform: translateX(-100%);
+}
+
+.sidebar .buttons {
+  display: flex;
+  flex-direction: column;
+  margin-top: 60px; /* Space below the toggle button */
+}
+
+.sidebar .buttons button {
+  background-color: #fff; /* Button background */
+  color: black;
+  border: none;
+  padding: 15px 20px; /* Increase padding */
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  font-size: 16px; /* Increase font size */
+  transition: background-color 0.3s;
+  display: flex;
+  align-items: center; /* Align icon and text */
+  margin-bottom: 15px; /* Add spacing between buttons */
+}
+
+.sidebar .buttons .submenu {
+  display: flex;
+  flex-direction: column;
+  padding-left: 20px;
+}
+
+.sidebar .buttons .submenu button {
+  padding: 10px 20px; /* Adjust padding for submenu buttons */
+}
+
+.sidebar .buttons button:hover {
+  background-color: #f0f0f0; /* Hover background color */
+}
+
+.sidebar .buttons button .icon {
+  margin-right: 10px; /* Space between icon and text */
+}
+
+.content {
+  transition: margin-left 0.3s ease;
+  margin-left: 0;
+  padding-top: 60px; /* Ensure the content is pushed down by the header height */
+}
+
+.content-shift {
+  margin-left: 280px; /* Adjust to match the width of the sidebar */
+}
+
+.logout-btn {
+  background-color: #fff; /* Button background */
+  color: black;
+  border: none;
+  padding: 15px 20px; /* Increase padding */
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  font-size: 16px; /* Increase font size */
+  transition: background-color 0.3s;
+  display: flex;
+  align-items: center; /* Align icon and text */
+  margin-bottom: 15px; /* Add spacing between buttons */
+}
+
+.logout-btn:hover {
+  background-color: #f0f0f0; /* Hover background color */
+}
+
+.logout-btn .icon {
+  margin-right: 10px; /* Space between icon and text */
+}

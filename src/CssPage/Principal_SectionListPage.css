@@ -1,0 +1,129 @@
+/* SectionListPage.css */
+.sectionlist-container {
+  margin: 20px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: #f9f9f9;
+}
+
+.sectionlist-title {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.sectionlist-search-filter-container {
+  margin-bottom: 20px;
+}
+
+.sectionlist-list {
+  list-style-type: none;
+  padding: 0;
+}
+
+.sectionlist-item-container {
+  display: flex;
+  flex-direction: column;
+  margin: 5px 0;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding: 10px;
+  background-color: #fff;
+  cursor: pointer;
+}
+
+.sectionlist-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0;
+  padding: 10px;
+  border-bottom: none;
+  margin-bottom: 0 !important;
+  margin-top: 0 !important;
+  border-bottom: none !important;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+.sectionlist-name {
+  margin: 5px 0;
+}
+
+.sectionlist-info {
+  margin-left: auto;
+  text-align: center;
+  flex: 1;
+  margin: 0;
+}
+
+.sectionlist-actions {
+  display: flex;
+}
+
+.sectionlist-view-button,
+.sectionlist-students-button {
+  margin-left: 5px; /* Added margin to create space between buttons */
+  padding: 5px 10px;
+  border: none;
+  background-color: #28a745;
+  color: white;
+  cursor: pointer;
+  border-radius: 13px;
+}
+
+.sectionlist-view-button:hover,
+.sectionlist-students-button:hover {
+  background-color: #218838;
+}
+
+.sectionlist-details {
+  margin: 10px 0;
+}
+
+.sectionlist-details table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.sectionlist-details table th, 
+.sectionlist-details table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
+
+.sectionlist-details table th {
+  background-color: #f2f2f2 !important; /* Grey background color for row headers with higher specificity */
+  font-weight: bold;
+}
+
+/* Styles for student lists */
+.sectionlist-students-container {
+  margin-top: 20px;
+}
+
+.sectionlist-students-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.sectionlist-students-table th, .sectionlist-students-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+  background-color: #ffffff; /* Set background color to white */
+}
+
+.sectionlist-students-table th {
+  background-color: #f2f2f2;
+}
+
+.sectionlist-students-table tr:nth-child(even) {
+  background-color: #f2f2f2;
+}
