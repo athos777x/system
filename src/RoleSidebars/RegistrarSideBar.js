@@ -63,8 +63,11 @@ function RegistrarSideBar({ showSidebar, toggleSidebar, handleLogout }) {
       <button onClick={() => handleNavigate('/home')}>
         <FiHome className="icon" /> Home
       </button>
-      <button onClick={() => handleNavigate('/registrar-students')}>
+      <button onClick={() => handleNavigate('/registrar-student')}>
         <FiUsers className="icon" /> Students
+      </button>
+      <button onClick={() => handleNavigate('/registrar-teacher')}>
+        <FiUsers className="icon" /> Teacher
       </button>
       <div className={`menu-with-submenu ${showRecordsSubMenu ? 'active' : ''}`}>
         <button onClick={toggleRecordsSubMenu}>
@@ -72,7 +75,7 @@ function RegistrarSideBar({ showSidebar, toggleSidebar, handleLogout }) {
         </button>
         {showRecordsSubMenu && (
           <div className="submenu">
-            <button onClick={() => handleNavigate('/registrar-grades')}>
+            <button onClick={() => handleNavigate('/grades')}>
               <FiFileText className="icon" /> Grades
             </button>
             <button onClick={() => handleNavigate('/attendance')}>

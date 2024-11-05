@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Navigate, Route, BrowserRouter as Router, Routes } from 'react-router-dom';
+import { Navigate, Route, BrowserRouter as Router, Routes} from 'react-router-dom';
 import './App.css';
 import './CssFiles/LoginForm.css'; 
 import LoginForm from './Utilities/LoginForm';
@@ -27,6 +27,7 @@ import Student_AttendancePage from './StudentPages/Student_AttendancePage';
 import Student_AccountPage from './StudentPages/Student_AccountPage';
 import Registrar_AccountPage from './RegistrarPages/Registrar_AccountPage';
 import Registrar_StudentsPage from './RegistrarPages/Registrar_StudentsPage';
+import Registrar_TeacherPage from './RegistrarPages/Registrar_TeacherPage';
 import Registrar_AttendancePage from './RegistrarPages/Registrar_AttendancePage';
 import Registrar_EarlyEnrollmentReportPage from './RegistrarPages/Registrar_EarlyEnrollmentReportPage';
 import Registrar_EnrolledStudentsPage from './RegistrarPages/Registrar_EnrolledStudentsPage';
@@ -108,9 +109,11 @@ function App() {
             <Route path="/student-grades" element={<Student_GradesPage />} />
             <Route path="/student-attendance" element={<Student_AttendancePage />} />
             <Route path="/enrollment" element={<Student_EnrollmentPage />} />
+            <Route path="/enrollment/:studentId" element={<Student_EnrollmentPage />} />
             <Route path="/account" element={<Student_AccountPage />} />
 
-            <Route path="/registrar-students" element={<Registrar_StudentsPage />} />
+            <Route path="/registrar-student" element={<Registrar_StudentsPage />} />
+            <Route path="/registrar-teacher" element={<Registrar_TeacherPage />} />
             <Route path="/registrar-attendance" element={<Registrar_AttendancePage />} />
             <Route path="/registrar-early-enrollment-report" element={<Registrar_EarlyEnrollmentReportPage />} />
             <Route path="/registrar-enrolled-students" element={<Registrar_EnrolledStudentsPage />} />
@@ -139,7 +142,9 @@ function App() {
 
             <Route path="/subject-account" element={<Subject_AccountPage />} />
             <Route path="/subject-subjects" element={<Subject_SubjectsPage />} />
+
           </Route>
+          
         )}
         <Route path="*" element={<Navigate to={isAuthenticated ? '/home' : '/'} />} />
       </Routes>

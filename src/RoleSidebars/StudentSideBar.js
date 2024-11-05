@@ -18,10 +18,12 @@ import { useNavigate } from 'react-router-dom';
 function StudentSideBar({ showSidebar, toggleSidebar, handleLogout }) {
   const navigate = useNavigate();
   const [showAcademicsSubMenu, setShowAcademicsSubMenu] = useState(false);
+  
 
   const toggleAcademicsSubMenu = () => {
     setShowAcademicsSubMenu(!showAcademicsSubMenu);
   };
+
 
   const handleNavigate = (path) => {
     navigate(path);

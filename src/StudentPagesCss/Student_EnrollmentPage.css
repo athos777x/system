@@ -1,0 +1,175 @@
+.student-enrollment-container {
+    margin: 20px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+  }
+  
+  .student-enrollment-title {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+
+  .student-enrollment-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 30px;
+    
+  }
+  
+  .student-enrollment-table th,
+  .student-enrollment-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: center;
+  }
+  
+  .student-enrollment-table th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+  }
+
+  .student-enrollment-button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 20px;
+    background-color: #4CAF50;
+    color: white;
+    cursor: pointer;
+    margin-top: 30px;
+    margin-left: auto;
+    margin-right: 0;
+    display:block;
+  }
+  
+  .student-enrollment-button:hover {
+    background-color: #45a049;
+  }
+
+  .enrollment-status-container {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 10px;
+  }
+  
+  .enrollment-status {
+    font-weight: bold;
+    color: #555;
+  }
+  
+/* Modal Container */
+.elective-modal {
+  display: block; /* Show modal */
+  position: fixed;
+  z-index: 1;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0, 0, 0, 0.6); /* Dark background with opacity */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Modal Content Box */
+.elective-modal-content {
+  background-color: #fff;
+  padding: 30px;
+  border-radius: 12px;
+  width: 40%; /* Adjust as needed */
+  box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.3);
+  position: relative;
+  text-align: center;
+}
+
+/* Close Button */
+.elective-modal-close {
+  color: #555;
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 24px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.elective-modal-close:hover {
+  color: #000;
+}
+
+/* Form styling inside modal */
+.elective-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.elective-form label {
+  font-weight: bold;
+  margin-bottom: 12px;
+  font-size: 18px;
+}
+
+/* Dropdown Styling */
+.elective-form select {
+  padding: 10px;
+  margin-bottom: 15px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 16px;
+  width: 80%;
+}
+
+/* Button Styles */
+.confirm-button,
+.cancel-button {
+  padding: 10px 25px;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  cursor: pointer;
+  color: #fff;
+  margin: 5px;
+  width: 120px;
+}
+
+.confirm-button {
+  background-color: #28a745; /* Green */
+  transition: background-color 0.3s ease;
+}
+
+.confirm-button:hover {
+  background-color: #218838;
+}
+
+.cancel-button {
+  background-color: #dc3545; /* Red */
+  transition: background-color 0.3s ease;
+}
+
+.cancel-button:hover {
+  background-color: #c82333;
+}
+
+/* Add Elective Button */
+.add-elective-button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 20px;
+  background-color: #28a745; /* Blue color */
+  color: white;
+  cursor: pointer;
+  margin-top: 20px;
+  display: inline-block;
+  transition: background-color 0.3s ease;
+  margin-left: 86%;
+}
+
+.add-elective-button:hover {
+  background-color: #003604; /* Darker blue on hover */
+}

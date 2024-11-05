@@ -112,6 +112,7 @@ function Principal_SectionListPage() {
       const girls = response.data.girls;
       setStudentsByGender({ boys, girls });
       setShowStudents(true);
+      console.log('Fetched students:',response.data)
     } catch (error) {
       console.error('There was an error fetching the students by gender!', error);
     }
