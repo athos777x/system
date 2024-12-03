@@ -84,7 +84,10 @@
 
 .subject-actions {
   display: flex;
+  float: right;
+  gap: 10px; /* Add spacing between buttons */
 }
+
 
 .subject-view-button,
 .subject-edit-button,

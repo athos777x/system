@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
-import { FiX } from 'react-icons/fi';
+import { FiX, FiTrash2 } from 'react-icons/fi';
 import '../CssPage/Principal_StudentDetailPage.css';
 
 const Principal_StudentDetailPage = () => {
@@ -91,6 +91,18 @@ const Principal_StudentDetailPage = () => {
 
   const handleClose = () => {
     navigate(-1);
+  };
+
+  const handleDeleteStudent = async () => {
+    if (window.confirm('Are you sure you want to delete this student? This action cannot be undone.')) {
+      try {
+        await axios.delete(`http://localhost:3001/students/${id}`);
+        navigate('/principal/students', { state: { message: 'Student deleted successfully' } });
+      } catch (error) {
+        console.error('Error deleting student:', error);
+        setError('Failed to delete student. Please try again.');
+      }
+    }
   };
 
   const headerMapping = {
@@ -240,7 +252,10 @@ const Principal_StudentDetailPage = () => {
           <p>No attendance records available.</p>
         )}
       </div>
-      <button className="studentdetail-download-button" onClick={handleDownload}>Download PDF</button>
+      <div className="studentdetail-button-container">
+        <button className="studentdetail-download-button" onClick={handleDownload}>Download PDF</button>
+        <button className="studentdetail-delete-button" onClick={handleDeleteStudent}>Delete</button>
+      </div>
       <button className="studentdetail-close-button" onClick={handleClose}><FiX /></button>
     </div>
   );

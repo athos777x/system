@@ -6,386 +6,273 @@ import '../CssPage/Principal_SubjectsPage.css';
 function Principal_SubjectsPage() {
   const [subjects, setSubjects] = useState([]);
   const [filteredSubjects, setFilteredSubjects] = useState([]);
-  const [selectedSubjectId, setSelectedSubjectId] = useState(null);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editFormData, setEditFormData] = useState({});
+  const [selectedSubject, setSelectedSubject] = useState(null);
   const [filters, setFilters] = useState({
     searchTerm: '',
     school_year: '',
     grade: '',
-    archive_status: 'unarchive'
+    archive_status: 'unarchive',
   });
-  const [grades] = useState(['7', '8', '9', '10']); // Example grades
-  const [schoolYears, setSchoolYears] = useState([]);
-  const [isAdding, setIsAdding] = useState(false);
+  const [grades] = useState(['7', '8', '9', '10']);
   const [showModal, setShowModal] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const [newSubjectData, setNewSubjectData] = useState({
     subject_name: '',
     grade_level: '7',
     status: 'active',
-    grading_criteria: '',
     description: '',
-    school_year: '',
-    archive_status: 'unarchive' // Default value
+    archive_status: 'unarchive',
   });
+  const [selectedGrade, setSelectedGrade] = useState(null);
 
   const fetchSubjects = useCallback(async () => {
     try {
       const response = await axios.get('http://localhost:3001/subjects', {
-        params: filters
+        params: filters,
       });
       setSubjects(response.data);
-      setFilteredSubjects(response.data);
+      if (selectedGrade) {
+        setFilteredSubjects(
+          response.data.filter((subject) => String(subject.grade_level) === String(selectedGrade))
+        );
+      } else {
+        setFilteredSubjects([]);
+      }
     } catch (error) {
       console.error('Error fetching subjects:', error);
     }
-  }, [filters]);
-
-  const fetchSchoolYears = useCallback(async () => {
-    try {
-      const response = await axios.get('http://localhost:3001/api/school_years');
-      setSchoolYears(response.data.map(sy => ({ id: sy.school_year_id, year: sy.school_year })));
-    } catch (error) {
-      console.error('Error fetching school years:', error);
-    }
-  }, []);
+  }, [filters, selectedGrade]);
 
   useEffect(() => {
     fetchSubjects();
-    fetchSchoolYears();
-  }, [fetchSubjects, fetchSchoolYears]);
+  }, [fetchSubjects]);
+
+  const handleGradeClick = (grade) => {
+    setSelectedGrade(grade);
+    setFilteredSubjects(subjects.filter((subject) => String(subject.grade_level) === String(grade)));
+    setSelectedSubject(null);
+  };
+
+  const handleSubjectClick = (subject) => {
+    setSelectedSubject(subject);
+  };
 
   const handleSearch = (searchTerm) => {
-    setFilters(prevFilters => ({ ...prevFilters, searchTerm }));
-  };
-
-  const handleApplyFilters = (newFilters) => {
-    setFilters(newFilters);
-  };
-
-  const toggleSubjectDetails = (subjectId) => {
-    if (selectedSubjectId === subjectId) {
-      setSelectedSubjectId(null);
-      setIsEditing(false);
-    } else {
-      setSelectedSubjectId(subjectId);
-      setIsEditing(false);
-      const subject = subjects.find(sub => sub.subject_id === subjectId);
-      setEditFormData(subject);
-    }
-  };
-
-  const startEditing = (subjectId) => {
-    setSelectedSubjectId(subjectId);
-    setIsEditing(true);
-    const subject = subjects.find(sub => sub.subject_id === subjectId);
-    setEditFormData(subject);
-  };
-
-  const handleEditChange = (event) => {
-    const { name, value } = event.target;
-
-    // Map school year name to its ID
-    if (name === 'school_year_id') {
-      const selectedSchoolYear = schoolYears.find(sy => sy.year === value);
-      setEditFormData(prevFormData => ({
-        ...prevFormData,
-        [name]: selectedSchoolYear ? selectedSchoolYear.id : value
-      }));
-    } else {
-      setEditFormData(prevFormData => ({
-        ...prevFormData,
-        [name]: value
-      }));
-    }
-  };
-
-  const saveChanges = async () => {
-    try {
-      await axios.put(`http://localhost:3001/subjects/${selectedSubjectId}`, editFormData);
-      fetchSubjects();  // Refresh the subjects list after saving
-      setIsEditing(false);
-    } catch (error) {
-      console.error('Error saving subject details:', error);
-    }
-  };
-
-  const cancelEditing = () => {
-    setIsEditing(false);
-    const subject = subjects.find(sub => sub.subject_id === selectedSubjectId);
-    setEditFormData(subject);
-  };
-
-  const archiveSubject = async (subjectId) => {
-    try {
-      await axios.put(`http://localhost:3001/subjects/${subjectId}/archive`, {
-        status: 'inactive',
-        archive_status: 'archive'
-      });
-      fetchSubjects();  // Refresh the subjects list after archiving
-    } catch (error) {
-      console.error('Error archiving subject:', error);
-    }
-  };
-
-  const unarchiveSubject = async (subjectId) => {
-    try {
-      await axios.put(`http://localhost:3001/subjects/${subjectId}/archive`, {
-        status: 'active',
-        archive_status: 'unarchive'
-      });
-      fetchSubjects();  // Refresh the subjects list after unarchiving
-    } catch (error) {
-      console.error('Error unarchiving subject:', error);
-    }
+    setFilters((prevFilters) => ({ ...prevFilters, searchTerm }));
   };
 
   const startAdding = () => {
-    setIsAdding(true);
+    setShowModal(true);
+    setIsEditing(false);
     setNewSubjectData({
       subject_name: '',
       grade_level: '7',
       status: 'active',
-      grading_criteria: '',
       description: '',
-      school_year: schoolYears.length > 0 ? schoolYears[0].year : '',
-      archive_status: 'unarchive' // Default value
+      archive_status: 'unarchive',
     });
-    setShowModal(true);
   };
 
   const handleAddChange = (event) => {
     const { name, value } = event.target;
-    setNewSubjectData(prevFormData => ({
-      ...prevFormData,
-      [name]: value
+    setNewSubjectData((prevData) => ({
+      ...prevData,
+      [name]: value,
     }));
   };
 
   const saveNewSubject = async () => {
     try {
-      await axios.post('http://localhost:3001/subjects', newSubjectData);
+      if (isEditing) {
+        // Update existing subject
+        await axios.put(`http://localhost:3001/subjects/${selectedSubject.subject_id}`, newSubjectData);
+      } else {
+        // Add new subject
+        await axios.post('http://localhost:3001/subjects', newSubjectData);
+      }
       fetchSubjects();
-      setIsAdding(false);
       setShowModal(false);
+      setSelectedSubject(null);
     } catch (error) {
-      console.error('Error adding new subject:', error);
+      console.error(`Error ${isEditing ? 'updating' : 'adding'} subject:`, error);
     }
   };
 
   const cancelAdding = () => {
-    setIsAdding(false);
     setShowModal(false);
   };
 
+  const handleEdit = () => {
+    setShowModal(true);
+    setIsEditing(true);
+    setNewSubjectData(selectedSubject);
+  };
+
+  const handleDelete = async () => {
+    try {
+      await axios.delete(`http://localhost:3001/subjects/${selectedSubject.subject_id}`);
+      fetchSubjects();
+      setSelectedSubject(null); // Clear details after deletion
+    } catch (error) {
+      console.error('Error deleting subject:', error);
+    }
+  };
+
   return (
-    <div className="subjects-container">
-      <h1 className="subjects-title">Subjects</h1>
-      <div className="subjects-search-filter-container">
-        <SubjectsSearchFilter
-          handleSearch={handleSearch}
-          handleApplyFilters={handleApplyFilters}
-        />
+    <div className="grades-container">
+      <h2 className="grades-title">Subjects</h2>
+      <div className="subjects-add-subject-button-container">
+        <SubjectsSearchFilter handleSearch={handleSearch} />
       </div>
       <div className="subjects-add-subject-button-container">
-        <button className="subjects-add-subject-button" onClick={startAdding}>Add New Subject</button>
+        <button className="subjects-add-subject-button" onClick={startAdding}>
+          + Add New Subject
+        </button>
       </div>
-      <div className="subjects-list">
-        {filteredSubjects.map((subject, index) => (
-          <div key={subject.subject_id} className="subject-item-container">
-            <div className="subject-item">
-              <p className="subject-name">{index + 1}. {subject.subject_name}</p>
-              <span className="subject-info">Grade {subject.grade_level} - {subject.status.charAt(0).toUpperCase() + subject.status.slice(1)}</span>
-              <div className="subject-actions">
-                <button className="subject-view-button" onClick={() => toggleSubjectDetails(subject.subject_id)}>View</button>
-                <button className="subject-edit-button" onClick={() => startEditing(subject.subject_id)}>Edit</button>
-                {subject.archive_status === 'unarchive' ? (
-                  <button className="subject-archive-button" onClick={() => archiveSubject(subject.subject_id)}>Archive</button>
-                ) : (
-                  <button className="subject-archive-button" onClick={() => unarchiveSubject(subject.subject_id)}>Unarchive</button>
-                )}
-              </div>
-            </div>
-            {selectedSubjectId === subject.subject_id && (
-              <div className="subject-details">
-                <table>
-                  <tbody>
-                    <tr>
-                      <th>Subject Name:</th>
-                      <td>
-                        {isEditing ? (
-                          <input
-                            type="text"
-                            name="subject_name"
-                            value={editFormData.subject_name}
-                            onChange={handleEditChange}
-                          />
-                        ) : (
-                          subject.subject_name
-                        )}
-                      </td>
-                    </tr>
-                    <tr>
-                      <th>Grade Level:</th>
-                      <td>
-                        {isEditing ? (
-                          <select
-                            name="grade_level"
-                            value={editFormData.grade_level}
-                            onChange={handleEditChange}
-                          >
-                            <option value="">Select Grade</option>
-                            {grades.map((grade, index) => (
-                              <option key={index} value={grade}>{grade}</option>
-                            ))}
-                          </select>
-                        ) : (
-                          subject.grade_level
-                        )}
-                      </td>
-                    </tr>
-                    <tr>
-                      <th>Status:</th>
-                      <td>
-                        {isEditing ? (
-                          <select
-                            name="status"
-                            value={editFormData.status}
-                            onChange={handleEditChange}
-                          >
-                            <option value="active">Active</option>
-                            <option value="inactive">Inactive</option>
-                          </select>
-                        ) : (
-                          subject.status.charAt(0).toUpperCase() + subject.status.slice(1)
-                        )}
-                      </td>
-                    </tr>
-                    <tr>
-                      <th>Grading Criteria:</th>
-                      <td>
-                        {isEditing ? (
-                          <input
-                            type="text"
-                            name="grading_criteria"
-                            value={editFormData.grading_criteria}
-                            onChange={handleEditChange}
-                          />
-                        ) : (
-                          subject.grading_criteria
-                        )}
-                      </td>
-                    </tr>
-                    <tr>
-                      <th>Description:</th>
-                      <td>
-                        {isEditing ? (
-                          <textarea
-                            name="description"
-                            value={editFormData.description}
-                            onChange={handleEditChange}
-                          />
-                        ) : (
-                          subject.description
-                        )}
-                      </td>
-                    </tr>
-                    <tr>
-                      <th>School Year:</th>
-                      <td>
-                        {isEditing ? (
-                          <span>{subject.school_year}</span>
-                        ) : (
-                          subject.school_year
-                        )}
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-                {isEditing && (
-                  <div className="subject-edit-buttons">
-                    <button className="subject-save-button" onClick={saveChanges}>Save</button>
-                    <button className="subject-cancel-button" onClick={cancelEditing}>Cancel</button>
-                  </div>
-                )}
-              </div>
-            )}
+      <div className="grades-table">
+        <div className="table-column">
+          <h3>Grade Levels</h3>
+          <div className="grade-buttons">
+            {grades.map((grade) => (
+              <button
+                key={grade}
+                className={selectedGrade === grade ? 'active' : ''}
+                onClick={() => handleGradeClick(grade)}
+              >
+                Grade {grade}
+              </button>
+            ))}
           </div>
-        ))}
-      </div>
-
-      {showModal && (
-        <div className="subject-modal">
-          <div className="subject-modal-content">
-            <h2>Add New Subject</h2>
-            <label>
-              Subject Name:
-              <input
-                type="text"
-                name="subject_name"
-                value={newSubjectData.subject_name}
-                onChange={handleAddChange}
-              />
-            </label>
-            <label>
-              Grade Level:
-              <select
-                name="grade_level"
-                value={newSubjectData.grade_level}
-                onChange={handleAddChange}
-              >
-                <option value="7">7</option>
-                <option value="8">8</option>
-                <option value="9">9</option>
-                <option value="10">10</option>
-              </select>
-            </label>
-            <label>
-              Status:
-              <select
-                name="status"
-                value={newSubjectData.status}
-                onChange={handleAddChange}
-              >
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-              </select>
-            </label>
-            <label>
-              Grading Criteria:
-              <input
-                type="text"
-                name="grading_criteria"
-                value={newSubjectData.grading_criteria}
-                onChange={handleAddChange}
-              />
-            </label>
-            <label>
-              Description:
-              <textarea
-                name="description"
-                value={newSubjectData.description}
-                onChange={handleAddChange}
-              />
-            </label>
-            <label>
-              School Year:
-              <select
-                name="school_year"
-                value={newSubjectData.school_year}
-                onChange={handleAddChange}
-              >
-                {schoolYears.map((year) => (
-                  <option key={year.id} value={year.year}>
-                    {year.year}
-                  </option>
+        </div>
+        <div className="table-column">
+          <h3>Subjects</h3>
+          {selectedGrade ? (
+            filteredSubjects.length > 0 ? (
+              <ul className="subjects-list">
+                {filteredSubjects.map((subject) => (
+                  <li
+                    key={subject.subject_id}
+                    className="subject-item"
+                    onClick={() => handleSubjectClick(subject)}
+                  >
+                    {subject.subject_name} ({subject.status.charAt(0).toUpperCase() + subject.status.slice(1)})
+                  </li>
                 ))}
-              </select>
-            </label>
-            <div className="subject-button-group">
-              <button className="subject-save-button" onClick={saveNewSubject}>Save</button>
-              <button className="subject-cancel-button" onClick={cancelAdding}>Cancel</button>
+              </ul> 
+            ) : (
+              <p>No subjects available for Grade {selectedGrade}.</p>
+            )
+          ) : (
+            <p>Please select a grade level to view its subjects.</p>
+          )}
+        </div>
+        <div className="table-column">
+          <h3>Subject Details</h3>
+          {selectedSubject ? (
+            <div className="subject-details">
+              <table>
+                <tbody>
+                  <tr>
+                    <td><strong>Name:</strong></td>
+                    <td>{selectedSubject.subject_name}</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Grade Level:</strong></td>
+                    <td>Grade {selectedSubject.grade_level}</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Status:</strong></td>
+                    <td>{selectedSubject.status}</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Description:</strong></td>
+                    <td>{selectedSubject.description || 'No description provided'}</td>
+                  </tr>
+                  <tr>
+                    <td colSpan="2">
+                      <div className="subject-actions">
+                        <button className="edit-button" onClick={handleEdit}>
+                          Edit
+                        </button>
+                        <button className="delete-button" onClick={handleDelete}>
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
+          ) : (
+            <p>Please select a subject to view its details.</p>
+          )}
+        </div>
+      </div>
+      {showModal && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h3>{isEditing ? 'Edit Subject' : 'Add New Subject'}</h3>
+              <button className="close-btn" onClick={cancelAdding}>
+                &times;
+              </button>
+            </div>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                saveNewSubject();
+              }}
+            >
+              <div className="form-group">
+                <label>Subject Name:</label>
+                <input
+                  type="text"
+                  name="subject_name"
+                  value={newSubjectData.subject_name}
+                  onChange={handleAddChange}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Grade Level:</label>
+                <select
+                  name="grade_level"
+                  value={newSubjectData.grade_level}
+                  onChange={handleAddChange}
+                >
+                  {grades.map((grade) => (
+                    <option key={grade} value={grade}>
+                      Grade {grade}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="form-group">
+                <label>Status:</label>
+                <select
+                  name="status"
+                  value={newSubjectData.status}
+                  onChange={handleAddChange}
+                >
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label>Description:</label>
+                <textarea
+                  name="description"
+                  value={newSubjectData.description}
+                  onChange={handleAddChange}
+                />
+              </div>
+              <div className="modal-buttons">
+                <button type="button" onClick={cancelAdding}>
+                  Cancel
+                </button>
+                <button type="submit">{isEditing ? 'Update' : 'Save'}</button>
+              </div>
+            </form>
           </div>
         </div>
       )}

@@ -103,11 +103,13 @@ function Registrar_StudentsPage() {
   };
 
   const handleFilterChange = (type, value) => {
-    setFilters(prevFilters => {
+    setFilters((prevFilters) => {
       const updatedFilters = { ...prevFilters, [type]: value };
+      applyFilters(updatedFilters); // Apply filters immediately after update
       return updatedFilters;
     });
   };
+  
 
   const applyFilters = (updatedFilters) => {
     let filtered = students;
@@ -119,7 +121,7 @@ function Registrar_StudentsPage() {
       filtered = filtered.filter(student => student.current_yr_lvl === updatedFilters.grade);
     }
     if (updatedFilters.section) {
-      filtered = filtered.filter(student => student.section_id === updatedFilters.section);
+      filtered = filtered.filter(student => String(student.section_id) === updatedFilters.section);
     }
     if (updatedFilters.status) {
       filtered = filtered.filter(student => student.student_status === updatedFilters.status);
@@ -350,17 +352,65 @@ const approveElective = async (studentElectiveId) => {
       alert('An error occurred while approving the elective.');
   }
 };
+const archiveStudent = async (studentId, status) => {
+  try {
+    console.log('Archiving student ID:', studentId, 'with status:', status);
 
+    const response = await axios.put(`http://localhost:3001/students/${studentId}/archive`, { status });
 
+    if (response.status === 200) {
+      alert('Student archived successfully');
+      await fetchStudents(); // Refresh the student list after archiving
+    } else {
+      console.warn('Failed to archive student, non-200 response:', response);
+      alert('Failed to archive student.');
+    }
+  } catch (error) {
+    if (error.response) {
+      console.error('Error response:', error.response.data);
+      alert('Error archiving the student: ' + (error.response.data.error || 'Unknown error'));
+    } else if (error.request) {
+      console.error('No response from server:', error.request);
+      alert('No response from the server. Please check your connection.');
+    } else {
+      console.error('Error setting up request:', error.message);
+      alert('An error occurred: ' + error.message);
+    }
+  }
+};
 
+// New Modal State
+const [showArchiveModal, setShowArchiveModal] = useState(false);
+const [archiveStudentId, setArchiveStudentId] = useState(null);
+const [archiveStatus, setArchiveStatus] = useState('');
 
-  const toggleStudentDetails = (studentId) => {
-    setSelectedStudentId(selectedStudentId === studentId ? null : studentId);
-  };
+const openArchiveModal = (studentId) => {
+  setArchiveStudentId(studentId);
+  setShowArchiveModal(true);
+};
+
+const closeArchiveModal = () => {
+  setArchiveStudentId(null);
+  setArchiveStatus('');
+  setShowArchiveModal(false);
+};
+
+const handleArchive = () => {
+  if (!archiveStatus) {
+    alert('Please select an archive status.');
+    return;
+  }
+  archiveStudent(archiveStudentId, archiveStatus);
+  closeArchiveModal();
+};
 
   const formatDate = (isoString) => {
     const date = new Date(isoString);
     return date.toLocaleDateString();
+  };
+
+  const toggleStudentDetails = (studentId) => {
+    setSelectedStudentId(selectedStudentId === studentId ? null : studentId);
   };
 
   return (
@@ -378,42 +428,51 @@ const approveElective = async (studentElectiveId) => {
       </div>
       <div className="students-list">
         {filteredStudents.map((student, index) => (
-          <div key={student.student_id} className="students-student-item-container" /*onClick={() => toggleStudentDetails(student.student_id)}*/>
+          <div key={student.student_id} className="students-student-item-container">
             <div className="students-student-item">
               <p className="students-student-name">
                 {index + 1}. {student.firstname} {student.middlename && `${student.middlename[0]}.`} {student.lastname}
               </p>
-              <span className="students-student-info">Grade {student.current_yr_lvl} - {student.active_status }</span>
-              <button className="students-view-button" onClick={() => navigate(`/students/${student.student_id}/details`)}>View</button>
+              <span className="students-student-info">Grade {student.current_yr_lvl} - {student.active_status}</span>
+              <button 
+                className="students-view-button" 
+                onClick={() => toggleStudentDetails(student.student_id)}
+              >
+                View
+              </button>
               {student.active_status === null && (
-              <button 
-                className="students-enroll-button" 
-                onClick={(e) => {
-                  e.stopPropagation();  // Prevent event bubbling to other handlers
-                  enrollStudent(student.student_id);  // Pass the correct student ID
-                }}
-              >Register
-              </button> 
-            )}
-            {student.active_status === 'pending' && (
-              <button 
-              className="students-validate-button" 
-              onClick={(e) => {
-              e.stopPropagation();  // Prevent event bubbling to other handlers
-              validateStudent(student.student_id);  // Pass the correct student ID
-              }}
-              >Validate
-              </button> 
-            )}
-            {student.enrollment_status === 'pending' && (
-              <button 
-              className="students-approve-button" 
-              onClick={(e) => {
-              e.stopPropagation(); // Prevent event bubbling to other handlers
-              approveElective(student.student_elective_id); // Pass the correct ID to approveElective function
-              }}
-              >Approve</button>
-             )}
+                <button 
+                  className="students-enroll-button" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    enrollStudent(student.student_id);
+                  }}
+                >
+                  Register
+                </button> 
+              )}
+              {student.active_status === 'pending' && (
+                <button 
+                  className="students-validate-button" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    validateStudent(student.student_id);
+                  }}
+                >
+                  Validate
+                </button> 
+              )}
+              {student.enrollment_status === 'pending' && (
+                <button 
+                  className="students-approve-button" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    approveElective(student.student_elective_id);
+                  }}
+                >
+                  Approve
+                </button>
+              )}
             </div>
             {selectedStudentId === student.student_id && (
               <div className="students-student-details">
@@ -432,7 +491,7 @@ const approveElective = async (studentElectiveId) => {
                       <td>{student.middlename}</td>
                     </tr>
                     <tr>
-                      <th>Current Year Level:</th>
+                      <th>Grade Level:</th>
                       <td>{student.current_yr_lvl}</td>
                     </tr>
                     <tr>
@@ -448,27 +507,11 @@ const approveElective = async (studentElectiveId) => {
                       <td>{student.age}</td>
                     </tr>
                     <tr>
-                      <th>Home Address:</th>
-                      <td>{student.home_address}</td>
-                    </tr>
-                    <tr>
-                      <th>Barangay:</th>
-                      <td>{student.barangay}</td>
-                    </tr>
-                    <tr>
-                      <th>City/Municipality:</th>
-                      <td>{student.city_municipality}</td>
-                    </tr>
-                    <tr>
-                      <th>Province:</th>
-                      <td>{student.province}</td>
-                    </tr>
-                    <tr>
                       <th>Contact Number:</th>
                       <td>{student.contact_number}</td>
                     </tr>
                     <tr>
-                      <th>Email Address:</th>
+                      <th>Email:</th>
                       <td>{student.email_address}</td>
                     </tr>
                     <tr>
@@ -516,22 +559,54 @@ const approveElective = async (studentElectiveId) => {
                       <td>{student.mother_contact_number}</td>
                     </tr>
                     <tr>
-                      <th>Status:</th>
-                      <td>{student.active_status === 'active' ? 'active' : 'inactive'}</td>
+                      <th>Emergency Contact Number:</th>
+                      <td>{student.emergency_number}</td>
                     </tr>
                   </tbody>
                 </table>
+                <div className="action-buttons">
+                  <button 
+                    className="archive-button"
+                    onClick={() => openArchiveModal(student.student_id)}
+                  >
+                    Archive Student
+                  </button>
+                </div>
               </div>
             )}
           </div>
         ))}
       </div>
+      {showArchiveModal && (
+        <div className="archive-modal">
+          <div className="archive-modal-content">
+            <h2>Archive Student</h2>
+            <p>Choose an archive status for the student:</p>
+            <select
+              value={archiveStatus}
+              onChange={(e) => setArchiveStatus(e.target.value)}
+              required
+            >
+              <option value="">Select Status</option>
+              <option value="inactive">Inactive</option>
+              <option value="withdrawn">Withdrawn</option>
+              <option value="transferred">Transferred</option>
+            </select>
+            <div className="archive-modal-buttons">
+              <button className="confirm-button" onClick={handleArchive}>
+                Confirm
+              </button>
+              <button className="cancel-button" onClick={closeArchiveModal}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {showModal && (
   <div className="section-modal">
     <div className="section-modal-content">
       <h2>Add New Student</h2>
-
-      {/* Mapping over form fields for a cleaner structure */}
       <label>
         Lastname:
         <input
@@ -539,6 +614,7 @@ const approveElective = async (studentElectiveId) => {
           name="lastname"
           value={newStudentData.lastname}
           onChange={handleAddChange}
+          required
         />
       </label>
       <label>
@@ -557,16 +633,23 @@ const approveElective = async (studentElectiveId) => {
           name="firstname"
           value={newStudentData.firstname}
           onChange={handleAddChange}
+          required
         />
       </label>
       <label>
-        Current Year Level:
-        <input
-          type="number"
+        Year Level:
+        <select
           name="current_yr_lvl"
           value={newStudentData.current_yr_lvl}
           onChange={handleAddChange}
-        />
+          required
+        >
+          <option value="">Select Year Level</option>
+          <option value="7">7</option>
+          <option value="8">8</option>
+          <option value="9">9</option>
+          <option value="10">10</option>
+        </select>
       </label>
       <label>
         Birthdate:
@@ -575,16 +658,21 @@ const approveElective = async (studentElectiveId) => {
           name="birthdate"
           value={newStudentData.birthdate}
           onChange={handleAddChange}
+          required
         />
       </label>
       <label>
         Gender:
-        <input
-          type="text"
+        <select
           name="gender"
           value={newStudentData.gender}
           onChange={handleAddChange}
-        />
+          required
+        >
+          <option value="">Select Gender</option>
+          <option value="Male">Male</option>
+          <option value="Female">Female</option>
+        </select>
       </label>
       <label>
         Age:
@@ -593,6 +681,7 @@ const approveElective = async (studentElectiveId) => {
           name="age"
           value={newStudentData.age}
           onChange={handleAddChange}
+          required
         />
       </label>
       <label>
@@ -602,6 +691,7 @@ const approveElective = async (studentElectiveId) => {
           name="home_address"
           value={newStudentData.home_address}
           onChange={handleAddChange}
+          required
         />
       </label>
       <label>
@@ -611,6 +701,7 @@ const approveElective = async (studentElectiveId) => {
           name="barangay"
           value={newStudentData.barangay}
           onChange={handleAddChange}
+          required
         />
       </label>
       <label>
@@ -620,6 +711,7 @@ const approveElective = async (studentElectiveId) => {
           name="city_municipality"
           value={newStudentData.city_municipality}
           onChange={handleAddChange}
+          required
         />
       </label>
       <label>
@@ -629,6 +721,7 @@ const approveElective = async (studentElectiveId) => {
           name="province"
           value={newStudentData.province}
           onChange={handleAddChange}
+          required
         />
       </label>
       <label>
@@ -638,6 +731,7 @@ const approveElective = async (studentElectiveId) => {
           name="contact_number"
           value={newStudentData.contact_number}
           onChange={handleAddChange}
+          required
         />
       </label>
       <label>
@@ -647,24 +741,27 @@ const approveElective = async (studentElectiveId) => {
           name="email_address"
           value={newStudentData.email_address}
           onChange={handleAddChange}
+          required
         />
       </label>
       <label>
-        Mother’s Name:
+        Mother's Name:
         <input
           type="text"
           name="mother_name"
           value={newStudentData.mother_name}
           onChange={handleAddChange}
+          required
         />
       </label>
       <label>
-        Father’s Name:
+        Father's Name:
         <input
           type="text"
           name="father_name"
           value={newStudentData.father_name}
           onChange={handleAddChange}
+          required
         />
       </label>
       <label>
@@ -674,10 +771,13 @@ const approveElective = async (studentElectiveId) => {
           name="parent_address"
           value={newStudentData.parent_address}
           onChange={handleAddChange}
+          required
         />
       </label>
+
+      {/* Optional fields without required attribute */}
       <label>
-        Father’s Occupation:
+        Father's Occupation:
         <input
           type="text"
           name="father_occupation"
@@ -686,7 +786,7 @@ const approveElective = async (studentElectiveId) => {
         />
       </label>
       <label>
-        Mother’s Occupation:
+        Mother's Occupation:
         <input
           type="text"
           name="mother_occupation"
@@ -713,7 +813,7 @@ const approveElective = async (studentElectiveId) => {
         />
       </label>
       <label>
-        Father’s Education Level:
+        Father's Education Level:
         <input
           type="text"
           name="father_educ_lvl"
@@ -722,7 +822,7 @@ const approveElective = async (studentElectiveId) => {
         />
       </label>
       <label>
-        Mother’s Education Level:
+        Mother's Education Level:
         <input
           type="text"
           name="mother_educ_lvl"
@@ -731,21 +831,23 @@ const approveElective = async (studentElectiveId) => {
         />
       </label>
       <label>
-        Father’s Contact Number:
+        Father's Contact Number:
         <input
           type="number"
           name="father_contact_number"
           value={newStudentData.father_contact_number}
           onChange={handleAddChange}
+          required
         />
       </label>
       <label>
-        Mother’s Contact Number:
+        Mother's Contact Number:
         <input
           type="number"
           name="mother_contact_number"
           value={newStudentData.mother_contact_number}
           onChange={handleAddChange}
+          required
         />
       </label>
       <label>
@@ -755,27 +857,7 @@ const approveElective = async (studentElectiveId) => {
           name="emergency_number"
           value={newStudentData.emergency_number}
           onChange={handleAddChange}
-        />
-      </label>
-      <label>
-        Status:
-        <select
-          name="status"
-          value={newStudentData.status}
-          onChange={handleAddChange}
-        >
-          <option value="active">Active</option>
-          <option value="inactive">Inactive</option>
-        </select>
-      </label>
-      <label>
-        Section ID:
-        <input
-          type="number"
-          name="section_id"
-          value={newStudentData.section_id}
-          onChange={handleAddChange}
-          placeholder="Enter section ID"
+          required
         />
       </label>
 

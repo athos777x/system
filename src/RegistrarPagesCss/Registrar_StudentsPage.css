@@ -69,6 +69,7 @@
   color: white;
   cursor: pointer;
   border-radius: 13px;
+  transition: all 0.3s ease;
 }
 
 .students-view-button:hover {
@@ -109,167 +110,269 @@
 }
 
 .section-modal {
-  display: flex;
-  justify-content: center;
-  align-items: center;
   position: fixed;
   top: 0;
   left: 0;
-  right: 0;
-  bottom: 0;
+  width: 100%;
+  height: 100%;
   background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
   z-index: 1000;
 }
 
 .section-modal-content {
-  background-color: #fff;
-  width: 60%;
-  max-width: 700px;
-  padding: 30px;
-  border-radius: 10px;
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  background-color: white;
+  padding: 24px;
+  border-radius: 8px;
+  width: 500px;
+  max-height: 80vh;
   overflow-y: auto;
-  max-height: 80%;
-  animation: fadeIn 0.3s ease-in-out;
 }
 
-.section-modal-content h2 {
-  margin-top: 0;
-  font-size: 1.8em;
-  font-weight: bold;
-  color: #333;
-  text-align: center;
-  border-bottom: 2px solid #f2f2f2;
-  padding-bottom: 15px;
+.grade-buttons {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  justify-content: center;
 }
 
-.section-modal-content label {
-  display: block;
-  margin-top: 15px;
-  font-weight: 600;
-  color: #555;
+.grade-button {
+  padding: 8px 16px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
-.section-modal-content input,
-.section-modal-content select {
-  width: 100%;
+.grade-button.active {
+  background: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+
+.subjects-list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+  max-height: 100%;
+  overflow-y: auto;
+}
+
+.subject-item {
   padding: 10px;
-  margin-top: 5px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  font-size: 1em;
-  transition: border-color 0.3s;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
-.section-modal-content input:focus,
-.section-modal-content select:focus {
-  border-color: #4CAF50;
-  outline: none;
+.subject-item:hover {
+  background-color: #f8f9fa;
+}
+
+.subject-item.selected {
+  background-color: #e3f2fd;
+  border-color: #007bff;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 20px;
+  border-top: 1px solid #eee;
+}
+
+.assign-button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.assign-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.cancel-button {
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
 }
 
 .section-button-group {
   display: flex;
-  justify-content: space-between;
-  margin-top: 20px;
+  justify-content: flex-end;
+  gap: 10px;
 }
 
 .section-save-button {
-  background-color: #4CAF50;
-  color: #fff;
-  padding: 10px 20px;
+  background-color: #007bff;
+  color: white;
   border: none;
-  border-radius: 5px;
+  padding: 8px 16px;
+  border-radius: 4px;
   cursor: pointer;
-  font-size: 1em;
-  transition: background-color 0.3s;
 }
 
 .section-save-button:hover {
-  background-color: #388e3c;
+  background-color: #0056b3;
 }
 
 .section-cancel-button {
-  background-color: #e74c3c;
-  color: #fff;
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.section-cancel-button:hover {
+  background-color: #545b62;
+}
+
+.assign-button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-right: 10px;
+}
+
+.assign-button:hover {
+  background-color: #0056b3;
+}
+
+.action-buttons {
+  margin-top: 15px;
+  text-align: right;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.archive-button {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.archive-button:hover {
+  background-color: #c82333;
+}
+
+.students-delete-button {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-left: 8px;
+}
+
+.students-delete-button:hover {
+  background-color: #c82333;
+}
+
+.view-button.active {
+  background-color: #dc3545;
+}
+
+.view-button.active:hover {
+  background-color: #c82333;
+}
+
+.assigned-section {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #eee;
+}
+
+.assigned-section h3 {
+  margin-bottom: 15px;
+  color: #333;
+}
+
+.section-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+}
+
+.section-table th,
+.section-table td {
+  padding: 8px 12px;
+  text-align: left;
+  border: 1px solid #ddd;
+}
+
+.section-table th {
+  background-color: #f8f9fa;
+  font-weight: bold;
+}
+
+.section-table tr:hover {
+  background-color: #f1f3f5;
+}
+
+.archive-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.archive-modal-content {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  text-align: center;
+  max-width: 400px;
+  width: 100%;
+}
+
+.archive-modal-buttons {
+  margin-top: 20px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.archive-modal-buttons button {
   padding: 10px 20px;
   border: none;
   border-radius: 5px;
   cursor: pointer;
-  font-size: 1em;
-  transition: background-color 0.3s;
 }
 
-.section-cancel-button:hover {
-  background-color: #c0392b;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-
-.students-add-student-button-container{
-  display: flex;
-  justify-content: center;
-  margin-bottom: 20px;
-}
-
-.students-add-student-button{
-  padding: 8px 16px;
-  font-size: 14px;
-  color: #fff;
-  background-color: #28a745;
-  border: none;
-  border-radius: 50px;
-  cursor: pointer;
-  text-align: center;
-}
-
-.students-enroll-button{
-  margin-left: 20px;
-  padding: 5px 10px;
-  border: none;
-  background-color: #28a745;
+.confirm-button {
+  background-color: #4CAF50;
   color: white;
-  cursor: pointer;
-  border-radius: 13px; 
 }
 
-.students-enroll-button:hover {
-  background-color: #218838;
-}
-
-.students-validate-button{
-  margin-left: 20px;
-  padding: 5px 10px;
-  border: none;
-  background-color: #28a745;
+.cancel-button {
+  background-color: #f44336;
   color: white;
-  cursor: pointer;
-  border-radius: 13px; 
-}
-
-.students-validate-button:hover {
-  background-color: #218838;
-}
-
-.students-approve-button{
-  margin-left: 20px;
-  padding: 5px 10px;
-  border: none;
-  background-color: #28a745;
-  color: white;
-  cursor: pointer;
-  border-radius: 13px; 
-}
-
-.students-approve-button:hover {
-  background-color: #218838;
 }

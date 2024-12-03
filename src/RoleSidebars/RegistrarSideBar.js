@@ -75,7 +75,7 @@ function RegistrarSideBar({ showSidebar, toggleSidebar, handleLogout }) {
         </button>
         {showRecordsSubMenu && (
           <div className="submenu">
-            <button onClick={() => handleNavigate('/grades')}>
+            <button onClick={() => handleNavigate('/registrar-grades')}>
               <FiFileText className="icon" /> Grades
             </button>
             <button onClick={() => handleNavigate('/attendance')}>

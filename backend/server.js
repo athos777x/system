@@ -128,16 +128,20 @@ app.get('/students', (req, res) => {
   const latestSchoolYear = '2023-2024'; 
 
   let query = `
-    SELECT s.student_id, s.lastname, s.firstname, s.middlename, s.current_yr_lvl, s.birthdate, s.gender, s.age, 
-           s.home_address, s.barangay, s.city_municipality, s.province, s.contact_number, s.email_address, 
-           s.mother_name, s.father_name, s.parent_address, s.father_occupation, s.mother_occupation, s.annual_hshld_income, 
-           s.number_of_siblings, s.father_educ_lvl, s.mother_educ_lvl, s.father_contact_number, s.mother_contact_number,
+    SELECT s.student_id, s.user_id, s.lastname, s.firstname, s.middlename, 
+           s.current_yr_lvl, s.birthdate, s.gender, s.age, 
+           s.home_address, s.barangay, s.city_municipality, s.province, 
+           s.contact_number, s.email_address, 
+           s.mother_name, s.father_name, s.parent_address, s.father_occupation, 
+           s.mother_occupation, s.annual_hshld_income, s.number_of_siblings, 
+           s.father_educ_lvl, s.mother_educ_lvl, s.father_contact_number, 
+           s.mother_contact_number,
            (SELECT ss.status FROM student_school_year ss
             JOIN school_year sy ON ss.school_year_id = sy.school_year_id
             WHERE ss.student_id = s.student_id AND sy.school_year = ?) as active_status,
            se.enrollment_status, se.student_elective_id
     FROM student s
-    LEFT JOIN student_elective se ON s.student_id = se.student_id
+    LEFT JOIN student_elective se ON s.student_id = se.student_id WHERE s.active_status = 'unarchive'
   `;
   
   const queryParams = [latestSchoolYear];
@@ -337,7 +341,7 @@ app.put('/students/:id/enroll', (req, res) => {
             // Step 6: Insert into the student_school_year table
             const studentSchoolYearInsertQuery = `
               INSERT INTO student_school_year (student_school_year_id, student_id, school_year_id, status, student_name)
-              VALUES (NULL, ?, ?, 'pending', ?);
+              VALUES (NULL, ?, ?, 'inactive', ?);
             `;
             const studentName = `${student.lastname} ${student.firstname} ${student.middlename || ''}`.trim();
             const studentSchoolYearValues = [
@@ -370,33 +374,55 @@ app.put('/students/:id/enroll', (req, res) => {
 
 // Route to handle fetching student enrollment data by student ID
 app.get('/enrollment/:user_id', (req, res) => {
-  const userId = req.params.user_id; // Get user_id from the URL
+  const userId = req.params.user_id;
   console.log(`Fetching enrollment data for user_id: ${userId}`);
 
-  // Updated query to properly join tables and filter based on userId
   const query = `
-    SELECT DISTINCT a.subject_name 
-    FROM SUBJECT a 
-    LEFT JOIN student b ON a.grade_level = b.current_yr_lvl 
-    WHERE b.user_id = ? AND a.status = 'active'
+    SELECT DISTINCT 
+      a.subject_name, 
+      CONCAT(c.lastname, ', ', c.firstname, ' ', IFNULL(c.middlename, '')) AS teacher, 
+      CASE 
+        WHEN d.time_start IS NOT NULL AND d.time_end IS NOT NULL 
+        THEN CONCAT(d.time_start, ' - ', d.time_end)
+        ELSE ''
+      END AS schedule
+    FROM subject a 
+    INNER JOIN student b ON a.grade_level = b.current_yr_lvl 
+    LEFT JOIN employee c ON a.employee_id = c.employee_id 
+    LEFT JOIN schedule d ON a.subject_id = d.subject_id
+    WHERE b.user_id = ? 
+      AND a.status = 'active'
+
     UNION 
-    SELECT e.name 
+
+    SELECT 
+      e.name AS subject_name, 
+      CONCAT(emp.lastname, ', ', emp.firstname, ' ', IFNULL(emp.middlename, '')) AS teacher, 
+      '' AS schedule
     FROM elective e 
-    JOIN student_elective se ON se.elective_id = e.elective_id 
-    WHERE IFNULL(se.user_id, 0) = ? AND se.enrollment_status = 'approved';
+    INNER JOIN student_elective se ON se.elective_id = e.elective_id 
+    LEFT JOIN employee emp ON e.employee_id = emp.employee_id
+    WHERE se.user_id = ? 
+      AND se.enrollment_status = 'approved'
+    ORDER BY subject_name;
   `;
 
-  // Use userId as the parameter to filter the student's grade level
   db.query(query, [userId, userId], (err, results) => {
     if (err) {
-      console.error('Error executing query:', err.message);
-      return res.status(500).json({ error: 'Database error: ' + err.message });
+      console.error('Error executing enrollment query:', {
+        error: err.message,
+        userId: userId,
+        sqlState: err.sqlState,
+        sqlMessage: err.sqlMessage
+      });
+      return res.status(500).json({ 
+        error: 'Failed to fetch enrollment data',
+        details: err.message 
+      });
     }
-    if (results.length > 0) {
-      res.json(results); // Send results as JSON
-    } else {
-      res.status(404).json({ error: 'No enrollment data found for this user' });
-    }
+
+    // Return empty array instead of 404 if no results
+    res.json(results || []);
   });
 });
 
@@ -1093,22 +1119,22 @@ app.put('/employees/:employeeId', (req, res) => {
 // Endpoint to archive an employee
 // Function: Archives an employee by updating their status to inactive and archive status to archive
 // Pages: EmployeePage.js
-app.put('/employees/:employeeId/archive', (req, res) => {
-  const { employeeId } = req.params;
-  const query = 'UPDATE employee SET archive_status = "archive", status = "inactive" WHERE employee_id = ?';
-  db.query(query, [employeeId], (err, results) => {
-    if (err) {
-      console.error('Error archiving employee:', err);
-      res.status(500).json({ error: 'Internal server error' });
-      return;
-    }
-    if (results.affectedRows > 0) {
-      res.json({ message: 'Employee archived and set to inactive successfully' });
-    } else {
-      res.status(404).json({ error: 'Employee not found' });
-    }
-  });
-});
+// app.put('/employees/:employeeId/archive', (req, res) => {
+//   const { employeeId } = req.params;
+//   const query = 'UPDATE employee SET archive_status = "archive", status = "inactive" WHERE employee_id = ?';
+//   db.query(query, [employeeId], (err, results) => {
+//     if (err) {
+//       console.error('Error archiving employee:', err);
+//       res.status(500).json({ error: 'Internal server error' });
+//       return;
+//     }
+//     if (results.affectedRows > 0) {
+//       res.json({ message: 'Employee archived and set to inactive successfully' });
+//     } else {
+//       res.status(404).json({ error: 'Employee not found' });
+//     }
+//   });
+// });
 
 // Endpoint to unarchive an employee
 // Function: Unarchives an employee by updating their status to active and archive status to unarchive
@@ -1134,14 +1160,24 @@ app.put('/employees/:employeeId/unarchive', (req, res) => {
 // Function: Retrieves a list of roles from the roles table
 // Pages: EmployeePage.js
 app.get('/roles', (req, res) => {
-  const query = 'SELECT role_name FROM roles';
-  db.query(query, (err, results) => {
-    if (err) {
-      console.error('Error fetching roles:', err);
-      res.status(500).json({ error: 'Internal server error' });
-      return;
+  const query = `
+    SELECT role_id, role_name, role_description 
+    FROM roles 
+    WHERE role_name != 'student'
+    ORDER BY role_name
+  `;
+
+  db.query(query, (error, results) => {
+    if (error) {
+      console.error('Error fetching roles:', error);
+      return res.status(500).json({ error: 'Failed to fetch roles' });
     }
-    res.json(results.map(role => role.role_name));
+    
+    // Log the results to verify the data structure
+    console.log('Roles being sent:', results);
+    
+    // Ensure we're sending an array
+    res.json(Array.isArray(results) ? results : []);
   });
 });
 
@@ -1332,7 +1368,7 @@ app.post('/sections', (req, res) => {
   // SQL query to insert a new section with archive_status defaulted to 'unarchive'
   const query = `
     INSERT INTO section (section_name, grade_level, status, max_capacity, school_year_id, room_number, archive_status)
-    VALUES (?, ?, ?, ?, ?, ?, 'unarchive')
+    VALUES (?, ?, ?, ?, ?, 'unarchive')
   `;
 
   // Execute the query
@@ -1515,8 +1551,8 @@ app.get('/subjects', (req, res) => {
   const { searchTerm, school_year, grade, archive_status } = req.query;
   
   let query = `
-    SELECT s.subject_id, s.grade_level, s.subject_name, s.status, s.grading_criteria, s.description, s.archive_status, sy.school_year
-    FROM subject s
+    SELECT s.subject_id, s.grade_level, s.subject_name, s.status, s.grading_criteria, s.description, s.archive_status, sy.school_year_id
+    FROM subject s  
     JOIN school_year sy ON s.school_year_id = sy.school_year_id
     WHERE s.archive_status = ? order by s.grade_level DESC
   `;
@@ -1683,35 +1719,35 @@ app.get('/student/profile/:userId', (req, res) => {
 });
 
 // Endpoint to fetch grades for the currently logged in student using userId
-app.get('/user/:userId/grades', (req, res) => {
-  const userId = req.params.userId;
-  const query = `
-    SELECT g.first_quarter, g.second_quarter, g.third_quarter, g.fourth_quarter, g.final_grade, g.remarks, s.subject_name, g.grade_level
-    FROM grades g
-    JOIN schedule sc ON g.schedule_id = sc.schedule_id
-    JOIN subject s ON sc.subject_id = s.subject_id
-    WHERE g.user_id = ?
-  `;
-  console.log(`Fetching grades for userId: ${userId}`); // Debug log
+// app.get('/user/:userId/grades', (req, res) => {
+//   const userId = req.params.userId;
+//   const query = `
+//     SELECT g.first_quarter, g.second_quarter, g.third_quarter, g.fourth_quarter, g.final_grade, g.remarks, s.subject_name, g.grade_level
+//     FROM grades g
+//     JOIN schedule sc ON g.schedule_id = sc.schedule_id
+//     JOIN subject s ON sc.subject_id = s.subject_id
+//     WHERE g.user_id = ?
+//   `;
+//   console.log(`Fetching grades for userId: ${userId}`); // Debug log
 
-  db.query(query, [userId], (err, results) => {
-    if (err) {
-      console.error('Error fetching grades:', err);
-      res.status(500).send('Error fetching grades');
-    } else {
-      console.log('Grades fetched from DB:', results); // Debug log
-      res.json(results);
-    }
-  });
-});
+//   db.query(query, [userId], (err, results) => {
+//     if (err) {
+//       console.error('Error fetching grades:', err);
+//       res.status(500).send('Error fetching grades');
+//     } else {
+//       console.log('Grades fetched from DB:', results); // Debug log
+//       res.json(results);
+//     }
+//   });
+// });
 
 // Endpoint to fetch schedule for the currently logged-in student
 app.get('/user/:userId/schedule', (req, res) => {
   const userId = req.params.userId;
   const query = `
     SELECT s.subject_name, sc.day, 
-           TIME_FORMAT(sc.time_start, '%H:%i:%s') as time_start, 
-           TIME_FORMAT(sc.time_end, '%h:%i %p') as time_end
+    TIME_FORMAT(sc.time_start, '%H:%i:%s') as time_start, 
+    TIME_FORMAT(sc.time_end, '%h:%i %p') as time_end
     FROM schedule sc
     JOIN subject s ON sc.subject_id = s.subject_id
     JOIN section sec ON sc.section_id = sec.section_id
@@ -1763,11 +1799,563 @@ app.put('/user/:userId/change-password', (req, res) => {
   });
 });
 
+// Add new employee (teacher) - Simplified version
+app.post('/employees', (req, res) => {
+  console.log('Received employee data:', req.body);
 
+  const employeeQuery = `
+    INSERT INTO employee (
+      lastname,
+      firstname,
+      middlename,
+      contact_number,
+      address,
+      year_started,
+      role_name,
+      status,
+      archive_status
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, 'active', 'unarchive')
+  `;
 
+  const values = [
+    req.body.lastname,
+    req.body.firstname,
+    req.body.middlename,
+    req.body.contact_number,
+    req.body.address,
+    req.body.year_started,
+    req.body.role_name
+  ];
 
-
+  db.query(employeeQuery, values, (error, result) => {
+    if (error) {
+      console.error('Failed to add employee:', error);
+      return res.status(500).json({ error: 'Failed to add employee' });
+    }
+    res.status(201).json({ 
+      message: 'Employee added successfully', 
+      employeeId: result.insertId
+    });
+  });
+});
 
 app.listen(3001, () => {
   console.log('Server running on port 3001');
 });
+
+// // Endpoint to fetch student grades by student ID
+// app.get('/students/:studentId/grades', (req, res) => {
+//   const { studentId } = req.params;
+//   const { grade_level, subject_name } = req.query; // Get these from query parameters
+
+//   const query = `
+//     SELECT 
+//       first_quarter, 
+//       second_quarter, 
+//       third_quarter, 
+//       fourth_quarter 
+//     FROM grades 
+//     WHERE student_id = ? 
+//     AND grade_level = ? 
+//     AND subject_name = ?
+//   `;
+
+//   // Log the parameters for debugging
+//   console.log('Fetching grades with:', {
+//     studentId,
+//     grade_level,
+//     subject_name
+//   });
+
+//   db.query(query, [studentId, grade_level, subject_name], (err, results) => {
+//     if (err) {
+//       console.error('Error fetching grades:', err);
+//       return res.status(500).json({ 
+//         error: 'Internal server error',
+//         details: err.message 
+//       });
+//     }
+
+//     // Log the results for debugging
+//     console.log('Query results:', results);
+
+//     res.json(results);
+//   });
+// });
+
+// Endpoint to fetch grades from marks table
+app.get('/students/:studentId/marks', (req, res) => {
+  const studentId = req.params.studentId;
+  const query = `
+    SELECT * FROM marks 
+    WHERE student_id = ?
+  `;
+
+  db.query(query, [studentId], (err, results) => {
+    if (err) {
+      console.error('Error fetching marks:', err);
+      res.status(500).json({ error: 'Internal server error' });
+      return;
+    }
+    res.json(results);
+  });
+});
+
+// Add this new endpoint for deleting an employee
+app.delete('/employees/:employeeId', (req, res) => {
+  const { employeeId } = req.params;
+  
+  // First check if the employee exists
+  const checkQuery = 'SELECT * FROM employee WHERE employee_id = ?';
+  
+  db.query(checkQuery, [employeeId], (checkError, checkResult) => {
+    if (checkError) {
+      console.error('Error checking employee:', checkError);
+      return res.status(500).json({ error: 'Database error while checking employee' });
+    }
+    
+    if (checkResult.length === 0) {
+      return res.status(404).json({ error: 'Employee not found' });
+    }
+
+    // If employee exists, proceed with deletion
+    const deleteQuery = 'DELETE FROM employee WHERE employee_id = ?';
+    
+    db.query(deleteQuery, [employeeId], (deleteError, deleteResult) => {
+      if (deleteError) {
+        console.error('Error deleting employee:', deleteError);
+        return res.status(500).json({ error: 'Failed to delete employee' });
+      }
+      
+      if (deleteResult.affectedRows === 0) {
+        return res.status(404).json({ error: 'Employee not found' });
+      }
+      
+      console.log(`Employee ${employeeId} deleted successfully`);
+      res.status(200).json({ 
+        message: 'Employee deleted successfully',
+        employeeId: employeeId
+      });
+    });
+  });
+});
+
+// Endpoint to fetch subjects by grade level
+app.get('/subjects-for-assignment/:gradeLevel', (req, res) => {
+  const gradeLevel = req.params.gradeLevel;
+  
+  const query = `
+    SELECT 
+      a.subject_name,
+      'subject' as type,
+      a.subject_id as id
+    FROM subject a  
+    WHERE a.grade_level = ? 
+    UNION 
+    SELECT 
+      b.name as subject_name,
+      'elective' as type,
+      b.elective_id as id
+    FROM elective b 
+    ORDER BY subject_name ASC
+  `;
+
+  db.query(query, [gradeLevel], (err, results) => {
+    if (err) {
+      console.error('Error fetching subjects:', err);
+      res.status(500).json({ error: 'Internal server error' });
+      return;
+    }
+    console.log('Fetched subjects:', results); // Debug log
+    res.json(results);
+  });
+});
+
+// Endpoint to assign subject to teacher
+app.post('/assign-subject/:teacherId', (req, res) => {
+  const teacherId = req.params.teacherId;
+  const { subject_name, grade_level } = req.body; // Get grade_level from request body
+  
+  console.log('Received assignment request:', { teacherId, subject_name, grade_level }); // Debug log
+
+  const query = `
+    UPDATE subject 
+    SET employee_id = ? 
+    WHERE subject_name = ?
+    AND grade_level = ?
+  `;
+
+  db.query(query, [teacherId, subject_name, grade_level], (err, result) => { // Add grade_level to query params
+    if (err) {
+      console.error('Error assigning subject:', err);
+      res.status(500).json({ error: 'Internal server error' });
+      return;
+    }
+    console.log('Subject assigned successfully');
+    res.json({ message: 'Subject assigned successfully' });
+  });
+});
+
+// Add this new endpoint to fetch assigned subjects for a teacher
+app.get('/teacher-subjects/:teacherId', (req, res) => {
+  const teacherId = req.params.teacherId;
+  
+  const query = `
+    SELECT subject_name, grade_level 
+    FROM subject 
+    WHERE employee_id = ?
+    ORDER BY grade_level ASC, subject_name ASC
+  `;
+
+  db.query(query, [teacherId], (err, results) => {
+    if (err) {
+      console.error('Error fetching teacher subjects:', err);
+      res.status(500).json({ error: 'Internal server error' });
+      return;
+    }
+    res.json(results);
+  });
+});
+
+// Endpoint to fetch sections by grade level
+app.get('/sections-for-assignment/:gradeLevel', (req, res) => {
+  const gradeLevel = req.params.gradeLevel;
+  
+  const query = `
+    SELECT section_name , section_id
+    FROM section 
+    WHERE grade_level = ?
+    ORDER BY section_id ASC
+  `;
+
+  db.query(query, [gradeLevel], (err, results) => {
+    if (err) {
+      console.error('Error fetching sections:', err);
+      res.status(500).json({ error: 'Internal server error' });
+      return;
+    }
+    console.log('Fetched sections:', results);
+    res.json(results);
+  });
+});
+
+// Endpoint to assign section to teacher (adviser)
+app.post('/assign-section/:teacherId', (req, res) => {
+  const teacherId = req.params.teacherId;
+  const { section_name, grade_level } = req.body;
+  
+  const query = `
+    UPDATE section 
+    SET section_adviser = ? 
+    WHERE grade_level = ?
+    AND section_name = ?
+  `;
+
+  db.query(query, [teacherId, grade_level, section_name], (err, result) => {
+    if (err) {
+      console.error('Error assigning section:', err);
+      res.status(500).json({ error: 'Internal server error' });
+      return;
+    }
+    console.log('Section assigned successfully');
+    res.json({ message: 'Section assigned successfully' });
+  });
+});
+
+// Endpoint to fetch teacher's assigned section
+app.get('/teacher-section/:teacherId', (req, res) => {
+  const teacherId = req.params.teacherId;
+  
+  const query = `
+    SELECT section_name, grade_level 
+    FROM section 
+    WHERE section_adviser = ?
+  `;
+
+  db.query(query, [teacherId], (err, results) => {
+    if (err) {
+      console.error('Error fetching teacher section:', err);
+      res.status(500).json({ error: 'Internal server error' });
+      return;
+    }
+    res.json(results[0]); // Return first result since a teacher can only have one section
+  });
+});
+
+app.get('/student-section/:userId', (req, res) => {
+  try {
+    const { userId } = req.params;
+    console.log('Fetching section for userId:', userId);
+    
+    const query = `
+      SELECT b.section_name 
+      FROM student a 
+      LEFT JOIN section b ON a.section_id = b.section_id 
+        AND a.current_yr_lvl = b.grade_level 
+      WHERE a.user_id = ?
+    `;
+    
+    console.log('Executing query:', query);
+    db.query(query, [userId], (err, results) => {
+      if (err) {
+        console.error('Database error:', err);
+        return res.status(500).json({ 
+          error: 'Failed to fetch student section',
+          details: err.message 
+        });
+      }
+      
+      console.log('Query results:', results);
+      
+      if (results.length > 0) {
+        console.log('Section found:', results[0].section_name);
+        res.json({ section: results[0].section_name });
+      } else {
+        console.log('No section found for user');
+        res.json({ section: null });
+      }
+    });
+  } catch (error) {
+    console.error('Error in route handler:', error);
+    res.status(500).json({ 
+      error: 'Failed to fetch student section',
+      details: error.message 
+    });
+  }
+});
+
+app.post('/insert-component', (req, res) => {
+  const { 
+    component_id,
+    scores,
+    total_items,
+    remarks,
+    student_id,
+    subject_name,
+    grading // Grading period is now included
+  } = req.body;
+
+  const query = `
+    INSERT INTO components (
+      component_id,
+      scores,
+      total_items,
+      remarks,
+      student_id,
+      subject_name,
+      grading
+    ) VALUES (?, ?, ?, ?, ?, ?, ?)
+  `;
+
+  db.query(query, [
+    component_id, 
+    scores, 
+    total_items, 
+    remarks,
+    student_id,
+    subject_name,
+    grading // Include the grading period in the query values
+  ], (error, result) => {
+    if (error) {
+      console.error('Error inserting component:', error);
+      return res.status(500).json({ 
+        success: false, 
+        message: 'Error inserting component',
+        error: error.message 
+      });
+    }
+
+    res.json({ 
+      success: true, 
+      message: 'Component inserted successfully',
+      data: result 
+    });
+  });
+});
+
+
+app.get('/get-components', (req, res) => {
+  const { student_id, subject_name, component_id, grading } = req.query; // Include grading in the query parameters
+
+  const query = `
+    SELECT remarks, scores, total_items
+    FROM components
+    WHERE student_id = ? 
+    AND subject_name = ? 
+    AND component_id = ? 
+    AND grading = ?
+  `;
+
+  db.query(
+    query, // First argument is the query string
+    [student_id, subject_name, component_id, grading], // Second argument is the parameter array
+    (error, results) => {
+      if (error) {
+        console.error('Error fetching components:', error);
+        return res.status(500).json({
+          success: false,
+          message: 'Error fetching components',
+          error: error.message,
+        });
+      }
+
+      res.json(results);
+    }
+  );
+});
+
+
+
+// Add this new endpoint after your other routes
+app.get('/section-students/:sectionId/:gradeLevel/:subjectId?/:type?', (req, res) => {
+  const { sectionId, gradeLevel, subjectId, type } = req.params;
+  
+  let query;
+  let queryParams;
+
+  if (!type && !subjectId) {
+    // Case 1: No type and no subjectId - fetch all students in section
+    query = `
+      SELECT 
+        student_id,
+        CONCAT(
+          UPPER(SUBSTRING(a.lastname, 1, 1)),
+          LOWER(SUBSTRING(a.lastname FROM 2)),
+          ', ',
+          UPPER(SUBSTRING(a.firstname, 1, 1)),
+          LOWER(SUBSTRING(a.firstname FROM 2)),
+          ' ',
+          UPPER(SUBSTRING(IFNULL(a.middlename, ''), 1, 1)),
+          LOWER(SUBSTRING(IFNULL(a.middlename, '') FROM 2))
+        ) AS NAME
+      FROM student a 
+      LEFT JOIN SUBJECT b ON a.current_yr_lvl = b.grade_level
+      WHERE a.section_id = ? AND a.current_yr_lvl = ?
+      GROUP BY NAME
+      ORDER BY a.lastname, a.firstname
+    `;
+    queryParams = [sectionId, gradeLevel];
+  } else if (type === 'subject') {
+    // Case 2: Regular subject
+    query = `
+      SELECT 
+        student_id,
+        CONCAT(
+          UPPER(SUBSTRING(a.lastname, 1, 1)),
+          LOWER(SUBSTRING(a.lastname FROM 2)),
+          ', ',
+          UPPER(SUBSTRING(a.firstname, 1, 1)),
+          LOWER(SUBSTRING(a.firstname FROM 2)),
+          ' ',
+          UPPER(SUBSTRING(IFNULL(a.middlename, ''), 1, 1)),
+          LOWER(SUBSTRING(IFNULL(a.middlename, '') FROM 2))
+        ) AS name, 
+        b.subject_name AS subject_name
+      FROM student a 
+      LEFT JOIN SUBJECT b ON a.current_yr_lvl = b.grade_level
+      WHERE a.section_id = ? 
+      AND b.grade_level = ? 
+      AND b.subject_id = ?
+      ORDER BY a.lastname, a.firstname
+    `;
+    queryParams = [sectionId, gradeLevel, subjectId];
+  } else if (type === 'elective') {
+    // Case 3: Elective
+    query = `
+      SELECT 
+        a.student_id,
+        CONCAT(
+          UPPER(SUBSTRING(a.lastname, 1, 1)),
+          LOWER(SUBSTRING(a.lastname FROM 2)),
+          ', ',
+          UPPER(SUBSTRING(a.firstname, 1, 1)),
+          LOWER(SUBSTRING(a.firstname FROM 2)),
+          ' ',
+          UPPER(SUBSTRING(IFNULL(a.middlename, ''), 1, 1)),
+          LOWER(SUBSTRING(IFNULL(a.middlename, '') FROM 2))
+        ) AS name, 
+        c.name AS elective_name 
+      FROM student a 
+      LEFT JOIN student_elective b ON a.student_id=b.student_id 
+      LEFT JOIN elective c ON b.elective_id=c.elective_id
+      WHERE a.section_id = ? 
+      AND a.current_yr_lvl = ? 
+      AND b.elective_id = ?
+      ORDER BY a.lastname, a.firstname
+    `;
+    queryParams = [sectionId, gradeLevel, subjectId];
+  }
+
+  console.log('Executing query with params:', queryParams); // Debug log
+
+  db.query(query, queryParams, (err, results) => {
+    if (err) {
+      console.error('Error fetching students:', err);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+    console.log('Query results:', results); // Debug log
+    res.json(results);
+  });
+});
+
+// Endpoint to archive a student
+app.put('/students/:studentId/archive', (req, res) => {
+  const { studentId } = req.params; // Extract the student ID from the URL
+  const { status } = req.body; // Extract the new status from the request body
+
+  // Validate the status
+  if (!status || !['inactive', 'withdrawn', 'transferred'].includes(status)) {
+    return res.status(400).json({ error: 'Invalid status provided' });
+  }
+
+  // SQL query to update the student's status and active_status
+  const query = `
+    UPDATE student
+    SET status = ?, active_status = 'archived'
+    WHERE student_id = ?;
+  `;
+
+  // Execute the query with parameterized inputs
+  db.query(query, [status, studentId], (err, result) => {
+    if (err) {
+      console.error('Error archiving student:', err);
+      return res.status(500).json({ error: 'Failed to archive student' });
+    }
+
+    if (result.affectedRows > 0) {
+      res.status(200).json({ message: 'Student archived successfully' });
+    } else {
+      res.status(404).json({ error: 'Student not found' });
+    }
+  });
+});
+
+app.put('/employees/:employeeId/archive', (req, res) => {
+  const { employeeId } = req.params;
+  const { status } = req.body;
+
+  console.log('Received status:', status); // Log the status received
+  console.log('Employee ID:', employeeId);
+
+  if (!status) {
+    return res.status(400).json({ error: 'Status is required.' });
+  }
+
+  const query = `
+    UPDATE employee
+    SET archive_status = 'archived', status = ?
+    WHERE employee_id = ?;
+  `;
+
+  console.log('Executing query:', query, 'with params:', [status, employeeId]); // Log query details
+
+  db.query(query, [status, employeeId], (err, results) => {
+    if (err) {
+      console.error('Database error:', err); // Log database errors
+      return res.status(500).json({ error: 'Database query failed.' });
+    }
+
+    res.status(200).json({ message: 'Employee archived successfully.' });
+  });
+});
+
