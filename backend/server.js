@@ -2359,3 +2359,103 @@ app.put('/employees/:employeeId/archive', (req, res) => {
   });
 });
 
+// API Endpoint to fetch user information
+app.get('/api/user-info/:userId', (req, res) => {
+  const userId = req.params.userId;
+  console.log(`Fetching user info for userId: ${userId}`);
+
+  const query = `
+    SELECT u.username, u.role_id, u.password,
+           COALESCE(s.firstname, e.firstname) AS firstname, 
+           COALESCE(s.lastname, e.lastname) AS lastname, 
+           COALESCE(s.middlename, e.middlename) AS middle_name
+    FROM users u
+    LEFT JOIN student s ON u.user_id = s.user_id
+    LEFT JOIN employee e ON u.user_id = e.user_id
+    WHERE u.user_id = ?
+  `;
+
+  db.query(query, [userId], (err, results) => {
+    if (err) {
+      console.error('Database query error:', err);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+    if (results.length > 0) {
+      res.json(results[0]);
+    } else {
+      res.status(404).json({ error: 'User not found' });
+    }
+  });
+});
+
+app.put('/api/user-info/:userId', (req, res) => {
+  const { userId } = req.params;
+  const { firstname, middle_name, lastname, username, password } = req.body;
+
+  console.log('Incoming request for user update:', { userId, firstname, middle_name, lastname, username, password });
+
+  const roleQuery = `SELECT role_name FROM users WHERE user_id = ?`;
+
+  db.query(roleQuery, [userId], (err, roleResults) => {
+    if (err) {
+      console.error('Error fetching role:', err);
+      res.status(500).json({ error: 'Database error while fetching role' });
+      return;
+    }
+
+    if (roleResults.length === 0) {
+      console.warn('User not found for userId:', userId);
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+
+    const roleName = roleResults[0].role_name;
+    console.log('User role:', roleName);
+
+    let updateQuery = `
+      UPDATE users
+      SET username = ?, password = ?
+      WHERE user_id = ?;
+    `;
+    // Execute the first update query
+    db.query(updateQuery, [username, password, userId], (updateErr, updateResults) => {
+      if (updateErr) {
+        console.error('Error updating user info:', updateErr);
+        res.status(500).json({ error: 'Database error while updating user info' });
+        return;
+      }
+
+      // Now update the employee or student based on the role
+      const roleUpdateQuery = roleName === 'student' ? `
+        UPDATE student
+        SET firstname = ?, middlename = ?, lastname = ?
+        WHERE user_id = ?;
+      ` : `
+        UPDATE employee
+        SET firstname = ?, middlename = ?, lastname = ?
+        WHERE user_id = ?;
+      `;
+
+      const roleUpdateParams = roleName === 'student' ? 
+        [firstname, middle_name, lastname, userId] : 
+        [firstname, middle_name, lastname, userId];
+
+      // Execute the second update query
+      db.query(roleUpdateQuery, roleUpdateParams, (roleUpdateErr, roleUpdateResults) => {
+        if (roleUpdateErr) {
+          console.error('Error updating user info:', roleUpdateErr);
+          res.status(500).json({ error: 'Database error while updating user info' });
+          return;
+        }
+
+        console.log('User info updated successfully for userId:', userId);
+        res.status(200).json({ message: 'User info updated successfully' });
+      });
+    });
+  });
+});
+
+
+
+
+

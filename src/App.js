@@ -51,7 +51,7 @@ import Academic_SchedulePage from './AcademicPages/Academic_SchedulePage';
 import Academic_SectionPage from './AcademicPages/Academic_SectionPage';
 import Subject_AccountPage from './SubjectPages/Subject_AccountPage';
 import Subject_SubjectsPage from './SubjectPages/Subject_SubjectsPage';
-
+import ProfilePage from './Utilities/ProfilePage';
 
 
 
@@ -88,7 +88,7 @@ function App() {
         {isAuthenticated && (
           <Route element={<Layout role={role} handleLogout={handleLogout} />}>
             <Route path="/home" element={<HomePage />} />
-
+            <Route path="/profile" element={<ProfilePage />} />
             <Route path="/section-list" element={<Principal_SectionListPage />} />
             <Route path="/section" element={<Principal_SectionPage />} />
             <Route path="/students" element={<Principal_StudentsPage />} />

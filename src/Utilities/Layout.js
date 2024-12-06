@@ -10,7 +10,7 @@ import AcademicCoordinatorSideBar from '../RoleSidebars/AcademicCoordinatorSideB
 import GradeLevelCoordinatorSideBar from '../RoleSidebars/GradeLevelCoordinatorSideBar';
 import SubjectCoordinatorSideBar from '../RoleSidebars/SubjectCoordinatorSideBar';
 
-function Layout({ role, handleLogout }) {
+function Layout({ role }) {
   const [showSidebar, setShowSidebar] = useState(true);
 
   const toggleSidebar = () => {
@@ -23,13 +23,28 @@ function Layout({ role, handleLogout }) {
     role: localStorage.getItem('role') || 'Role'
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('fullName');
+    localStorage.removeItem('username');
+    localStorage.removeItem('role');
+    localStorage.removeItem('isAuthenticated');
+    sessionStorage.clear();
+    window.location.href = '/'; // Redirect to the login page
+  };
+
   if (!localStorage.getItem('isAuthenticated')) {
     return <Navigate to="/" />;
   }
 
   return (
     <div>
-      <HeaderBar showSidebar={showSidebar} toggleSidebar={toggleSidebar} user={user} />
+      <HeaderBar
+        showSidebar={showSidebar}
+        toggleSidebar={toggleSidebar}
+        user={user}
+        onLogout={handleLogout}
+      />
       {role === 'student' && (
         <StudentSideBar showSidebar={showSidebar} toggleSidebar={toggleSidebar} handleLogout={handleLogout} />
       )}

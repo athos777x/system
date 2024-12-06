@@ -1,14 +1,19 @@
-// HeadBar.js
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import '../CssFiles/headbar.css';
 import { FaBars, FaTimes } from 'react-icons/fa';
 import profilePic from '../png/user_pp.jpg'; // Import the profile picture
 
-function HeaderBar({ showSidebar, toggleSidebar, user }) {
+function HeaderBar({ showSidebar, toggleSidebar, onLogout }) {
   const [dropdownVisible, setDropdownVisible] = useState(false);
+  const navigate = useNavigate();
 
   const toggleDropdown = () => {
     setDropdownVisible(!dropdownVisible);
+  };
+
+  const handleViewProfile = () => {
+    navigate('/profile');
   };
 
   return (
@@ -21,9 +26,12 @@ function HeaderBar({ showSidebar, toggleSidebar, user }) {
         <img src={profilePic} alt="Profile" className="profile-pic" />
         {dropdownVisible && (
           <div className="dropdown-menu">
-            <p className="dropdown-item">{user.fullName}</p>
-            <p className="dropdown-item">{user.name}</p>
-            <p className="dropdown-item">{user.role}</p>
+            <button className="dropdown-item" onClick={handleViewProfile}>
+              My Profile
+            </button>
+            <button className="dropdown-item" onClick={onLogout}>
+              Logout
+            </button>
           </div>
         )}
       </div>
