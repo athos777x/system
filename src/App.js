@@ -37,6 +37,7 @@ import Registrar_SchoolYearPage from './RegistrarPages/Registrar_SchoolYearPage'
 import Registrar_SectionListPage from './RegistrarPages/Registrar_SectionListPage';
 import Registrar_SectionPage from './RegistrarPages/Registrar_SectionPage';
 import Registrar_SummaryReportonPromotionPage from './RegistrarPages/Registrar_SummaryReportonPromotionPage';
+import Registrar_BrigadaEskwela from './RegistrarPages/Registrar_BrigadaEskwela';
 import GradeLevel_AccountPage from './GradeLevelPages/GradeLevel_AccountPage';
 import GradeLevel_AttendancePage from './GradeLevelPages/GradeLevel_AttendancePage';
 import GradeLevel_EnrolledStudentsPage from './GradeLevelPages/GradeLevel_EnrolledStudentsPage';
@@ -52,6 +53,7 @@ import Academic_SectionPage from './AcademicPages/Academic_SectionPage';
 import Subject_AccountPage from './SubjectPages/Subject_AccountPage';
 import Subject_SubjectsPage from './SubjectPages/Subject_SubjectsPage';
 import ProfilePage from './Utilities/ProfilePage';
+
 
 
 
@@ -124,6 +126,7 @@ function App() {
             <Route path="/registrar-section-list" element={<Registrar_SectionListPage />} />
             <Route path="/registrar-section" element={<Registrar_SectionPage />} />
             <Route path="/registrar-summary-report-promotion" element={<Registrar_SummaryReportonPromotionPage />} />
+            <Route path="/registrar-brigada-eskwela" element={<Registrar_BrigadaEskwela />} />
 
             <Route path="/gradelevel-account" element={<GradeLevel_AccountPage />} />
             <Route path="/gradelevel-attendance" element={<GradeLevel_AttendancePage />} />

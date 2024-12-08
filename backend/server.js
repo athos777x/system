@@ -2455,6 +2455,29 @@ app.put('/api/user-info/:userId', (req, res) => {
   });
 });
 
+// New endpoint to get student data for the table
+app.get('/brigada-eskwela', (req, res) => {
+  const query = `
+    SELECT 
+      CONCAT(a.lastname, ', ', a.firstname, ' ', IFNULL(a.middlename, '')) AS stud_name, 
+      a.current_yr_lvl AS grade_lvl, 
+      b.section_name as section_name, 
+      b.section_id as section_id,
+      IF(a.brigada_eskwela = 1, 'Present', 'Absent') AS brigada_attendance 
+    FROM student a 
+    LEFT JOIN section b ON a.section_id = b.section_id 
+    WHERE a.section_id != ''
+  `;
+
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error('Error fetching brigada eskwela data:', err);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+    res.json(results);
+  });
+});
+
 
 
 

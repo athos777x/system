@@ -81,6 +81,9 @@ function RegistrarSideBar({ showSidebar, toggleSidebar, handleLogout }) {
             <button onClick={() => handleNavigate('/attendance')}>
               <FiCheckSquare className="icon" /> Attendance
             </button>
+            <button onClick={() => handleNavigate('/registrar-brigada-eskwela')}>
+              <FiCheckSquare className="icon" /> Brigada Eskwela
+            </button>
           </div>
         )}
       </div>
