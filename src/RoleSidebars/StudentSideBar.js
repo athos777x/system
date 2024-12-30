@@ -38,7 +38,7 @@ function StudentSideBar({ showSidebar, toggleSidebar, handleLogout }) {
         <button onClick={() => handleNavigate('/home')}>
           <FiHome className="icon" /> Home
         </button>
-        <button onClick={() => handleNavigate('/profile')}>
+        <button onClick={() => handleNavigate('/stud-profile')}>
           <FiUser className="icon" /> Profile
         </button>
         <div className={`menu-with-submenu ${showAcademicsSubMenu ? 'active' : ''}`}>
@@ -62,9 +62,9 @@ function StudentSideBar({ showSidebar, toggleSidebar, handleLogout }) {
         <button onClick={() => handleNavigate('/student-schedule')}>
           <FiCalendar className="icon" /> Schedule
         </button>
-        <button onClick={() => handleNavigate('/account')}>
+        {/* <button onClick={() => handleNavigate('/account')}>
           <FiSettings className="icon" /> Account
-        </button>
+        </button> */}
         <button onClick={() => handleLogout()}>
           <FiLogOut className="icon" /> Logout
         </button>

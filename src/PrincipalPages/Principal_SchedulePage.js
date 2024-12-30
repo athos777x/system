@@ -15,6 +15,14 @@ function Principal_SchedulePage() {
   });
   const [isEditing, setIsEditing] = useState(false);
   const [editFormData, setEditFormData] = useState({});
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [newSchedule, setNewSchedule] = useState({
+    subject_name: '',
+    time_start: '',
+    time_end: '',
+    day: '',
+    teacher_id: ''
+  });
 
   const fetchSections = useCallback(async () => {
     try {
@@ -76,6 +84,10 @@ function Principal_SchedulePage() {
     }
   };
 
+  const startAdding = () => {
+    setIsModalOpen(true);
+  };
+
   const startEditing = (schedule) => {
     setIsEditing(true);
     setEditFormData(schedule);
@@ -99,7 +111,7 @@ function Principal_SchedulePage() {
         day,
         schedule_status
       });
-      fetchSectionSchedules(selectedSectionId); // Refresh the schedules list
+      fetchSectionSchedules(selectedSectionId);
       setIsEditing(false);
     } catch (error) {
       console.error('Error saving schedule details:', error);
@@ -113,9 +125,24 @@ function Principal_SchedulePage() {
   const handleApproveClick = async (scheduleId) => {
     try {
       await axios.put(`http://localhost:3001/schedules/${scheduleId}/approve`, { schedule_status: 'Approved' });
-      fetchSectionSchedules(selectedSectionId); // Refresh the schedules list
+      fetchSectionSchedules(selectedSectionId);
     } catch (error) {
       console.error('There was an error approving the schedule!', error);
+    }
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setNewSchedule({ ...newSchedule, [name]: value });
+  };
+
+  const handleAddSchedule = async () => {
+    try {
+      await axios.post('http://localhost:3001/schedules', newSchedule);
+      fetchSectionSchedules(selectedSectionId);
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error('Error adding schedule:', error);
     }
   };
 
@@ -128,6 +155,9 @@ function Principal_SchedulePage() {
           grades={['7', '8', '9', '10']}
           sections={sections}
         />
+      </div>
+      <div className="section-add-section-button-container">
+        <button className="section-add-section-button" onClick={startAdding}>Add New Schedule</button>
       </div>
       <div className="schedule-sectionlist-list">
         {filteredSections.length > 0 ? (
@@ -244,6 +274,50 @@ function Principal_SchedulePage() {
           <p>No sections available.</p>
         )}
       </div>
+      {isModalOpen && (
+        <div className="section-modal">
+          <div className="section-modal-content">
+            <h2>Add New Schedule</h2>
+            <input
+              type="text"
+              name="subject_name"
+              placeholder="Subject Name"
+              value={newSchedule.subject_name}
+              onChange={handleInputChange}
+            />
+            <input
+              type="time"
+              name="time_start"
+              placeholder="Start Time"
+              value={newSchedule.time_start}
+              onChange={handleInputChange}
+            />
+            <input
+              type="time"
+              name="time_end"
+              placeholder="End Time"
+              value={newSchedule.time_end}
+              onChange={handleInputChange}
+            />
+            <input
+              type="text"
+              name="day"
+              placeholder="Day"
+              value={newSchedule.day}
+              onChange={handleInputChange}
+            />
+            <input
+              type="number"
+              name="teacher_id"
+              placeholder="Teacher ID"
+              value={newSchedule.teacher_id}
+              onChange={handleInputChange}
+            />
+            <button onClick={handleAddSchedule}>Add Schedule</button>
+            <button onClick={() => setIsModalOpen(false)}>Close</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

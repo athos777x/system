@@ -1,0 +1,43 @@
+.good-moral-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    background-color: #f9f9f9;
+    min-height: 100vh;
+  }
+  
+  .certificate {
+    border: 2px solid #000;
+    padding: 40px;
+    max-width: 800px;
+    background-color: #fff;
+    font-family: "Georgia", serif;
+    line-height: 1.6;
+  }
+  
+  .certificate-title {
+    text-align: center;
+    font-size: 28px;
+    font-weight: bold;
+    text-decoration: underline;
+    margin-bottom: 20px;
+  }
+  
+  .certificate-body {
+    text-align: justify;
+    margin-bottom: 30px;
+    font-size: 16px;
+  }
+  
+  .certificate-footer {
+    text-align: center;
+    margin-top: 40px;
+    font-size: 16px;
+  }
+  
+  .convert-to-pdf {
+    margin-top: auto; /* Push the button to the very bottom */
+    padding: 10px;
+    text-align: center;
+  }

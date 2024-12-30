@@ -57,7 +57,7 @@ function GradeLevelCoordinatorSideBar({ showSidebar, toggleSidebar, handleLogout
         <button onClick={() => handleNavigate('/profile')}>
           <FiUser className="icon" /> Profile
         </button>
-        <button onClick={() => handleNavigate('/students')}>
+        <button onClick={() => handleNavigate('/student')}>
           <FiUsers className="icon" /> Students
         </button>
         <div className={`menu-with-submenu ${showRecordsSubMenu ? 'active' : ''}`}>
@@ -74,9 +74,9 @@ function GradeLevelCoordinatorSideBar({ showSidebar, toggleSidebar, handleLogout
               </button>
             </div>
           )}
-          <button onClick={() => handleNavigate('/account')}>
+          {/* <button onClick={() => handleNavigate('/account')}>
           <FiSettings className="icon" /> Account
-          </button>
+          </button> */}
         </div>
         <div className={`menu-with-submenu ${showEnrollmentSubMenu ? 'active' : ''}`}>
           <button onClick={toggleEnrollmentSubMenu}>

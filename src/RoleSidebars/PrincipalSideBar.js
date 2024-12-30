@@ -66,7 +66,7 @@ function PrincipalSideBar({ showSidebar, toggleSidebar, handleLogout }) {
         <button onClick={() => handleNavigate('/home')}>
           <FiHome className="icon" /> Home
         </button>
-        <button onClick={() => handleNavigate('/students')}>
+        <button onClick={() => handleNavigate('/student')}>
           <FiUsers className="icon" /> Students
         </button>
         <div className={`menu-with-submenu ${showRecordsSubMenu ? 'active' : ''}`}>
@@ -107,7 +107,7 @@ function PrincipalSideBar({ showSidebar, toggleSidebar, handleLogout }) {
         </div>
         <div className={`menu-with-submenu ${showClassesSubMenu ? 'active' : ''}`}>
           <button onClick={toggleClassesSubMenu}>
-            <FiClipboard className="icon" /> Classes
+            <FiClipboard className="icon" /> Classes  
           </button>
           {showClassesSubMenu && (
             <div className="submenu">

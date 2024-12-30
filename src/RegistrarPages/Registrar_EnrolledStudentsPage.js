@@ -1,15 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import EnrolledStudentsSearchFilter from '../RoleSearchFilters/EnrolledStudentsSearchFilter';
+import Pagination from '../Utilities/pagination';
 import '../CssPage/Principal_EnrolledStudentsPage.css';
 
 function Registrar_EnrolledStudentsPage() {
   const [students, setStudents] = useState([]);
   const [filteredStudents, setFilteredStudents] = useState([]);
   const [totalEnrolledStudents, setTotalEnrolledStudents] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [studentsPerPage] = useState(5); // Adjust this number to set how many students per page
   const [filters, setFilters] = useState({
     searchTerm: '',
-    grade: ''
+    grade: '',
   });
 
   useEffect(() => {
@@ -19,47 +22,55 @@ function Registrar_EnrolledStudentsPage() {
   const fetchStudents = async (appliedFilters = {}) => {
     try {
       const response = await axios.get('http://localhost:3001/enrolled-students', {
-        params: appliedFilters
+        params: appliedFilters,
       });
-      console.log('API Response:', response.data); // Log the API response
-      const activeStudents = response.data.filter(student => student.enrollment_status === 'active');
+      const activeStudents = response.data.filter(
+        (student) => student.enrollment_status === 'active'
+      );
       setStudents(activeStudents);
       setFilteredStudents(activeStudents);
       setTotalEnrolledStudents(activeStudents.length);
-      console.log('Active students:', activeStudents);
     } catch (error) {
       console.error('There was an error fetching the students!', error);
     }
   };
 
   const handleSearch = (searchTerm) => {
-    setFilters(prevFilters => ({ ...prevFilters, searchTerm }));
+    setFilters((prevFilters) => ({ ...prevFilters, searchTerm }));
+    applyFilters({ ...filters, searchTerm });
   };
 
   const handleFilterChange = (type, value) => {
-    setFilters(prevFilters => ({ ...prevFilters, [type]: value }));
+    setFilters((prevFilters) => ({ ...prevFilters, [type]: value }));
+    applyFilters({ ...filters, [type]: value });
   };
 
-  const applyFilters = () => {
+  const applyFilters = (updatedFilters) => {
     let filtered = students;
 
-    if (filters.grade) {
-      filtered = filtered.filter(student => student.grade_level === filters.grade);
+    if (updatedFilters.grade) {
+      filtered = filtered.filter((student) => student.grade_level === updatedFilters.grade);
     }
-    if (filters.searchTerm) {
-      filtered = filtered.filter(student =>
-        student.firstname.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
-        student.lastname.toLowerCase().includes(filters.searchTerm.toLowerCase())
+    if (updatedFilters.searchTerm) {
+      filtered = filtered.filter((student) =>
+        student.firstname.toLowerCase().includes(updatedFilters.searchTerm.toLowerCase()) ||
+        student.lastname.toLowerCase().includes(updatedFilters.searchTerm.toLowerCase())
       );
     }
 
     setFilteredStudents(filtered);
-    console.log('Filtered students:', filtered);
+    setCurrentPage(1); // Reset to the first page when filters are applied
   };
 
-  const handleApplyFilters = () => {
-    console.log('Applying filters:', filters);
-    applyFilters();
+  // Pagination Logic
+  const indexOfLastStudent = currentPage * studentsPerPage;
+  const indexOfFirstStudent = indexOfLastStudent - studentsPerPage;
+  const currentStudents = filteredStudents.slice(indexOfFirstStudent, indexOfLastStudent);
+
+  const totalPages = Math.ceil(filteredStudents.length / studentsPerPage);
+
+  const paginate = (pageNumber) => {
+    setCurrentPage(pageNumber);
   };
 
   return (
@@ -69,22 +80,46 @@ function Registrar_EnrolledStudentsPage() {
         <EnrolledStudentsSearchFilter
           handleSearch={handleSearch}
           handleFilter={handleFilterChange}
-          handleApplyFilters={handleApplyFilters}
         />
       </div>
       <div className="enrolled-students-summary">
         <p>Total Enrolled Students: {totalEnrolledStudents}</p>
       </div>
-      <ul className="enrolled-students-list">
-        {filteredStudents.map((student, index) => (
-          <li key={student.student_id} className="enrolled-student-item-container">
-            <div className="enrolled-student-item">
-              <p className="enrolled-student-name">{index + 1}. {student.firstname} {student.middlename} {student.lastname}</p>
-              <p className="enrolled-student-info">Grade {student.grade_level} - {student.enrollment_status}</p>
-            </div>
-          </li>
-        ))}
-      </ul>
+      <table className="attendance-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Name</th>
+            <th>Grade Level</th>
+            <th>Enrollment Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {currentStudents.length > 0 ? (
+            currentStudents.map((student, index) => (
+              <tr key={student.student_id}>
+                <td>{index + 1 + (currentPage - 1) * studentsPerPage}</td>
+                <td>{`${student.firstname} ${student.middlename} ${student.lastname}`}</td>
+                <td>Grade {student.grade_level}</td>
+                <td>{student.enrollment_status}</td>
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td colSpan="4" style={{ textAlign: 'center' }}>
+                No students found
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+      {/* Pagination Controls */}
+      <Pagination
+        totalItems={filteredStudents.length}
+        itemsPerPage={studentsPerPage}
+        currentPage={currentPage}
+        onPageChange={paginate}
+      />
     </div>
   );
 }

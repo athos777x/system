@@ -33,12 +33,12 @@ function ClassAdviserSideBar({ showSidebar, toggleSidebar, handleLogout }) {
         <button onClick={() => handleNavigate('/profile')}>
           <FiUser className="icon" /> Profile
         </button>
-        <button onClick={() => handleNavigate('/students')}>
+        <button onClick={() => handleNavigate('/student')}>
           <FiUsers className="icon" /> Students
         </button>
-        <button onClick={() => handleNavigate('/account')}>
+        {/* <button onClick={() => handleNavigate('/account')}>
           <FiSettings className="icon" /> Account
-        </button>
+        </button> */}
         <LogoutButton onClick={handleLogout}>
           <FiLogOut className="icon" /> Logout
         </LogoutButton>

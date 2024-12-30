@@ -110,7 +110,7 @@ function Principal_SubjectsPage() {
 
   const handleDelete = async () => {
     try {
-      await axios.delete(`http://localhost:3001/subjects/${selectedSubject.subject_id}`);
+      await axios.put(`http://localhost:3001/subjects/${selectedSubject.subject_id}/archive`);
       fetchSubjects();
       setSelectedSubject(null); // Clear details after deletion
     } catch (error) {

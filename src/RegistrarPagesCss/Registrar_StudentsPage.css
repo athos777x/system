@@ -124,214 +124,61 @@
 
 .section-modal-content {
   background-color: white;
-  padding: 24px;
+  padding: 20px;
   border-radius: 8px;
-  width: 500px;
-  max-height: 80vh;
+  width: 400px; /* Adjust width to make it smaller */
+  max-height: 70vh; /* Limit the height */
   overflow-y: auto;
+  cursor: default;
 }
 
-.grade-buttons {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
-  justify-content: center;
-}
-
-.grade-button {
-  padding: 8px 16px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  background: white;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.grade-button.active {
-  background: #007bff;
-  color: white;
-  border-color: #007bff;
-}
-
-.subjects-list {
+/* Grid layout for form fields to make it more compact */
+.form-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
+  grid-template-columns: 1fr 1fr; /* Two columns */
+  gap: 10px; /* Space between fields */
   margin-bottom: 20px;
-  max-height: 100%;
-  overflow-y: auto;
 }
 
-.subject-item {
-  padding: 10px;
+/* Adjust the form labels and inputs for better alignment */
+label {
+  font-size: 14px;
+  margin-bottom: 6px;
+  display: block;
+}
+
+/* Make the form inputs smaller and compact */
+input, select {
+  width: 100%;
+  padding: 8px;
+  font-size: 14px;
   border: 1px solid #ddd;
   border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.3s ease;
 }
 
-.subject-item:hover {
-  background-color: #f8f9fa;
-}
-
-.subject-item.selected {
-  background-color: #e3f2fd;
-  border-color: #007bff;
-}
-
-.modal-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  padding-top: 20px;
-  border-top: 1px solid #eee;
-}
-
-.assign-button {
-  background-color: #007bff;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.assign-button:disabled {
-  background-color: #ccc;
-  cursor: not-allowed;
-}
-
-.cancel-button {
-  background-color: #6c757d;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
+/* Button adjustments */
 .section-button-group {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
 }
 
-.section-save-button {
-  background-color: #007bff;
-  color: white;
-  border: none;
+.section-save-button,
+.section-cancel-button {
   padding: 8px 16px;
-  border-radius: 4px;
-  cursor: pointer;
+  font-size: 14px;
 }
 
+/* Compact save and cancel button */
 .section-save-button:hover {
   background-color: #0056b3;
-}
-
-.section-cancel-button {
-  background-color: #6c757d;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
-  cursor: pointer;
 }
 
 .section-cancel-button:hover {
   background-color: #545b62;
 }
 
-.assign-button {
-  background-color: #007bff;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
-  cursor: pointer;
-  margin-right: 10px;
-}
-
-.assign-button:hover {
-  background-color: #0056b3;
-}
-
-.action-buttons {
-  margin-top: 15px;
-  text-align: right;
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-}
-
-.archive-button {
-  background-color: #dc3545;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.archive-button:hover {
-  background-color: #c82333;
-}
-
-.students-delete-button {
-  background-color: #dc3545;
-  color: white;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 4px;
-  cursor: pointer;
-  margin-left: 8px;
-}
-
-.students-delete-button:hover {
-  background-color: #c82333;
-}
-
-.view-button.active {
-  background-color: #dc3545;
-}
-
-.view-button.active:hover {
-  background-color: #c82333;
-}
-
-.assigned-section {
-  margin-top: 20px;
-  padding-top: 20px;
-  border-top: 1px solid #eee;
-}
-
-.assigned-section h3 {
-  margin-bottom: 15px;
-  color: #333;
-}
-
-.section-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-bottom: 20px;
-}
-
-.section-table th,
-.section-table td {
-  padding: 8px 12px;
-  text-align: left;
-  border: 1px solid #ddd;
-}
-
-.section-table th {
-  background-color: #f8f9fa;
-  font-weight: bold;
-}
-
-.section-table tr:hover {
-  background-color: #f1f3f5;
-}
-
+/* Archive modal */
 .archive-modal {
   position: fixed;
   top: 0;
@@ -375,4 +222,52 @@
 .cancel-button {
   background-color: #f44336;
   color: white;
+}
+
+/* Improved table styling for student details */
+.student-details-row td {
+  background-color: #f9f9f9;
+  padding: 16px;
+  border: 1px solid #ddd;
+}
+
+.student-details-full-row {
+  width: 100%;
+  padding: 16px;
+  background-color: #ffffff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.details-row td {
+  padding: 0;
+  border: none;
+}
+
+.student-details-container {
+  background-color: #ffffff;
+  padding: 20px;
+  width: 100%;
+  box-sizing: border-box; /* Ensures padding doesn't exceed the width */
+  border: 1px solid #ddd;
+}
+
+.student-details-container .student-details-modal {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.student-details-container button {
+  align-self: flex-end;
+  margin-bottom: 16px;
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.student-details-container button:hover {
+  background-color: #c0392b;
 }

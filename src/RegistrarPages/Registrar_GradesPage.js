@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import '../RegistrarPagesCss/Registrar_GradesPage.css';
+import GradeDetail from '../Utilities/grades-detail'
 
 const Registrar_GradesPage = () => {
   // State variables
@@ -20,8 +21,88 @@ const Registrar_GradesPage = () => {
   const [performanceTasks, setPerformanceTasks] = useState([]);
   const [quarterlyAssessments, setQuarterlyAssessments] = useState([]);
   const [selectedGradingPeriod, setSelectedGradingPeriod] = useState('1st Grading');
-  
+  const [selectedItem, setSelectedItem] = useState(null);  // Store selected item for editing
 
+  const [percentages, setPercentages] = useState({
+    WW: 30,
+    PT: 50,
+    QA: 20,
+  });
+
+   // Handle opening the modal with data from the clicked item
+   const handleEditActivity = (item, index, type) => {
+    setSelectedItem({ ...item, index, type }); // Store the item and index to update later
+    setActivityType(type);
+    setShowAddActivityModal(true); // Open the modal
+  };
+
+  // Function to handle deleting the activity
+  const handleDeleteActivity = (index, type) => {
+    let updatedData = [];
+    if (type === 'WW') {
+      updatedData = [...writtenWorks];
+      updatedData.splice(index, 1);  // Remove the item at the specified index
+      setWrittenWorks(updatedData);
+    } else if (type === 'PT') {
+      updatedData = [...performanceTasks];
+      updatedData.splice(index, 1);  // Remove the item at the specified index
+      setPerformanceTasks(updatedData);
+    } else if (type === 'QA') {
+      updatedData = [...quarterlyAssessments];
+      updatedData.splice(index, 1);  // Remove the item at the specified index
+      setQuarterlyAssessments(updatedData);
+    }
+  };
+
+  // Handle updating the item in the data state
+  const handleUpdateActivity = async (e) => {
+    e.preventDefault();
+
+    // Make a copy of the corresponding list to update
+    const { index, type } = selectedItem;
+    const updatedItem = {
+      remarks: e.target.remarks.value,
+      scores: parseFloat(e.target.scores.value), // Ensure scores are parsed as a number
+      total_items: parseInt(e.target.total_items.value, 10), // Ensure total_items are parsed as a number
+    };
+
+    // Update the correct list (WW, PT, or QA)
+    if (type === 'WW') {
+      const updatedData = [...writtenWorks];
+      updatedData[index] = updatedItem; // Update the item at the index
+      setWrittenWorks(updatedData); // Set the updated state
+    } else if (type === 'PT') {
+      const updatedData = [...performanceTasks];
+      updatedData[index] = updatedItem;
+      setPerformanceTasks(updatedData);
+    } else if (type === 'QA') {
+      const updatedData = [...quarterlyAssessments];
+      updatedData[index] = updatedItem;
+      setQuarterlyAssessments(updatedData);
+    }
+
+    setShowAddActivityModal(false); // Close the modal after update
+  };
+
+  const calculateWeightedScore = (data, weight) => {
+    const totalScore = data.reduce((sum, item) => {
+      const ps = ((item.scores / item.total_items) * 100); // Percentage Score (as a number)
+      return sum + (ps * (weight / 100));
+    }, 0);
+    return totalScore; // Ensure it returns a number, not a string
+  };
+  
+  const calculateFinalGrade = () => {
+    // Calculate final grade as a number, and ensure it's a valid number before applying .toFixed()
+    const finalGrade =
+      calculateWeightedScore(writtenWorks, percentages.WW) +
+      calculateWeightedScore(performanceTasks, percentages.PT) +
+      calculateWeightedScore(quarterlyAssessments, percentages.QA);
+  
+    // Return final grade formatted to 2 decimal places
+    return isNaN(finalGrade) ? 0 : finalGrade.toFixed(2);
+  };
+  
   // Grade levels array
   const gradeLevels = [7, 8, 9, 10];
 
@@ -147,6 +228,71 @@ const handleStudentNameClick = (student) => {
     setActivityType('');
   };
 
+  const handleSubmitGrades = async () => {
+    if (!selectedStudent || !selectedSubject || !selectedGradingPeriod) {
+      alert('Incomplete data. Please ensure all fields are selected.');
+      return;
+    }
+  
+    // Map grading period to a numeric value (1, 2, 3, or 4)
+    const gradingPeriodMap = {
+      '1st Grading': 1,
+      '2nd Grading': 2,
+      '3rd Grading': 3,
+      '4th Grading': 4,
+    };
+  
+    const periodValue = gradingPeriodMap[selectedGradingPeriod];
+  
+    if (!periodValue) {
+      alert('Invalid grading period selected');
+      return;
+    }
+  
+    // Calculate the final grade based on the weighted scores
+    const finalGrade = [
+      ...writtenWorks.map(
+        (work) => ((work.scores / work.total_items) * 100 * 0.30).toFixed(2)
+      ),
+      ...performanceTasks.map(
+        (task) => ((task.scores / task.total_items) * 100 * 0.50).toFixed(2)
+      ),
+      ...quarterlyAssessments.map(
+        (assessment) =>
+          ((assessment.scores / assessment.total_items) * 100 * 0.20).toFixed(2)
+      ),
+    ]
+      .reduce((sum, value) => sum + parseFloat(value), 0)
+      .toFixed(2);
+  
+    const gradeData = {
+      grade_level: selectedGrade,
+      subject_name: selectedSubject.subject_name,
+      grade: finalGrade,
+      period: periodValue, // Use the numeric value for the period
+      student_id: selectedStudent.student_id,
+      student_name: selectedStudent.name,
+      school_year_id: 1, // Replace with your actual school year ID
+    };
+  
+    try {
+      const response = await axios.post('http://localhost:3001/submit-grade', gradeData, {
+        headers: { 'Content-Type': 'application/json' },
+      });
+  
+      if (response.data.success) {
+        alert('Grades submitted successfully!');
+      } else {
+        alert(`Error: ${response.data.message}`);
+      }
+    } catch (error) {
+      console.error('Error submitting grades:', error);
+      alert('Failed to submit grades. Please try again.');
+    }
+  };
+  
+  
+
   const fetchComponentData = async (componentType) => {
     const componentId =
       componentType === 'WW' ? 1 : componentType === 'PT' ? 2 : 3;
@@ -172,6 +318,8 @@ const handleStudentNameClick = (student) => {
       console.error(`Error fetching ${componentType} data:`, error);
     }
   };
+
+  
 
   useEffect(() => {
     if (selectedStudent && selectedSubject) {
@@ -396,297 +544,140 @@ const handleStudentNameClick = (student) => {
           </div>
           <div className="student-grades-details">
             <div className="grade-columns">
-            <div className="grade-column">
-            <h4>Written Works (30%)</h4>
-            <table>
-              <thead>
-                <tr>
-                  <th>WW</th>
-                  <th>Score</th>
-                  <th>Total</th>
-                  <th>PS</th>
-                  <th>WS</th>
-                </tr>
-              </thead>
-              <tbody>
-                {writtenWorks.map((work, index) => {
-                  const ps = ((work.scores / work.total_items) * 100).toFixed(2); // Calculate Percentage Score
-                  const ws = (ps * 0.30).toFixed(2); // Calculate Weighted Score (30%)
-                  return (
-                    <tr key={index}>
-                      <td>{work.remarks}</td>
-                      <td>{work.scores}</td>
-                      <td>{work.total_items}</td>
-                      <td>{ps}</td> {/* PS column */}
-                      <td>{ws}</td> {/* WS column */}
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-            <button
-              className="add-activity-btn"
-              onClick={() => handleAddActivity('WW')}
-            >
-              + Add Written Work
-            </button>
-          </div>
-
-          <div className="grade-column">
-            <h4>Performance Task (50%)</h4>
-            <table>
-              <thead>
-                <tr>
-                  <th>PT</th>
-                  <th>Score</th>
-                  <th>Total</th>
-                  <th>PS</th>
-                  <th>WS</th>
-                </tr>
-              </thead>
-              <tbody>
-                {performanceTasks.map((task, index) => {
-                  const ps = ((task.scores / task.total_items) * 100).toFixed(2); // Calculate Percentage Score
-                  const ws = (ps * 0.50).toFixed(2); // Calculate Weighted Score (50%)
-                  return (
-                    <tr key={index}>
-                      <td>{task.remarks}</td>
-                      <td>{task.scores}</td>
-                      <td>{task.total_items}</td>
-                      <td>{ps}</td> {/* PS column */}
-                      <td>{ws}</td> {/* WS column */}
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-            <button
-              className="add-activity-btn"
-              onClick={() => handleAddActivity('PT')}
-            >
-              + Add Performance Task
-            </button>
-          </div>
-
-          <div className="grade-column">
-            <h4>Quarterly Assessment (20%)</h4>
-            <table>
-              <thead>
-                <tr>
-                  <th>QA</th>
-                  <th>Score</th>
-                  <th>Total</th>
-                  <th>PS</th>
-                  <th>WS</th>
-                </tr>
-              </thead>
-              <tbody>
-                {quarterlyAssessments.map((assessment, index) => {
-                  const ps = ((assessment.scores / assessment.total_items) * 100).toFixed(2); // Calculate Percentage Score
-                  const ws = (ps * 0.20).toFixed(2); // Calculate Weighted Score (20%)
-                  return (
-                    <tr key={index}>
-                      <td>{assessment.remarks}</td>
-                      <td>{assessment.scores}</td>
-                      <td>{assessment.total_items}</td>
-                      <td>{ps}</td> {/* PS column */}
-                      <td>{ws}</td> {/* WS column */}
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-            <button
-              className="add-activity-btn"
-              onClick={() => handleAddActivity('QA')}
-            >
-              + Add Quarterly Assessment
-            </button>
-          </div>
-          <div className="grade-column">
-          <h4>Grades</h4>
-          <table>
-            <thead>
-              <tr>
-                <th>Component</th>
-                <th>WS</th>
-                <th>Weight</th>
-              </tr>
-            </thead>
-            <tbody>
+              
               {/* Written Works */}
-              <tr>
-                <td>Written Works</td>
-                <td>
-                  {writtenWorks.length > 0
-                    ? writtenWorks
-                        .map(
-                          (work) =>
-                            ((work.scores / work.total_items) * 100 * 0.30).toFixed(2) // Weighted Score for WW
-                        )
-                        .reduce((sum, ws) => sum + parseFloat(ws), 0)
-                        .toFixed(2)
-                    : '-'}
-                </td>
-                <td>30%</td>
-              </tr>
+              <GradeDetail
+                title="Written Works"
+                percentage={percentages.WW}  // 30% for Written Works
+                data={writtenWorks}
+                onAddActivity={() => handleAddActivity('WW')}
+                onEditActivity={handleEditActivity}  // Pass edit functionality
+                onDeleteActivity={handleDeleteActivity}  // Pass delete functionality
+                onPercentageChange={(newPercentage) => setPercentages((prev) => ({ ...prev, WW: newPercentage }))}
+              />
 
               {/* Performance Task */}
-              <tr>
-                <td>Performance Task</td>
-                <td>
-                  {performanceTasks.length > 0
-                    ? performanceTasks
-                        .map(
-                          (task) =>
-                            ((task.scores / task.total_items) * 100 * 0.50).toFixed(2) // Weighted Score for PT
-                        )
-                        .reduce((sum, ws) => sum + parseFloat(ws), 0)
-                        .toFixed(2)
-                    : '-'}
-                </td>
-                <td>50%</td>
-              </tr>
+              <GradeDetail
+                title="Performance Task"
+                percentage={percentages.PT}  // 50% for Performance Tasks
+                data={performanceTasks}
+                onAddActivity={() => handleAddActivity('PT')}
+                onEditActivity={handleEditActivity}  // Pass edit functionality
+                onDeleteActivity={handleDeleteActivity}  // Pass delete functionality
+                onPercentageChange={(newPercentage) => setPercentages((prev) => ({ ...prev, PT: newPercentage }))}
+              />
 
               {/* Quarterly Assessment */}
-              <tr>
-                <td>Quarterly Assessment</td>
-                <td>
-                  {quarterlyAssessments.length > 0
-                    ? quarterlyAssessments
-                        .map(
-                          (assessment) =>
-                            ((assessment.scores / assessment.total_items) *
-                              100 *
-                              0.20).toFixed(2) // Weighted Score for QA
-                        )
-                        .reduce((sum, ws) => sum + parseFloat(ws), 0)
-                        .toFixed(2)
-                    : '-'}
-                </td>
-                <td>20%</td>
-              </tr>
+              <GradeDetail
+                title="Quarterly Assessment"
+                percentage={percentages.QA}  // 20% for Quarterly Assessments
+                data={quarterlyAssessments}
+                onAddActivity={() => handleAddActivity('QA')}
+                onEditActivity={handleEditActivity}  // Pass edit functionality
+                onDeleteActivity={handleDeleteActivity}  // Pass delete functionality
+                onPercentageChange={(newPercentage) => setPercentages((prev) => ({ ...prev, QA: newPercentage }))}
+              />
+            </div>
+            
+             {/* Display Grade Summary */}
+              <div className="grade-column">
+                <h4>Grades</h4>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Component</th>
+                      <th>WS</th>
+                      <th>Weight</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {/* Written Works */}
+                    <tr>
+                      <td>Written Works</td>
+                      <td>{calculateWeightedScore(writtenWorks, percentages.WW)}</td>
+                      <td>{percentages.WW}%</td>
+                    </tr>
 
-              {/* Final Weighted Grade */}
-              <tr>
-                <td>Grade</td>
-                <td>
-                  {[
-                    writtenWorks
-                      .map(
-                        (work) =>
-                          ((work.scores / work.total_items) * 100 * 0.30).toFixed(2)
-                      )
-                      .reduce((sum, ws) => sum + parseFloat(ws), 0) || 0,
-                    performanceTasks
-                      .map(
-                        (task) =>
-                          ((task.scores / task.total_items) * 100 * 0.50).toFixed(2)
-                      )
-                      .reduce((sum, ws) => sum + parseFloat(ws), 0) || 0,
-                    quarterlyAssessments
-                      .map(
-                        (assessment) =>
-                          ((assessment.scores / assessment.total_items) *
-                            100 *
-                            0.20).toFixed(2)
-                      )
-                      .reduce((sum, ws) => sum + parseFloat(ws), 0) || 0,
-                  ]
-                    .reduce((total, value) => total + value, 0)
-                    .toFixed(2)}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-          
-        </div>
-        
-                  
+                    {/* Performance Task */}
+                    <tr>
+                      <td>Performance Task</td>
+                      <td>{calculateWeightedScore(performanceTasks, percentages.PT)}</td>
+                      <td>{percentages.PT}%</td>
+                    </tr>
+
+                    {/* Quarterly Assessment */}
+                    <tr>
+                      <td>Quarterly Assessment</td>
+                      <td>{calculateWeightedScore(quarterlyAssessments, percentages.QA)}</td>
+                      <td>{percentages.QA}%</td>
+                    </tr>
+
+                    {/* Final Weighted Grade */}
+                    <tr>
+                      <td>Grade</td>
+                      <td>{calculateFinalGrade()}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              <button className="submit-grades-btn" onClick={handleSubmitGrades}>
+                Submit Grades
+              </button>
             </div>
           </div>
 
-          {/* Add Activity Modal */}
-          {showAddActivityModal && (
-          <div className="modal-overlay" onClick={handleCloseModal}>
-            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-              <div className="modal-header">
-                <h3>
-                  Add{' '}
-                  {activityType === 'WW'
-                    ? 'Written Work'
-                    : activityType === 'PT'
-                    ? 'Performance Task'
-                    : 'Quarterly Assessment'}
-                </h3>
-                <button className="close-btn" onClick={handleCloseModal}>
-                  &times;
-                </button>
+           {/* Add Activity Modal */}
+      {showAddActivityModal && selectedItem && (
+        <div className="modal-overlay" onClick={handleCloseModal}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>
+                Edit {selectedItem.type === 'WW' ? 'Written Work' : selectedItem.type === 'PT' ? 'Performance Task' : 'Quarterly Assessment'}
+              </h3>
+              <button className="close-btn" onClick={handleCloseModal}>
+                &times;
+              </button>
+            </div>
+            <form onSubmit={handleUpdateActivity}>
+              <div className="form-group">
+                <label>Name:</label>
+                <input
+                  type="text"
+                  name="remarks"
+                  defaultValue={selectedItem?.remarks || ''}  // Dynamically pre-fill with selected item's value
+                  required
+                />
               </div>
-              <form
-                onSubmit={async (e) => {
-                  e.preventDefault();
-
-                  // Determine component_id based on activityType
-                  const componentId =
-                    activityType === 'WW' ? 1 : activityType === 'PT' ? 2 : 3;
-
-                  const formData = {
-                    component_id: componentId, // Dynamic component ID
-                    scores: e.target.scores.value, // Access the "Score" input value
-                    total_items: e.target.total_items.value, // Access the "Total Items" input value
-                    remarks: e.target.remarks.value, // Access the "Name" input value as remarks
-                    student_id: selectedStudent?.student_id, // Dynamic student ID
-                    subject_name: selectedSubject?.subject_name, // Dynamic subject name
-                    grading: selectedGradingPeriod, // Access the selected grading period
-                  };
-
-                  try {
-                    const response = await axios.post(
-                      'http://localhost:3001/insert-component',
-                      formData,
-                      {
-                        headers: { 'Content-Type': 'application/json' },
-                      }
-                    );
-
-                    if (response.data.success) {
-                      alert('Activity added successfully!');
-                      handleCloseModal(); // Close modal after success
-                    } else {
-                      alert(`Error: ${response.data.message}`);
-                    }
-                  } catch (error) {
-                    console.error('Error during submission:', error);
-                    alert('Failed to add activity. Please try again.');
-                  }
-                }}
-              >
-                <div className="form-group">
-                  <label>Name:</label>
-                  <input type="text" name="remarks" required />
-                </div>
-                <div className="form-group">
-                  <label>Score:</label>
-                  <input type="number" name="scores" min="0" required />
-                </div>
-                <div className="form-group">
-                  <label>Total Items:</label>
-                  <input type="number" name="total_items" min="1" required />
-                </div>
-                <div className="modal-buttons">
-                  <button type="button" onClick={handleCloseModal}>
-                    Cancel
-                  </button>
-                  <button type="submit">Save</button>
-                </div>
-              </form>
-            </div>
+              <div className="form-group">
+                <label>Score:</label>
+                <input
+                  type="number"
+                  name="scores"
+                  defaultValue={selectedItem?.scores || ''}  // Dynamically pre-fill with selected item's value
+                  min="0"
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Total Items:</label>
+                <input
+                  type="number"
+                  name="total_items"
+                  defaultValue={selectedItem?.total_items || ''}  // Dynamically pre-fill with selected item's value
+                  min="1"
+                  required
+                />
+              </div>
+              <div className="modal-buttons">
+                <button type="button" onClick={handleCloseModal}>Cancel</button>
+                <button type="submit">Save</button>
+              </div>
+            </form>
           </div>
-        )}
-
         </div>
       )}
+        </div>
+      )}
+
     </div>
   );
 };

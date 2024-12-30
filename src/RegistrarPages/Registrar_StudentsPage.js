@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import SearchFilter from '../RoleSearchFilters/SearchFilter';
+import Pagination from '../Utilities/pagination';
 import axios from 'axios';
 import '../RegistrarPagesCss/Registrar_StudentsPage.css';
 
@@ -8,6 +9,8 @@ function Registrar_StudentsPage() {
   const [students, setStudents] = useState([]);
   const [filteredStudents, setFilteredStudents] = useState([]);
   const [selectedStudentId, setSelectedStudentId] = useState(null);
+  const [studentsPerPage] = useState(5); // Adjust this number to set how many students per page
+  const [currentPage, setCurrentPage] = useState(1);
   const [filters, setFilters] = useState({
     searchTerm: '',
     school_year: '',
@@ -45,7 +48,8 @@ function Registrar_StudentsPage() {
     emergency_number: '',
     status: 'active',
     archive_status: 'unarchive', // Default value
-    section_id: ''
+    section_id: '',
+    brigada_eskwela: ''
   });
 
 
@@ -135,6 +139,7 @@ function Registrar_StudentsPage() {
 
     setFilteredStudents(filtered);
     console.log('Filtered students:', filtered);
+    setCurrentPage(1); // Reset to the first page when filters are applied
   };
 
   const handleApplyFilters = () => {
@@ -173,7 +178,8 @@ function Registrar_StudentsPage() {
       status: 'active',
       active_status: 'unarchive', // Default value
       section_id: '',
-      user_id: ''
+      user_id: '',
+      brigada_eskwela:'',
     });
     setShowModal(true);
   };
@@ -262,7 +268,8 @@ const cancelAdding = () => {
     status: 'active',
     active_status: 'unarchive',
     section_id: '',
-    user_id: ''  
+    user_id: '',
+    brigada_eskwela:'',
   });
   setShowModal(false);  // Close the modal
 };
@@ -413,6 +420,50 @@ const handleArchive = () => {
     setSelectedStudentId(selectedStudentId === studentId ? null : studentId);
   };
 
+  const paginate = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
+
+  const indexOfLastStudent = currentPage * studentsPerPage;
+  const indexOfFirstStudent = indexOfLastStudent - studentsPerPage;
+  const currentStudents = filteredStudents.slice(indexOfFirstStudent, indexOfLastStudent);
+
+  const totalPages = Math.ceil(filteredStudents.length / studentsPerPage);
+  const [roleName, setRoleName] = useState('');
+
+  useEffect(() => {
+    const userId = localStorage.getItem('userId'); // Retrieve userId from localStorage
+    if (userId) {
+      console.log(`Retrieved userId from localStorage: ${userId}`); // Debugging log
+      fetchUserRole(userId);
+    } else {
+      console.error('No userId found in localStorage');
+    }
+  }, []);
+
+  const fetchUserRole = async (userId) => {
+    try {
+      console.log(`Fetching role for user ID: ${userId}`); // Debugging log
+      const response = await axios.get(`http://localhost:3001/user-role/${userId}`);
+      if (response.status === 200) {
+        console.log('Response received:', response.data); // Debugging log
+        setRoleName(response.data.role_name);
+        console.log('Role name set to:', response.data.role_name); // Debugging log
+      } else {
+        console.error('Failed to fetch role name. Response status:', response.status);
+      }
+    } catch (error) {
+      if (error.response) {
+        console.error('Error response from server:', error.response.data);
+      } else if (error.request) {
+        console.error('No response received from server. Request:', error.request);
+      } else {
+        console.error('Error setting up request:', error.message);
+      }
+    }
+  };
+
+
   return (
     <div className="students-container">
       <h1 className="students-title">Students</h1>
@@ -424,159 +475,199 @@ const handleArchive = () => {
         />
       </div>
       <div className="students-add-student-button-container">
+      {(roleName === 'registrar' || roleName === 'principal') && (
         <button className="students-add-student-button" onClick={startAdding}>Add New Student</button>
+      )}
       </div>
       <div className="students-list">
-        {filteredStudents.map((student, index) => (
-          <div key={student.student_id} className="students-student-item-container">
-            <div className="students-student-item">
-              <p className="students-student-name">
-                {index + 1}. {student.firstname} {student.middlename && `${student.middlename[0]}.`} {student.lastname}
-              </p>
-              <span className="students-student-info">Grade {student.current_yr_lvl} - {student.active_status}</span>
-              <button 
-                className="students-view-button" 
-                onClick={() => toggleStudentDetails(student.student_id)}
-              >
-                View
-              </button>
-              {student.active_status === null && (
-                <button 
-                  className="students-enroll-button" 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    enrollStudent(student.student_id);
-                  }}
-                >
-                  Register
-                </button> 
-              )}
-              {student.active_status === 'pending' && (
-                <button 
-                  className="students-validate-button" 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    validateStudent(student.student_id);
-                  }}
-                >
-                  Validate
-                </button> 
-              )}
-              {student.enrollment_status === 'pending' && (
-                <button 
-                  className="students-approve-button" 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    approveElective(student.student_elective_id);
-                  }}
-                >
-                  Approve
-                </button>
-              )}
-            </div>
-            {selectedStudentId === student.student_id && (
-              <div className="students-student-details">
-                <table>
-                  <tbody>
-                    <tr>
-                      <th>Last Name:</th>
-                      <td>{student.lastname}</td>
-                    </tr>
-                    <tr>
-                      <th>First Name:</th>
-                      <td>{student.firstname}</td>
-                    </tr>
-                    <tr>
-                      <th>Middle Name:</th>
-                      <td>{student.middlename}</td>
-                    </tr>
-                    <tr>
-                      <th>Grade Level:</th>
-                      <td>{student.current_yr_lvl}</td>
-                    </tr>
-                    <tr>
-                      <th>Birthdate:</th>
-                      <td>{formatDate(student.birthdate)}</td>
-                    </tr>
-                    <tr>
-                      <th>Gender:</th>
-                      <td>{student.gender}</td>
-                    </tr>
-                    <tr>
-                      <th>Age:</th>
-                      <td>{student.age}</td>
-                    </tr>
-                    <tr>
-                      <th>Contact Number:</th>
-                      <td>{student.contact_number}</td>
-                    </tr>
-                    <tr>
-                      <th>Email:</th>
-                      <td>{student.email_address}</td>
-                    </tr>
-                    <tr>
-                      <th>Mother's Name:</th>
-                      <td>{student.mother_name}</td>
-                    </tr>
-                    <tr>
-                      <th>Father's Name:</th>
-                      <td>{student.father_name}</td>
-                    </tr>
-                    <tr>
-                      <th>Parent Address:</th>
-                      <td>{student.parent_address}</td>
-                    </tr>
-                    <tr>
-                      <th>Father's Occupation:</th>
-                      <td>{student.father_occupation}</td>
-                    </tr>
-                    <tr>
-                      <th>Mother's Occupation:</th>
-                      <td>{student.mother_occupation}</td>
-                    </tr>
-                    <tr>
-                      <th>Annual Household Income:</th>
-                      <td>{student.annual_hshld_income}</td>
-                    </tr>
-                    <tr>
-                      <th>Number of Siblings:</th>
-                      <td>{student.number_of_siblings}</td>
-                    </tr>
-                    <tr>
-                      <th>Father's Education Level:</th>
-                      <td>{student.father_educ_lvl}</td>
-                    </tr>
-                    <tr>
-                      <th>Mother's Education Level:</th>
-                      <td>{student.mother_educ_lvl}</td>
-                    </tr>
-                    <tr>
-                      <th>Father's Contact Number:</th>
-                      <td>{student.father_contact_number}</td>
-                    </tr>
-                    <tr>
-                      <th>Mother's Contact Number:</th>
-                      <td>{student.mother_contact_number}</td>
-                    </tr>
-                    <tr>
-                      <th>Emergency Contact Number:</th>
-                      <td>{student.emergency_number}</td>
-                    </tr>
-                  </tbody>
-                </table>
-                <div className="action-buttons">
+      <table className="attendance-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Name</th>
+            <th>Grade</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {currentStudents.map((student, index) => (
+            <React.Fragment key={student.student_id}>
+              <tr>
+                <td>{index + 1}</td>
+                <td>{student.firstname} {student.middlename && `${student.middlename[0]}.`} {student.lastname}</td>
+                <td>Grade {student.current_yr_lvl}</td>
+                <td>{student.active_status}</td>
+                <td>
                   <button 
-                    className="archive-button"
-                    onClick={() => openArchiveModal(student.student_id)}
+                    className="students-view-button"
+                    onClick={() => toggleStudentDetails(student.student_id)}
                   >
-                    Archive Student
+                    View
                   </button>
-                </div>
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
+                  {(roleName === 'registrar' || roleName === 'principal') && (
+                    <>
+                  {student.active_status === null && (
+                    <button 
+                      className="students-enroll-button" 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        enrollStudent(student.student_id);
+                      }}
+                    >
+                      Register
+                    </button> 
+                  )}
+                  {student.active_status === 'pending' && (
+                    <button 
+                      className="students-validate-button" 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        validateStudent(student.student_id);
+                      }}
+                    >
+                      Validate
+                    </button> 
+                  )}
+                  {student.enrollment_status === 'pending' && (
+                    <button 
+                      className="students-approve-button" 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        approveElective(student.student_elective_id);
+                      }}
+                    >
+                      Approve
+                    </button>
+                  )}
+                  </>
+                  )}
+                </td>
+              </tr>
+
+              {selectedStudentId === student.student_id && (
+                <tr className="student-details-row">
+                  <td colSpan="5">
+                    <div className="student-details-container">
+                      <table className="student-details-table">
+                        <tbody>
+                          <tr>
+                            <th>Last Name:</th>
+                            <td>{student.lastname}</td>
+                          </tr>
+                          <tr>
+                            <th>First Name:</th>
+                            <td>{student.firstname}</td>
+                          </tr>
+                          <tr>
+                            <th>Middle Name:</th>
+                            <td>{student.middlename || 'N/A'}</td>
+                          </tr>
+                          <tr>
+                            <th>Grade Level:</th>
+                            <td>{student.current_yr_lvl}</td>
+                          </tr>
+                          <tr>
+                            <th>Birthdate:</th>
+                            <td>{formatDate(student.birthdate)}</td>
+                          </tr>
+                          <tr>
+                            <th>Gender:</th>
+                            <td>{student.gender}</td>
+                          </tr>
+                          <tr>
+                            <th>Age:</th>
+                            <td>{student.age}</td>
+                          </tr>
+                          <tr>
+                            <th>Contact Number:</th>
+                            <td>{student.contact_number}</td>
+                          </tr>
+                          <tr>
+                            <th>Email:</th>
+                            <td>{student.email_address}</td>
+                          </tr>
+                          <tr>
+                            <th>Mother's Name:</th>
+                            <td>{student.mother_name}</td>
+                          </tr>
+                          <tr>
+                            <th>Father's Name:</th>
+                            <td>{student.father_name}</td>
+                          </tr>
+                          <tr>
+                            <th>Parent Address:</th>
+                            <td>{student.parent_address}</td>
+                          </tr>
+                          <tr>
+                            <th>Father's Occupation:</th>
+                            <td>{student.father_occupation}</td>
+                          </tr>
+                          <tr>
+                            <th>Mother's Occupation:</th>
+                            <td>{student.mother_occupation}</td>
+                          </tr>
+                          <tr>
+                            <th>Annual Household Income:</th>
+                            <td>{student.annual_hshld_income}</td>
+                          </tr>
+                          <tr>
+                            <th>Number of Siblings:</th>
+                            <td>{student.number_of_siblings}</td>
+                          </tr>
+                          <tr>
+                            <th>Father's Education Level:</th>
+                            <td>{student.father_educ_lvl}</td>
+                          </tr>
+                          <tr>
+                            <th>Mother's Education Level:</th>
+                            <td>{student.mother_educ_lvl}</td>
+                          </tr>
+                          <tr>
+                            <th>Father's Contact Number:</th>
+                            <td>{student.father_contact_number}</td>
+                          </tr>
+                          <tr>
+                            <th>Mother's Contact Number:</th>
+                            <td>{student.mother_contact_number}</td>
+                          </tr>
+                          <tr>
+                            <th>Emergency Contact Number:</th>
+                            <td>{student.emergency_number}</td>
+                          </tr>
+                          <tr>
+                            <th>Brigada Eskwela:</th>
+                            <td>{student.brigada_eskwela}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                      <div className="action-buttons">
+                      {(roleName === 'registrar' || roleName === 'principal') && (
+                        <button 
+                          className="archive-button"
+                          onClick={() => openArchiveModal(student.student_id)}
+                        >
+                          Archive Student
+                        </button>
+                      )}
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              )}
+            </React.Fragment>
+          ))}
+        </tbody>
+      </table>
+      {/* Pagination Controls */}
+      <Pagination
+        totalItems={filteredStudents.length}
+        itemsPerPage={studentsPerPage}
+        currentPage={currentPage}
+        onPageChange={paginate}
+      />
+    </div>
+
       {showArchiveModal && (
         <div className="archive-modal">
           <div className="archive-modal-content">
@@ -604,271 +695,255 @@ const handleArchive = () => {
         </div>
       )}
       {showModal && (
-  <div className="section-modal">
-    <div className="section-modal-content">
-      <h2>Add New Student</h2>
-      <label>
-        Lastname:
-        <input
-          type="text"
-          name="lastname"
-          value={newStudentData.lastname}
-          onChange={handleAddChange}
-          required
-        />
-      </label>
-      <label>
-        Middlename:
-        <input
-          type="text"
-          name="middlename"
-          value={newStudentData.middlename}
-          onChange={handleAddChange}
-        />
-      </label>
-      <label>
-        Firstname:
-        <input
-          type="text"
-          name="firstname"
-          value={newStudentData.firstname}
-          onChange={handleAddChange}
-          required
-        />
-      </label>
-      <label>
-        Year Level:
-        <select
-          name="current_yr_lvl"
-          value={newStudentData.current_yr_lvl}
-          onChange={handleAddChange}
-          required
-        >
-          <option value="">Select Year Level</option>
-          <option value="7">7</option>
-          <option value="8">8</option>
-          <option value="9">9</option>
-          <option value="10">10</option>
-        </select>
-      </label>
-      <label>
-        Birthdate:
-        <input
-          type="date"
-          name="birthdate"
-          value={newStudentData.birthdate}
-          onChange={handleAddChange}
-          required
-        />
-      </label>
-      <label>
-        Gender:
-        <select
-          name="gender"
-          value={newStudentData.gender}
-          onChange={handleAddChange}
-          required
-        >
-          <option value="">Select Gender</option>
-          <option value="Male">Male</option>
-          <option value="Female">Female</option>
-        </select>
-      </label>
-      <label>
-        Age:
-        <input
-          type="number"
-          name="age"
-          value={newStudentData.age}
-          onChange={handleAddChange}
-          required
-        />
-      </label>
-      <label>
-        Home Address:
-        <input
-          type="text"
-          name="home_address"
-          value={newStudentData.home_address}
-          onChange={handleAddChange}
-          required
-        />
-      </label>
-      <label>
-        Barangay:
-        <input
-          type="text"
-          name="barangay"
-          value={newStudentData.barangay}
-          onChange={handleAddChange}
-          required
-        />
-      </label>
-      <label>
-        City Municipality:
-        <input
-          type="text"
-          name="city_municipality"
-          value={newStudentData.city_municipality}
-          onChange={handleAddChange}
-          required
-        />
-      </label>
-      <label>
-        Province:
-        <input
-          type="text"
-          name="province"
-          value={newStudentData.province}
-          onChange={handleAddChange}
-          required
-        />
-      </label>
-      <label>
-        Contact Number:
-        <input
-          type="number"
-          name="contact_number"
-          value={newStudentData.contact_number}
-          onChange={handleAddChange}
-          required
-        />
-      </label>
-      <label>
-        Email Address:
-        <input
-          type="email"
-          name="email_address"
-          value={newStudentData.email_address}
-          onChange={handleAddChange}
-          required
-        />
-      </label>
-      <label>
-        Mother's Name:
-        <input
-          type="text"
-          name="mother_name"
-          value={newStudentData.mother_name}
-          onChange={handleAddChange}
-          required
-        />
-      </label>
-      <label>
-        Father's Name:
-        <input
-          type="text"
-          name="father_name"
-          value={newStudentData.father_name}
-          onChange={handleAddChange}
-          required
-        />
-      </label>
-      <label>
-        Parent Address:
-        <input
-          type="text"
-          name="parent_address"
-          value={newStudentData.parent_address}
-          onChange={handleAddChange}
-          required
-        />
-      </label>
+        <div className="section-modal">
+          <div className="section-modal-content">
+            <h2>Add New Student</h2>
+            <div className="form-grid">
+              <label>
+                Lastname:
+                <input
+                  type="text"
+                  name="lastname"
+                  value={newStudentData.lastname}
+                  onChange={handleAddChange}
+                  required
+                />
+              </label>
+              <label>
+                Middlename:
+                <input
+                  type="text"
+                  name="middlename"
+                  value={newStudentData.middlename}
+                  onChange={handleAddChange}
+                />
+              </label>
+              <label>
+                Firstname:
+                <input
+                  type="text"
+                  name="firstname"
+                  value={newStudentData.firstname}
+                  onChange={handleAddChange}
+                  required
+                />
+              </label>
+              <label>
+                Year Level:
+                <select
+                  name="current_yr_lvl"
+                  value={newStudentData.current_yr_lvl}
+                  onChange={handleAddChange}
+                  required
+                >
+                  <option value="">Select Year Level</option>
+                  <option value="7">7</option>
+                  <option value="8">8</option>
+                  <option value="9">9</option>
+                  <option value="10">10</option>
+                </select>
+              </label>
+              <label>
+                Birthdate:
+                <input
+                  type="date"
+                  name="birthdate"
+                  value={newStudentData.birthdate}
+                  onChange={handleAddChange}
+                  required
+                />
+              </label>
+              <label>
+                Gender:
+                <select
+                  name="gender"
+                  value={newStudentData.gender}
+                  onChange={handleAddChange}
+                  required
+                >
+                  <option value="">Select Gender</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                </select>
+              </label>
+              <label>
+                Age:
+                <input
+                  type="number"
+                  name="age"
+                  value={newStudentData.age}
+                  onChange={handleAddChange}
+                  required
+                />
+              </label>
+              <label>
+                Home Address:
+                <input
+                  type="text"
+                  name="home_address"
+                  value={newStudentData.home_address}
+                  onChange={handleAddChange}
+                  required
+                />
+              </label>
+              <label>
+                Barangay:
+                <input
+                  type="text"
+                  name="barangay"
+                  value={newStudentData.barangay}
+                  onChange={handleAddChange}
+                  required
+                />
+              </label>
+              <label>
+                City Municipality:
+                <input
+                  type="text"
+                  name="city_municipality"
+                  value={newStudentData.city_municipality}
+                  onChange={handleAddChange}
+                  required
+                />
+              </label>
+              <label>
+                Province:
+                <input
+                  type="text"
+                  name="province"
+                  value={newStudentData.province}
+                  onChange={handleAddChange}
+                  required
+                />
+              </label>
+              <label>
+                Contact Number:
+                <input
+                  type="number"
+                  name="contact_number"
+                  value={newStudentData.contact_number}
+                  onChange={handleAddChange}
+                  required
+                />
+              </label>
+              <label>
+                Email Address:
+                <input
+                  type="email"
+                  name="email_address"
+                  value={newStudentData.email_address}
+                  onChange={handleAddChange}
+                  required
+                />
+              </label>
+            </div>
+            {/* Optional fields without required attribute */}
+            <label>
+              Father's Occupation:
+              <input
+                type="text"
+                name="father_occupation"
+                value={newStudentData.father_occupation}
+                onChange={handleAddChange}
+              />
+            </label>
+            <label>
+              Mother's Occupation:
+              <input
+                type="text"
+                name="mother_occupation"
+                value={newStudentData.mother_occupation}
+                onChange={handleAddChange}
+              />
+            </label>
+            <label>
+              Annual Household Income:
+              <input
+                type="number"
+                name="annual_hshld_income"
+                value={newStudentData.annual_hshld_income}
+                onChange={handleAddChange}
+              />
+            </label>
+            <label>
+              Number of Siblings:
+              <input
+                type="number"
+                name="number_of_siblings"
+                value={newStudentData.number_of_siblings}
+                onChange={handleAddChange}
+              />
+            </label>
+            <label>
+              Father's Education Level:
+              <input
+                type="text"
+                name="father_educ_lvl"
+                value={newStudentData.father_educ_lvl}
+                onChange={handleAddChange}
+              />
+            </label>
+            <label>
+              Mother's Education Level:
+              <input
+                type="text"
+                name="mother_educ_lvl"
+                value={newStudentData.mother_educ_lvl}
+                onChange={handleAddChange}
+              />
+            </label>
+            <label>
+              Father's Contact Number:
+              <input
+                type="number"
+                name="father_contact_number"
+                value={newStudentData.father_contact_number}
+                onChange={handleAddChange}
+                required
+              />
+            </label>
+            <label>
+              Mother's Contact Number:
+              <input
+                type="number"
+                name="mother_contact_number"
+                value={newStudentData.mother_contact_number}
+                onChange={handleAddChange}
+                required
+              />
+            </label>
+            <label>
+              Emergency Contact Number:
+              <input
+                type="number"
+                name="emergency_number"
+                value={newStudentData.emergency_number}
+                onChange={handleAddChange}
+                required
+              />
+            </label>
+            <label>
+              Brigada Eskwela:
+              <select
+                name="brigada_eskwela"
+                value={newStudentData.brigada_eskwela}
+                onChange={handleAddChange}
+                required
+              >
+                <option value="">Select Option</option>
+                <option value="1">Yes</option>
+                <option value="0">No</option>
+              </select>
+            </label>
+            {/* Section Button Group */}
+            <div className="section-button-group">
+              <button className="section-save-button" onClick={saveNewSection}>Save</button>
+              <button className="section-cancel-button" onClick={cancelAdding}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
 
-      {/* Optional fields without required attribute */}
-      <label>
-        Father's Occupation:
-        <input
-          type="text"
-          name="father_occupation"
-          value={newStudentData.father_occupation}
-          onChange={handleAddChange}
-        />
-      </label>
-      <label>
-        Mother's Occupation:
-        <input
-          type="text"
-          name="mother_occupation"
-          value={newStudentData.mother_occupation}
-          onChange={handleAddChange}
-        />
-      </label>
-      <label>
-        Annual Household Income:
-        <input
-          type="number"
-          name="annual_hshld_income"
-          value={newStudentData.annual_hshld_income}
-          onChange={handleAddChange}
-        />
-      </label>
-      <label>
-        Number of Siblings:
-        <input
-          type="number"
-          name="number_of_siblings"
-          value={newStudentData.number_of_siblings}
-          onChange={handleAddChange}
-        />
-      </label>
-      <label>
-        Father's Education Level:
-        <input
-          type="text"
-          name="father_educ_lvl"
-          value={newStudentData.father_educ_lvl}
-          onChange={handleAddChange}
-        />
-      </label>
-      <label>
-        Mother's Education Level:
-        <input
-          type="text"
-          name="mother_educ_lvl"
-          value={newStudentData.mother_educ_lvl}
-          onChange={handleAddChange}
-        />
-      </label>
-      <label>
-        Father's Contact Number:
-        <input
-          type="number"
-          name="father_contact_number"
-          value={newStudentData.father_contact_number}
-          onChange={handleAddChange}
-          required
-        />
-      </label>
-      <label>
-        Mother's Contact Number:
-        <input
-          type="number"
-          name="mother_contact_number"
-          value={newStudentData.mother_contact_number}
-          onChange={handleAddChange}
-          required
-        />
-      </label>
-      <label>
-        Emergency Contact Number:
-        <input
-          type="number"
-          name="emergency_number"
-          value={newStudentData.emergency_number}
-          onChange={handleAddChange}
-          required
-        />
-      </label>
-
-      {/* Section Button Group */}
-      <div className="section-button-group">
-        <button className="section-save-button" onClick={saveNewSection}>Save</button>
-        <button className="section-cancel-button" onClick={cancelAdding}>Cancel</button>
-      </div>
-    </div>
-  </div>
-)}  
 
     </div>
   );

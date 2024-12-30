@@ -63,10 +63,10 @@ function RegistrarSideBar({ showSidebar, toggleSidebar, handleLogout }) {
       <button onClick={() => handleNavigate('/home')}>
         <FiHome className="icon" /> Home
       </button>
-      <button onClick={() => handleNavigate('/registrar-student')}>
+      <button onClick={() => handleNavigate('/student')}>
         <FiUsers className="icon" /> Students
       </button>
-      <button onClick={() => handleNavigate('/registrar-teacher')}>
+      <button onClick={() => handleNavigate('/employees')}>
         <FiUsers className="icon" /> Teacher
       </button>
       <div className={`menu-with-submenu ${showRecordsSubMenu ? 'active' : ''}`}>
@@ -75,13 +75,13 @@ function RegistrarSideBar({ showSidebar, toggleSidebar, handleLogout }) {
         </button>
         {showRecordsSubMenu && (
           <div className="submenu">
-            <button onClick={() => handleNavigate('/registrar-grades')}>
+            <button onClick={() => handleNavigate('/grades')}>
               <FiFileText className="icon" /> Grades
             </button>
             <button onClick={() => handleNavigate('/attendance')}>
               <FiCheckSquare className="icon" /> Attendance
             </button>
-            <button onClick={() => handleNavigate('/registrar-brigada-eskwela')}>
+            <button onClick={() => handleNavigate('/brigada-eskwela')}>
               <FiCheckSquare className="icon" /> Brigada Eskwela
             </button>
           </div>
@@ -114,14 +114,8 @@ function RegistrarSideBar({ showSidebar, toggleSidebar, handleLogout }) {
         </button>
         {showReportsSubMenu && (
           <div className="submenu">
-            <button onClick={() => handleNavigate('/list-of-student-enrollees')}>
-              <FiUsers className="icon" /> List of Student Enrollees
-            </button>
             <button onClick={() => handleNavigate('/summary-report-promotion')}>
               <FiFileText className="icon" /> Summary Report
-            </button>
-            <button onClick={() => handleNavigate('/early-enrollment-report')}>
-              <FiFileText className="icon" /> Early Enrollment Report
             </button>
           </div>
         )}

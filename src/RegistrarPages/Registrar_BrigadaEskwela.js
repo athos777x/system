@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import SearchFilter from '../RoleSearchFilters/SearchFilter';
+import Pagination from '../Utilities/pagination';
 import '../RegistrarPagesCss/Registrar_BrigadaEskwela.css';
 
 const BrigadaEskwela = () => {
   const [students, setStudents] = useState([]);
   const [filteredStudents, setFilteredStudents] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [studentsPerPage] = useState(10); // Adjust this number to set how many students per page
+  const [studentsPerPage] = useState(5); // Adjust this number to set how many students per page
   const [filters, setFilters] = useState({
     searchTerm: '',
     grade: '',
@@ -81,6 +82,10 @@ const BrigadaEskwela = () => {
     fetchStudents(filters);
   };
 
+  const paginate = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
+
   // Pagination Logic
   const indexOfLastStudent = currentPage * studentsPerPage;
   const indexOfFirstStudent = indexOfLastStudent - studentsPerPage;
@@ -139,23 +144,12 @@ const BrigadaEskwela = () => {
         </tbody>
       </table>
       {/* Pagination Controls */}
-      <div className="pagination">
-        <button onClick={goToPreviousPage} disabled={currentPage === 1}>
-          Previous
-        </button>
-        {[...Array(totalPages).keys()].map((number) => (
-          <button
-            key={number}
-            onClick={() => goToPage(number + 1)}
-            className={currentPage === number + 1 ? 'active' : ''}
-          >
-            {number + 1}
-          </button>
-        ))}
-        <button onClick={goToNextPage} disabled={currentPage === totalPages}>
-          Next
-        </button>
-      </div>
+      <Pagination
+        totalItems={filteredStudents.length}
+        itemsPerPage={studentsPerPage}
+        currentPage={currentPage}
+        onPageChange={paginate}
+      />
     </div>
   );
 };

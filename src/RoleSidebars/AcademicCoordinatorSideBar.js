@@ -53,9 +53,9 @@ function AcademicCoordinatorSideBar({ showSidebar, toggleSidebar, handleLogout }
               </button>
             </div>
           )}
-        <button onClick={() => handleNavigate('/account')}>
+        {/* <button onClick={() => handleNavigate('/account')}>
         <FiSettings className="icon" /> Account
-        </button>
+        </button> */}
         </div>
         <LogoutButton onClick={handleLogout}>
           <FiLogOut className="icon" /> Logout

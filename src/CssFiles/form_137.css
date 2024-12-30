@@ -1,0 +1,46 @@
+.form-137-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    background: #f9f9f9;
+  }
+  
+  .form-137 {
+    border: 2px solid #000;
+    padding: 20px;
+    max-width: 900px;
+    background: #fff;
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+  }
+  
+  .form-header {
+    text-align: center;
+  }
+  
+  .school-logo img {
+    max-height: 100px;
+  }
+  
+  .info-table, .records-table, .values-table, .attendance-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+  }
+  
+  .info-table td, .records-table th, .records-table td, .values-table th, .values-table td, .attendance-table th, .attendance-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: center;
+  }
+  
+  /* .values-table th, .records-table th, .attendance-table th {
+    background-color: #f2f2f2;
+  } */
+  
+  .form-footer {
+    text-align: right;
+    margin-top: 20px;
+  }
+  

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import SearchFilter from '../RoleSearchFilters/SearchFilter';
+import Pagination from '../Utilities/pagination';
 import axios from 'axios';
 import '../RegistrarPagesCss/Registrar_StudentsPage.css';
 
@@ -8,6 +9,8 @@ function Registrar_TeacherPage() {
   const [teachers, setTeachers] = useState([]);
   const [filteredTeachers, setFilteredTeachers] = useState([]);
   const [selectedTeacherId, setSelectedTeacherId] = useState(null);
+  const [studentsPerPage] = useState(5); // Adjust this number to set how many students per page
+  const [currentPage, setCurrentPage] = useState(1);
   const [filters, setFilters] = useState({
     searchTerm: '',
     status: ''
@@ -98,6 +101,7 @@ function Registrar_TeacherPage() {
       );
     }
     setFilteredTeachers(filtered);
+    setCurrentPage(1); // Reset to the first page when filters are applied
   };
 
   const handleApplyFilters = () => {
@@ -390,9 +394,52 @@ function Registrar_TeacherPage() {
     }
   };
 
+  const paginate = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
+
+  const indexOfLastStudent = currentPage * studentsPerPage;
+  const indexOfFirstStudent = indexOfLastStudent - studentsPerPage;
+  const CurrentTeachers = filteredTeachers.slice(indexOfFirstStudent, indexOfLastStudent);
+
+  const totalPages = Math.ceil(filteredTeachers.length / studentsPerPage);
+  const [roleName, setRoleName] = useState('');
+
+  useEffect(() => {
+    const userId = localStorage.getItem('userId'); // Retrieve userId from localStorage
+    if (userId) {
+      console.log(`Retrieved userId from localStorage: ${userId}`); // Debugging log
+      fetchUserRole(userId);
+    } else {
+      console.error('No userId found in localStorage');
+    }
+  }, []);
+
+  const fetchUserRole = async (userId) => {
+    try {
+      console.log(`Fetching role for user ID: ${userId}`); // Debugging log
+      const response = await axios.get(`http://localhost:3001/user-role/${userId}`);
+      if (response.status === 200) {
+        console.log('Response received:', response.data); // Debugging log
+        setRoleName(response.data.role_name);
+        console.log('Role name set to:', response.data.role_name); // Debugging log
+      } else {
+        console.error('Failed to fetch role name. Response status:', response.status);
+      }
+    } catch (error) {
+      if (error.response) {
+        console.error('Error response from server:', error.response.data);
+      } else if (error.request) {
+        console.error('No response received from server. Request:', error.request);
+      } else {
+        console.error('Error setting up request:', error.message);
+      }
+    }
+  };
+
   return (
     <div className="students-container">
-      <h1 className="students-title">Teachers</h1>
+      <h1 className="students-title">Employees</h1>
       <div className="students-search-filter-container">
         <SearchFilter
           handleSearch={handleSearch}
@@ -400,142 +447,170 @@ function Registrar_TeacherPage() {
         />
       </div>
       <div className="students-add-student-button-container">
+        {(roleName === 'registrar' || roleName === 'principal') && (
         <button className="students-add-student-button" onClick={startAdding}>Add New Teacher</button>
+        )}
       </div>
-      <div className="students-list">
-        {filteredTeachers.map((teacher, index) => (
-          <div key={teacher.employee_id} className="students-student-item-container">
-            <div className="students-student-item">
-              <p className="students-student-name">
-                {index + 1}. {teacher.firstname} {teacher.middlename && `${teacher.middlename[0]}.`} {teacher.lastname}
-              </p>
-              <span className="students-student-info">{teacher.status}</span>
-              <button 
-                className="students-view-button"
-                onClick={() => handleViewDetails(teacher.employee_id, teacher.role_id)}
-              >
-                View
-              </button>
-            </div>
-            {selectedTeacherId === teacher.employee_id && (
-              <div className="students-student-details">
-                <table>
-                  <tbody>
-                    <tr>
-                      <th>Last Name:</th>
-                      <td>{teacher.lastname}</td>
-                    </tr>
-                    <tr>
-                      <th>First Name:</th>
-                      <td>{teacher.firstname}</td>
-                    </tr>
-                    <tr>
-                      <th>Middle Name:</th>
-                      <td>{teacher.middlename}</td>
-                    </tr>
-                    <tr>
-                      <th>Contact Number:</th>
-                      <td>{teacher.contact_number}</td>
-                    </tr>
-                    <tr>
-                      <th>Address:</th>
-                      <td>{teacher.address}</td>
-                    </tr>
-                    <tr>
-                      <th>Year Started:</th>
-                      <td>{teacher.year_started}</td>
-                    </tr>
-                    <tr>
-                      <th>Role:</th>
-                      <td>{teacher.role_name}</td>
-                    </tr>
-                    <tr>
-                      <th>Status:</th>
-                      <td>{teacher.status}</td>
-                    </tr>
-                  </tbody>
-                </table>
-
-                {teacher.role_id === 3 && (
-                  <div className="assigned-subjects">
-                    <h3>Assigned Subjects</h3>
-                    {teacherSubjects.length > 0 ? (
-                      <table className="subjects-table">
-                        <thead>
-                          <tr>
-                            <th>Grade Level</th>
-                            <th>Subject Name</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {teacherSubjects.map((subject, index) => (
-                            <tr key={index}>
-                              <td>Grade {subject.grade_level}</td>
-                              <td>{subject.subject_name}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    ) : (
-                      <p>No subjects assigned yet</p>
-                    )}
-                  </div>
-                )}
-
-                {teacher.role_id === 4 && (
-                  <div className="assigned-section">
-                    <h3>Assigned Section</h3>
-                    {teacherSection ? (
-                      <table className="section-table">
-                        <thead>
-                          <tr>
-                            <th>Grade Level</th>
-                            <th>Section Name</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          <tr>
-                            <td>Grade {teacherSection.grade_level}</td>
-                            <td>{teacherSection.section_name}</td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    ) : (
-                      <p>No section assigned yet</p>
-                    )}
-                  </div>
-                )}
-
-                <div className="action-buttons">
-                  {teacher.role_id === 3 && (
-                    <button 
-                      className="assign-button"
-                      onClick={() => handleAssignSubject(teacher.employee_id)}
-                    >
-                      Assign Subject
-                    </button>
-                  )}
-                  {teacher.role_id === 4 && (
-                    <button 
-                      className="assign-button"
-                      onClick={() => handleAssignSection(teacher.employee_id)}
-                    >
-                      Assign Section
-                    </button>
-                  )}
+      <div className="teachers-list">
+      <table className="attendance-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Name</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {CurrentTeachers.map((teacher, index) => (
+            <React.Fragment key={teacher.employee_id}>
+              <tr>
+                <td>{index + 1}</td>
+                <td>{teacher.firstname} {teacher.middlename && `${teacher.middlename[0]}.`} {teacher.lastname}</td>
+                <td>{teacher.status}</td>
+                <td>
                   <button 
-                    className="delete-button"
-                    onClick={() => openArchiveModal(teacher.employee_id)}
-                    disabled={teacher.status !== 'active'}
+                    className="students-view-button"
+                    onClick={() => handleViewDetails(teacher.employee_id, teacher.role_id)}
                   >
-                    Archive Employee
+                    View
                   </button>
-                </div>
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
+                </td>
+              </tr>
+
+              {selectedTeacherId === teacher.employee_id && (
+                <tr className="teacher-details-row">
+                  <td colSpan="4">
+                    <div className="teacher-details-container">
+                      <table className="teacher-details-table">
+                        <tbody>
+                          <tr>
+                            <th>Last Name:</th>
+                            <td>{teacher.lastname}</td>
+                          </tr>
+                          <tr>
+                            <th>First Name:</th>
+                            <td>{teacher.firstname}</td>
+                          </tr>
+                          <tr>
+                            <th>Middle Name:</th>
+                            <td>{teacher.middlename || 'N/A'}</td>
+                          </tr>
+                          <tr>
+                            <th>Contact Number:</th>
+                            <td>{teacher.contact_number}</td>
+                          </tr>
+                          <tr>
+                            <th>Address:</th>
+                            <td>{teacher.address}</td>
+                          </tr>
+                          <tr>
+                            <th>Year Started:</th>
+                            <td>{teacher.year_started}</td>
+                          </tr>
+                          <tr>
+                            <th>Role:</th>
+                            <td>{teacher.role_name}</td>
+                          </tr>
+                          <tr>
+                            <th>Status:</th>
+                            <td>{teacher.status}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+
+                      {teacher.role_id === 3 && (
+                        <div className="assigned-subjects">
+                          <h3>Assigned Subjects</h3>
+                          {teacherSubjects.length > 0 ? (
+                            <table className="subjects-table">
+                              <thead>
+                                <tr>
+                                  <th>Grade Level</th>
+                                  <th>Subject Name</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {teacherSubjects.map((subject, index) => (
+                                  <tr key={index}>
+                                    <td>Grade {subject.grade_level}</td>
+                                    <td>{subject.subject_name}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          ) : (
+                            <p>No subjects assigned yet</p>
+                          )}
+                        </div>
+                      )}
+
+                      {teacher.role_id === 4 && (
+                        <div className="assigned-section">
+                          <h3>Assigned Section</h3>
+                          {teacherSection ? (
+                            <table className="section-table">
+                              <thead>
+                                <tr>
+                                  <th>Grade Level</th>
+                                  <th>Section Name</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                <tr>
+                                  <td>Grade {teacherSection.grade_level}</td>
+                                  <td>{teacherSection.section_name}</td>
+                                </tr>
+                              </tbody>
+                            </table>
+                          ) : (
+                            <p>No section assigned yet</p>
+                          )}
+                        </div>
+                      )}
+
+                      <div className="action-buttons">
+                        {teacher.role_id === 3 && (
+                          <button 
+                            className="assign-button"
+                            onClick={() => handleAssignSubject(teacher.employee_id)}
+                          >
+                            Assign Subject
+                          </button>
+                        )}
+                        {teacher.role_id === 4 && (
+                          <button 
+                            className="assign-button"
+                            onClick={() => handleAssignSection(teacher.employee_id)}
+                          >
+                            Assign Section
+                          </button>
+                        )}
+                        <button 
+                          className="delete-button"
+                          onClick={() => openArchiveModal(teacher.employee_id)}
+                          disabled={teacher.status !== 'active'}
+                        >
+                          Archive Employee
+                        </button>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              )}
+            </React.Fragment>
+          ))}
+        </tbody>
+      </table>
+      {/* Pagination Controls */}
+      <Pagination
+        totalItems={filteredTeachers.length}
+        itemsPerPage={studentsPerPage}
+        currentPage={currentPage}
+        onPageChange={paginate}
+      />
+    </div>
+
       {showArchiveModal && (
         <div className="archive-modal">
           <div className="archive-modal-content">
