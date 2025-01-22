@@ -7,19 +7,58 @@ const GradesDetail = ({
   onAddActivity, 
   onPercentageChange, 
   onEditActivity, 
-  onDeleteActivity 
+  onDeleteActivity,
+  readOnly,
+  otherPercentages,
+  isLocked
 }) => {
+  // Helper function to ensure grades don't exceed 100
+  const calculatePercentageScore = (score, total) => {
+    const rawPercentage = (score / total) * 100;
+    return Math.min(rawPercentage, 100).toFixed(2);
+  };
+
+  // Helper function to calculate weighted score
+  const calculateWeightedScore = (ps, weight) => {
+    const weightedScore = (parseFloat(ps) * (weight / 100));
+    return Math.min(weightedScore, weight).toFixed(2);
+  };
+
+  // Calculate maximum allowed percentage for this component
+  const calculateMaxPercentage = () => {
+    const totalOtherPercentages = Object.values(otherPercentages)
+      .reduce((sum, value) => sum + value, 0) - percentage;
+    return 100 - totalOtherPercentages;
+  };
+
+  // Generate available percentage options
+  const generatePercentageOptions = () => {
+    const maxPercentage = calculateMaxPercentage();
+    const options = [];
+    for (let i = 5; i <= maxPercentage; i += 5) {
+      options.push(i);
+    }
+    return options;
+  };
+
   return (
     <div className="grade-column">
       <h4>
         {title} ({percentage}%)
       </h4>
-      {/* Dropdown to change percentage dynamically */}
       <select 
         value={percentage} 
-        onChange={(e) => onPercentageChange(parseFloat(e.target.value))}
+        onChange={(e) => {
+          const newValue = parseFloat(e.target.value);
+          const maxAllowed = calculateMaxPercentage() + percentage;
+          if (newValue <= maxAllowed) {
+            onPercentageChange(newValue);
+          } else {
+            alert(`Total percentage cannot exceed 100%. Maximum allowed for ${title} is ${maxAllowed}%`);
+          }
+        }}
       >
-        {[10, 20, 30, 40, 50].map((option) => (
+        {generatePercentageOptions().map((option) => (
           <option key={option} value={option}>
             {option}%
           </option>
@@ -34,13 +73,13 @@ const GradesDetail = ({
             <th>Total</th>
             <th>PS</th>
             <th>WS</th>
-            <th>Actions</th> {/* Add Actions Column */}
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
           {data.map((item, index) => {
-            const ps = ((item.scores / item.total_items) * 100).toFixed(2); // Percentage Score
-            const ws = (ps * (percentage / 100)).toFixed(2); // Weighted Score
+            const ps = calculatePercentageScore(item.scores, item.total_items);
+            const ws = calculateWeightedScore(ps, percentage);
             return (
               <tr key={index}>
                 <td>{item.remarks}</td>
@@ -48,20 +87,23 @@ const GradesDetail = ({
                 <td>{item.total_items}</td>
                 <td>{ps}</td>
                 <td>{ws}</td>
-                <td>
-                  {/* Edit and Delete buttons */}
-                  <button onClick={() => onEditActivity(item, index)}>Edit</button>
-                  <button onClick={() => onDeleteActivity(index)}>Delete</button>
-                </td>
+                {!isLocked && (
+                  <td>
+                    <button onClick={() => onEditActivity(item, index, title)}>Edit</button>
+                    <button onClick={() => onDeleteActivity(item, index, title)}>Delete</button>
+                  </td>
+                )}
               </tr>
             );
           })}
         </tbody>
       </table>
     
-      <button className="add-activity-btn" onClick={onAddActivity}>
-        + Add {title}
-      </button>
+      {!isLocked && (
+        <button className="add-activity-btn" onClick={onAddActivity}>
+          + Add {title}
+        </button>
+      )}
     </div>
   );
 };
