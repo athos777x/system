@@ -790,6 +790,144 @@ app.get('/unregistered-students', (req, res) => {
   });
 });
 
+// New endpoint to get all student names for auto-suggest
+// Endpoint to get student names for auto-suggest
+app.get('/students/names', (req, res) => {
+  const { searchTerm, gradeLevel, sectionName } = req.query;
+
+  // Base query with JOIN between student and section tables
+  let query = `
+    SELECT CONCAT(a.lastname, ', ', a.firstname, ' ', IFNULL(a.middlename, '')) AS stud_name
+    FROM student a
+    LEFT JOIN section b ON a.section_id = b.section_id
+    WHERE a.current_yr_lvl = ? AND b.section_name = ?
+  `;
+
+  // Initialize query parameters array
+  const queryParams = [gradeLevel, sectionName];
+
+  // Add search term filter if provided
+  if (searchTerm) {
+    query += ' AND (a.firstname LIKE ? OR a.lastname LIKE ?)';
+    queryParams.push(`%${searchTerm}%`, `%${searchTerm}%`);
+  }
+
+  // Execute the query
+  db.query(query, queryParams, (err, results) => {
+    if (err) {
+      console.error('Error fetching student names:', err);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+    res.json(results);
+  });
+});
+
+
+app.get('/sections-report', async (req, res) => {
+  const gradeLevel = req.query.gradeLevel;
+
+  // Check if gradeLevel is provided
+  if (!gradeLevel) {
+    return res.status(400).json({ error: 'Grade level is required' });
+  }
+
+  try {
+    console.log(`Fetching sections for grade level: ${gradeLevel}`); // Log the incoming gradeLevel
+
+    // Execute the query
+    db.query('SELECT * FROM section WHERE grade_level = ?', [gradeLevel], (err, results) => {
+      if (err) {
+        console.error('Error fetching sections:', err);
+        return res.status(500).json({ error: 'Internal server error' });
+      }
+
+      // Check if results is an array
+      if (!Array.isArray(results)) {
+        console.error('Unexpected result format:', results);
+        return res.status(500).json({ error: 'Unexpected result format' });
+      }
+
+      // Now it's safe to iterate over results
+      results.forEach(section => {
+        // Process each section
+      });
+
+      res.json(results); // Send the results back to the client
+    });
+  } catch (error) {
+    console.error('Error fetching sections:', error);
+    res.status(500).json({ error: 'Failed to fetch sections' });
+  }
+});
+
+app.get(`/api/student/details`, (req, res) => {
+  const { firstName, lastName } = req.query;
+
+  const query = `
+    SELECT 
+      a.student_id, 
+      CONCAT(a.firstname, ' ', IFNULL(a.middlename, ''), ' ', a.lastname) AS stud_name, 
+      a.age, 
+      a.gender, 
+      CONCAT('Grade',' ', a.current_yr_lvl, ' - ', b.section_name) AS grade_section, 
+      d.school_year  
+    FROM student a
+    LEFT JOIN section b ON a.section_id = b.section_id
+    LEFT JOIN student_school_year c ON a.student_id = c.student_id
+    LEFT JOIN school_year d ON c.school_year_id = d.school_year_id
+    WHERE (a.firstname LIKE ? OR a.lastname LIKE ?)
+  `;
+
+  db.query(query, [`%${firstName}%`, `%${lastName}%`], (err, results) => {
+    if (err) {
+      console.error("Error querying the database:", err);
+      return res.status(500).send("Database query error");
+    }
+    res.json(results);
+  });
+});
+
+app.get('/api/subjects-card', (req, res) => {
+  const { studentId } = req.query;
+
+  // Validate that studentId is provided
+  if (!studentId) {
+    return res.status(400).json({ error: 'Student ID is required' });
+  }
+
+  const query = `
+    SELECT DISTINCT 
+      a.subject_name
+    FROM subject a 
+    INNER JOIN student b ON a.grade_level = b.current_yr_lvl 
+    WHERE b.student_id = ?
+      AND a.status = 'active'
+
+    UNION 
+
+    SELECT 
+      e.name AS subject_name
+    FROM elective e 
+    INNER JOIN student_elective se ON se.elective_id = e.elective_id 
+    WHERE se.student_id = ?
+      AND se.enrollment_status = 'approved'
+    ORDER BY subject_name
+  `;
+
+  // Use the studentId to query the database
+  db.query(query, [studentId, studentId], (err, results) => {
+    if (err) {
+      console.error('Error querying the database:', err);
+      return res.status(500).send('Database query error');
+    }
+
+    // Return the fetched subjects
+    res.json(results);
+  });
+});
+
+
+
 
 // Endpoint to fetch sections for select section filter
 // Function: Retrieves sections for filtering in various pages
@@ -2093,20 +2231,20 @@ app.get('/subjects-for-assignment/:gradeLevel', (req, res) => {
 
 // ENDPOINT FOR GRADES PAGE
 app.get('/get-components', (req, res) => {
-  const { student_id, subject_name, component_id, grading } = req.query; // Include grading in the query parameters
+  const { student_id, subject_name, component_id, grading, period } = req.query;
 
   const query = `
-    SELECT remarks, scores, total_items
+    SELECT id, remarks, scores, total_items, component_id
     FROM components
     WHERE student_id = ? 
     AND subject_name = ? 
     AND component_id = ? 
-    AND grading = ?
+    AND period = ?
   `;
 
   db.query(
-    query, // First argument is the query string
-    [student_id, subject_name, component_id, grading], // Second argument is the parameter array
+    query,
+    [student_id, subject_name, component_id, grading, period], // Added period to match all placeholders
     (error, results) => {
       if (error) {
         console.error('Error fetching components:', error);
@@ -2121,6 +2259,39 @@ app.get('/get-components', (req, res) => {
     }
   );
 });
+
+//ENDPOINT USED:
+//GRADES PAGES
+app.delete('/delete-component', (req, res) => {
+  const { id, component_id } = req.body;  // Get id and component_id from request body
+  console.log('Received delete request with id:', id, 'and component_id:', component_id); // Log received data
+  const query = 'DELETE FROM components WHERE id = ? AND component_id = ?';
+
+  db.query(query, [id, component_id], (error, results) => {
+    if (error) {
+      console.error('Error deleting component:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Error deleting component',
+        error: error.message,
+      });
+    }
+
+    // If the deletion was successful, send a response
+    if (results.affectedRows > 0) {
+      res.json({
+        success: true,
+        message: 'Component deleted successfully',
+      });
+    } else {
+      res.json({
+        success: false,
+        message: 'Component not found or deletion failed',
+      });
+    }
+  });
+});
+
 
 
 //ENDPOINT USED:
@@ -2226,37 +2397,101 @@ app.post('/submit-grade', (req, res) => {
     student_id,
     student_name,
     school_year_id,
+    written_works, // Add written works score
+    performance_task, // Add performance task score
+    quarterly_assessment // Add quarterly assessment score
   } = req.body;
 
   const query = `
-    INSERT INTO grades 
-    (grade_level, subject_name, grade, period, student_id, student_name, school_year_id) 
+    INSERT INTO grades (
+      grade_level,
+      subject_name,
+      grade,
+      period,
+      student_id,
+      student_name,
+      school_year_id
+    ) 
     VALUES (?, ?, ?, ?, ?, ?, ?)
     ON DUPLICATE KEY UPDATE
-    grade_level = VALUES(grade_level),
-    subject_name = VALUES(subject_name),
-    grade = VALUES(grade),
-    student_name = VALUES(student_name),
+      grade = VALUES(grade),
+      grade_level = VALUES(grade_level),
+      subject_name = VALUES(subject_name),
+      student_name = VALUES(student_name),
+      school_year_id = VALUES(school_year_id)
   `;
 
-  db.query(
-    query,
-    [grade_level, subject_name, grade, period, student_id, student_name, school_year_id],
-    (err, result) => {
-      if (err) {
-        console.error('Error inserting/updating grade:', err);
-        return res.status(500).json({
-          success: false,
-          message: 'Failed to submit grade.',
-        });
-      }
-      res.json({
-        success: true,
-        message: 'Grade submitted successfully!',
+  db.query(query, [grade_level, subject_name, grade, period, student_id, student_name, school_year_id], (err, result) => {
+    if (err) {
+      console.error('Error inserting/updating grade:', err);
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to submit grade.',
+        error: err.message
       });
     }
-  );
+
+    // Fetch the grades_id after insertion
+    const fetchQuery = `
+      SELECT grades_id FROM grades 
+      WHERE student_id = ? AND subject_name = ? AND period = ? 
+      ORDER BY grades_id DESC LIMIT 1;
+    `;
+
+    db.query(fetchQuery, [student_id, subject_name, period], (fetchErr, fetchResult) => {
+      if (fetchErr) {
+        console.error('Error fetching grades_id:', fetchErr);
+        return res.status(500).json({
+          success: false,
+          message: 'Failed to fetch grades_id.',
+          error: fetchErr.message
+        });
+      }
+
+      if (fetchResult.length === 0) {
+        return res.status(404).json({ success: false, message: 'No grades found for the specified criteria.' });
+      }
+
+      const gradesId = fetchResult[0].grades_id; // Get the fetched grades_id
+
+      // Now insert into grades_detail using the gradesId
+      const detailQuery = `
+        INSERT INTO grades_detail (
+          grades_id,
+          written_works,
+          performance_task,
+          quarterly_assessment,
+          student_id
+        ) 
+        VALUES (?, ?, ?, ?, ?)  
+        ON DUPLICATE KEY UPDATE
+          grades_id = VALUES(grades_id),
+          written_works = VALUES(written_works),
+          performance_task = VALUES(performance_task),
+          quarterly_assessment = VALUES(quarterly_assessment),
+          student_id = VALUES(student_id)
+      `;
+
+      db.query(detailQuery, [gradesId, written_works, performance_task, quarterly_assessment, student_id], (detailErr) => {
+        if (detailErr) {
+          console.error('Error inserting into grades_detail:', detailErr);
+          return res.status(500).json({
+            success: false,
+            message: 'Failed to insert grade details.',
+            error: detailErr.message
+          });
+        }
+
+        res.json({
+          success: true,
+          message: result.insertId ? 'Grade submitted successfully!' : 'Grade updated successfully!',
+          id: gradesId
+        });
+      });
+    });
+  });
 });
+
 
 
 
@@ -2303,53 +2538,69 @@ app.get('/student-section/:userId', (req, res) => {
 });
 
 app.post('/insert-component', (req, res) => {
+  console.log('Request body:', req.body); // Log the entire request body
+
   const { 
+    id, 
     component_id,
     scores,
     total_items,
     remarks,
     student_id,
     subject_name,
-    grading // Grading period is now included
+    period 
   } = req.body;
+
+  console.log('Received period:', period); // Log specifically the period value
 
   const query = `
     INSERT INTO components (
+      id,
       component_id,
       scores,
       total_items,
       remarks,
       student_id,
       subject_name,
-      grading
-    ) VALUES (?, ?, ?, ?, ?, ?, ?)
+      period
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    ON DUPLICATE KEY UPDATE
+      component_id = VALUES(component_id),
+      scores = VALUES(scores),
+      total_items = VALUES(total_items),
+      remarks = VALUES(remarks),
+      student_id = VALUES(student_id),
+      subject_name = VALUES(subject_name),
+      period = VALUES(period)
   `;
 
   db.query(query, [
+    id, 
     component_id, 
     scores, 
     total_items, 
     remarks,
     student_id,
     subject_name,
-    grading // Include the grading period in the query values
+    period
   ], (error, result) => {
     if (error) {
-      console.error('Error inserting component:', error);
+      console.error('Error inserting/updating component:', error);
       return res.status(500).json({ 
         success: false, 
-        message: 'Error inserting component',
+        message: 'Error inserting/updating component',
         error: error.message 
       });
     }
 
     res.json({ 
       success: true, 
-      message: 'Component inserted successfully',
+      message: 'Component inserted/updated successfully',
       data: result 
     });
   });
 });
+
 
 
 
@@ -2501,6 +2752,13 @@ app.get('/get-students', async (req, res) => {
 // ENDPOINT USED:
 // LATE ENROLLEE REPORT
 app.get('/late-enrollees', (req, res) => {
+  const { section, grade_lvl } = req.query;
+
+  if (!section || !grade_lvl) {
+    res.status(400).json({ error: 'Section and grade level are required.' });
+    return;
+  }
+
   const query = `
     SELECT * FROM (
       SELECT 
@@ -2514,16 +2772,118 @@ app.get('/late-enrollees', (req, res) => {
       FROM student a  
       LEFT JOIN student_school_year b ON a.student_id = b.student_id 
       LEFT JOIN school_year c ON b.school_year_id = c.school_year_id
-      LEFT JOIN section d on a.section_id=d.section_id 
+      LEFT JOIN section d ON a.section_id = d.section_id 
     ) AS subquery 
-    WHERE enrollment_status = 'Late' AND section!='';
+    WHERE enrollment_status = 'Late' AND section = ? AND grade_lvl = ?;
   `;
 
-  db.query(query, (err, results) => {
+  db.query(query, [section, grade_lvl], (err, results) => {
     if (err) {
       console.error('Error fetching late enrollees:', err);
       res.status(500).json({ error: 'Failed to fetch late enrollees' });
       return;
+    }
+    res.json(results);
+  });
+});
+
+
+// Add this new endpoint
+app.get('/student-grades', (req, res) => {
+  const { grade_level, subject_name, student_id } = req.query;
+
+  const query = `
+    SELECT grade, period 
+    FROM grades 
+    WHERE grade_level = ? 
+    AND subject_name = ? 
+    AND student_id = ?
+    ORDER BY period ASC`;
+
+  db.query(query, [grade_level, subject_name, student_id], (err, results) => {
+    if (err) {
+      console.error('Error fetching student grades:', err);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+    res.json(results);
+  });
+});
+
+// Add this new endpoint to check if grades exist
+app.get('/check-grade', (req, res) => {
+  const { student_id, subject_name, period } = req.query;
+
+  const query = `
+    SELECT grades_id, grade 
+    FROM grades 
+    WHERE student_id = ? 
+    AND subject_name = ? 
+    AND period = ?
+  `;
+
+  db.query(query, [student_id, subject_name, period], (error, results) => {
+    if (error) {
+      console.error('Error checking grades:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Error checking grades',
+        error: error.message
+      });
+    }
+
+    res.json({
+      exists: results.length > 0,
+      gradeData: results[0] || null
+    });
+  });
+});
+
+// New endpoint to fetch all grades detail for a specific student
+app.get('/grades-detail', (req, res) => {
+  const studentId = req.query.student_id; // Get student_id from query parameters
+
+  console.log(`Received request for grades detail with student ID: ${studentId}`); // Log the received student ID
+
+  if (!studentId) {
+    console.error('Student ID is missing in the request'); // Log if student_id is missing
+    return res.status(400).json({ error: 'Student ID is required' }); // Handle missing student_id
+  }
+
+  const query = `
+    SELECT * FROM grades_detail WHERE student_id = ?
+  `;
+
+  db.query(query, [studentId], (err, results) => {
+    if (err) {
+      console.error('Error fetching grades detail:', err);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+
+    console.log('Fetched grades detail for student ID:', studentId);
+    console.log('Grades Detail:', results); // Log the results to see what is returned
+
+    res.json(results);
+  });
+});
+
+// New endpoint to get all student names for auto-suggest
+app.get('/students/names', (req, res) => {
+  const { searchTerm } = req.query; // Get searchTerm from query parameters
+  let query = `
+    SELECT CONCAT(lastname, ', ', firstname, ' ', IFNULL(middlename, '')) AS stud_name 
+    FROM student
+  `;
+
+  const queryParams = [];
+  if (searchTerm) {
+    query += ' WHERE firstname LIKE ? OR lastname LIKE ?';
+    queryParams.push(`%${searchTerm}%`, `%${searchTerm}%`);
+  }
+
+  db.query(query, queryParams, (err, results) => {
+    if (err) {
+      console.error('Error fetching student names:', err);
+      return res.status(500).json({ error: 'Internal server error' });
     }
     res.json(results);
   });

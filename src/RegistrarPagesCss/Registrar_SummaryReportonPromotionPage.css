@@ -75,6 +75,7 @@
     margin-bottom: 10px;
     border: 1px solid #ddd;
     border-radius: 5px;
+    width: 96%;
   }
   
   .modal form button {
@@ -101,3 +102,36 @@
     cursor: pointer;
   }
   
+  /* Suggestions Dropdown */
+/* Suggestions Dropdown */
+.suggestions-list {
+  background: #ffffff;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  max-height: 150px; /* Limit the height */
+  overflow-y: auto;
+  z-index: 1000;
+  width: 100%; /* Match the input field's width */
+  padding: 0;
+  list-style: none;
+  margin: 5px 0 0; /* Align directly below the input field */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+}
+
+.suggestions-list li {
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 14px; /* Minimalistic font size */
+  color: #333; /* Neutral text color */
+  transition: background-color 0.2s;
+}
+
+.suggestions-list li:hover {
+  background-color: #f7f7f7; /* Subtle hover effect */
+}
+
+.suggestions-list li:active {
+  background-color: #eaeaea; /* Slightly darker active effect */
+}
+

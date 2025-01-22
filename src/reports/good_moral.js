@@ -1,74 +1,131 @@
-import React from "react";
-import "../CssFiles/good_moral.css"; // Add your custom styles here
-import { jsPDF } from "jspdf"; // Import jsPDF
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import "../CssFiles/good_moral.css";
+import { jsPDF } from "jspdf";
+import { useLocation } from "react-router-dom";
 
-function GoodMoral({ student }) {
+function GoodMoral() {
+  const { state } = useLocation();
+  const student = state?.student;
   const date = new Date().toLocaleDateString();
+  const [studentDetails, setStudentDetails] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Function to handle PDF conversion
-  const handleConvertToPdf = () => {
-    const doc = new jsPDF();
+  const fetchStudentDetails = async () => {
+    if (student) {
+      const [lastName, firstName] = student.name.replace(",", "").trim().split(/\s+/);
 
-    // Hide the "Convert to PDF" button during PDF generation
-    const button = document.querySelector(".convert-to-pdf");
-    if (button) {
-      button.style.display = "none"; // Hide the button
+      try {
+        const response = await axios.get(`http://localhost:3001/api/student/details`, {
+          params: { lastName, firstName },
+        });
+
+        if (response.data.length > 0) {
+          setStudentDetails(response.data[0]);
+        } else {
+          setStudentDetails(null);
+        }
+      } catch (error) {
+        console.error("Error fetching student details:", error);
+      } finally {
+        setLoading(false);
+      }
     }
+  };
 
-    // Generate the PDF from the content
+  const handleConvertToPdf = () => {
+    const doc = new jsPDF({
+      orientation: "portrait", // Set portrait orientation
+      unit: "mm",
+      format: "a4",
+    });
+
+    const button = document.querySelector(".convert-to-pdf");
+    if (button) button.style.display = "none";
+
     doc.html(document.querySelector(".good-moral-container"), {
       callback: function (doc) {
-        // Open the generated PDF in a new tab (not printing)
         window.open(doc.output("bloburl"), "_blank");
-
-        // Show the button again after PDF is generated
-        if (button) {
-          button.style.display = "block"; // Show the button again
-        }
+        if (button) button.style.display = "block";
       },
-      margin: [10, 10, 10, 10],
       x: 10,
       y: 10,
-      width: 180, // Ensure the content fits properly
-      windowWidth: 800, // Adjust the window width for rendering
+      width: 190, // Fit content into portrait layout
+      windowWidth: 900,
     });
   };
 
+  useEffect(() => {
+    if (student) {
+      fetchStudentDetails();
+    }
+  }, [student]);
+
+  // Function to handle back navigation
+  const handleBack = () => {
+    window.location.href = 'http://localhost:3000/summary-report-promotion'; // Navigate to the specified URL
+  };
+
   return (
-    <div className="good-moral-container">
-      <div className="certificate">
-        <h1 className="certificate-title">Certificate of Good Moral</h1>
-        <div className="certificate-body">
-          <p>
-            <strong>{`This is to certify that ${student?.name || "_____________"},`}</strong>
-            {` a student of `}
-            <strong>{`Grade ${student?.grade || "____"}`}</strong>
-            {` at ${student?.schoolName || "____________________________"},`}
-          </p>
-          <p>
-            has exhibited exemplary conduct, proper decorum, and good moral
-            character during the school year {student?.schoolYear || "__________"}.
-          </p>
-          <p>
-            This certificate is issued upon the request of the student for
-            official purposes.
-          </p>
-        </div>
-        <div className="certificate-footer">
-          <p>{`Given this ${date} at ${student?.schoolAddress || "______________________"}`}</p>
-          <p>
-            <strong>_______________________</strong>
+    <div>
+      <div className="good-moral-container">
+        <div className="certificate">
+          <div className="certificate-header">
+            <div className="logo-left">
+              <img src="/deped-logo.png" alt="DepEd Logo" className="login-logo" />
+            </div>
+            <div className="certificate-title">
+              <h1>Republic of the Philippines</h1>
+              <h1>DEPARTMENT OF EDUCATION</h1>
+              <h1>Region VII Central Visayas</h1>
+              <h1>DIVISION OF BOHOL</h1>
+              <h1>District of Dauis</h1>
+              <h1>LOURDES NATIONAL HIGH SCHOOL</h1>
+              <h1>Dauis - Panglao Rd, Dauis, Bohol</h1>
+              <h1>C E R T I F I C A T I O N</h1>
+            </div>
+            <div className="logo-right">
+              <img src="/lnhs-logo.png" alt="School Logo" className="login-logo" />
+            </div>
+          </div>
+
+          <div className="certificate-body">
+            <p>TO WHOM IT MAY CONCERN:</p>
+            <p>
+              This is to certify that <strong>{studentDetails?.stud_name || "_____________"}</strong>, a student of
+              <strong> {studentDetails?.grade_section || "__________"}</strong> at
+              <strong> {student?.schoolName || "Lourdes National High School"}</strong>, has exhibited exemplary
+              conduct, proper decorum, and good moral character during the school year
+              <strong> {studentDetails?.school_year || "__________"}.</strong>
+            </p>
+            <p>
+              The student has consistently demonstrated behavior aligned with the values and principles upheld by this
+              institution, both inside and outside the school premises. Such qualities exemplify the moral character that
+              is highly valued by the school and the community.
+            </p>
+            <p>
+              This certificate is issued upon the request of the student for whatever legal or official purposes it may serve.
+            </p>
+          </div>
+
+          <div className="certificate-footer">
+            <p>Given this {date} at {student?.schoolAddress || "______________________"}.</p>
             <br />
-            {student?.principalName || "Principal Name"}
-            <br />
-            Principal
-          </p>
+            <p>
+              <strong>__________________________</strong>
+              <br />
+              {student?.principalName || "Principal Name"}
+              <br />
+              Principal
+            </p>
+          </div>
         </div>
       </div>
 
-      {/* Convert to PDF Button */}
-      <div className="convert-to-pdf">
-        <button onClick={handleConvertToPdf}>Print</button>
+      {/* Button Container for Print and Back */}
+      <div className="button-container">
+        <button onClick={handleBack}>Back</button>
+        <button className="convert-to-pdf" onClick={handleConvertToPdf}>Print</button>
       </div>
     </div>
   );

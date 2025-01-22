@@ -1,46 +1,168 @@
+/* General Styles */
 .form-137-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 20px;
-    background: #f9f9f9;
-  }
-  
-  .form-137 {
-    border: 2px solid #000;
-    padding: 20px;
-    max-width: 900px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 20px;
+  background: #f9f9f9;
+}
+
+.form-137 {
+  border: 2px solid #000;
+  padding: 20px;
+  width: 210mm; /* Full width of A4 */
+  height: 297mm; /* Full height of A4 */
+  background: #fff;
+  font-family: Arial, sans-serif;
+  line-height: 1.6;
+  box-sizing: border-box;
+  margin: 0;
+  overflow: hidden;
+}
+
+/* Header Styles */
+.form-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.school-logo img {
+  max-height: 100px;
+}
+
+.school-details h2,
+.school-details h3,
+.school-details p {
+  margin: 0;
+}
+
+.school-details p {
+  font-size: 12px;
+}
+
+.info-table,
+.subjects-table,
+.values-table,
+.attendance-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 20px 0;
+}
+
+.info-table td,
+.subjects-table th,
+.subjects-table td,
+.values-table th,
+.values-table td,
+.attendance-table th,
+.attendance-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: center;
+  font-size: 12px;
+}
+
+th {
+  background-color: #f2f2f2;
+  font-weight: bold;
+}
+
+/* Button Styles */
+.button-container {
+  display: flex;
+  justify-content: space-between; /* Space between buttons */
+  margin-top: 20px; /* Space above buttons */
+  padding: 10px; /* Add padding for better spacing */
+}
+
+.button-container button {
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  padding: 10px 15px;
+  cursor: pointer;
+  font-size: 16px;
+  border-radius: 4px;
+}
+
+.button-container button:hover {
+  background-color: #0056b3;
+}
+
+.convert-to-pdf {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.convert-to-pdf button {
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  padding: 10px 15px;
+  cursor: pointer;
+  font-size: 16px;
+  border-radius: 4px;
+}
+
+.convert-to-pdf button:hover {
+  background-color: #0056b3;
+}
+
+/* Footer */
+.form-footer {
+  text-align: right;
+  margin-top: 20px;
+  font-size: 12px;
+  position: relative;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+
+/* Print-Specific Styles */
+@media print {
+  body {
+    margin: 0;
     background: #fff;
-    font-family: Arial, sans-serif;
-    line-height: 1.6;
   }
-  
-  .form-header {
-    text-align: center;
+
+  .form-137-container {
+    margin: 0;
+    padding: 0;
+    width: 210mm; /* Full width of A4 */
+    height: 297mm; /* Full height of A4 */
+    background: #fff;
   }
-  
-  .school-logo img {
-    max-height: 100px;
+
+  .form-137 {
+    border: none; /* Remove borders for cleaner print */
+    padding: 20mm; /* Set padding for 1-inch margins */
+    box-shadow: none;
+    overflow: hidden; /* Prevent content overflow */
+    margin: 0;
+    width: 170mm; /* Content width adjusted for A4 1-inch margin */
+    height: 257mm; /* Height adjusted for 1-inch margin */
   }
-  
-  .info-table, .records-table, .values-table, .attendance-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 20px 0;
+
+  th, td {
+    font-size: 10px; /* Smaller font for better fit */
+    padding: 4px;
   }
-  
-  .info-table td, .records-table th, .records-table td, .values-table th, .values-table td, .attendance-table th, .attendance-table td {
-    border: 1px solid #ddd;
-    padding: 8px;
-    text-align: center;
+
+  /* Hide the button container during printing */
+  .button-container {
+    display: none; /* Hide the print and back buttons */
   }
-  
-  /* .values-table th, .records-table th, .attendance-table th {
-    background-color: #f2f2f2;
-  } */
-  
+
+  .convert-to-pdf {
+    display: none; /* Hide the print button */
+  }
+
   .form-footer {
-    text-align: right;
-    margin-top: 20px;
+    position: relative;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    text-align: left;
   }
-  
+}
