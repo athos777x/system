@@ -129,14 +129,8 @@ function PrincipalSideBar({ showSidebar, toggleSidebar, handleLogout }) {
           </button>
           {showReportsSubMenu && (
             <div className="submenu">
-              <button onClick={() => handleNavigate('/list-of-student-enrollees')}>
-                <FiUsers className="icon" /> List of Student Enrollees
-              </button>
               <button onClick={() => handleNavigate('/summary-report-promotion')}>
-                <FiFileText className="icon" /> Summary Report
-              </button>
-              <button onClick={() => handleNavigate('/early-enrollment-report')}>
-                <FiFileText className="icon" /> Early Enrollment Report
+                <FiFileText className="icon" /> Report
               </button>
             </div>
           )}

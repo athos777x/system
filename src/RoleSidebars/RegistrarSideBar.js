@@ -115,7 +115,7 @@ function RegistrarSideBar({ showSidebar, toggleSidebar, handleLogout }) {
         {showReportsSubMenu && (
           <div className="submenu">
             <button onClick={() => handleNavigate('/summary-report-promotion')}>
-              <FiFileText className="icon" /> Summary Report
+              <FiFileText className="icon" /> Report
             </button>
           </div>
         )}
