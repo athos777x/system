@@ -932,10 +932,10 @@ app.get('/api/grades', (req, res) => {
 
   const query = `
     SELECT subject_name, 
-           MAX(CASE WHEN period = 1 THEN grade ELSE NULL END) AS q1,
-           MAX(CASE WHEN period = 2 THEN grade ELSE NULL END) AS q2,
-           MAX(CASE WHEN period = 3 THEN grade ELSE NULL END) AS q3,
-           MAX(CASE WHEN period = 4 THEN grade ELSE NULL END) AS q4
+           FORMAT(MAX(CASE WHEN period = 1 THEN grade ELSE NULL END),0) AS q1,
+           FORMAT(MAX(CASE WHEN period = 2 THEN grade ELSE NULL END),0) AS q2,
+           FORMAT(MAX(CASE WHEN period = 3 THEN grade ELSE NULL END),0) AS q3,
+           FORMAT(MAX(CASE WHEN period = 4 THEN grade ELSE NULL END),0) AS q4
     FROM grades
     WHERE student_id = ? AND grade_level = ?
     GROUP BY subject_name;
@@ -2935,6 +2935,43 @@ app.get('/students/names', (req, res) => {
   });
 });
 
+
+app.get('/user-id/convert/student-id', (req, res) => {
+  const { userId } = req.query;
+
+  // Validate the input
+  if (!userId) {
+    return res.status(400).json({ success: false, message: 'User ID is required.' });
+  }
+
+  try {
+    // SQL query to fetch student_id and grade_level (current_yr_lvl)
+    const query = 'SELECT student_id, current_yr_lvl as grade_level FROM student WHERE user_id = ?';
+
+    // Execute the query
+    db.query(query, [userId], (err, results) => {
+      if (err) {
+        console.error('Error executing query:', err);
+        return res.status(500).json({ success: false, message: 'Database error occurred.' });
+      }
+
+      // Check if any results were returned
+      if (results.length === 0) {
+        return res.status(404).json({ success: false, message: 'No student found for the given user ID.' });
+      }
+
+      // Respond with the student_id and grade_level
+      res.status(200).json({
+        success: true,
+        studentId: results[0].student_id,
+        gradeLevel: results[0].grade_level, // Send gradeLevel too
+      });
+    });
+  } catch (error) {
+    console.error('Unexpected error:', error);
+    res.status(500).json({ success: false, message: 'An unexpected error occurred.' });
+  }
+});
 
 
 
