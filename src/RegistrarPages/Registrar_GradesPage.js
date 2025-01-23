@@ -25,7 +25,7 @@ const Registrar_GradesPage = () => {
   const [studentGrades, setStudentGrades] = useState({});
   const [existingGrades, setExistingGrades] = useState({});
   const [isEditing, setIsEditing] = useState(false);
-
+  
   const [percentages, setPercentages] = useState({
     WW: 30,
     PT: 50,
@@ -378,27 +378,18 @@ const handleStudentNameClick = (student) => {
       return;
     }
   
-    const gradingPeriodMap = {
-      '1st Grading': 1,
-      '2nd Grading': 2,
-      '3rd Grading': 3,
-      '4th Grading': 4,
-    };
+    const periodValue = selectedGradingPeriod;
   
-    const periodValue = gradingPeriodMap[selectedGradingPeriod];
-  
-    if (!periodValue) {
+    if (![1, 2, 3, 4].includes(periodValue)) {
       alert('Invalid grading period selected');
       return;
     }
   
     const finalGrade = calculateFinalGrade();
-  
-    // Calculate weighted scores for each component
     const wwScore = calculateWeightedScore(writtenWorks, percentages.WW);
     const ptScore = calculateWeightedScore(performanceTasks, percentages.PT);
     const qaScore = calculateWeightedScore(quarterlyAssessments, percentages.QA);
-
+  
     const gradeData = {
       grade_level: selectedGrade,
       subject_name: selectedSubject.subject_name,
@@ -407,10 +398,12 @@ const handleStudentNameClick = (student) => {
       student_id: selectedStudent.student_id,
       student_name: selectedStudent.name,
       school_year_id: 1,
-      written_works: wwScore, // Add WS for Written Works
-      performance_task: ptScore, // Add WS for Performance Tasks
-      quarterly_assessment: qaScore, // Add WS for Quarterly Assessments
+      written_works: wwScore,
+      performance_task: ptScore,
+      quarterly_assessment: qaScore,
     };
+  
+    console.log('Submitting grade data:', gradeData);
   
     try {
       const response = await axios.post('http://localhost:3001/submit-grade', gradeData, {
@@ -420,7 +413,6 @@ const handleStudentNameClick = (student) => {
       if (response.data.success) {
         alert(isEditing ? 'Grades updated successfully!' : 'Grades submitted successfully!');
         setIsEditing(false);
-        // Refresh the existing grades check
         checkExistingGrade(
           selectedStudent.student_id,
           selectedSubject.subject_name,
@@ -434,6 +426,8 @@ const handleStudentNameClick = (student) => {
       alert('Failed to submit grades. Please try again.');
     }
   };
+  
+
   
   const handleEditMode = () => {
     setIsEditing(true);
@@ -497,15 +491,32 @@ const handleStudentNameClick = (student) => {
   const fetchGradesDetail = async (studentId) => {
     try {
       const response = await axios.get('http://localhost:3001/grades-detail', {
-        params: { student_id: studentId }
+        params: { student_id: studentId },
       });
+  
       console.log('Fetched grades detail:', response.data);
-      setGradesDetailData(response.data); // Store the fetched grades detail in state
+  
+      if (Array.isArray(response.data)) {
+        setGradesDetailData((prev) => ({
+          ...prev,
+          [studentId]: response.data,
+        }));
+      } else {
+        console.warn('Grades detail response is not an array.');
+        setGradesDetailData((prev) => ({
+          ...prev,
+          [studentId]: [],
+        }));
+      }
     } catch (error) {
       console.error('Error fetching grades detail:', error);
-      setGradesDetailData({}); // Reset to empty object on error
+      setGradesDetailData((prev) => ({
+        ...prev,
+        [studentId]: [],
+      }));
     }
   };
+  
 
   // Fetch grades detail when the component mounts
   useEffect(() => {
@@ -872,50 +883,73 @@ const handleStudentNameClick = (student) => {
                   <th>Written Works ({percentages.WW}%)</th>
                   <th>Performance Task ({percentages.PT}%)</th>
                   <th>Quarterly Assessment ({percentages.QA}%)</th>
-                  <th>Initial Grade</th>
-                  <th>Quarterly Grade</th>
-                  <th>Grades Detail</th>
+                  <th>Grade</th>
+                  <th>Status</th>
                 </tr>
               </thead>
               <tbody>
-                {students.map((student, index) => {
-                  const gradesDetail = gradesDetailData[student.student_id] || []; // Get grades detail for the student
+              {students.map((student, index) => {
+                const gradesDetail = gradesDetailData[student.student_id] || [];
+                const gradesDetailForPeriod = gradesDetail.filter(
+                  (detail) => detail.period === selectedGradingPeriod
+                );
 
-                  // Extract scores based on student_id
-                  const writtenWorksScore = gradesDetail.length > 0 ? gradesDetail[0].written_works : 0; // Use written_score
-                  const performanceTaskScore = gradesDetail.length > 0 ? gradesDetail[0].performance_task : 0; // Use performance_task
-                  const quarterlyAssessmentScore = gradesDetail.length > 0 ? gradesDetail[0].quarterly_assessment : 0; // Use quarterly_assessment
+                return (
+                  <tr key={index}>
+                    <td>{student.student_id}</td>
+                    <td onClick={() => handleStudentNameClick(student)} className="student-name-cell">
+                      {student.name}
+                    </td>
+                    {gradesDetailForPeriod.length > 0 ? (
+                      <>
+                        <td>{gradesDetailForPeriod[0].written_works || 0}</td>
+                        <td>{gradesDetailForPeriod[0].performance_task || 0}</td>
+                        <td>{gradesDetailForPeriod[0].quarterly_assessment || 0}</td>
+                        <td>
+                          {
+                            Math.round(
+                              (gradesDetailForPeriod[0].written_works || 0) +
+                              (gradesDetailForPeriod[0].performance_task || 0) +
+                              (gradesDetailForPeriod[0].quarterly_assessment || 0)
+                            )
+                          }
+                        </td>
+                        <td
+                          className={
+                            Math.round(
+                              (gradesDetailForPeriod[0].written_works || 0) +
+                              (gradesDetailForPeriod[0].performance_task || 0) +
+                              (gradesDetailForPeriod[0].quarterly_assessment || 0)
+                            ) >= 75
+                              ? 'passed'
+                              : 'failed'
+                          }
+                        >
+                          {
+                            Math.round(
+                              (gradesDetailForPeriod[0].written_works || 0) +
+                              (gradesDetailForPeriod[0].performance_task || 0) +
+                              (gradesDetailForPeriod[0].quarterly_assessment || 0)
+                            ) >= 75
+                              ? 'Passed'
+                              : 'Failed'
+                          }
+                        </td>
+                      </>
+                    ) : (
+                      <>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td></td>
+                      </>
+                    )}
+                  </tr>
+                ); 
+                
+              })}
 
-                  // Calculate initial and quarterly grades
-                  const initialGrade = (writtenWorksScore + performanceTaskScore + quarterlyAssessmentScore).toFixed(2);
-                  const quarterlyGrade = transmutedGrade(initialGrade);
-
-                  return (
-                    <tr key={index}>
-                      <td>{student.student_id}</td>
-                      <td 
-                        onClick={() => handleStudentNameClick(student)}
-                        className="student-name-cell"
-                      >
-                        {student.name}
-                      </td>
-                      <td>{writtenWorksScore.toFixed(2)}</td>
-                      <td>{performanceTaskScore.toFixed(2)}</td>
-                      <td>{quarterlyAssessmentScore.toFixed(2)}</td>
-                      <td>{initialGrade}</td>
-                      <td>{quarterlyGrade}</td>
-                      <td>
-                        {gradesDetail.map((detail, detailIndex) => (
-                          <div key={detailIndex}>
-                            <p>Score: {detail.scores}</p>
-                            <p>Remarks: {detail.remarks}</p>
-                            <p>Grading Period: {detail.period}</p>
-                          </div>
-                        ))}
-                      </td>
-                    </tr>
-                  );
-                })}
               </tbody>
             </table>
           </div>

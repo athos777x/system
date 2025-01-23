@@ -13,6 +13,8 @@ function Form137() {
   const [values, setValues] = useState([]);
   const [subjects, setSubjects] = useState([]); // State for subjects
   const [loading, setLoading] = useState(true);
+  const [grade, setGrade] = useState(student?.grade || "");  // Set the initial value of grade
+  const [gradesFetched, setGradesFetched] = useState(false); // State to track if grades have been fetched
 
   const date = new Date().toLocaleDateString();
 
@@ -39,7 +41,7 @@ function Form137() {
       }
     }
   };
-  
+
   // Fetch subjects based on the student ID
   const fetchSubjects = async () => {
     if (studentDetails?.student_id) {
@@ -58,8 +60,37 @@ function Form137() {
       }
     }
   };
-  
-  
+
+  // Fetch grades based on student details and grade, but only fetch once
+  const fetchGrades = async () => {
+    if (studentDetails?.student_id && grade && !gradesFetched) { // Check if grades have already been fetched
+      try {
+        const response = await axios.get('http://localhost:3001/api/grades', {
+          params: {
+            studentId: studentDetails.student_id,
+            gradeLevel: grade, // Pass grade here
+          },
+        });
+
+        console.log(response.data); // Log the response
+
+        if (response.data.success) {
+          const grades = response.data.grades;
+          const updatedSubjects = subjects.map(subject => {
+            const subjectGrades = grades.find(grade => grade.subject_name === subject.subject_name) || {};
+            return { ...subject, ...subjectGrades };
+          });
+
+          setSubjects(updatedSubjects); // Update subjects with grades
+          setGradesFetched(true); // Set gradesFetched to true to prevent further fetches
+        } else {
+          console.warn('No grades found for this student.');
+        }
+      } catch (error) {
+        console.error('Error fetching grades:', error);
+      }
+    }
+  };
 
   // Fetch academic records
   const fetchAcademicRecords = async () => {
@@ -103,23 +134,36 @@ function Form137() {
     }
   };
 
+  // Fetch student details once student data is available
   useEffect(() => {
     if (student) {
       fetchStudentDetails();
     }
   }, [student]);
-  
+
+  // Fetch subjects only once the student details are loaded
   useEffect(() => {
     if (studentDetails?.student_id) {
       fetchSubjects();
+    }
+  }, [studentDetails]);
+
+  // Fetch grades once both subjects and grade are available, and prevent multiple fetches
+  useEffect(() => {
+    if (subjects.length > 0 && grade && !gradesFetched) { // Prevent fetching if grades have already been fetched
+      fetchGrades();
+    }
+  }, [subjects, grade, gradesFetched]); // Added gradesFetched as a dependency
+
+  // Fetch academic records, attendance, and values after student details are available
+  useEffect(() => {
+    if (studentDetails?.student_id && grade) {
       fetchAcademicRecords();
       fetchAttendance();
       fetchValues();
     }
-  }, [studentDetails]);
-  
+  }, [studentDetails, grade]);
 
-  
   // Function to generate and open PDF in a new tab
   const handleConvertToPdf = () => {
     const doc = new jsPDF({

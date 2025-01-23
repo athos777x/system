@@ -926,6 +926,30 @@ app.get('/api/subjects-card', (req, res) => {
   });
 });
 
+// Backend: Fetch grades for all subjects and periods for a student
+app.get('/api/grades', (req, res) => {
+  const { studentId, gradeLevel } = req.query;
+
+  const query = `
+    SELECT subject_name, 
+           MAX(CASE WHEN period = 1 THEN grade ELSE NULL END) AS q1,
+           MAX(CASE WHEN period = 2 THEN grade ELSE NULL END) AS q2,
+           MAX(CASE WHEN period = 3 THEN grade ELSE NULL END) AS q3,
+           MAX(CASE WHEN period = 4 THEN grade ELSE NULL END) AS q4
+    FROM grades
+    WHERE student_id = ? AND grade_level = ?
+    GROUP BY subject_name;
+  `;
+
+  db.query(query, [studentId, gradeLevel], (err, results) => {
+    if (err) {
+      console.error('Error fetching grades:', err);
+      return res.status(500).json({ success: false, message: 'Failed to fetch grades.' });
+    }
+
+    res.json({ success: true, grades: results });
+  });
+});
 
 
 
@@ -2231,7 +2255,7 @@ app.get('/subjects-for-assignment/:gradeLevel', (req, res) => {
 
 // ENDPOINT FOR GRADES PAGE
 app.get('/get-components', (req, res) => {
-  const { student_id, subject_name, component_id, grading, period } = req.query;
+  const { student_id, subject_name, component_id, period } = req.query;
 
   const query = `
     SELECT id, remarks, scores, total_items, component_id
@@ -2244,7 +2268,7 @@ app.get('/get-components', (req, res) => {
 
   db.query(
     query,
-    [student_id, subject_name, component_id, grading, period], // Added period to match all placeholders
+    [student_id, subject_name, component_id, period], // Added period to match all placeholders
     (error, results) => {
       if (error) {
         console.error('Error fetching components:', error);
@@ -2397,9 +2421,9 @@ app.post('/submit-grade', (req, res) => {
     student_id,
     student_name,
     school_year_id,
-    written_works, // Add written works score
-    performance_task, // Add performance task score
-    quarterly_assessment // Add quarterly assessment score
+    written_works,
+    performance_task,
+    quarterly_assessment,
   } = req.body;
 
   const query = `
@@ -2421,76 +2445,98 @@ app.post('/submit-grade', (req, res) => {
       school_year_id = VALUES(school_year_id)
   `;
 
-  db.query(query, [grade_level, subject_name, grade, period, student_id, student_name, school_year_id], (err, result) => {
-    if (err) {
-      console.error('Error inserting/updating grade:', err);
-      return res.status(500).json({
-        success: false,
-        message: 'Failed to submit grade.',
-        error: err.message
-      });
-    }
-
-    // Fetch the grades_id after insertion
-    const fetchQuery = `
-      SELECT grades_id FROM grades 
-      WHERE student_id = ? AND subject_name = ? AND period = ? 
-      ORDER BY grades_id DESC LIMIT 1;
-    `;
-
-    db.query(fetchQuery, [student_id, subject_name, period], (fetchErr, fetchResult) => {
-      if (fetchErr) {
-        console.error('Error fetching grades_id:', fetchErr);
+  db.query(
+    query,
+    [grade_level, subject_name, grade, period, student_id, student_name, school_year_id],
+    (err, result) => {
+      if (err) {
+        console.error('Error inserting/updating grade:', err);
         return res.status(500).json({
           success: false,
-          message: 'Failed to fetch grades_id.',
-          error: fetchErr.message
+          message: 'Failed to submit grade.',
+          error: err.message,
         });
       }
 
-      if (fetchResult.length === 0) {
-        return res.status(404).json({ success: false, message: 'No grades found for the specified criteria.' });
-      }
-
-      const gradesId = fetchResult[0].grades_id; // Get the fetched grades_id
-
-      // Now insert into grades_detail using the gradesId
-      const detailQuery = `
-        INSERT INTO grades_detail (
-          grades_id,
-          written_works,
-          performance_task,
-          quarterly_assessment,
-          student_id
-        ) 
-        VALUES (?, ?, ?, ?, ?)  
-        ON DUPLICATE KEY UPDATE
-          grades_id = VALUES(grades_id),
-          written_works = VALUES(written_works),
-          performance_task = VALUES(performance_task),
-          quarterly_assessment = VALUES(quarterly_assessment),
-          student_id = VALUES(student_id)
+      const fetchQuery = `
+        SELECT grades_id FROM grades 
+        WHERE student_id = ? AND subject_name = ? AND period = ? 
+        ORDER BY grades_id DESC LIMIT 1;
       `;
 
-      db.query(detailQuery, [gradesId, written_works, performance_task, quarterly_assessment, student_id], (detailErr) => {
-        if (detailErr) {
-          console.error('Error inserting into grades_detail:', detailErr);
+      db.query(fetchQuery, [student_id, subject_name, period], (fetchErr, fetchResult) => {
+        if (fetchErr) {
+          console.error('Error fetching grades_id:', fetchErr);
           return res.status(500).json({
             success: false,
-            message: 'Failed to insert grade details.',
-            error: detailErr.message
+            message: 'Failed to fetch grades_id.',
+            error: fetchErr.message,
           });
         }
 
-        res.json({
-          success: true,
-          message: result.insertId ? 'Grade submitted successfully!' : 'Grade updated successfully!',
-          id: gradesId
-        });
+        if (fetchResult.length === 0) {
+          return res.status(404).json({
+            success: false,
+            message: 'No grades found for the specified criteria.',
+          });
+        }
+
+        const gradesId = fetchResult[0].grades_id;
+
+        if (!gradesId) {
+          return res.status(500).json({
+            success: false,
+            message: 'Failed to retrieve grades ID for grades detail insertion.',
+          });
+        }
+
+        const detailQuery = `
+          INSERT INTO grades_detail (
+            grades_id,
+            written_works,
+            performance_task,
+            quarterly_assessment,
+            student_id,
+            period
+          ) 
+          VALUES (?, ?, ?, ?, ?, ?)  
+          ON DUPLICATE KEY UPDATE
+            written_works = VALUES(written_works),
+            performance_task = VALUES(performance_task),
+            quarterly_assessment = VALUES(quarterly_assessment),
+            student_id = VALUES(student_id),
+            period = VALUES(period)
+        `;
+
+        db.query(
+          detailQuery,
+          [gradesId, written_works, performance_task, quarterly_assessment, student_id, period],
+          (detailErr) => {
+            if (detailErr) {
+              console.error('Error inserting into grades_detail:', detailErr);
+              return res.status(500).json({
+                success: false,
+                message: 'Failed to insert grade details.',
+                error: detailErr.message,
+              });
+            }
+
+            console.log('Grade details successfully inserted:', { gradesId, written_works, performance_task, quarterly_assessment });
+
+            res.json({
+              success: true,
+              message: result.insertId
+                ? 'Grade submitted successfully!'
+                : 'Grade updated successfully!',
+              id: gradesId,
+            });
+          }
+        );
       });
-    });
-  });
+    }
+  );
 });
+
 
 
 
@@ -2793,7 +2839,7 @@ app.get('/student-grades', (req, res) => {
   const { grade_level, subject_name, student_id } = req.query;
 
   const query = `
-    SELECT grade, period 
+    SELECT ROUND(grade,0) AS grade, period 
     FROM grades 
     WHERE grade_level = ? 
     AND subject_name = ? 

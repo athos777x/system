@@ -720,8 +720,7 @@
 
 .subject-grades-view {
   width: 100%;
-  padding: 20px;
-}
+  }
 
 .subject-header {
   margin-bottom: 20px;
@@ -1234,3 +1233,10 @@
   color: white;
 }
 
+.passed {
+  color: green;
+}
+
+.failed {
+  color: red;
+}
