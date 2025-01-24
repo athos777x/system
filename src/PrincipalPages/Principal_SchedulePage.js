@@ -159,121 +159,138 @@ function Principal_SchedulePage() {
       <div className="section-add-section-button-container">
         <button className="section-add-section-button" onClick={startAdding}>Add New Schedule</button>
       </div>
-      <div className="schedule-sectionlist-list">
-        {filteredSections.length > 0 ? (
-          filteredSections.map((section, index) => (
-            <div key={section.section_id} className="schedule-sectionlist-item-container">
-              <div className="schedule-sectionlist-item">
-                <p className="schedule-sectionlist-name">
-                  {index + 1}. Section {section.section_name}
-                </p>
-                <span className="schedule-sectionlist-info">Grade: {section.grade_level} - {section.status.charAt(0).toUpperCase() + section.status.slice(1)}</span>
-                <div className="schedule-sectionlist-actions">
-                  <button className="schedule-sectionlist-view-button" onClick={() => handleViewClick(section.section_id)}>View</button>
-                </div>
-              </div>
-              {selectedSectionId === section.section_id && (
-                <div className="schedule-sectionlist-details">
-                  <h2 className="schedule-subtitle">Schedules</h2>
-                  <table className="schedule-table">
-                    <thead>
-                      <tr>
-                        <th>Subject</th>
-                        <th>Time Start</th>
-                        <th>Time End</th>
-                        <th>Day</th>
-                        <th>Teacher ID</th>
-                        <th>Status</th>
-                        <th className="actions-column">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {sectionSchedules.length > 0 ? (
-                        sectionSchedules.map(schedule => (
-                          <tr key={schedule.schedule_id}>
-                            {isEditing && editFormData.schedule_id === schedule.schedule_id ? (
-                              <>
-                                <td>{schedule.subject_name}</td>
-                                <td>
-                                  <input
-                                    type="time"
-                                    name="time_start"
-                                    value={editFormData.time_start}
-                                    onChange={handleEditChange}
-                                  />
-                                </td>
-                                <td>
-                                  <input
-                                    type="time"
-                                    name="time_end"
-                                    value={editFormData.time_end}
-                                    onChange={handleEditChange}
-                                  />
-                                </td>
-                                <td>
-                                  <input
-                                    type="text"
-                                    name="day"
-                                    value={editFormData.day}
-                                    onChange={handleEditChange}
-                                  />
-                                </td>
-                                <td>
-                                  <input
-                                    type="number"
-                                    name="teacher_id"
-                                    value={editFormData.teacher_id}
-                                    onChange={handleEditChange}
-                                  />
-                                </td>
-                                <td>
-                                  <select
-                                    name="schedule_status"
-                                    value={editFormData.schedule_status}
-                                    onChange={handleEditChange}
-                                  >
-                                    <option value="Approved">Approved</option>
-                                    <option value="Pending Approval">Pending Approval</option>
-                                  </select>
-                                </td>
-                                <td className="actions-column">
-                                  <button className="save-button" onClick={saveChanges}>Save</button>
-                                  <button className="cancel-button" onClick={cancelEditing}>Cancel</button>
-                                </td>
-                              </>
-                            ) : (
-                              <>
-                                <td>{schedule.subject_name}</td>
-                                <td>{schedule.time_start}</td>
-                                <td>{schedule.time_end}</td>
-                                <td>{schedule.day}</td>
-                                <td>{schedule.teacher_id}</td>
-                                <td>{schedule.schedule_status}</td>
-                                <td className="actions-column">
-                                  <button className="edit-button" onClick={() => startEditing(schedule)}>Edit</button>
-                                  {schedule.schedule_status === 'Pending Approval' && (
-                                    <button className="approve-button" onClick={() => handleApproveClick(schedule.schedule_id)}>Approve</button>
+      <table className="attendance-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Section Name</th>
+            <th>Grade Level</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {filteredSections.length > 0 ? (
+            filteredSections.map((section, index) => (
+              <React.Fragment key={section.section_id}>
+                <tr>
+                  <td>{index + 1}</td>
+                  <td>Section {section.section_name}</td>
+                  <td>Grade {section.grade_level}</td>
+                  <td>{section.status.charAt(0).toUpperCase() + section.status.slice(1)}</td>
+                  <td>
+                    <button className="schedule-sectionlist-view-button" onClick={() => handleViewClick(section.section_id)}>View</button>
+                  </td>
+                </tr>
+                {selectedSectionId === section.section_id && (
+                  <tr>
+                    <td colSpan="5">
+                      <div className="schedule-sectionlist-details">
+                        <h2 className="schedule-subtitle">Schedules</h2>
+                        <table className="schedule-table">
+                          <thead>
+                            <tr>
+                              <th>Subject</th>
+                              <th>Time Start</th>
+                              <th>Time End</th>
+                              <th>Day</th>
+                              <th>Teacher ID</th>
+                              <th>Status</th>
+                              <th className="actions-column">Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {sectionSchedules.length > 0 ? (
+                              sectionSchedules.map(schedule => (
+                                <tr key={schedule.schedule_id}>
+                                  {isEditing && editFormData.schedule_id === schedule.schedule_id ? (
+                                    <>
+                                      <td>{schedule.subject_name}</td>
+                                      <td>
+                                        <input
+                                          type="time"
+                                          name="time_start"
+                                          value={editFormData.time_start}
+                                          onChange={handleEditChange}
+                                        />
+                                      </td>
+                                      <td>
+                                        <input
+                                          type="time"
+                                          name="time_end"
+                                          value={editFormData.time_end}
+                                          onChange={handleEditChange}
+                                        />
+                                      </td>
+                                      <td>
+                                        <input
+                                          type="text"
+                                          name="day"
+                                          value={editFormData.day}
+                                          onChange={handleEditChange}
+                                        />
+                                      </td>
+                                      <td>
+                                        <input
+                                          type="number"
+                                          name="teacher_id"
+                                          value={editFormData.teacher_id}
+                                          onChange={handleEditChange}
+                                        />
+                                      </td>
+                                      <td>
+                                        <select
+                                          name="schedule_status"
+                                          value={editFormData.schedule_status}
+                                          onChange={handleEditChange}
+                                        >
+                                          <option value="Approved">Approved</option>
+                                          <option value="Pending Approval">Pending Approval</option>
+                                        </select>
+                                      </td>
+                                      <td className="actions-column">
+                                        <button className="save-button" onClick={saveChanges}>Save</button>
+                                        <button className="cancel-button" onClick={cancelEditing}>Cancel</button>
+                                      </td>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <td>{schedule.subject_name}</td>
+                                      <td>{schedule.time_start}</td>
+                                      <td>{schedule.time_end}</td>
+                                      <td>{schedule.day}</td>
+                                      <td>{schedule.teacher_id}</td>
+                                      <td>{schedule.schedule_status}</td>
+                                      <td className="actions-column">
+                                        <button className="edit-button" onClick={() => startEditing(schedule)}>Edit</button>
+                                        {schedule.schedule_status === 'Pending Approval' && (
+                                          <button className="approve-button" onClick={() => handleApproveClick(schedule.schedule_id)}>Approve</button>
+                                        )}
+                                      </td>
+                                    </>
                                   )}
-                                </td>
-                              </>
+                                </tr>
+                              ))
+                            ) : (
+                              <tr>
+                                <td colSpan="7" style={{ textAlign: 'center' }}>No schedules available</td>
+                              </tr>
                             )}
-                          </tr>
-                        ))
-                      ) : (
-                        <tr>
-                          <td colSpan="7" style={{ textAlign: 'center' }}>No schedules available</td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          ))
-        ) : (
-          <p>No sections available.</p>
-        )}
-      </div>
+                          </tbody>
+                        </table>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </React.Fragment>
+            ))
+          ) : (
+            <tr>
+              <td colSpan="5" style={{ textAlign: 'center' }}>No sections available.</td>
+            </tr>
+          )}
+        </tbody>
+      </table>
       {isModalOpen && (
         <div className="section-modal">
           <div className="section-modal-content">

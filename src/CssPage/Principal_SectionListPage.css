@@ -19,70 +19,57 @@
 }
 
 .sectionlist-list {
-  list-style-type: none;
-  padding: 0;
+  width: 100%;
 }
 
-.sectionlist-item-container {
-  display: flex;
-  flex-direction: column;
-  margin: 5px 0;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  padding: 10px;
-  background-color: #fff;
-  cursor: pointer;
+/* Table styles */
+.attendance-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: white;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: var(--spacing-md);
 }
 
-.sectionlist-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin: 0;
-  padding: 10px;
-  border-bottom: none;
-  margin-bottom: 0 !important;
-  margin-top: 0 !important;
-  border-bottom: none !important;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
+.attendance-table th,
+.attendance-table td {
+  padding: var(--spacing-md);
+  text-align: left;
+  border: 1px solid var(--border-color);
 }
 
-.sectionlist-name {
-  margin: 5px 0;
+.attendance-table th {
+  background-color: var(--background-light);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-primary);
 }
 
-.sectionlist-info {
-  margin-left: auto;
-  text-align: center;
-  flex: 1;
-  margin: 0;
+.attendance-table tr:hover {
+  background-color: var(--background-light);
 }
 
-.sectionlist-actions {
-  display: flex;
-}
-
-.sectionlist-view-button,
-.sectionlist-students-button {
-  margin-left: 5px; /* Added margin to create space between buttons */
-  padding: 5px 10px;
-  border: none;
-  background-color: #28a745;
+/* Button styles */
+.sectionlist-view-button {
+  padding: var(--spacing-sm) var(--spacing-md);
+  background-color: var(--primary-color);
   color: white;
+  border: none;
+  border-radius: var(--border-radius-sm);
   cursor: pointer;
-  border-radius: 13px;
+  transition: var(--transition-fast);
 }
 
-.sectionlist-view-button:hover,
-.sectionlist-students-button:hover {
-  background-color: #218838;
+.sectionlist-view-button:hover {
+  background-color: var(--primary-hover);
 }
 
+/* Details section */
 .sectionlist-details {
-  margin: 10px 0;
+  padding: var(--spacing-md);
+  background-color: white;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  margin-top: var(--spacing-sm);
 }
 
 .sectionlist-details table {
@@ -90,40 +77,44 @@
   border-collapse: collapse;
 }
 
-.sectionlist-details table th, 
-.sectionlist-details table td {
-  border: 1px solid #ddd;
-  padding: 8px;
+.sectionlist-details th,
+.sectionlist-details td {
+  padding: var(--spacing-sm);
+  border: 1px solid var(--border-color);
   text-align: left;
 }
 
-.sectionlist-details table th {
-  background-color: #f2f2f2 !important; /* Grey background color for row headers with higher specificity */
-  font-weight: bold;
+.sectionlist-details th {
+  background-color: var(--background-light);
+  font-weight: var(--font-weight-medium);
+  width: 30%;
 }
 
-/* Styles for student lists */
+/* Students table */
 .sectionlist-students-container {
-  margin-top: 20px;
+  margin-top: var(--spacing-md);
 }
 
 .sectionlist-students-table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 10px;
+  background-color: white;
+  box-shadow: var(--shadow-sm);
 }
 
-.sectionlist-students-table th, .sectionlist-students-table td {
-  border: 1px solid #ddd;
-  padding: 8px;
+.sectionlist-students-table th,
+.sectionlist-students-table td {
+  padding: var(--spacing-sm);
+  border: 1px solid var(--border-color);
   text-align: left;
-  background-color: #ffffff; /* Set background color to white */
 }
 
 .sectionlist-students-table th {
-  background-color: #f2f2f2;
+  background-color: var(--background-light);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-primary);
 }
 
 .sectionlist-students-table tr:nth-child(even) {
-  background-color: #f2f2f2;
+  background-color: var(--background-light);
 }

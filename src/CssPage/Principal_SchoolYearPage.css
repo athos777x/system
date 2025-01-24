@@ -19,70 +19,61 @@
 }
 
 .school-year-list {
-  list-style-type: none;
-  padding: 0;
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
 }
 
-.school-year-item-container {
-  display: flex;
-  flex-direction: column;
-  margin: 5px 0;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  padding: 10px;
-  background-color: #fff;
-  cursor: pointer;
+/* Table styles */
+.attendance-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: white;
+  box-shadow: var(--shadow-sm);
 }
 
-.school-year-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin: 0;
-  padding: 10px;
-  border-bottom: none;
-  margin-bottom: 0 !important;
-  margin-top: 0 !important;
-  border-bottom: none !important;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
+.attendance-table th,
+.attendance-table td {
+  padding: var(--spacing-md);
+  text-align: left;
+  border: 1px solid var(--border-color);
 }
 
-.school-year-name {
-  margin: 5px 0;
+.attendance-table th {
+  background-color: var(--background-light);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-primary);
 }
 
-.school-year-info {
-  margin-left: auto;
-  text-align: center;
-  flex: 1;
-  margin: 0;
+.attendance-table tr:hover {
+  background-color: var(--background-light);
 }
 
-.school-year-actions {
-  display: flex;
-}
-
+/* Button styles */
 .school-year-view-button,
 .school-year-edit-button {
-  margin-left: 5px; /* Added margin to create space between buttons */
+  margin-left: 5px;
   padding: 5px 10px;
   border: none;
-  background-color: #28a745;
+  background-color: var(--primary-color);
   color: white;
   cursor: pointer;
-  border-radius: 13px;
+  border-radius: var(--border-radius-sm);
+  transition: var(--transition-fast);
 }
 
 .school-year-view-button:hover,
 .school-year-edit-button:hover {
-  background-color: #218838;
+  background-color: var(--primary-hover);
 }
 
+/* Details section */
 .school-year-details {
-  margin: 10px 0;
+  padding: var(--spacing-md);
+  background-color: white;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  margin-top: var(--spacing-sm);
 }
 
 .school-year-details table {
@@ -90,162 +81,125 @@
   border-collapse: collapse;
 }
 
-.school-year-details table th, 
-.school-year-details table td {
-  border: 1px solid #ddd;
-  padding: 8px;
+.school-year-details th,
+.school-year-details td {
+  padding: var(--spacing-sm);
+  border: 1px solid var(--border-color);
   text-align: left;
 }
 
-.school-year-details table th {
-  background-color: #f2f2f2 !important; /* Grey background color for row headers with higher specificity */
-  font-weight: bold;
+.school-year-details th {
+  background-color: var(--background-light);
+  font-weight: var(--font-weight-medium);
+  width: 30%;
 }
 
-/* Styles for editable inputs */
+/* Form controls */
 .school-year-details input[type="text"],
-.school-year-details select,
-.school-year-details input[type="date"] {
+.school-year-details input[type="date"],
+.school-year-details select {
   width: 100%;
-  padding: 8px;
-  margin: 0;
-  box-sizing: border-box;
-  border: 1px solid #ddd;
-  border-radius: 0;
-  background-color: #fff;
-  font-size: 14px;
-  text-align: left;
+  padding: var(--spacing-sm);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-base);
 }
 
-/* Styles for save and cancel buttons */
-.school-year-edit-buttons {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 10px;
-}
-
+/* Action buttons */
 .school-year-save-button,
 .school-year-cancel-button {
-  margin-left: 5px;
-  padding: 5px 10px;
+  padding: var(--spacing-sm) var(--spacing-md);
   border: none;
-  background-color: #28a745;
-  color: white;
+  border-radius: var(--border-radius-sm);
   cursor: pointer;
-  border-radius: 13px;
+  font-weight: var(--font-weight-medium);
+  transition: var(--transition-fast);
+}
+
+.school-year-save-button {
+  background-color: var(--primary-color);
+  color: white;
 }
 
 .school-year-save-button:hover {
-  background-color: #218838;
+  background-color: var(--primary-hover);
 }
 
 .school-year-cancel-button {
-  background-color: #dc3545;
+  background-color: var(--error-color);
   color: white;
+  margin-left: var(--spacing-sm);
 }
 
 .school-year-cancel-button:hover {
-  background-color: #c82333;
-}
-
-.school-year-item-container::after,
-.school-year-item-container::before,
-.school-year-item::after,
-.school-year-item::before {
-  content: '';
-  display: block;
-  height: 0;
-  border: none;
-  margin: 0;
-  padding: 0;
-}
-
-.add-school-year-button {
-  display: block;
-  margin: 20px auto;
-  padding: 8px 16px;
-  border: none;
-  border-radius: 50px;
-  background-color: #28a745;
-  color: #fff;
-  cursor: pointer;
-  font-size: 14px;
-}
-
-.add-school-year-button:hover {
-  background-color: #218838;
-}
-
-.add-school-year-button.disabled {
-  background-color: #ccc;
-  cursor: not-allowed;
+  opacity: 0.9;
 }
 
 /* Modal styles */
 .school-year-modal {
   position: fixed;
-  z-index: 1;
-  left: 0;
   top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
-  overflow: auto;
-  background-color: rgb(0,0,0);
-  background-color: rgba(0,0,0,0.4);
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
 }
 
 .school-year-modal-content {
-  background-color: #fefefe;
-  margin: 15% auto;
-  padding: 20px;
-  border: 1px solid #888;
-  width: 80%;
+  background-color: white;
+  padding: var(--spacing-lg);
+  border-radius: var(--border-radius-md);
+  width: 90%;
   max-width: 500px;
-  border-radius: 5px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.school-year-modal-content h2 {
+  margin-bottom: var(--spacing-md);
+  color: var(--text-primary);
 }
 
 .school-year-modal-content label {
   display: block;
-  margin: 10px 0;
+  margin-bottom: var(--spacing-sm);
+  color: var(--text-secondary);
 }
 
 .school-year-modal-content input {
-  width: calc(100% - 22px);
-  padding: 10px;
-  margin-top: 5px;
-  border: 1px solid #ccc;
-  border-radius: 3px;
+  width: 100%;
+  margin-bottom: var(--spacing-md);
 }
 
-.school-year-modal-content .button-group {
+.school-year-button-group {
   display: flex;
-  justify-content: center;
-  margin-top: 20px;
+  justify-content: flex-end;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-md);
 }
 
-.school-year-modal-content .button-group button {
-  margin: 0 10px;
-  padding: 8px 16px;
+/* Add button */
+.add-school-year-button {
+  display: block;
+  margin: var(--spacing-md) auto;
+  padding: var(--spacing-sm) var(--spacing-lg);
+  background-color: var(--primary-color);
+  color: white;
   border: none;
-  border-radius: 50px;
-  font-size: 14px;
+  border-radius: var(--border-radius-lg);
   cursor: pointer;
+  transition: var(--transition-fast);
 }
 
-.school-year-modal-content .button-group .school-year-save-button {
-  background-color: #28a745;
-  color: #fff;
+.add-school-year-button:hover {
+  background-color: var(--primary-hover);
 }
 
-.school-year-modal-content .button-group .school-year-save-button:hover {
-  background-color: #218838;
-}
-
-.school-year-modal-content .button-group .school-year-cancel-button {
-  background-color: #dc3545;
-  color: #fff;
-}
-
-.school-year-modal-content .button-group .school-year-cancel-button:hover {
-  background-color: #c82333;
+.add-school-year-button.disabled {
+  background-color: var(--secondary-color);
+  cursor: not-allowed;
 }
