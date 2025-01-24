@@ -73,8 +73,9 @@
   border-radius: 50px;
   font-size: 14px;
   transition: all 0.3s ease;
-  margin: 0 5px;
+  margin: 0 4px;
   background-color: #28a745;
+  min-width: 90px;
 }
 
 .students-view-button:hover,
@@ -302,4 +303,80 @@ input, select {
 
 .student-details-container button:hover {
   background-color: #c0392b;
+}
+
+/* Table styles */
+.attendance-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #ffffff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  table-layout: fixed; /* This ensures consistent column widths */
+}
+
+.attendance-table th,
+.attendance-table td {
+  padding: 12px 16px;
+  text-align: left;
+  border: 1px solid #e9ecef;
+  vertical-align: middle; /* This centers content vertically */
+  line-height: 1.5;
+  height: 48px; /* Fixed height for rows */
+}
+
+/* Set specific widths for each column */
+.attendance-table th:nth-child(1),
+.attendance-table td:nth-child(1) {
+  width: 5%; /* # column */
+}
+
+.attendance-table th:nth-child(2),
+.attendance-table td:nth-child(2) {
+  width: 35%; /* Name column */
+}
+
+.attendance-table th:nth-child(3),
+.attendance-table td:nth-child(3) {
+  width: 15%; /* Grade column */
+}
+
+.attendance-table th:nth-child(4),
+.attendance-table td:nth-child(4) {
+  width: 15%; /* Status column */
+}
+
+.attendance-table th:nth-child(5),
+.attendance-table td:nth-child(5) {
+  width: 30%; /* Actions column */
+}
+
+/* Header styling */
+.attendance-table thead th {
+  background-color: #28a745;
+  color: #ffffff;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.9rem;
+}
+
+/* Row hover effect */
+.attendance-table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+/* Ensure buttons in the actions column are properly aligned */
+.attendance-table td:last-child {
+  white-space: nowrap;
+  text-align: center;
+  padding: 8px;
+}
+
+/* Zebra striping for better readability */
+.attendance-table tbody tr:nth-child(even):not(.student-details-row) {
+  background-color: #f8f9fa;
+}
+
+/* Header text alignment for Actions column */
+.attendance-table th:last-child {
+  text-align: center;
 }
