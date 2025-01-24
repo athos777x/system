@@ -61,19 +61,51 @@
   margin: 0;
 }
 
-.students-view-button {
-  margin-left: 20px;
-  padding: 5px 10px;
+/* Action Buttons */
+.students-view-button,
+.students-register-button,
+.students-validate-button,
+.students-approve-button {
+  padding: 8px 16px;
   border: none;
-  background-color: #28a745;
   color: white;
   cursor: pointer;
-  border-radius: 13px;
+  border-radius: 50px;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  margin: 0 5px;
+  background-color: #28a745;
+}
+
+.students-view-button:hover,
+.students-register-button:hover,
+.students-validate-button:hover,
+.students-approve-button:hover {
+  background-color: #218838;
+  transform: translateY(-1px);
+}
+
+/* Add New Student Button */
+.students-button-container {
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: 20px;
+}
+
+.students-add-button {
+  padding: 8px 16px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  font-size: 14px;
   transition: all 0.3s ease;
 }
 
-.students-view-button:hover {
+.students-add-button:hover {
   background-color: #218838;
+  transform: translateY(-1px);
 }
 
 .students-student-details {

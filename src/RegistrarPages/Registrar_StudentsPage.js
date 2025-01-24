@@ -474,10 +474,12 @@ const handleArchive = () => {
           handleApplyFilters={handleApplyFilters}
         />
       </div>
-      <div className="students-add-student-button-container">
-      {(roleName === 'registrar' || roleName === 'principal') && (
-        <button className="students-add-student-button" onClick={startAdding}>Add New Student</button>
-      )}
+      <div className="students-button-container">
+        {(roleName === 'registrar' || roleName === 'principal') && (
+          <button className="students-add-button" onClick={startAdding}>
+            Add New Student
+          </button>
+        )}
       </div>
       <div className="students-list">
       <table className="attendance-table">
@@ -509,7 +511,7 @@ const handleArchive = () => {
                     <>
                   {student.active_status === null && (
                     <button 
-                      className="students-enroll-button" 
+                      className="students-register-button" 
                       onClick={(e) => {
                         e.stopPropagation();
                         enrollStudent(student.student_id);
