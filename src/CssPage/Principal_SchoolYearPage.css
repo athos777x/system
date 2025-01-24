@@ -52,19 +52,34 @@
 /* Button styles */
 .school-year-view-button,
 .school-year-edit-button {
-  margin-left: 5px;
-  padding: 5px 10px;
+  padding: 8px 16px;
   border: none;
-  background-color: var(--primary-color);
   color: white;
   cursor: pointer;
-  border-radius: var(--border-radius-sm);
-  transition: var(--transition-fast);
+  border-radius: 50px;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  margin: 0 4px;
+  background-color: #28a745;
+  min-width: 90px;
 }
 
 .school-year-view-button:hover,
 .school-year-edit-button:hover {
-  background-color: var(--primary-hover);
+  background-color: #218838;
+  transform: translateY(-1px);
+}
+
+/* Ensure buttons in the actions column are properly aligned */
+.attendance-table td:last-child {
+  white-space: nowrap;
+  text-align: center;
+  padding: 8px;
+}
+
+/* Header text alignment for Actions column */
+.attendance-table th:last-child {
+  text-align: center;
 }
 
 /* Details section */
