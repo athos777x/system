@@ -118,6 +118,7 @@ const BrigadaEskwela = () => {
       <table className="attendance-table">
         <thead>
           <tr>
+            <th>#</th>
             <th>Name</th>
             <th>Grade and Level</th>
             <th>Section</th>
@@ -128,6 +129,7 @@ const BrigadaEskwela = () => {
           {currentStudents.length > 0 ? (
             currentStudents.map((student, index) => (
               <tr key={index}>
+                <td>{indexOfFirstStudent + index + 1}</td>
                 <td>{student.stud_name}</td>
                 <td>Grade {student.grade_lvl}</td>
                 <td>{student.section_name}</td>
@@ -136,7 +138,7 @@ const BrigadaEskwela = () => {
             ))
           ) : (
             <tr>
-              <td colSpan="4" style={{ textAlign: 'center' }}>
+              <td colSpan="5" style={{ textAlign: 'center' }}>
                 No students found
               </td>
             </tr>
