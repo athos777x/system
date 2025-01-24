@@ -88,3 +88,99 @@
   }
 }
 
+.late-enrollees {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.students-title {
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.attendance-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.attendance-table th {
+  background-color: #28a745;
+  color: white;
+  font-weight: 500;
+  text-align: left;
+  padding: 12px 16px;
+}
+
+.attendance-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #e0e0e0;
+  color: #333;
+}
+
+.attendance-table tr:last-child td {
+  border-bottom: none;
+}
+
+.attendance-table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.button-container {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+  padding: 0 20px;
+  gap: 15px; /* Add consistent spacing between buttons */
+}
+
+.button-container button {
+  padding: 8px 24px;
+  border: none;
+  color: white;
+  cursor: pointer;
+  border-radius: 50px;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  background-color: #28a745;
+  min-width: 120px; /* Set consistent minimum width */
+  width: 120px; /* Set fixed width for both buttons */
+  text-align: center; /* Center the text */
+}
+
+.button-container button:hover {
+  background-color: #218838;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+@media print {
+  .button-container {
+    display: none; /* Hide both buttons when printing */
+  }
+}
+
+/* Loading and Error States */
+.late-enrollees p {
+  text-align: center;
+  padding: 20px;
+  font-size: 14px;
+  color: #666;
+}
+
+.late-enrollees p[style*="color: red"] {
+  background-color: #fff5f5;
+  border-radius: 8px;
+  padding: 12px;
+  margin: 20px 0;
+}
+

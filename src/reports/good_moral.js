@@ -125,7 +125,7 @@ function GoodMoral() {
       {/* Button Container for Print and Back */}
       <div className="button-container">
         <button onClick={handleBack}>Back</button>
-        <button className="convert-to-pdf" onClick={handleConvertToPdf}>Print</button>
+        <button onClick={handleConvertToPdf}>Print</button>
       </div>
     </div>
   );
