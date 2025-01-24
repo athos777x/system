@@ -446,9 +446,11 @@ function Registrar_TeacherPage() {
           handleApplyFilters={handleApplyFilters}
         />
       </div>
-      <div className="students-add-student-button-container">
+      <div className="students-button-container">
         {(roleName === 'registrar' || roleName === 'principal') && (
-        <button className="students-add-student-button" onClick={startAdding}>Add New Teacher</button>
+          <button className="students-add-button" onClick={startAdding}>
+            Add New Teacher
+          </button>
         )}
       </div>
       <div className="teachers-list">

@@ -62,17 +62,21 @@
 }
 
 .attendance-view-button {
-  margin-left: 20px;
-  padding: 5px 10px;
+  padding: 8px 16px;
   border: none;
-  background-color: #28a745;
   color: white;
   cursor: pointer;
-  border-radius: 13px;
+  border-radius: 50px;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  margin: 0 4px;
+  background-color: #28a745;
+  min-width: 90px;
 }
 
 .attendance-view-button:hover {
   background-color: #218838;
+  transform: translateY(-1px);
 }
 
 .attendance-student-details {
@@ -105,4 +109,80 @@
   border: none;
   margin: 0;
   padding: 0;
+}
+
+/* Table styles */
+.attendance-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #ffffff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  table-layout: fixed;
+}
+
+.attendance-table th,
+.attendance-table td {
+  padding: 12px 16px;
+  text-align: left;
+  border: 1px solid #e9ecef;
+  vertical-align: middle;
+  line-height: 1.5;
+  height: 48px;
+}
+
+/* Set specific widths for each column */
+.attendance-table th:nth-child(1),
+.attendance-table td:nth-child(1) {
+  width: 5%;
+}
+
+.attendance-table th:nth-child(2),
+.attendance-table td:nth-child(2) {
+  width: 35%;
+}
+
+.attendance-table th:nth-child(3),
+.attendance-table td:nth-child(3) {
+  width: 15%;
+}
+
+.attendance-table th:nth-child(4),
+.attendance-table td:nth-child(4) {
+  width: 15%;
+}
+
+.attendance-table th:nth-child(5),
+.attendance-table td:nth-child(5) {
+  width: 30%;
+}
+
+/* Header styling */
+.attendance-table thead th {
+  background-color: #28a745;
+  color: #ffffff;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.9rem;
+}
+
+/* Row hover effect */
+.attendance-table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+/* Ensure buttons in the actions column are properly aligned */
+.attendance-table td:last-child {
+  white-space: nowrap;
+  text-align: center;
+  padding: 8px;
+}
+
+/* Header text alignment for Actions column */
+.attendance-table th:last-child {
+  text-align: center;
+}
+
+/* Zebra striping for better readability */
+.attendance-table tbody tr:nth-child(even):not(.student-details-row) {
+  background-color: #f8f9fa;
 }
