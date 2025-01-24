@@ -179,7 +179,7 @@ function Principal_SchedulePage() {
                   <td>Grade {section.grade_level}</td>
                   <td>{section.status.charAt(0).toUpperCase() + section.status.slice(1)}</td>
                   <td>
-                    <button className="schedule-sectionlist-view-button" onClick={() => handleViewClick(section.section_id)}>View</button>
+                    <button className="schedule-view-button" onClick={() => handleViewClick(section.section_id)}>View</button>
                   </td>
                 </tr>
                 {selectedSectionId === section.section_id && (
@@ -262,9 +262,9 @@ function Principal_SchedulePage() {
                                       <td>{schedule.teacher_id}</td>
                                       <td>{schedule.schedule_status}</td>
                                       <td className="actions-column">
-                                        <button className="edit-button" onClick={() => startEditing(schedule)}>Edit</button>
+                                        <button className="schedule-edit-button" onClick={() => startEditing(schedule)}>Edit</button>
                                         {schedule.schedule_status === 'Pending Approval' && (
-                                          <button className="approve-button" onClick={() => handleApproveClick(schedule.schedule_id)}>Approve</button>
+                                          <button className="schedule-approve-button" onClick={() => handleApproveClick(schedule.schedule_id)}>Approve</button>
                                         )}
                                       </td>
                                     </>

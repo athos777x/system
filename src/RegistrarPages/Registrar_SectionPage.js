@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import SectionSearchFilter from '../RoleSearchFilters/SectionSearchFilter'; 
-import '../CssPage/Principal_SectionPage.css';
+import '../RegistrarPagesCss/Registrar_SectionPage.css';
 
 function Registrar_SectionPage() {
   const [sections, setSections] = useState([]);

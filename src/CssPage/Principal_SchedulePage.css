@@ -73,26 +73,35 @@
 }
 
 /* Button styles */
-.schedule-sectionlist-view-button,
-.edit-button,
-.save-button,
-.approve-button,
-.cancel-button {
-  margin-left: var(--spacing-xs);
-  padding: var(--spacing-sm) var(--spacing-md);
-  background-color: var(--primary-color);
-  color: white;
+.schedule-view-button,
+.schedule-edit-button,
+.schedule-approve-button {
+  padding: 8px 16px;
   border: none;
-  border-radius: var(--border-radius-sm);
+  color: white;
   cursor: pointer;
-  transition: var(--transition-fast);
+  border-radius: 50px;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  margin: 0 4px;
+  background-color: #28a745;
+  min-width: 90px;
 }
 
-.schedule-sectionlist-view-button:hover,
-.edit-button:hover,
-.save-button:hover,
-.approve-button:hover {
-  background-color: var(--primary-hover);
+.schedule-view-button:hover,
+.schedule-edit-button:hover,
+.schedule-approve-button:hover {
+  background-color: #218838;
+  transform: translateY(-1px);
+}
+
+/* Specific color for approve button */
+.schedule-approve-button {
+  background-color: #007bff;
+}
+
+.schedule-approve-button:hover {
+  background-color: #0056b3;
 }
 
 .cancel-button {
