@@ -111,25 +111,47 @@
   transform: translateY(-1px);
 }
 
+/* Student Details Table specific styles */
 .students-student-details {
-  margin: 10px 0;
+  margin: 15px 0;
+  padding: 0 15px;
 }
 
 .students-student-details table {
   width: 100%;
   border-collapse: collapse;
-}
-
-.students-student-details table th, 
-.students-student-details table td {
-  border: 1px solid #ddd;
-  padding: 8px;
-  text-align: left;
+  background-color: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .students-student-details table th {
-  background-color: #f2f2f2 !important; /* Grey background color for row headers with higher specificity */
-  font-weight: bold;
+  width: 200px;
+  background-color: #f5f5f5;
+  color: #333;
+  font-weight: 600;
+  text-align: right;
+  padding: 12px 15px;
+  border: 1px solid #e0e0e0;
+}
+
+.students-student-details table td {
+  padding: 12px 15px;
+  border: 1px solid #e0e0e0;
+  text-align: left;
+}
+
+.students-student-details table tr:hover {
+  background-color: #f8f9fa;
+}
+
+/* Ensure the details table doesn't inherit attendance-table styles */
+.students-student-details table.details-table {
+  table-layout: auto;
+}
+
+.students-student-details table.details-table th,
+.students-student-details table.details-table td {
+  width: auto;
 }
 
 .students-student-item-container::after,
@@ -259,52 +281,61 @@ input, select {
   color: white;
 }
 
-/* Improved table styling for student details */
+/* Update the student details styling */
+.student-details-row {
+  background-color: #f8f9fa !important;
+}
+
 .student-details-row td {
-  background-color: #f9f9f9;
-  padding: 16px;
-  border: 1px solid #ddd;
-}
-
-.student-details-full-row {
-  width: 100%;
-  padding: 16px;
-  background-color: #ffffff;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.details-row td {
-  padding: 0;
-  border: none;
+  padding: 20px !important;
+  background-color: #f8f9fa;
 }
 
 .student-details-container {
-  background-color: #ffffff;
   padding: 20px;
-  width: 100%;
-  box-sizing: border-box; /* Ensures padding doesn't exceed the width */
-  border: 1px solid #ddd;
-}
-
-.student-details-container .student-details-modal {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-}
-
-.student-details-container button {
-  align-self: flex-end;
-  margin-bottom: 16px;
-  background-color: #e74c3c;
-  color: white;
-  border: none;
-  padding: 8px 16px;
+  background-color: #ffffff;
   border-radius: 4px;
-  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin: 0;
 }
 
-.student-details-container button:hover {
-  background-color: #c0392b;
+.student-details-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin: 0;
+}
+
+.student-details-table th {
+  width: 200px;
+  background-color: #f1f3f5;
+  color: #495057;
+  font-weight: 600;
+  text-align: right;
+  padding: 12px 20px;
+  border: 1px solid #dee2e6;
+}
+
+.student-details-table td {
+  padding: 12px 20px;
+  border: 1px solid #dee2e6;
+  background-color: white;
+}
+
+/* Ensure expanded row takes full width */
+.attendance-table tr.student-details-row > td {
+  padding: 0 !important;
+  border-top: none !important;
+}
+
+.attendance-table tr.student-details-row {
+  display: table-row;
+}
+
+/* Override any conflicting styles */
+.attendance-table .student-details-container {
+  margin: 0;
+  width: 100%;
 }
 
 /* Table styles */
