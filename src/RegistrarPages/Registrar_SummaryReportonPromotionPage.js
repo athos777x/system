@@ -28,17 +28,35 @@ function Registrar_SummaryReportonPromotionPage() {
   };
 
   const handleGenerateForm137 = () => {
+
+    if (!grade || !section || !studentName) {
+      alert('Please fill in all the required fields before generating.');
+      return;
+    }
+
     const studentData = { grade, section, name: studentName };
     navigate('/form-137', { state: { student: studentData } });
   };
   
 
   const handleGenerateGoodMoral = () => {
+
+    if (!grade || !section || !studentName) {
+      alert('Please fill in all the required fields before generating.');
+      return;
+    }
+
     const studentData = { grade, section, name: studentName };
     navigate('/good-moral', { state: { student: studentData } });
   };
 
   const handleLateEnrolleesReport = () => {
+
+    if (!grade || !section ) {
+      alert('Please fill in all the required fields before generating.');
+      return;
+    }
+
     const reportData = { grade, section };
     navigate('/late-enrollee', { state: { report: reportData } });
   };
@@ -119,11 +137,11 @@ function Registrar_SummaryReportonPromotionPage() {
       {/* Form 137 Section */}
       <div className="form137-section">
         <div>
-          <h2 className="form137-title">Form 137</h2>
-          <p className="report-description">Generate Form 137 for a specific student.</p>
+          <h2 className="form137-title">Form 138</h2>
+          <p className="report-description">Generate Form 138 for a specific student.</p>
         </div>
         <button className="report-button" onClick={() => openModal('form_137')}>
-          Generate Form 137
+          Generate Form 138
         </button>
       </div>
 
@@ -155,10 +173,10 @@ function Registrar_SummaryReportonPromotionPage() {
             <button className="close-modal" onClick={closeModal}>&times;</button>
             {modalContent === 'form_137' && (
               <div>
-                <h3>Generate Form 137</h3>
+                <h3>Generate Form 138</h3>
                 <form onSubmit={(e) => e.preventDefault()}>
                   <label>Grade:</label>
-                  <select value={grade} onChange={handleGradeChange}>
+                  <select value={grade} onChange={handleGradeChange} required> 
                     <option value="">--Select One--</option>
                     <option value="7">Grade 7</option>
                     <option value="8">Grade 8</option>
@@ -166,7 +184,7 @@ function Registrar_SummaryReportonPromotionPage() {
                     <option value="10">Grade 10</option>
                   </select>
                   <label>Section:</label>
-                  <select value={section} onChange={(e) => setSection(e.target.value)}>
+                  <select value={section} onChange={(e) => setSection(e.target.value)} required>
                     <option value="">--Select One--</option>
                     {sections.map((sec) => (
                       <option key={sec.section_name} value={sec.section_name}>
@@ -180,6 +198,7 @@ function Registrar_SummaryReportonPromotionPage() {
                     value={studentName}
                     onChange={handleStudentNameChange}
                     placeholder="Enter student name"
+                    required
                   />
                   {suggestions.length > 0 && (
                     <ul className="suggestions-list">
@@ -199,7 +218,7 @@ function Registrar_SummaryReportonPromotionPage() {
                 <h3>Generate Good Moral Certificate</h3>
                 <form onSubmit={(e) => e.preventDefault()}>
                   <label>Grade:</label>
-                  <select value={grade} onChange={handleGradeChange}>
+                  <select value={grade} onChange={handleGradeChange} required>
                     <option value="">--Select One--</option>
                     <option value="7">Grade 7</option>
                     <option value="8">Grade 8</option>
@@ -207,7 +226,7 @@ function Registrar_SummaryReportonPromotionPage() {
                     <option value="10">Grade 10</option>
                   </select>
                   <label>Section:</label>
-                  <select value={section} onChange={(e) => setSection(e.target.value)}>
+                  <select value={section} onChange={(e) => setSection(e.target.value)} required>
                     <option value="">--Select One--</option>
                     {sections.map((sec) => (
                       <option key={sec.section_name} value={sec.section_name}>
@@ -221,6 +240,7 @@ function Registrar_SummaryReportonPromotionPage() {
                     value={studentName}
                     onChange={handleStudentNameChange}
                     placeholder="Enter student name"
+                    required
                   />
                   {suggestions.length > 0 && (
                     <ul className="suggestions-list">
@@ -240,7 +260,7 @@ function Registrar_SummaryReportonPromotionPage() {
                 <h3>Generate Late Enrollees Report</h3>
                 <form onSubmit={(e) => e.preventDefault()}>
                   <label>Grade:</label>
-                  <select value={grade} onChange={handleGradeChange}>
+                  <select value={grade} onChange={handleGradeChange} required>
                     <option value="">--Select One--</option>
                     <option value="7">Grade 7</option>
                     <option value="8">Grade 8</option>
@@ -248,7 +268,7 @@ function Registrar_SummaryReportonPromotionPage() {
                     <option value="10">Grade 10</option>
                   </select>
                   <label>Section:</label>
-                  <select value={section} onChange={(e) => setSection(e.target.value)}>
+                  <select value={section} onChange={(e) => setSection(e.target.value)} required>
                     <option value="">--Select One--</option>
                     {sections.map((sec) => (
                       <option key={sec.section_name} value={sec.section_name}>

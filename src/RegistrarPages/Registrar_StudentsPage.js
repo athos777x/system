@@ -11,6 +11,10 @@ function Registrar_StudentsPage() {
   const [selectedStudentId, setSelectedStudentId] = useState(null);
   const [studentsPerPage] = useState(5); // Adjust this number to set how many students per page
   const [currentPage, setCurrentPage] = useState(1);
+  const [isEditing, setIsEditing] = useState(false); // Tracks edit mode
+  const [editStudentData, setEditStudentData] = useState(null); // Stores the editable student data
+  const [showCancelModal, setShowCancelModal] = useState(false); // Tracks cancel confirmation modal
+
   const [filters, setFilters] = useState({
     searchTerm: '',
     school_year: '',
@@ -416,7 +420,12 @@ const handleArchive = () => {
     return date.toLocaleDateString();
   };
 
-  const toggleStudentDetails = (studentId) => {
+  const toggleStudentDetails = (studentId, editMode = false) => {
+    if (editMode) {
+      const student = currentStudents.find((s) => s.student_id === studentId);
+      setEditStudentData(student); // Load student data into edit mode
+    }
+    setIsEditing(editMode);
     setSelectedStudentId(selectedStudentId === studentId ? null : studentId);
   };
 
@@ -464,6 +473,135 @@ const handleArchive = () => {
   };
 
 
+  // Handle changes in editable fields
+  const handleEditChange = (e) => {
+    const { name, value } = e.target;
+    setEditStudentData({ ...editStudentData, [name]: value });
+  };
+
+  const handleSave = async () => {
+    if (!editStudentData || !editStudentData.student_id) {
+      console.error('Student ID is missing or edit data is not initialized.');
+      return;
+    }
+  
+    // Format the birthdate before sending it to the backend
+    const formattedBirthdate = new Date(editStudentData.birthdate).toISOString().split('T')[0];
+  
+    // Update the student data with the formatted birthdate
+    const updatedStudentData = { ...editStudentData, birthdate: formattedBirthdate };
+  
+    try {
+      // Make the PUT request to the backend to update the student
+      const response = await fetch(`http://localhost:3001/students/${editStudentData.student_id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedStudentData),
+      });
+  
+      // Check if the response is OK
+      if (!response.ok) {
+        throw new Error('Failed to save student data');
+      }
+  
+      // Get the updated student data from the response
+      const updatedStudent = await response.json();
+  
+      // Update the state with the updated student data
+      setStudents((prevStudents) =>
+        prevStudents.map((student) =>
+          student.student_id === updatedStudent.student_id ? updatedStudent : student
+        )
+      );
+  
+      // Reset the form only after saving is successful
+      setEditStudentData(null);
+  
+      // Show success message
+      alert('Edited Successfully');
+      
+      // Refresh the student list
+      await fetchStudents();
+  
+      // Untoggle the student detail view to return to the list of students
+      toggleStudentDetails(); // This will hide the student detail view and go back to the list
+  
+    } catch (error) {
+      console.error('Error saving student data:', error);
+    }
+  };
+  
+  
+  
+  
+  
+  
+  
+  
+
+  // Cancel edit with confirmation modal
+  const cancelEdit = () => {
+    setShowCancelModal(true);
+  };
+
+  // Confirm cancel
+  const confirmCancel = (confirm) => {
+    if (confirm) {
+      setIsEditing(false);
+      setSelectedStudentId(null);
+    }
+    setShowCancelModal(false);
+  };
+
+  const handlePrint = (studentId) => {
+    // Locate the specific student-details-table
+    const table = document.querySelector(".student-details-table");
+  
+    if (!table) {
+      console.error("Student details table not found");
+      return;
+    }
+  
+    // Create a new window for displaying the content
+    const printWindow = window.open("", "");
+  
+    // Generate printable content
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Student Details</title>
+          <style>
+            table {
+              border-collapse: collapse;
+              width: 100%;
+            }
+            th, td {
+              border: 1px solid #ddd;
+              padding: 8px;
+            }
+            th {
+              background-color: #f2f2f2;
+              text-align: left;
+            }
+          </style>
+        </head>
+        <body>
+          <h2>Student Details</h2>
+          ${table.outerHTML}
+        </body>
+      </html>
+    `);
+  
+    // Close the document and focus on the new window
+    printWindow.document.close();
+    printWindow.focus();
+  };
+  
+  
+  
+
   return (
     <div className="students-container">
       <h1 className="students-title">Students</h1>
@@ -475,7 +613,7 @@ const handleArchive = () => {
         />
       </div>
       <div className="students-button-container">
-        {(roleName === 'registrar' || roleName === 'principal') && (
+        {(roleName === 'registrar' || roleName === 'subject_teacher' || roleName === 'class_adviser' || roleName === 'grade_level_coordinator') && (
           <button className="students-add-button" onClick={startAdding}>
             Add New Student
           </button>
@@ -506,6 +644,12 @@ const handleArchive = () => {
                     onClick={() => toggleStudentDetails(student.student_id)}
                   >
                     View
+                  </button>
+                  <button
+                    className="students-view-button"
+                    onClick={() => toggleStudentDetails(student.student_id, true)}
+                  >
+                    Edit
                   </button>
                   {(roleName === 'registrar' || roleName === 'principal') && (
                     <>
@@ -548,115 +692,367 @@ const handleArchive = () => {
               </tr>
 
               {selectedStudentId === student.student_id && (
-                <tr className="student-details-row">
-                  <td colSpan="5">
-                    <div className="student-details-container">
-                      <table className="student-details-table">
-                        <tbody>
-                          <tr>
-                            <th>Last Name:</th>
-                            <td>{student.lastname}</td>
-                          </tr>
-                          <tr>
-                            <th>First Name:</th>
-                            <td>{student.firstname}</td>
-                          </tr>
-                          <tr>
-                            <th>Middle Name:</th>
-                            <td>{student.middlename || 'N/A'}</td>
-                          </tr>
-                          <tr>
-                            <th>Grade Level:</th>
-                            <td>{student.current_yr_lvl}</td>
-                          </tr>
-                          <tr>
-                            <th>Birthdate:</th>
-                            <td>{formatDate(student.birthdate)}</td>
-                          </tr>
-                          <tr>
-                            <th>Gender:</th>
-                            <td>{student.gender}</td>
-                          </tr>
-                          <tr>
-                            <th>Age:</th>
-                            <td>{student.age}</td>
-                          </tr>
-                          <tr>
-                            <th>Contact Number:</th>
-                            <td>{student.contact_number}</td>
-                          </tr>
-                          <tr>
-                            <th>Email:</th>
-                            <td>{student.email_address}</td>
-                          </tr>
-                          <tr>
-                            <th>Mother's Name:</th>
-                            <td>{student.mother_name}</td>
-                          </tr>
-                          <tr>
-                            <th>Father's Name:</th>
-                            <td>{student.father_name}</td>
-                          </tr>
-                          <tr>
-                            <th>Parent Address:</th>
-                            <td>{student.parent_address}</td>
-                          </tr>
-                          <tr>
-                            <th>Father's Occupation:</th>
-                            <td>{student.father_occupation}</td>
-                          </tr>
-                          <tr>
-                            <th>Mother's Occupation:</th>
-                            <td>{student.mother_occupation}</td>
-                          </tr>
-                          <tr>
-                            <th>Annual Household Income:</th>
-                            <td>{student.annual_hshld_income}</td>
-                          </tr>
-                          <tr>
-                            <th>Number of Siblings:</th>
-                            <td>{student.number_of_siblings}</td>
-                          </tr>
-                          <tr>
-                            <th>Father's Education Level:</th>
-                            <td>{student.father_educ_lvl}</td>
-                          </tr>
-                          <tr>
-                            <th>Mother's Education Level:</th>
-                            <td>{student.mother_educ_lvl}</td>
-                          </tr>
-                          <tr>
-                            <th>Father's Contact Number:</th>
-                            <td>{student.father_contact_number}</td>
-                          </tr>
-                          <tr>
-                            <th>Mother's Contact Number:</th>
-                            <td>{student.mother_contact_number}</td>
-                          </tr>
-                          <tr>
-                            <th>Emergency Contact Number:</th>
-                            <td>{student.emergency_number}</td>
-                          </tr>
-                          <tr>
-                            <th>Brigada Eskwela:</th>
-                            <td>{student.brigada_eskwela}</td>
-                          </tr>
-                        </tbody>
-                      </table>
-                      <div className="action-buttons">
-                      {(roleName === 'registrar' || roleName === 'principal') && (
-                        <button 
-                          className="archive-button"
-                          onClick={() => openArchiveModal(student.student_id)}
-                        >
-                          Archive Student
-                        </button>
+              <tr className="student-details-row">
+                <td colSpan="5">
+                  <div className="student-details-container">
+                    <table className="student-details-table">
+                      <tbody>
+                        <tr>
+                          <th>Last Name:</th>
+                          <td>
+                            {isEditing ? (
+                              <input
+                                type="text"
+                                name="lastname"
+                                value={editStudentData ? editStudentData.lastname || "" : ""}
+                                onChange={handleEditChange}
+                              />
+                            ) : (
+                              student.lastname
+                            )}
+                          </td>
+                        </tr>
+                        <tr>
+                          <th>First Name:</th>
+                          <td>
+                            {isEditing ? (
+                              <input
+                                type="text"
+                                name="firstname"
+                                value={editStudentData ? editStudentData.firstname || "" : ""}
+                                onChange={handleEditChange}
+                              />
+                            ) : (
+                              student.firstname
+                            )}
+                          </td>
+                        </tr>
+                        <tr>
+                          <th>Middle Name:</th>
+                          <td>
+                            {isEditing ? (
+                              <input
+                                type="text"
+                                name="middlename"
+                                value={editStudentData ? editStudentData.middlename || "" : ""}
+                                onChange={handleEditChange}
+                              />
+                            ) : (
+                              student.middlename || "N/A"
+                            )}
+                          </td>
+                        </tr>
+                        <tr>
+                          <th>Grade Level:</th>
+                          <td>
+                            {isEditing ? (
+                              <input
+                                type="text"
+                                name="current_yr_lvl"
+                                value={editStudentData ? editStudentData.current_yr_lvl || "" : ""}
+                                onChange={handleEditChange}
+                              />
+                            ) : (
+                              student.current_yr_lvl
+                            )}
+                          </td>
+                        </tr>
+                        <tr>
+                          <th>Birthdate:</th>
+                          <td>
+                            {isEditing ? (
+                              <input
+                                type="date"
+                                name="birthdate"
+                                value={editStudentData ? editStudentData.birthdate || "" : ""}
+                                onChange={handleEditChange}
+                              />
+                            ) : (
+                              formatDate(student.birthdate)
+                            )}
+                          </td>
+                        </tr>
+                        <tr>
+                          <th>Gender:</th>
+                          <td>
+                            {isEditing ? (
+                              <select
+                                name="gender"
+                                vvalue={editStudentData ? editStudentData.gender || "" : ""}
+                                onChange={handleEditChange}
+                              >
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                              </select>
+                            ) : (
+                              student.gender
+                            )}
+                          </td>
+                        </tr>
+                        <tr>
+                          <th>Contact Number:</th>
+                          <td>
+                            {isEditing ? (
+                              <input
+                                type="text"
+                                name="contact_number"
+                                value={editStudentData ? editStudentData.contact_number || "" : ""}
+                                onChange={handleEditChange}
+                              />
+                            ) : (
+                              student.contact_number
+                            )}
+                          </td>
+                        </tr>
+                        <tr>
+                          <th>Email:</th>
+                          <td>
+                            {isEditing ? (
+                              <input
+                                type="email"
+                                name="email_address"
+                                value={editStudentData ? editStudentData.email_address || "" : ""}
+                                onChange={handleEditChange}
+                              />
+                            ) : (
+                              student.email_address
+                            )}
+                          </td>
+                        </tr>
+                        <tr>
+                          <th>Mother's Name:</th>
+                          <td>
+                            {isEditing ? (
+                              <input
+                                type="text"
+                                name="mother_name"
+                                value={editStudentData ? editStudentData.mother_name || "" : ""}
+                                onChange={handleEditChange}
+                              />
+                            ) : (
+                              student.mother_name
+                            )}
+                          </td>
+                        </tr>
+                        <tr>
+                          <th>Father's Name:</th>
+                          <td>
+                            {isEditing ? (
+                              <input
+                                type="text"
+                                name="father_name"
+                                value={editStudentData ? editStudentData.father_name || "" : ""}
+                                onChange={handleEditChange}
+                              />
+                            ) : (
+                              student.father_name
+                            )}
+                          </td>
+                        </tr>
+                        <tr>
+                          <th>Parent Address:</th>
+                          <td>
+                            {isEditing ? (
+                              <input
+                                type="text"
+                                name="parent_address"
+                                value={editStudentData ? editStudentData.parent_address || "" : ""}
+                                onChange={handleEditChange}
+                              />
+                            ) : (
+                              student.parent_address
+                            )}
+                          </td>
+                        </tr>
+                        <tr>
+                          <th>Mother's Occupation:</th>
+                          <td>
+                            {isEditing ? (
+                              <input
+                                type="text"
+                                name="mother_occupation"
+                                value={editStudentData ? editStudentData.mother_occupation || "" : ""}
+                                onChange={handleEditChange}
+                              />
+                            ) : (
+                              student.mother_occupation
+                            )}
+                          </td>
+                        </tr>
+                        <tr>
+                          <th>Father's Occupation:</th>
+                          <td>
+                            {isEditing ? (
+                              <input
+                                type="text"
+                                name="father_occupation"
+                                value={editStudentData ? editStudentData.father_occupation || "" : ""}
+                                onChange={handleEditChange}
+                              />
+                            ) : (
+                              student.father_occupation
+                            )}
+                          </td>
+                        </tr>
+                        <tr>
+                          <th>Annual Household Income:</th>
+                          <td>
+                            {isEditing ? (
+                              <input
+                                type="text"
+                                name="annual_hshld_income"
+                                value={editStudentData ? editStudentData.annual_hshld_income || "" : ""}
+                                onChange={handleEditChange}
+                              />
+                            ) : (
+                              student.annual_hshld_income
+                            )}
+                          </td>
+                        </tr>
+                        <tr>
+                          <th>Number of Siblings:</th>
+                          <td>
+                            {isEditing ? (
+                              <input
+                                type="number"
+                                name="number_of_siblings"
+                                value={editStudentData ? editStudentData.number_of_siblings || "" : ""}
+                                onChange={handleEditChange}
+                              />
+                            ) : (
+                              student.number_of_siblings
+                            )}
+                          </td>
+                        </tr>
+                        <tr>
+                          <th>Mother's Educational Level:</th>
+                          <td>
+                            {isEditing ? (
+                              <input
+                                type="text"
+                                name="mother_educ_lvl"
+                                value={editStudentData ? editStudentData.mother_educ_lvl || "" : ""}
+                                onChange={handleEditChange}
+                              />
+                            ) : (
+                              student.mother_educ_lvl
+                            )}
+                          </td>
+                        </tr>
+                        <tr>
+                          <th>Father's Educational Level:</th>
+                          <td>
+                            {isEditing ? (
+                              <input
+                                type="text"
+                                name="father_educ_lvl"
+                                value={editStudentData ? editStudentData.father_educ_lvl || "" : ""}
+                                onChange={handleEditChange}
+                              />
+                            ) : (
+                              student.father_educ_lvl
+                            )}
+                          </td>
+                        </tr>
+                        <tr>
+                          <th>Mother's Contact Number:</th>
+                          <td>
+                            {isEditing ? (
+                              <input
+                                type="number"
+                                name="mother_contact_number"
+                                value={editStudentData ? editStudentData.mother_contact_number || "" : ""}
+                                onChange={handleEditChange}
+                              />
+                            ) : (
+                              student.mother_contact_number
+                            )}
+                          </td>
+                        </tr>
+                        <tr>
+                          <th>Father's Contact Number:</th>
+                          <td>
+                            {isEditing ? (
+                              <input
+                                type="number"
+                                name="father_contact_number"
+                                value={editStudentData ? editStudentData.father_contact_number || "" : ""}
+                                onChange={handleEditChange}
+                              />
+                            ) : (
+                              student.father_contact_number
+                            )}
+                          </td>
+                        </tr>
+                        <tr>
+                          <th>Emergency Contact Number:</th>
+                          <td>
+                            {isEditing ? (
+                              <input
+                                type="number"
+                                name="emergency_contact_number"
+                                value={editStudentData ? editStudentData.emergency_number || "" : ""}
+                                onChange={handleEditChange}
+                              />
+                            ) : (
+                              student.emergency_number
+                            )}
+                          </td>
+                        </tr>
+                        <tr>
+                          <th>Brigada Eskwela:</th>
+                          <td>
+                            {isEditing ? (
+                              <input
+                                type="text"
+                                name="brigada_eskwela"
+                                value={editStudentData ? editStudentData.brigada_eskwela || "" : ""}
+                                onChange={handleEditChange}
+                              />
+                            ) : (
+                              student.brigada_eskwela
+                            )}
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                    <div className="action-buttons">
+                      {isEditing ? (
+                        <>
+                          <button className="save-button" onClick={handleSave}>
+                            Save
+                          </button>
+                          <button className="cancel-button" onClick={cancelEdit}>
+                            Cancel
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          {(roleName === "registrar" || roleName === "principal") && (
+                            <>
+                              <button
+                                className="archive-button"
+                                onClick={() => openArchiveModal(student.student_id)}
+                              >
+                                Archive Student
+                              </button>
+                              <button
+                                className="print-button"
+                                onClick={() => handlePrint(student.student_id)}
+                              >
+                                Print
+                              </button>
+                            </>
+                          )}
+                        </>
                       )}
-                      </div>
                     </div>
-                  </td>
-                </tr>
-              )}
+                  </div>
+                </td>
+              </tr>
+            )}
+
+
             </React.Fragment>
           ))}
         </tbody>
@@ -669,6 +1065,22 @@ const handleArchive = () => {
         onPageChange={paginate}
       />
     </div>
+    {showCancelModal && (
+      <div className="archive-modal">
+        <div className="archive-modal-content">
+          <h2>Cancel Editing?</h2>
+          <p>Are you sure you want to cancel? Unsaved changes will be lost.</p>
+          <div className="archive-modal-buttons">
+            <button className="yes-button" onClick={() => confirmCancel(true)}>
+              Yes
+            </button>
+            <button className="no-button" onClick={() => confirmCancel(false)}>
+              No
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
 
       {showArchiveModal && (
         <div className="archive-modal">
