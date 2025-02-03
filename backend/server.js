@@ -124,72 +124,157 @@ app.get('/students', (req, res) => {
 
   console.log('Received params:', { searchTerm, grade, section, school_year });
 
-  const latestSchoolYear = '2023-2024'; 
-
-  let query = `
-    SELECT s.student_id, s.user_id, s.lastname, s.firstname, s.middlename, 
-           s.current_yr_lvl, s.birthdate, s.gender, s.age, 
-           s.home_address, s.barangay, s.city_municipality, s.province, 
-           s.contact_number, s.email_address, 
-           s.mother_name, s.father_name, s.parent_address, s.father_occupation, 
-           s.mother_occupation, s.annual_hshld_income, s.number_of_siblings, 
-           s.father_educ_lvl, s.mother_educ_lvl, s.father_contact_number, 
-           s.mother_contact_number,IF(s.brigada_eskwela=1,'Attended','Not Attended') AS brigada_eskwela,
-           (SELECT ss.status FROM student_school_year ss
-            JOIN school_year sy ON ss.school_year_id = sy.school_year_id
-            WHERE ss.student_id = s.student_id AND sy.school_year = ?) as active_status,
-           se.enrollment_status, se.student_elective_id
-    FROM student s
-    LEFT JOIN student_elective se ON s.student_id = se.student_id WHERE s.active_status = 'unarchive'
+  // Query to fetch the active school year
+  const getActiveSchoolYearQuery = `
+    SELECT school_year 
+    FROM school_year 
+    WHERE status = 'active' 
+    LIMIT 1
   `;
-  
-  const queryParams = [latestSchoolYear];
-  const conditions = [];
 
-  if (searchTerm) {
-    conditions.push(`(s.firstname LIKE ? OR s.lastname LIKE ?)`);
-    queryParams.push(`%${searchTerm}%`, `%${searchTerm}%`);
-  }
-  
-  if (grade) {
-    conditions.push(`s.current_yr_lvl = ?`);
-    queryParams.push(grade);
-  }
-  
-  if (section) {
-    conditions.push(`s.section_id = ?`);
-    queryParams.push(section);
-  }
-  
-  if (school_year) {
-    conditions.push(`
-      s.student_id IN (
-        SELECT ss.student_id FROM student_school_year ss 
-        JOIN school_year sy ON ss.school_year_id = sy.school_year_id 
-        WHERE sy.school_year = ?
-      )
-    `);
-    queryParams.push(school_year);
-  }
-
-  if (conditions.length > 0) {
-    query += ' WHERE ' + conditions.join(' AND ');
-  }
-
-  query += ' ORDER BY s.firstname';
-
-  console.log('Final query:', query);
-  console.log('With parameters:', queryParams);
-
-  db.query(query, queryParams, (err, results) => {
+  db.query(getActiveSchoolYearQuery, (err, results) => {
     if (err) {
-      console.error('Error fetching students:', err);
-      res.status(500).json({ error: 'Internal server error' });
+      console.error('Error fetching active school year:', err);
+      res.status(500).json({ error: 'Failed to fetch active school year' });
       return;
     }
-    res.json(results);
+
+    const latestSchoolYear = results[0]?.school_year;
+
+    if (!latestSchoolYear) {
+      console.error('No active school year found');
+      res.status(404).json({ error: 'No active school year found' });
+      return;
+    }
+
+    console.log('Active school year:', latestSchoolYear);
+
+    // Build the main query
+    let query = `
+      SELECT s.student_id, s.user_id, s.lastname, s.firstname, s.middlename, 
+             s.current_yr_lvl, s.birthdate, s.gender, s.age, 
+             s.home_address, s.barangay, s.city_municipality, s.province, 
+             s.contact_number, s.email_address, 
+             s.mother_name, s.father_name, s.parent_address, s.father_occupation, 
+             s.mother_occupation, s.annual_hshld_income, s.number_of_siblings, 
+             s.father_educ_lvl, s.mother_educ_lvl, s.father_contact_number, 
+             s.mother_contact_number, IF(s.brigada_eskwela=1,'Attended','Not Attended') AS brigada_eskwela,
+             (SELECT ss.status FROM student_school_year ss
+              JOIN school_year sy ON ss.school_year_id = sy.school_year_id
+              WHERE ss.student_id = s.student_id AND sy.status = 'active') as active_status,
+             se.enrollment_status, se.student_elective_id
+      FROM student s
+      LEFT JOIN student_elective se ON s.student_id = se.student_id 
+      WHERE s.active_status = 'unarchive'
+    `;
+
+    const queryParams = [];
+    const conditions = [];
+
+    if (searchTerm) {
+      conditions.push(`(s.firstname LIKE ? OR s.lastname LIKE ?)`);
+      queryParams.push(`%${searchTerm}%`, `%${searchTerm}%`);
+    }
+
+    if (grade) {
+      conditions.push(`s.current_yr_lvl = ?`);
+      queryParams.push(grade);
+    }
+
+    if (section) {
+      conditions.push(`s.section_id = ?`);
+      queryParams.push(section);
+    }
+
+    if (school_year) {
+      conditions.push(`
+        s.student_id IN (
+          SELECT ss.student_id FROM student_school_year ss 
+          JOIN school_year sy ON ss.school_year_id = sy.school_year_id 
+          WHERE sy.school_year = ?
+        )
+      `);
+      queryParams.push(school_year);
+    } else {
+      // Default to the latest school year if no specific year is provided
+      conditions.push(`
+        s.student_id IN (
+          SELECT ss.student_id FROM student_school_year ss 
+          JOIN school_year sy ON ss.school_year_id = sy.school_year_id 
+          WHERE sy.school_year = ?
+        )
+      `);
+      queryParams.push(latestSchoolYear);
+    }
+
+    if (conditions.length > 0) {
+      query += ' AND ' + conditions.join(' AND ');
+    }
+
+    query += ' ORDER BY s.firstname';
+
+    console.log('Final query:', query);
+    console.log('With parameters:', queryParams);
+
+    // Execute the main query
+    db.query(query, queryParams, (err, results) => {
+      if (err) {
+        console.error('Error fetching students:', err);
+        res.status(500).json({ error: 'Internal server error' });
+        return;
+      }
+      res.json(results);
+    });
   });
 });
+
+app.put('/students/:id', (req, res) => {
+  const studentId = req.params.id;
+  const updatedData = req.body;
+
+  const updateQuery = `
+    UPDATE student 
+    SET firstname = ?, lastname = ?, middlename = ?, 
+        current_yr_lvl = ?, birthdate = ?, gender = ?, 
+        age = ?, home_address = ?, barangay = ?, city_municipality = ?, 
+        province = ?, contact_number = ?, email_address = ?, 
+        mother_name = ?, father_name = ?, parent_address = ?, 
+        father_occupation = ?, mother_occupation = ?, 
+        annual_hshld_income = ?, number_of_siblings = ?, 
+        father_educ_lvl = ?, mother_educ_lvl = ?, 
+        father_contact_number = ?, mother_contact_number = ?
+    WHERE student_id = ?
+  `;
+
+  const values = [
+    updatedData.firstname, updatedData.lastname, updatedData.middlename,
+    updatedData.current_yr_lvl, updatedData.birthdate, updatedData.gender,
+    updatedData.age, updatedData.home_address, updatedData.barangay, updatedData.city_municipality,
+    updatedData.province, updatedData.contact_number, updatedData.email_address,
+    updatedData.mother_name, updatedData.father_name, updatedData.parent_address,
+    updatedData.father_occupation, updatedData.mother_occupation,
+    updatedData.annual_hshld_income, updatedData.number_of_siblings,
+    updatedData.father_educ_lvl, updatedData.mother_educ_lvl,
+    updatedData.father_contact_number, updatedData.mother_contact_number,
+    studentId
+  ];
+
+  db.query(updateQuery, values, (err, result) => {
+    if (err) {
+      console.error('Error updating student:', err);
+      res.status(500).json({ error: 'Failed to update student' });
+      return;
+    }
+
+    if (result.affectedRows === 0) {
+      res.status(404).json({ error: 'Student not found' });
+      return;
+    }
+
+    res.json({ message: 'Student updated successfully' });
+  });
+});
+
 
 // ENDPOINT USED:
 // STUDENTS PAGE
@@ -564,7 +649,7 @@ app.get('/enrollment-status/:user_id', (req, res) => {
     FROM student a
     LEFT JOIN enrollment b ON a.student_id = b.student_id
     LEFT JOIN school_year c ON b.school_year_id = c.school_year_id
-    WHERE a.user_id = ? AND c.school_year = '2023-2024';
+    WHERE a.user_id = ? AND c.school_year = '2025-2026';
   `;
 
   db.query(query, [userId], (err, results) => {
@@ -2973,6 +3058,25 @@ app.get('/user-id/convert/student-id', (req, res) => {
   }
 });
 
+app.get('/api/students/search', (req, res) => {
+  const searchQuery = req.query.q || ''; // Get query parameter (q)
+  
+  const sql = `
+      SELECT CONCAT(lastname, ', ', firstname, ' ', IFNULL(middlename, '')) AS stud_name 
+      FROM student 
+      WHERE lastname LIKE ? OR firstname LIKE ? OR middlename LIKE ?
+  `;
+
+  const queryParams = [`%${searchQuery}%`, `%${searchQuery}%`, `%${searchQuery}%`];
+
+  db.query(sql, queryParams, (err, results) => {
+      if (err) {
+          console.error("Error fetching students:", err);
+          return res.status(500).json({ error: "Internal Server Error" });
+      }
+      res.json(results);
+  });
+});
 
 
 

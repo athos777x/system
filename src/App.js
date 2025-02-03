@@ -30,6 +30,8 @@ import ProfilePage from './Utilities/ProfilePage';
 import Form137 from './reports/form_137';
 import GoodMoral from './reports/good_moral';
 import LateEnrollees from './Utilities/late_enrollee';
+import StudentGrades from './Pages/selected_grade';
+
 
 
 
@@ -97,6 +99,8 @@ function App() {
             <Route path="/form-137" element={<Form137 />} />
             <Route path="/good-moral" element={<GoodMoral />} />
             <Route path="/late-enrollee" element={<LateEnrollees/>} />
+
+            <Route path="/student-grades" element={<StudentGrades />} />
             
           </Route>
           

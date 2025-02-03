@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import '../RegistrarPagesCss/Registrar_GradesPage.css';
 import GradeDetail from '../Utilities/grades-detail'
+import { useNavigate } from "react-router-dom";
 
 const Registrar_GradesPage = () => {
   // State variables
@@ -25,7 +26,9 @@ const Registrar_GradesPage = () => {
   const [studentGrades, setStudentGrades] = useState({});
   const [existingGrades, setExistingGrades] = useState({});
   const [isEditing, setIsEditing] = useState(false);
-  
+  const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [suggestions, setSuggestions] = useState([]);
   const [percentages, setPercentages] = useState({
     WW: 30,
     PT: 50,
@@ -698,10 +701,65 @@ const handleStudentNameClick = (student) => {
     fetchAllGradesDetails(); // Fetch grades details when students change
   }, [students]);
 
+  const fetchSuggestions = async (query) => {
+    if (!query) {
+        setSuggestions([]);
+        return;
+    }
+    try {
+        const response = await fetch(`/api/students/search?q=${query}`);
+        const data = await response.json();
+        setSuggestions(data);
+    } catch (error) {
+        console.error("Error fetching suggestions:", error);
+    }
+  };
+
+  // Handle search box input
+  const handleInputChange = (e) => {
+      const value = e.target.value;
+      setSearchQuery(value);
+      fetchSuggestions(value);
+  };
+
+  // Handle selecting a student from suggestions
+  const handleSelectStudent = (studentName) => {
+      setSearchQuery(studentName);
+      setSelectedStudent(studentName);
+      setSuggestions([]); // Hide suggestions after selection
+  };
+
+  // Handle search button click
+  const handleSearch = () => {
+      if (selectedStudent) {
+          navigate(`/student-grades?student=${encodeURIComponent(selectedStudent)}`);
+      } else {
+          alert("Please select a student before searching.");
+      }
+  };
+
   return (
     <div className="grades-container">
       <h2>Grades</h2>
-      
+          <div className="search-box">
+                <input
+                    type="text"
+                    placeholder="Search student..."
+                    value={searchQuery}
+                    onChange={handleInputChange}
+                />
+                <button onClick={handleSearch}>Search</button>
+                {suggestions.length > 0 && (
+                    <ul className="suggestions-list">
+                        {suggestions.map((student, index) => (
+                            <li key={index} onClick={() => handleSelectStudent(student.stud_name)}>
+                                {student.stud_name}
+                            </li>
+                        ))}
+                    </ul>
+                )}
+            </div>
+
       {!showSubjectGrades && !showGradesTable && (
         <div className="detailed-grades-view">
           <button onClick={handleBackClick} className="back-button">
