@@ -5,7 +5,7 @@ import Pagination from '../Utilities/pagination';
 import axios from 'axios';
 import '../RegistrarPagesCss/Registrar_StudentsPage.css';
 
-function Registrar_StudentsPage() {
+function Registrar_PendingEnrollmentPage() {
   const [students, setStudents] = useState([]);
   const [filteredStudents, setFilteredStudents] = useState([]);
   const [selectedStudentId, setSelectedStudentId] = useState(null);
@@ -14,7 +14,6 @@ function Registrar_StudentsPage() {
   const [isEditing, setIsEditing] = useState(false); // Tracks edit mode
   const [editStudentData, setEditStudentData] = useState(null); // Stores the editable student data
   const [showCancelModal, setShowCancelModal] = useState(false); // Tracks cancel confirmation modal
-  const [errors, setErrors] = useState({});
 
   const [filters, setFilters] = useState({
     searchTerm: '',
@@ -23,42 +22,9 @@ function Registrar_StudentsPage() {
     section: '',
     status: ''
   });
-  const [isAdding, setIsAdding] = useState(false);
-  const [showModal, setShowModal] = useState(false);
-  const [newStudentData, setNewStudentData] = useState({
-    lastname: '',
-    middlename: '',
-    firstname: '',
-    current_yr_lvl: '',
-    birthdate: '',
-    gender: '',
-    age: '',
-    home_address: '',
-    barangay: '', 
-    city_municipality: '',
-    province: '',
-    contact_number: '',
-    email_address: '',
-    mother_name: '',
-    father_name: '',
-    parent_address: '',
-    father_occupation: '',
-    mother_occupation: '',
-    annual_hshld_income: '',
-    number_of_siblings: '',
-    father_educ_lvl: '',
-    mother_educ_lvl: '',
-    father_contact_number: '',
-    mother_contact_number: '',
-    emergency_number: '',
-    status: 'active',
-    archive_status: 'unarchive', // Default value
-    section_id: '',
-    brigada_eskwela: ''
-  });
 
 
-  const navigate = useNavigate();
+
 
   useEffect(() => {
     fetchStudents();
@@ -70,7 +36,7 @@ function Registrar_StudentsPage() {
       console.log('Applied filters:', appliedFilters);
   
       // Make the API request to get students with the applied filters
-      const response = await axios.get('http://localhost:3001/students', {
+      const response = await axios.get('http://localhost:3001/students/pending-enrollment', {
         params: appliedFilters
       });
   
@@ -78,7 +44,7 @@ function Registrar_StudentsPage() {
       console.log('Full response from server:', response);
   
       // Sort the students by first name
-      const sortedStudents = response.data.sort((a, b) => b.current_yr_lvl - a.current_yr_lvl);
+      const sortedStudents = response.data.sort((a, b) => a.firstname.localeCompare(b.firstname));
   
       // Log the sorted students before setting the state
       console.log('Sorted students:', sortedStudents);
@@ -127,7 +93,7 @@ const applyFilters = () => {
         filtered = filtered.filter(student => student.current_yr_lvl === filters.grade);
     }
     if (filters.section) {
-        filtered = filtered.filter(student => String(student.section_name) === filters.section);
+        filtered = filtered.filter(student => String(student.section_id) === filters.section);
     }
     if (filters.status) {
         filtered = filtered.filter(student => student.student_status === filters.status);
@@ -152,134 +118,9 @@ const handleApplyFilters = () => {
 };
 
 
-  const startAdding = () => {
-    setIsAdding(true);
-    setNewStudentData({
-      lrn: '',
-      lastname: '',
-      middlename: '',
-      firstname: '',
-      current_yr_lvl: '',
-      birthdate: '',
-      gender: '',
-      age: '',
-      home_address: '',
-      barangay: '', 
-      city_municipality: '',
-      province: '',
-      contact_number: '',
-      email_address: '',
-      mother_name: '',
-      father_name: '',
-      parent_address: '',
-      father_occupation: '',
-      mother_occupation: '',
-      annual_hshld_income: '',
-      number_of_siblings: '',
-      father_educ_lvl: '',
-      mother_educ_lvl: '',
-      father_contact_number: '',  
-      mother_contact_number: '',
-      emergency_number: '',
-      status: 'active',
-      active_status: 'unarchive', // Default value
-      section_id: '',
-      user_id: '',
-      brigada_eskwela:'',
-    });
-    setShowModal(true);
-  };
-
-  const handleAddChange = (e) => {
-    const { name, value } = e.target;
-    setNewStudentData(prevData => ({ ...prevData, [name]: value }));
-
-    // Remove error message once the user starts typing
-    setErrors(prevErrors => ({ ...prevErrors, [name]: value ? "" : "This field is required" }));
-};
+ 
   
-  
-  const saveNewSection = async () => {
-    try {
-      // Correct data structure with the required fields
-      const correctedStudentData = {
-        ...newStudentData, // Spread in existing data fields
-        status: newStudentData.status || 'active', // Default 'active' status
-        active_status: newStudentData.archive_status || 'unarchive', // Default 'unarchive' status
-        section_id: newStudentData.section_id, // Use user-provided section_id
-        user_id: newStudentData.user_id || '1'
-      };
-  
-      // Log the data before sending to the server for debugging
-      console.log('Student data to be sent:', correctedStudentData);
-  
-      // Send the POST request
-      const response = await axios.post('http://localhost:3001/students', correctedStudentData);
-      
-      // If successful, reset the form and close modal
-      if (response.status === 201) {
-        console.log('Student added successfully:', response.data);
-        await fetchStudents(); // Refresh student list
-        setIsAdding(false);
-        setShowModal(false); // Close the modal
-      } else {
-        console.error('Failed to add student. Response:', response);
-        alert('Failed to add student. Please try again.');
-      }
-    } catch (error) {
-      if (error.response) {
-        console.error('Error response:', error.response.data);
-        alert(`Error adding student: ${error.response.data.error || 'Unknown error'}. Please check the input fields and try again.`);
-      } else if (error.request) {
-        console.error('No response received:', error.request);
-        alert('No response from the server. Please check your connection and try again.');
-      } else {
-        console.error('Error in request setup:', error.message);
-        alert('There was an error setting up the request. Please try again.');
-      }
-    }
-  };
-  
-  
-
-  
-const cancelAdding = () => {
-  // Reset form data and close modal
-  setNewStudentData({
-    lastname: '',
-    middlename: '',
-    firstname: '',
-    current_yr_lvl: '',
-    birthdate: '',
-    gender: '',
-    age: '',
-    home_address: '',
-    barangay: '',
-    city_municipality: '',
-    province: '',
-    contact_number: '',
-    email_address: '',
-    mother_name: '',
-    father_name: '',
-    parent_address: '',
-    father_occupation: '',
-    mother_occupation: '',
-    annual_hshld_income: '',
-    number_of_siblings: '',
-    father_educ_lvl: '',
-    mother_educ_lvl: '',
-    father_contact_number: '',
-    mother_contact_number: '',
-    emergency_number: '',
-    status: 'active',
-    active_status: 'unarchive',
-    section_id: '',
-    user_id: '',
-    brigada_eskwela:'',
-  });
-  setShowModal(false);  // Close the modal
-};
-
+   
 const enrollStudent = async (studentId) => {
   try {
     // Log the attempt to enroll a student
@@ -370,57 +211,8 @@ const approveElective = async (studentElectiveId) => {
       alert('An error occurred while approving the elective.');
   }
 };
-const archiveStudent = async (studentId, status) => {
-  try {
-    console.log('Archiving student ID:', studentId, 'with status:', status);
 
-    const response = await axios.put(`http://localhost:3001/students/${studentId}/archive`, { status });
 
-    if (response.status === 200) {
-      alert('Student archived successfully');
-      await fetchStudents(); // Refresh the student list after archiving
-    } else {
-      console.warn('Failed to archive student, non-200 response:', response);
-      alert('Failed to archive student.');
-    }
-  } catch (error) {
-    if (error.response) {
-      console.error('Error response:', error.response.data);
-      alert('Error archiving the student: ' + (error.response.data.error || 'Unknown error'));
-    } else if (error.request) {
-      console.error('No response from server:', error.request);
-      alert('No response from the server. Please check your connection.');
-    } else {
-      console.error('Error setting up request:', error.message);
-      alert('An error occurred: ' + error.message);
-    }
-  }
-};
-
-// New Modal State
-const [showArchiveModal, setShowArchiveModal] = useState(false);
-const [archiveStudentId, setArchiveStudentId] = useState(null);
-const [archiveStatus, setArchiveStatus] = useState('');
-
-const openArchiveModal = (studentId) => {
-  setArchiveStudentId(studentId);
-  setShowArchiveModal(true);
-};
-
-const closeArchiveModal = () => {
-  setArchiveStudentId(null);
-  setArchiveStatus('');
-  setShowArchiveModal(false);
-};
-
-const handleArchive = () => {
-  if (!archiveStatus) {
-    alert('Please select an archive status.');
-    return;
-  }
-  archiveStudent(archiveStudentId, archiveStatus);
-  closeArchiveModal();
-};
 
   const formatDate = (isoString) => {
     const date = new Date(isoString);
@@ -488,151 +280,71 @@ const handleArchive = () => {
 
   const handleSave = async () => {
     if (!editStudentData || !editStudentData.student_id) {
-        console.error('Student ID is missing or edit data is not initialized.');
-        return;
+      console.error('Student ID is missing or edit data is not initialized.');
+      return;
     }
-
-    // Required fields
-    const requiredFields = [
-        "lastname", "firstname", "current_yr_lvl", "birthdate", "gender",
-        "age", "home_address", "barangay", "city_municipality", "province",
-        "contact_number", "email_address", "father_contact_number", 
-        "mother_contact_number", "emergency_number", "brigada_eskwela"
-    ];
-
-    // Check for missing fields
-    let newErrors = {};
-    requiredFields.forEach(field => {
-        if (!editStudentData[field]) {
-            newErrors[field] = "This field is required";
-        }
-    });
-
-    // If errors exist, show them and prevent submission
-    if (Object.keys(newErrors).length > 0) {
-        setErrors(newErrors);
-        return;
-    }
-
+  
     // Format the birthdate before sending it to the backend
     const formattedBirthdate = new Date(editStudentData.birthdate).toISOString().split('T')[0];
-
+  
     // Update the student data with the formatted birthdate
     const updatedStudentData = { ...editStudentData, birthdate: formattedBirthdate };
-
+  
     try {
-        // Make the PUT request to the backend to update the student
-        const response = await fetch(`http://localhost:3001/students/${editStudentData.student_id}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(updatedStudentData),
-        });
-
-        // Check if the response is OK
-        if (!response.ok) {
-            throw new Error('Failed to save student data');
-        }
-
-        // Get the updated student data from the response
-        const updatedStudent = await response.json();
-
-        // Update the state with the updated student data
-        setStudents((prevStudents) =>
-            prevStudents.map((student) =>
-                student.student_id === updatedStudent.student_id ? updatedStudent : student
-            )
-        );
-
-        // Reset the form only after saving is successful
-        setEditStudentData(null);
-
-
-        // Refresh the student list
-        await fetchStudents();
-
-        // Untoggle the student detail view to return to the list of students
-        toggleStudentDetails(); // Hide student detail view
-
+      // Make the PUT request to the backend to update the student
+      const response = await fetch(`http://localhost:3001/students/${editStudentData.student_id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedStudentData),
+      });
+  
+      // Check if the response is OK
+      if (!response.ok) {
+        throw new Error('Failed to save student data');
+      }
+  
+      // Get the updated student data from the response
+      const updatedStudent = await response.json();
+  
+      // Update the state with the updated student data
+      setStudents((prevStudents) =>
+        prevStudents.map((student) =>
+          student.student_id === updatedStudent.student_id ? updatedStudent : student
+        )
+      );
+  
+      // Reset the form only after saving is successful
+      setEditStudentData(null);
+  
+      // Show success message
+      alert('Edited Successfully');
+      
+      // Refresh the student list
+      await fetchStudents();
+  
+      // Untoggle the student detail view to return to the list of students
+      toggleStudentDetails(); // This will hide the student detail view and go back to the list
+  
     } catch (error) {
-        console.error('Error saving student data:', error);
+      console.error('Error saving student data:', error);
     }
-};
+  };
+  
 
-  
-  
-  
-  
-  
-  
-  
-  
 
   // Cancel edit with confirmation modal
   const cancelEdit = () => {
     setShowCancelModal(true);
   };
 
-  // Confirm cancel
-  const confirmCancel = (confirm) => {
-    if (confirm) {
-      setIsEditing(false);
-      setSelectedStudentId(null);
-    }
-    setShowCancelModal(false);
-  };
-
-  const handlePrint = (studentId) => {
-    // Locate the specific student-details-table
-    const table = document.querySelector(".student-details-table");
-  
-    if (!table) {
-      console.error("Student details table not found");
-      return;
-    }
-  
-    // Create a new window for displaying the content
-    const printWindow = window.open("", "");
-  
-    // Generate printable content
-    printWindow.document.write(`
-      <html>
-        <head>
-          <title>Student Details</title>
-          <style>
-            table {
-              border-collapse: collapse;
-              width: 100%;
-            }
-            th, td {
-              border: 1px solid #ddd;
-              padding: 8px;
-            }
-            th {
-              background-color: #f2f2f2;
-              text-align: left;
-            }
-          </style>
-        </head>
-        <body>
-          <h2>Student Details</h2>
-          ${table.outerHTML}
-        </body>
-      </html>
-    `);
-  
-    // Close the document and focus on the new window
-    printWindow.document.close();
-    printWindow.focus();
-  };
-  
-  
+ 
   
 
   return (
     <div className="students-container">
-      <h1 className="students-title">Students</h1>
+      <h1 className="students-title">Pending Enrollment</h1>
       <div className="students-search-filter-container">
         <SearchFilter
           handleSearch={handleSearch}
@@ -641,11 +353,6 @@ const handleArchive = () => {
         />
       </div>
       <div className="students-button-container">
-        {(roleName === 'registrar' || roleName === 'subject_teacher' || roleName === 'class_adviser' || roleName === 'grade_level_coordinator') && (
-          <button className="students-add-button" onClick={startAdding}>
-            Add New Student
-          </button>
-        )}
       </div>
       <div className="students-list">
       <table className="attendance-table">
@@ -673,24 +380,29 @@ const handleArchive = () => {
                   >
                     View
                   </button>
-                  <button
-                    className="students-view-button"
-                    onClick={() => toggleStudentDetails(student.student_id, true)}
-                  >
-                    Edit
-                  </button>
                   {(roleName === 'registrar' || roleName === 'principal') && (
                     <>
-                  {student.active_status === null && (
+                  {student.active_status === 'pending' && (
                     <button 
-                      className="students-register-button" 
+                      className="students-validate-button" 
                       onClick={(e) => {
                         e.stopPropagation();
-                        enrollStudent(student.student_id);
+                        validateStudent(student.student_id);
                       }}
                     >
-                      Register
+                      Validate
                     </button> 
+                  )}
+                  {student.enrollment_status === 'pending' && (
+                    <button 
+                      className="students-approve-button" 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        approveElective(student.student_elective_id);
+                      }}
+                    >
+                      Approve
+                    </button>
                   )}
                   </>
                   )}
@@ -1034,22 +746,6 @@ const handleArchive = () => {
                         </>
                       ) : (
                         <>
-                          {(roleName === "registrar" || roleName === "principal") && (
-                            <>
-                              <button
-                                className="archive-button"
-                                onClick={() => openArchiveModal(student.student_id)}
-                              >
-                                Archive Student
-                              </button>
-                              <button
-                                className="print-button"
-                                onClick={() => handlePrint(student.student_id)}
-                              >
-                                Print
-                              </button>
-                            </>
-                          )}
                         </>
                       )}
                     </div>
@@ -1071,360 +767,8 @@ const handleArchive = () => {
         onPageChange={paginate}
       />
     </div>
-    {showCancelModal && (
-      <div className="archive-modal">
-        <div className="archive-modal-content">
-          <h2>Cancel Editing?</h2>
-          <p>Are you sure you want to cancel? Unsaved changes will be lost.</p>
-          <div className="archive-modal-buttons">
-            <button className="yes-button" onClick={() => confirmCancel(true)}>
-              Yes
-            </button>
-            <button className="no-button" onClick={() => confirmCancel(false)}>
-              No
-            </button>
-          </div>
-        </div>
-      </div>
-    )}
-
-      {showArchiveModal && (
-        <div className="archive-modal">
-          <div className="archive-modal-content">
-            <h2>Archive Student</h2>
-            <p>Choose an archive status for the student:</p>
-            <select
-              value={archiveStatus}
-              onChange={(e) => setArchiveStatus(e.target.value)}
-              required
-            >
-              <option value="">Select Status</option>
-              <option value="inactive">Inactive</option>
-              <option value="withdrawn">Withdrawn</option>
-              <option value="transferred">Transferred</option>
-            </select>
-            <div className="archive-modal-buttons">
-              <button className="confirm-button" onClick={handleArchive}>
-                Confirm
-              </button>
-              <button className="cancel-button" onClick={closeArchiveModal}>
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-      {showModal && (
-        <div className="section-modal">
-          <div className="section-modal-content">
-            <h2>Add New Student</h2>
-            <div className="form-grid">
-            <label>
-                LRN:
-                <input
-                  type="text"
-                  name="lrn"
-                  value={newStudentData.lrn}
-                  onChange={handleAddChange}
-                  className={errors.lrn ? "error-border" : ""}
-                  required
-                />
-                {errors.lrn && <p className="error-message">{errors.lrn}</p>}
-              </label>
-              <label>
-                Lastname:
-                <input
-                  type="text"
-                  name="lastname"
-                  value={newStudentData.lastname}
-                  onChange={handleAddChange}
-                  className={errors.lastname ? "error-border" : ""}
-                  required
-                />
-                {errors.lastname && <p className="error-message">{errors.lastname}</p>}
-              </label>
-              <label>
-                Middlename:
-                <input
-                  type="text"
-                  name="middlename"
-                  value={newStudentData.middlename}
-                  onChange={handleAddChange}
-                  className={errors.middlename ? "error-border" : ""}
-                />
-                {errors.middlename && <p className="error-message">{errors.middlename}</p>}
-              </label>
-              <label>
-                Firstname:
-                <input
-                  type="text"
-                  name="firstname"
-                  value={newStudentData.firstname}
-                  onChange={handleAddChange}
-                  className={errors.firstname ? "error-border" : ""}
-                  required
-                />
-                {errors.firstname && <p className="error-message">{errors.firstname}</p>}
-              </label>
-              <label>
-                Year Level:
-                <select
-                  name="current_yr_lvl"
-                  value={newStudentData.current_yr_lvl}
-                  onChange={handleAddChange}
-                  className={errors.current_yr_lvl ? "error-border" : ""}
-                  required
-                >
-                  <option value="">Select Year Level</option>
-                  <option value="7">7</option>
-                  <option value="8">8</option>
-                  <option value="9">9</option>
-                  <option value="10">10</option>
-                </select>
-                {errors.current_yr_lvl && <p className="error-message">{errors.current_yr_lvl}</p>}
-              </label>
-              <label>
-                Birthdate:
-                <input
-                  type="date"
-                  name="birthdate"
-                  value={newStudentData.birthdate}
-                  onChange={handleAddChange}
-                  className={errors.birthdate ? "error-border" : ""}
-                  required
-                />
-                {errors.birthdate && <p className="error-message">{errors.birthdate}</p>}
-              </label>
-              <label>
-                Gender:
-                <select
-                  name="gender"
-                  value={newStudentData.gender}
-                  onChange={handleAddChange}
-                  className={errors.gender ? "error-border" : ""}
-                  required
-                >
-                  <option value="">Select Gender</option>
-                  <option value="Male">Male</option>
-                  <option value="Female">Female</option>
-                </select>
-                {errors.gender && <p className="error-message">{errors.gender}</p>}
-              </label>
-              <label>
-                Age:
-                <input
-                  type="number"
-                  name="age"
-                  value={newStudentData.age}
-                  onChange={handleAddChange}
-                  className={errors.age ? "error-border" : ""}
-                  required
-                />
-                {errors.age && <p className="error-message">{errors.age}</p>}
-              </label>
-              <label>
-                Home Address:
-                <input
-                  type="text"
-                  name="home_address"
-                  value={newStudentData.home_address}
-                  onChange={handleAddChange}
-                  className={errors.home_address ? "error-border" : ""}
-                  required
-                />
-                {errors.home_address && <p className="error-message">{errors.home_address}</p>}
-              </label>
-              <label>
-                Barangay:
-                <input
-                  type="text"
-                  name="barangay"
-                  value={newStudentData.barangay}
-                  onChange={handleAddChange}
-                  className={errors.barangay ? "error-border" : ""}
-                  required
-                />
-                {errors.barangay && <p className="error-message">{errors.barangay}</p>}
-              </label>
-              <label>
-                City Municipality:
-                <input
-                  type="text"
-                  name="city_municipality"
-                  value={newStudentData.city_municipality}
-                  onChange={handleAddChange}
-                  className={errors.city_municipality ? "error-border" : ""}
-                  required
-                />
-                {errors.city_municipality && <p className="error-message">{errors.city_municipality}</p>}
-              </label>
-              <label>
-                Province:
-                <input
-                  type="text"
-                  name="province"
-                  value={newStudentData.province}
-                  onChange={handleAddChange}
-                  className={errors.province ? "error-border" : ""}
-                  required
-                />
-                {errors.province && <p className="error-message">{errors.province}</p>}
-              </label>
-              <label>
-                Contact Number:
-                <input
-                  type="number"
-                  name="contact_number"
-                  value={newStudentData.contact_number}
-                  onChange={handleAddChange}
-                  className={errors.contact_number ? "error-border" : ""}
-                  required
-                />
-                {errors.contact_number && <p className="error-message">{errors.contact_number}</p>}
-              </label>
-              <label>
-                Email Address:
-                <input
-                  type="email"
-                  name="email_address"
-                  value={newStudentData.email_address}
-                  onChange={handleAddChange}
-                  className={errors.email_address ? "error-border" : ""}
-                  required
-                />
-                {errors.email_address && <p className="error-message">{errors.email_address}</p>}
-              </label>
-            </div>
-            {/* Optional fields without required attribute */}
-            <label>
-              Father's Occupation:
-              <input
-                type="text"
-                name="father_occupation"
-                value={newStudentData.father_occupation}
-                onChange={handleAddChange}
-                className={errors.father_occupation ? "error-border" : ""}
-              />
-              {errors.father_occupation && <p className="error-message">{errors.father_occupation}</p>}
-            </label>
-            <label>
-              Mother's Occupation:
-              <input
-                type="text"
-                name="mother_occupation"
-                value={newStudentData.mother_occupation}
-                onChange={handleAddChange}
-                className={errors.mother_occupation ? "error-border" : ""}
-              />
-              {errors.mother_occupation && <p className="error-message">{errors.mother_occupation}</p>}
-            </label>
-            <label>
-              Annual Household Income:
-              <input
-                type="number"
-                name="annual_hshld_income"
-                value={newStudentData.annual_hshld_income}
-                onChange={handleAddChange}
-                className={errors.annual_hshld_income ? "error-border" : ""}
-              />
-              {errors.annual_hshld_income && <p className="error-message">{errors.annual_hshld_income}</p>}
-            </label>
-            <label>
-              Number of Siblings:
-              <input
-                type="number"
-                name="number_of_siblings"
-                value={newStudentData.number_of_siblings}
-                onChange={handleAddChange}
-                className={errors.number_of_siblings ? "error-border" : ""}
-              />
-              {errors.number_of_siblings && <p className="error-message">{errors.number_of_siblings}</p>}
-            </label>
-            <label>
-              Father's Education Level:
-              <input
-                type="text"
-                name="father_educ_lvl"
-                value={newStudentData.father_educ_lvl}
-                onChange={handleAddChange}
-                className={errors.father_educ_lvl ? "error-border" : ""}
-              />
-              {errors.father_educ_lvl && <p className="error-message">{errors.father_educ_lvl}</p>}
-            </label>
-            <label>
-              Mother's Education Level:
-              <input
-                type="text"
-                name="mother_educ_lvl"
-                value={newStudentData.mother_educ_lvl}
-                onChange={handleAddChange}
-                className={errors.mother_educ_lvl ? "error-border" : ""}
-              />
-              {errors.mother_educ_lvl && <p className="error-message">{errors.mother_educ_lvl}</p>}
-            </label>
-            <label>
-              Father's Contact Number:
-              <input
-                type="number"
-                name="father_contact_number"
-                value={newStudentData.father_contact_number}
-                onChange={handleAddChange}
-                className={errors.father_contact_number ? "error-border" : ""}
-                required
-              />
-              {errors.father_contact_number && <p className="error-message">{errors.father_contact_number}</p>}
-            </label>
-            <label>
-              Mother's Contact Number:
-              <input
-                type="number"
-                name="mother_contact_number"
-                value={newStudentData.mother_contact_number}
-                onChange={handleAddChange}
-                className={errors.mother_contact_number ? "error-border" : ""}
-                required
-              />
-              {errors.mother_contact_number && <p className="error-message">{errors.mother_contact_number}</p>}
-            </label>
-            <label>
-              Emergency Contact Number:
-              <input
-                type="number"
-                name="emergency_number"
-                value={newStudentData.emergency_number}
-                onChange={handleAddChange}
-                className={errors.emergency_number ? "error-border" : ""}
-                required
-              />
-              {errors.emergency_number && <p className="error-message">{errors.emergency_number}</p>}
-            </label>
-            <label>
-              Brigada Eskwela:
-              <select
-                name="brigada_eskwela"
-                value={newStudentData.brigada_eskwela}
-                onChange={handleAddChange}
-                className={errors.brigada_eskwela ? "error-border" : ""}
-                required
-              >
-                <option value="">Select Option</option>
-                <option value="1">Yes</option>
-                <option value="0">No</option>
-              </select>
-              {errors.brigada_eskwela && <p className="error-message">{errors.brigada_eskwela}</p>}
-            </label>
-            {/* Section Button Group */}
-            <div className="section-button-group">
-              <button className="section-save-button" onClick={saveNewSection}>Save</button>
-              <button className="section-cancel-button" onClick={cancelAdding}>Cancel</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-
     </div>
   );
 }
 
-export default Registrar_StudentsPage;
+export default Registrar_PendingEnrollmentPage;

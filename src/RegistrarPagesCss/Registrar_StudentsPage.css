@@ -415,3 +415,13 @@ input, select {
 .attendance-table th:last-child {
   text-align: center;
 }
+
+.error-border {
+  border: 2px solid red;
+}
+
+.error-message {
+  color: red;
+  font-size: 12px;
+  margin-top: 4px;
+}
