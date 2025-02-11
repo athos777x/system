@@ -31,6 +31,7 @@ import Form137 from './reports/form_137';
 import GoodMoral from './reports/good_moral';
 import LateEnrollees from './Utilities/late_enrollee';
 import StudentGrades from './Pages/selected_grade';
+import Registrar_PendingEnrollmentPage from './RegistrarPages/Registrar_PendingEnrollment';
 
 
 
@@ -95,6 +96,7 @@ function App() {
             <Route path="/section" element={<Registrar_SectionPage />} />
             <Route path="/summary-report-promotion" element={<Registrar_SummaryReportonPromotionPage />} />
             <Route path="/brigada-eskwela" element={<Registrar_BrigadaEskwela />} />
+            <Route path="/pending-enrollment" element={<Registrar_PendingEnrollmentPage />} />
 
             <Route path="/form-137" element={<Form137 />} />
             <Route path="/good-moral" element={<GoodMoral />} />

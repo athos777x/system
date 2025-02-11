@@ -93,6 +93,9 @@ function RegistrarSideBar({ showSidebar, toggleSidebar, handleLogout }) {
         </button>
         {showEnrollmentSubMenu && (
           <div className="submenu">
+            <button onClick={() => handleNavigate('/pending-enrollment')}>
+              <FiUsers className="icon" /> Pending Enrollment
+            </button>
             <button onClick={() => handleNavigate('/school-year')}>
               <FiCalendar className="icon" /> School Year
             </button>

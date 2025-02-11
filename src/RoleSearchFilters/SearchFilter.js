@@ -89,7 +89,7 @@ function SearchFilter({ handleSearch, handleFilter, handleApplyFilters }) {
       <select id="section" value={selectedSection} onChange={handleSectionChange} className="filter-select">
         <option value="">Select Section</option>
         {sections.map(section => (
-          <option key={section.section_id} value={section.section_id}>{section.section_name}</option>
+          <option key={section.section_id} value={section.section_name}>{section.section_name}</option>
         ))}
       </select>
       <button onClick={applyFilters} className="filter-button">Apply Filters</button>

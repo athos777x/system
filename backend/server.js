@@ -154,6 +154,102 @@ app.get('/students', (req, res) => {
       SELECT s.student_id, s.user_id, s.lastname, s.firstname, s.middlename, 
              s.current_yr_lvl, s.birthdate, s.gender, s.age, 
              s.home_address, s.barangay, s.city_municipality, s.province, 
+             s.contact_number, s.email_address, z.section_name, sy.school_year,
+             s.mother_name, s.father_name, s.parent_address, s.father_occupation, 
+             s.mother_occupation, s.annual_hshld_income, s.number_of_siblings, 
+             s.father_educ_lvl, s.mother_educ_lvl, s.father_contact_number, 
+             s.mother_contact_number, IF(s.brigada_eskwela=1,'Attended','Not Attended') AS brigada_eskwela,
+             (SELECT ss.status FROM student_school_year ss
+              JOIN school_year sy ON ss.school_year_id = sy.school_year_id
+              WHERE ss.student_id = s.student_id AND sy.status = 'active') as active_status,
+             se.enrollment_status, se.student_elective_id
+      FROM student s
+      LEFT JOIN student_elective se ON s.student_id = se.student_id
+      LEFT JOIN section z ON s.section_id=z.section_id
+      LEFT JOIN student_school_year ss ON s.student_id = ss.student_id
+      LEFT JOIN school_year sy ON ss.school_year_id = sy.school_year_id
+      WHERE s.active_status = 'unarchive' 
+    `;
+
+    const queryParams = [];
+    const conditions = [];
+
+    if (searchTerm) {
+      conditions.push(`(s.firstname LIKE ? OR s.lastname LIKE ?)`);
+      queryParams.push(`%${searchTerm}%`, `%${searchTerm}%`);
+    }
+
+    if (grade) {
+      conditions.push(`s.current_yr_lvl = ?`);
+      queryParams.push(grade);
+    }
+
+    if (section) {
+      conditions.push(`z.section_name = ?`);
+      queryParams.push(section);
+    }
+
+    if (school_year) {
+      conditions.push(`sy.school_year = ?`);
+      queryParams.push(school_year);
+    } 
+
+    if (conditions.length > 0) {
+      query += ' AND ' + conditions.join(' AND ');
+    }
+
+    query += ' ORDER BY s.current_yr_lvl DESC';
+
+    console.log('Final query:', query);
+    console.log('With parameters:', queryParams);
+
+    // Execute the main query
+    db.query(query, queryParams, (err, results) => {
+      if (err) {
+        console.error('Error fetching students:', err);
+        res.status(500).json({ error: 'Internal server error' });
+        return;
+      }
+      res.json(results);
+    });
+  });
+});
+
+app.get('/students/pending-enrollment', (req, res) => {
+  const { searchTerm, grade, section, school_year } = req.query;
+
+  console.log('Received params:', { searchTerm, grade, section, school_year });
+
+  // Query to fetch the active school year
+  const getActiveSchoolYearQuery = `
+    SELECT school_year 
+    FROM school_year 
+    WHERE status = 'active' 
+    LIMIT 1
+  `;
+
+  db.query(getActiveSchoolYearQuery, (err, results) => {
+    if (err) {
+      console.error('Error fetching active school year:', err);
+      res.status(500).json({ error: 'Failed to fetch active school year' });
+      return;
+    }
+
+    const latestSchoolYear = results[0]?.school_year;
+
+    if (!latestSchoolYear) {
+      console.error('No active school year found');
+      res.status(404).json({ error: 'No active school year found' });
+      return;
+    }
+
+    console.log('Active school year:', latestSchoolYear);
+
+    // Build the main query
+    let query = `
+      SELECT s.student_id, s.user_id, s.lastname, s.firstname, s.middlename, 
+             s.current_yr_lvl, s.birthdate, s.gender, s.age, 
+             s.home_address, s.barangay, s.city_municipality, s.province, 
              s.contact_number, s.email_address, 
              s.mother_name, s.father_name, s.parent_address, s.father_occupation, 
              s.mother_occupation, s.annual_hshld_income, s.number_of_siblings, 
@@ -165,7 +261,8 @@ app.get('/students', (req, res) => {
              se.enrollment_status, se.student_elective_id
       FROM student s
       LEFT JOIN student_elective se ON s.student_id = se.student_id 
-      WHERE s.active_status = 'unarchive'
+      LEFT JOIN enrollment xx ON s.student_id=xx.student_id
+      WHERE s.active_status = 'unarchive' AND xx.enrollment_status='pending'
     `;
 
     const queryParams = [];
@@ -186,26 +283,26 @@ app.get('/students', (req, res) => {
       queryParams.push(section);
     }
 
-    if (school_year) {
-      conditions.push(`
-        s.student_id IN (
-          SELECT ss.student_id FROM student_school_year ss 
-          JOIN school_year sy ON ss.school_year_id = sy.school_year_id 
-          WHERE sy.school_year = ?
-        )
-      `);
-      queryParams.push(school_year);
-    } else {
-      // Default to the latest school year if no specific year is provided
-      conditions.push(`
-        s.student_id IN (
-          SELECT ss.student_id FROM student_school_year ss 
-          JOIN school_year sy ON ss.school_year_id = sy.school_year_id 
-          WHERE sy.school_year = ?
-        )
-      `);
-      queryParams.push(latestSchoolYear);
-    }
+    // if (school_year) {
+    //   conditions.push(`
+    //     s.student_id IN (
+    //       SELECT ss.student_id FROM student_school_year ss 
+    //       JOIN school_year sy ON ss.school_year_id = sy.school_year_id 
+    //       WHERE sy.school_year = ?
+    //     )
+    //   `);
+    //   queryParams.push(school_year);
+    // } else {
+    //   // Default to the latest school year if no specific year is provided
+    //   conditions.push(`
+    //     s.student_id IN (
+    //       SELECT ss.student_id FROM student_school_year ss 
+    //       JOIN school_year sy ON ss.school_year_id = sy.school_year_id 
+    //       WHERE sy.school_year = ?
+    //     )
+    //   `);
+    //   queryParams.push(latestSchoolYear);
+    // }
 
     if (conditions.length > 0) {
       query += ' AND ' + conditions.join(' AND ');
@@ -227,6 +324,7 @@ app.get('/students', (req, res) => {
     });
   });
 });
+
 
 app.put('/students/:id', (req, res) => {
   const studentId = req.params.id;
@@ -750,7 +848,7 @@ app.post('/apply-enrollment', (req, res) => {
   const queryFetch = `
     SELECT a.student_id, a.current_yr_lvl, a.lastname, a.firstname, a.middlename, c.school_year_id 
     FROM student a
-    JOIN school_year c ON c.school_year = '2023-2024'
+    JOIN school_year c ON c.status = 'active' 
     WHERE a.user_id = ?;
   `;
 
