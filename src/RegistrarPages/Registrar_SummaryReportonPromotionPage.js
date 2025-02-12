@@ -145,6 +145,17 @@ function Registrar_SummaryReportonPromotionPage() {
         </button>
       </div>
 
+      {/* Form 138 Section */}
+      <div className="form137-section">
+        <div>
+          <h2 className="form137-title">Form 137</h2>
+          <p className="report-description">Generate Form 137 for a specific student.</p>
+        </div>
+        <button className="report-button" onClick={() => openModal('form_138')}>
+          Generate Form 137
+        </button>
+      </div>
+
       {/* Good Moral Section */}
       <div className="good-moral-section">
         <div>

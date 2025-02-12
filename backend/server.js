@@ -2316,11 +2316,6 @@ app.put('/user/:userId/change-password', (req, res) => {
 
 
 
-app.listen(3001, () => {
-  console.log('Server running on port 3001');
-});
-
-
 // Endpoint to fetch grades from marks table
 app.get('/students/:studentId/marks', (req, res) => {
   const studentId = req.params.studentId;
@@ -3178,5 +3173,6 @@ app.get('/api/students/search', (req, res) => {
 
 
 
-
-
+app.listen(3001, () => {
+  console.log('Server running on port 3001');
+});
