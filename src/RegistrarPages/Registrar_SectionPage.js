@@ -4,6 +4,7 @@ import SectionSearchFilter from '../RoleSearchFilters/SectionSearchFilter';
 import '../RegistrarPagesCss/Registrar_SectionPage.css';
 
 function Registrar_SectionPage() {
+  const [roleName, setRoleName] = useState('');
   const [sections, setSections] = useState([]);
   const [filteredSections, setFilteredSections] = useState([]);
   const [selectedSectionId, setSelectedSectionId] = useState(null);
@@ -221,6 +222,39 @@ function Registrar_SectionPage() {
     return status.charAt(0).toUpperCase() + status.slice(1);
   };
 
+  useEffect(() => {
+    const userId = localStorage.getItem('userId'); // Retrieve userId from localStorage
+    if (userId) {
+      console.log(`Retrieved userId from localStorage: ${userId}`); // Debugging log
+      fetchUserRole(userId);
+    } else {
+      console.error('No userId found in localStorage');
+    }
+  }, []);
+
+  const fetchUserRole = async (userId) => {
+    try {
+      console.log(`Fetching role for user ID: ${userId}`); // Debugging log
+      const response = await axios.get(`http://localhost:3001/user-role/${userId}`);
+      if (response.status === 200) {
+        console.log('Response received:', response.data); // Debugging log
+        setRoleName(response.data.role_name);
+        console.log('Role name set to:', response.data.role_name); // Debugging log
+      } else {
+        console.error('Failed to fetch role name. Response status:', response.status);
+      }
+    } catch (error) {
+      if (error.response) {
+        console.error('Error response from server:', error.response.data);
+      } else if (error.request) {
+        console.error('No response received from server. Request:', error.request);
+      } else {
+        console.error('Error setting up request:', error.message);
+      }
+    }
+  };
+
+
   return (
     <div className="section-container">
       <h1 className="section-title">Section Management</h1>
@@ -232,7 +266,9 @@ function Registrar_SectionPage() {
         />
       </div>
       <div className="section-add-section-button-container">
+      {(roleName != 'academic_coordinator') && (
         <button className="section-add-section-button" onClick={startAdding}>Add New Section</button>
+      )}
       </div>
       <table className="attendance-table">
         <thead>
@@ -254,7 +290,9 @@ function Registrar_SectionPage() {
                 <td>{capitalizeStatus(section.status)}</td>
                 <td>
                   <button className="section-view-button" onClick={() => handleViewClick(section.section_id)}>View</button>
+                  {(roleName != 'academic_coordinator') && (
                   <button className="section-edit-button" onClick={() => startEditing(section.section_id)}>Edit</button>
+                  )}
                   <button
                     className="section-archive-button"
                     onClick={() => toggleArchiveStatus(section.section_id, section.status)}
