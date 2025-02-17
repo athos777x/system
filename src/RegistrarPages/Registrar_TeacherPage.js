@@ -43,6 +43,17 @@ function Registrar_TeacherPage() {
   const [selectedGradeLevelForSection, setSelectedGradeLevelForSection] = useState('7');
   const [sectionsByGrade, setSectionsByGrade] = useState([]);
   const [teacherSection, setTeacherSection] = useState(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editTeacherData, setEditTeacherData] = useState({
+    firstname: '',
+    lastname: '',
+    middlename: '',
+    contact_number: '',
+    address: '',
+    year_started: '',
+    role_name: '',
+    role_id: ''
+  });
 
   const navigate = useNavigate();
 
@@ -437,6 +448,49 @@ function Registrar_TeacherPage() {
     }
   };
 
+  const handleEditClick = (teacher) => {
+    setEditTeacherData({
+      ...teacher,
+      role_name: teacher.role_name
+    });
+    setShowEditModal(true);
+  };
+
+  const handleEditChange = (e) => {
+    const { name, value } = e.target;
+    setEditTeacherData(prevState => {
+      const updates = {
+        ...prevState,
+        [name]: value
+      };
+      
+      if (name === 'role_name') {
+        const selectedRole = roles.find(role => role.role_name === value);
+        if (selectedRole) {
+          updates.role_id = selectedRole.role_id;
+        }
+      }
+      
+      return updates;
+    });
+  };
+
+  const saveEditedTeacher = async () => {
+    try {
+      const response = await axios.put(`http://localhost:3001/employees/${editTeacherData.employee_id}`, editTeacherData);
+      if (response.status === 200) {
+        alert('Teacher updated successfully!');
+        await fetchTeachers();
+        setShowEditModal(false);
+      } else {
+        alert('Failed to update teacher. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error updating teacher:', error);
+      alert(`Error updating teacher: ${error.response?.data?.message || 'Please try again.'}`);
+    }
+  };
+
   return (
     <div className="students-container">
       <h1 className="students-title">Employees</h1>
@@ -477,6 +531,14 @@ function Registrar_TeacherPage() {
                   >
                     View
                   </button>
+                  {(roleName === 'registrar' || roleName === 'principal') && teacher.status === 'active' && (
+                    <button 
+                      className="students-edit-button"
+                      onClick={() => handleEditClick(teacher)}
+                    >
+                      Edit
+                    </button>
+                  )}
                 </td>
               </tr>
 
@@ -486,6 +548,10 @@ function Registrar_TeacherPage() {
                     <div className="teacher-details-container">
                       <table className="teacher-details-table">
                         <tbody>
+                        <tr>
+                            <th>Employee ID:</th>
+                            <td>{teacher.employee_id}</td>
+                          </tr>
                           <tr>
                             <th>Last Name:</th>
                             <td>{teacher.lastname}</td>
@@ -838,6 +904,102 @@ function Registrar_TeacherPage() {
                   setSelectedSection('');
                   setSelectedGradeLevelForSection('7');
                 }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {showEditModal && (
+        <div className="section-modal">
+          <div className="section-modal-content">
+            <h2>Edit Teacher</h2>
+            <label>
+              Lastname:
+              <input
+                type="text"
+                name="lastname"
+                value={editTeacherData.lastname}
+                onChange={handleEditChange}
+                required
+              />
+            </label>
+            <label>
+              Firstname:
+              <input
+                type="text"
+                name="firstname"
+                value={editTeacherData.firstname}
+                onChange={handleEditChange}
+                required
+              />
+            </label>
+            <label>
+              Middlename:
+              <input
+                type="text"
+                name="middlename"
+                value={editTeacherData.middlename}
+                onChange={handleEditChange}
+              />
+            </label>
+            <label>
+              Contact Number:
+              <input
+                type="text"
+                name="contact_number"
+                value={editTeacherData.contact_number}
+                onChange={handleEditChange}
+              />
+            </label>
+            <label>
+              Address:
+              <input
+                type="text"
+                name="address"
+                value={editTeacherData.address}
+                onChange={handleEditChange}
+              />
+            </label>
+            <label>
+              Year Started:
+              <input
+                type="text"
+                name="year_started"
+                value={editTeacherData.year_started}
+                onChange={handleEditChange}
+              />
+            </label>
+            <label>
+              Role:
+              <select
+                name="role_name"
+                value={editTeacherData.role_name}
+                onChange={handleEditChange}
+                required
+              >
+                <option value="">Select Role</option>
+                {roles.map((role) => (
+                  <option 
+                    key={role.role_id} 
+                    value={role.role_name}
+                  >
+                    {formatRoleName(role.role_name)}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <div className="section-button-group">
+              <button 
+                className="section-save-button" 
+                onClick={saveEditedTeacher}
+              >
+                Save Changes
+              </button>
+              <button 
+                className="section-cancel-button" 
+                onClick={() => setShowEditModal(false)}
               >
                 Cancel
               </button>
