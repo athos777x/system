@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../RegistrarPagesCss/Registrar_SummaryReportonPromotionPage.css';
 
@@ -10,21 +10,42 @@ function Registrar_SummaryReportonPromotionPage() {
   const [sections, setSections] = useState([]); // State to store sections
   const [studentName, setStudentName] = useState("");
   const [suggestions, setSuggestions] = useState([]);
+  const [schoolYears, setSchoolYears] = useState([]); // Store fetched school years
+  const [selectedSchoolYear, setSelectedSchoolYear] = useState(""); // Selected school year
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // Fetch school years from the backend
+    const fetchSchoolYears = async () => {
+      try {
+        const response = await fetch("http://localhost:3001/api/school_years");
+        if (!response.ok) {
+          throw new Error("Failed to fetch school years");
+        }
+        const data = await response.json();
+        setSchoolYears(data.map(sy => sy.school_year)); // Store school years
+      } catch (error) {
+        console.error("Error fetching school years:", error);
+      }
+    };
+    
+    fetchSchoolYears();
+  }, []);
 
   const openModal = (type) => {
     setModalContent(type);
     setShowModal(true);
-    setGrade(""); // Reset grade to default "--Select One--"
-    setSection(""); // Reset section to default "--Select One--"
+    setGrade("");
+    setSection("");
+    setSelectedSchoolYear(""); // Reset school year selection
   };
-  
 
   const closeModal = () => {
     setModalContent(null);
     setShowModal(false);
     setSuggestions([]);
-    setSections([]); // Clear sections when modal is closed
+    setSections([]);
+    setSelectedSchoolYear(""); // Clear selected school year on close
   };
 
   const handleGenerateForm137 = () => {
@@ -182,10 +203,17 @@ function Registrar_SummaryReportonPromotionPage() {
         <div className="modal-overlay">
           <div className="modal">
             <button className="close-modal" onClick={closeModal}>&times;</button>
-            {modalContent === 'form_137' && (
+            {(modalContent === 'form_137' || modalContent === 'form_138')  &&  (
               <div>
                 <h3>Generate Form 138</h3>
-                <form onSubmit={(e) => e.preventDefault()}>
+                <form onSubmit={(e) => e.preventDefault()}> 
+                  <label>School Year:</label>
+                  <select value={selectedSchoolYear} onChange={(e) => setSelectedSchoolYear(e.target.value)} required>
+                    <option value="">--Select One--</option>
+                    {schoolYears.map((year, index) => (
+                      <option key={index} value={year}>{year}</option>
+                    ))}
+                  </select>
                   <label>Grade:</label>
                   <select value={grade} onChange={handleGradeChange} required> 
                     <option value="">--Select One--</option>
@@ -270,6 +298,13 @@ function Registrar_SummaryReportonPromotionPage() {
               <div>
                 <h3>Generate Late Enrollees Report</h3>
                 <form onSubmit={(e) => e.preventDefault()}>
+                <label>School Year:</label>
+                  <select value={selectedSchoolYear} onChange={(e) => setSelectedSchoolYear(e.target.value)} required>
+                    <option value="">--Select One--</option>
+                    {schoolYears.map((year, index) => (
+                      <option key={index} value={year}>{year}</option>
+                    ))}
+                  </select>
                   <label>Grade:</label>
                   <select value={grade} onChange={handleGradeChange} required>
                     <option value="">--Select One--</option>
