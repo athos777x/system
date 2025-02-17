@@ -673,13 +673,15 @@ const handleArchive = () => {
                   >
                     View
                   </button>
+                  {(roleName != 'principal') && (
                   <button
                     className="students-view-button"
                     onClick={() => toggleStudentDetails(student.student_id, true)}
                   >
                     Edit
                   </button>
-                  {(roleName === 'registrar' || roleName === 'principal') && (
+                  )}
+                  {(roleName === 'registrar') && (
                     <>
                   {student.active_status === null && (
                     <button 
