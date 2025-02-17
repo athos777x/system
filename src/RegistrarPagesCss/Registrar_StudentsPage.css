@@ -66,6 +66,7 @@
 .students-register-button,
 .students-validate-button,
 .students-approve-button,
+.students-edit-button,
 .sectionlist-view-button {
   padding: 8px 16px;
   border: none;
@@ -83,6 +84,7 @@
 .students-register-button:hover,
 .students-validate-button:hover,
 .students-approve-button:hover,
+.students-edit-button:hover,
 .sectionlist-view-button:hover {
   background-color: #218838;
   transform: translateY(-1px);
