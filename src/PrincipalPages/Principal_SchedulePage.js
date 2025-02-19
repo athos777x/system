@@ -23,9 +23,11 @@ function Principal_SchedulePage() {
     time_start: '',
     time_end: '',
     day: '',
-    teacher_id: ''
+    teacher_id: '',
+    section_id: ''
   });
   const [subjects, setSubjects] = useState([]);
+  const [filteredSubjects, setFilteredSubjects] = useState([]);
 
   const fetchSections = useCallback(async () => {
     try {
@@ -103,13 +105,27 @@ function Principal_SchedulePage() {
 
   const startAdding = async () => {
     try {
-      const response = await axios.get('http://localhost:3001/subjects', {
-        params: { archive_status: 'unarchive' }
+      const [subjectsResponse, sectionsResponse] = await Promise.all([
+        axios.get('http://localhost:3001/subjects', {
+          params: { archive_status: 'unarchive' }
+        }),
+        axios.get('http://localhost:3001/sections')
+      ]);
+      console.log('Fetched subjects:', subjectsResponse.data);
+      setSubjects(subjectsResponse.data);
+      setFilteredSubjects([]); // Reset filtered subjects
+      setSections(sectionsResponse.data);
+      setNewSchedule({
+        subject_name: '',
+        time_start: '',
+        time_end: '',
+        day: '',
+        teacher_id: '',
+        section_id: ''
       });
-      setSubjects(response.data);
       setIsModalOpen(true);
     } catch (error) {
-      console.error('Error fetching subjects:', error);
+      console.error('Error fetching data:', error);
     }
   };
 
@@ -159,6 +175,24 @@ function Principal_SchedulePage() {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setNewSchedule({ ...newSchedule, [name]: value });
+
+    // When section is selected, filter subjects by grade level
+    if (name === 'section_id' && value) {
+      const selectedSection = sections.find(section => section.section_id === Number(value));
+      console.log('Selected section:', selectedSection);
+      if (selectedSection) {
+        const sectionGrade = selectedSection.grade_level;
+        console.log('Section grade:', sectionGrade);
+        console.log('All subjects:', subjects);
+        const filteredSubjects = subjects.filter(subject => 
+          String(subject.grade_level) === String(sectionGrade)
+        );
+        console.log('Filtered subjects:', filteredSubjects);
+        setFilteredSubjects(filteredSubjects);
+      } else {
+        setFilteredSubjects([]);
+      }
+    }
   };
 
   const handleAddSchedule = async () => {
@@ -329,13 +363,27 @@ function Principal_SchedulePage() {
           <div className="section-modal-content">
             <h2>Add New Schedule</h2>
             <select
+              name="section_id"
+              value={newSchedule.section_id}
+              onChange={handleInputChange}
+              required
+            >
+              <option value="">Select Section</option>
+              {sections.map((section) => (
+                <option key={section.section_id} value={section.section_id}>
+                  Section {section.section_name} (Grade {section.grade_level})
+                </option>
+              ))}
+            </select>
+            <select
               name="subject_name"
               value={newSchedule.subject_name}
               onChange={handleInputChange}
               required
+              disabled={!newSchedule.section_id}
             >
               <option value="">Select Subject</option>
-              {subjects.map((subject) => (
+              {filteredSubjects.map((subject) => (
                 <option key={subject.subject_id} value={subject.subject_name}>
                   {subject.subject_name} (Grade {subject.grade_level})
                 </option>
