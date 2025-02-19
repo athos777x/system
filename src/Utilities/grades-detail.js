@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 
 const GradesDetail = ({ 
   title, 
@@ -40,6 +41,41 @@ const GradesDetail = ({
     }
     return options;
   };
+
+  const [roleName, setRoleName] = useState('');
+  
+
+  const fetchUserRole = async (userId) => {
+    try {
+      console.log(`Fetching role for user ID: ${userId}`); // Debugging log
+      const response = await axios.get(`http://localhost:3001/user-role/${userId}`);
+      if (response.status === 200) {
+        console.log('Response received:', response.data); // Debugging log
+        setRoleName(response.data.role_name);
+        console.log('Role name set to:', response.data.role_name); // Debugging log
+      } else {
+        console.error('Failed to fetch role name. Response status:', response.status);
+      }
+    } catch (error) {
+      if (error.response) {
+        console.error('Error response from server:', error.response.data);
+      } else if (error.request) {
+        console.error('No response received from server. Request:', error.request);
+      } else {
+        console.error('Error setting up request:', error.message);
+      }
+    }
+  };
+
+  useEffect(() => {
+    const userId = localStorage.getItem('userId'); // Retrieve userId from localStorage
+    if (userId) {
+      console.log(`Retrieved userId from localStorage: ${userId}`); // Debugging log
+      fetchUserRole(userId);
+    } else {
+      console.error('No userId found in localStorage');
+    }
+  }, []);
 
   return (
     <div className="grade-column">
@@ -89,8 +125,12 @@ const GradesDetail = ({
                 <td>{ws}</td>
                 {!isLocked && (
                   <td>
-                    <button onClick={() => onEditActivity(item, index, title)}>Edit</button>
-                    <button onClick={() => onDeleteActivity(item, index, title)}>Delete</button>
+                     {(roleName !== 'principal') && (
+                        <>
+                          <button onClick={() => onEditActivity(item, index, title)}>Edit</button>
+                          <button onClick={() => onDeleteActivity(item, index, title)}>Delete</button>
+                        </>
+                      )}
                   </td>
                 )}
               </tr>
@@ -99,11 +139,12 @@ const GradesDetail = ({
         </tbody>
       </table>
     
-      {!isLocked && (
+      {!isLocked && roleName !== 'principal' && (
         <button className="add-activity-btn" onClick={onAddActivity}>
           + Add {title}
         </button>
       )}
+
     </div>
   );
 };

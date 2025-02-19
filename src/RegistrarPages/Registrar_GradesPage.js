@@ -3,6 +3,7 @@ import axios from 'axios';
 import '../RegistrarPagesCss/Registrar_GradesPage.css';
 import GradeDetail from '../Utilities/grades-detail'
 import { useNavigate } from "react-router-dom";
+import Student_Grades_Search from '../RoleSearchFilters/student_grades_search';
 
 const Registrar_GradesPage = () => {
   // State variables
@@ -29,11 +30,14 @@ const Registrar_GradesPage = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [suggestions, setSuggestions] = useState([]);
+  const [roleName, setRoleName] = useState('');
+  const [showDetailedView, setShowDetailedView] = useState(false); // New state to show the detailed view
   const [percentages, setPercentages] = useState({
     WW: 30,
     PT: 50,
     QA: 20,
   });
+  const [filters, setFilters] = useState({ searchTerm: '' });
 
   // State to store grades detail
   const [gradesDetailData, setGradesDetailData] = useState({});
@@ -72,8 +76,13 @@ const Registrar_GradesPage = () => {
 };
 
   
-  
-  
+const handleSearch = (filters) => {
+  setFilters(filters);
+  setShowGradesTable(false); // Show the detailed grades view
+  fetchSectionStudents(true, filters.studentId); // Fetch the specific student's grades
+};
+
+
       
   // Function to handle deleting the activity
   const handleDeleteActivity = (item, index, type) => {
@@ -130,7 +139,37 @@ const Registrar_GradesPage = () => {
       });
   };
   
-  
+  const fetchUserRole = async (userId) => {
+    try {
+      console.log(`Fetching role for user ID: ${userId}`); // Debugging log
+      const response = await axios.get(`http://localhost:3001/user-role/${userId}`);
+      if (response.status === 200) {
+        console.log('Response received:', response.data); // Debugging log
+        setRoleName(response.data.role_name);
+        console.log('Role name set to:', response.data.role_name); // Debugging log
+      } else {
+        console.error('Failed to fetch role name. Response status:', response.status);
+      }
+    } catch (error) {
+      if (error.response) {
+        console.error('Error response from server:', error.response.data);
+      } else if (error.request) {
+        console.error('No response received from server. Request:', error.request);
+      } else {
+        console.error('Error setting up request:', error.message);
+      }
+    }
+  };
+
+  useEffect(() => {
+    const userId = localStorage.getItem('userId'); // Retrieve userId from localStorage
+    if (userId) {
+      console.log(`Retrieved userId from localStorage: ${userId}`); // Debugging log
+      fetchUserRole(userId);
+    } else {
+      console.error('No userId found in localStorage');
+    }
+  }, []);
   
   
   // Handle updating the item in the data state
@@ -289,30 +328,22 @@ const Registrar_GradesPage = () => {
   };
 
   // Add this function to fetch students
-  const fetchSectionStudents = async () => {
+  const fetchSectionStudents = async (searchMode = false, studentId = null) => {
     try {
-      if (!selectedSection?.section_id) {
-        console.error('No section ID available');
+      let url;
+  
+      if (searchMode && studentId) {
+        // Fetch specific student without grade/section
+        url = `http://localhost:3001/student-grades/${studentId}`;
+      } else if (selectedSubject?.id) {
+        url = `http://localhost:3001/section-students/${selectedSection?.section_id || 0}/${selectedGrade}/${selectedSubject.id}/${selectedSubject.type === 'elective' ? 'elective' : 'subject'}`;
+      } else if (selectedSection?.section_id) {
+        url = `http://localhost:3001/section-students/${selectedSection.section_id}/${selectedGrade}`;
+      } else {
+        console.error("No section or student specified for fetching students.");
         return;
       }
-
-      let url;
-      // If we have a selected subject, use the subject-specific endpoint
-      if (selectedSubject?.id) {
-        url = `http://localhost:3001/section-students/${
-          selectedSection.section_id
-        }/${
-          selectedGrade
-        }/${
-          selectedSubject.id
-        }/${
-          selectedSubject.type === 'elective' ? 'elective' : 'subject'
-        }`;
-      } else {
-        // Otherwise, use the basic endpoint for all students in section
-        url = `http://localhost:3001/section-students/${selectedSection.section_id}/${selectedGrade}`;
-      }
-      
+  
       console.log('Fetching students with URL:', url);
       const response = await axios.get(url);
       console.log('Fetched students:', response.data);
@@ -322,6 +353,8 @@ const Registrar_GradesPage = () => {
       setStudents([]);
     }
   };
+  
+  
 
   // Add handler for subject click
   const handleSubjectClick = (subject) => {
@@ -555,14 +588,7 @@ const handleStudentNameClick = (student) => {
         }
       }
       
-      // Merge grades detail with existing grades
-      // gradesDetailData.forEach(detail => {
-      //   const key = `${detail.student_id}-${detail.subject_name}`;
-      //   if (!grades[key]) {
-      //     grades[key] = [];
-      //   }
-      //   grades[key].push(detail); // Add detail to the corresponding student-subject key
-      // });
+
 
       setStudentGrades(grades);
     };
@@ -729,36 +755,13 @@ const handleStudentNameClick = (student) => {
       setSuggestions([]); // Hide suggestions after selection
   };
 
-  // Handle search button click
-  const handleSearch = () => {
-      if (selectedStudent) {
-          navigate(`/student-grades?student=${encodeURIComponent(selectedStudent)}`);
-      } else {
-          alert("Please select a student before searching.");
-      }
-  };
 
   return (
     <div className="grades-container">
-      <h2>Grades</h2>
-          <div className="search-box">
-                <input
-                    type="text"
-                    placeholder="Search student..."
-                    value={searchQuery}
-                    onChange={handleInputChange}
-                />
-                <button onClick={handleSearch}>Search</button>
-                {suggestions.length > 0 && (
-                    <ul className="suggestions-list">
-                        {suggestions.map((student, index) => (
-                            <li key={index} onClick={() => handleSelectStudent(student.stud_name)}>
-                                {student.stud_name}
-                            </li>
-                        ))}
-                    </ul>
-                )}
-            </div>
+      <h2 className='grades-title'>Grades</h2>
+      <div className="subjects-add-subject-button-container">
+        <Student_Grades_Search handleSearch={handleSearch} />
+      </div>
 
       {!showSubjectGrades && !showGradesTable && (
         <div className="detailed-grades-view">
@@ -1158,6 +1161,7 @@ const handleStudentNameClick = (student) => {
                   </button>
                 )
               ) : (
+                roleName !== 'principal') && (
                 <button className="submit-grades-btn" onClick={handleSubmitGrades}>
                   Submit Grades
                 </button>
