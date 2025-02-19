@@ -1395,41 +1395,75 @@ app.get('/employees', (req, res) => {
 app.post('/employees', (req, res) => {
   console.log('Received employee data:', req.body);
 
-  const employeeQuery = `
-    INSERT INTO employee (
-      lastname,
-      firstname,
-      middlename,
-      contact_number,
-      address,
-      year_started,
-      role_name,
-      status,
-      archive_status
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, 'active', 'unarchive')
-  `;
+  const { lastname, firstname, middlename, contact_number, address, year_started, role_name } = req.body;
 
-  const values = [
-    req.body.lastname,
-    req.body.firstname,
-    req.body.middlename,
-    req.body.contact_number,
-    req.body.address,
-    req.body.year_started,
-    req.body.role_name
-  ];
+  // First, get the role_id based on the role_name
+  const getRoleIdQuery = `SELECT role_id FROM roles WHERE role_name = ?`;
 
-  db.query(employeeQuery, values, (error, result) => {
-    if (error) {
-      console.error('Failed to add employee:', error);
-      return res.status(500).json({ error: 'Failed to add employee' });
+  db.query(getRoleIdQuery, [role_name], (roleError, roleResult) => {
+    if (roleError) {
+      console.error('Failed to retrieve role_id:', roleError);
+      return res.status(500).json({ error: 'Failed to retrieve role_id' });
     }
-    res.status(201).json({ 
-      message: 'Employee added successfully', 
-      employeeId: result.insertId
+
+    if (roleResult.length === 0) {
+      return res.status(400).json({ error: 'Invalid role_name' });
+    }
+
+    const role_id = roleResult[0].role_id;
+
+    // Insert employee details
+    const employeeQuery = `
+      INSERT INTO employee (
+        lastname,
+        firstname,
+        middlename,
+        contact_number,
+        address,
+        year_started,
+        role_name,
+        status,
+        archive_status
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, 'active', 'unarchive')
+    `;
+
+    const employeeValues = [lastname, firstname, middlename, contact_number, address, year_started, role_name];
+
+    db.query(employeeQuery, employeeValues, (employeeError, employeeResult) => {
+      if (employeeError) {
+        console.error('Failed to add employee:', employeeError);
+        return res.status(500).json({ error: 'Failed to add employee' });
+      }
+
+      const employeeId = employeeResult.insertId;
+      const username = `${lastname.toLowerCase()}.${firstname.toLowerCase()}@lnhs.com`;
+      const defaultPassword = '1234'; // Default password
+      const encryptedPassword = `SHA1('${defaultPassword}')`; // SHA1 encryption (consider bcrypt for security)
+
+      // Insert user account
+      const userQuery = `
+        INSERT INTO users (username, password, role_id, role_name, password1)
+        VALUES (?,${defaultPassword}, ?, ?, ${encryptedPassword})
+      `;
+
+      const userValues = [username, role_id, role_name];
+
+      db.query(userQuery, userValues, (userError) => {
+        if (userError) {
+          console.error('Failed to create user account:', userError);
+          return res.status(500).json({ error: 'Failed to create user account' });
+        }
+
+        res.status(201).json({ 
+          message: 'Employee and user account added successfully', 
+          employeeId 
+        });
+      });
     });
   });
 });
+
+
 
 // ENDPOINT USED:
 // TEACHER PAGE
