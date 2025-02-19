@@ -194,9 +194,14 @@ function Principal_SubjectsPage() {
                         <button className="edit-button" onClick={handleEdit}>
                           Edit
                         </button>
-                        <button className="delete-button" onClick={handleDelete}>
+                        <button 
+                          className="delete-button" 
+                          onClick={handleDelete} 
+                          disabled={selectedSubject?.status === 'active'} // Disable if status is not 'active'
+                        >
                           Archive
                         </button>
+
                       </div>
                     </td>
                   </tr>
