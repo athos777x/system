@@ -2020,9 +2020,11 @@ app.get('/sections/:sectionId/schedules', (req, res) => {
     SELECT sc.schedule_id, sc.teacher_id, sb.subject_name, 
            TIME_FORMAT(sc.time_start, '%h:%i %p') as time_start, 
            TIME_FORMAT(sc.time_end, '%h:%i %p') as time_end, 
-           sc.day, sc.section_id, sc.schedule_status
+           sc.day, sc.section_id, sc.schedule_status,
+           CONCAT(e.firstname, ' ', IF(e.middlename IS NOT NULL AND e.middlename != '', CONCAT(LEFT(e.middlename, 1), '. '), ''), e.lastname) as teacher_name
     FROM schedule sc
     JOIN subject sb ON sc.subject_id = sb.subject_id
+    LEFT JOIN employee e ON sc.teacher_id = e.employee_id
     WHERE sc.section_id = ?
     ORDER BY sc.time_start
   `;
