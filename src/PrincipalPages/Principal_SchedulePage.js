@@ -240,12 +240,17 @@ function Principal_SchedulePage() {
                                         />
                                       </td>
                                       <td>
-                                        <input
-                                          type="text"
+                                        <select
                                           name="day"
                                           value={editFormData.day}
                                           onChange={handleEditChange}
-                                        />
+                                        >
+                                          <option value="Monday">Monday</option>
+                                          <option value="Tuesday">Tuesday</option>
+                                          <option value="Wednesday">Wednesday</option>
+                                          <option value="Thursday">Thursday</option>
+                                          <option value="Friday">Friday</option>
+                                        </select>
                                       </td>
                                       <td>
                                         <input
@@ -335,13 +340,18 @@ function Principal_SchedulePage() {
               value={newSchedule.time_end}
               onChange={handleInputChange}
             />
-            <input
-              type="text"
+            <select
               name="day"
-              placeholder="Day"
               value={newSchedule.day}
               onChange={handleInputChange}
-            />
+            >
+              <option value="">Select Day</option>
+              <option value="Monday">Monday</option>
+              <option value="Tuesday">Tuesday</option>
+              <option value="Wednesday">Wednesday</option>
+              <option value="Thursday">Thursday</option>
+              <option value="Friday">Friday</option>
+            </select>
             <input
               type="number"
               name="teacher_id"
