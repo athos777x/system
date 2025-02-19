@@ -19,7 +19,7 @@ function Principal_SchedulePage() {
   const [editFormData, setEditFormData] = useState({});
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newSchedule, setNewSchedule] = useState({
-    subject_name: '',
+    subject_id: '',
     time_start: '',
     time_end: '',
     day: '',
@@ -121,7 +121,7 @@ function Principal_SchedulePage() {
       setSections(sectionsResponse.data);
       setTeachers(teachersResponse.data);
       setNewSchedule({
-        subject_name: '',
+        subject_id: '',
         time_start: '',
         time_end: '',
         day: '',
@@ -210,8 +210,16 @@ function Principal_SchedulePage() {
 
   const handleAddSchedule = async () => {
     try {
-      await axios.post('http://localhost:3001/schedules', newSchedule);
-      fetchSectionSchedules(selectedSectionId);
+      // Add schedule_status as Pending Approval
+      const scheduleData = {
+        ...newSchedule,
+        schedule_status: 'Pending Approval'
+      };
+      
+      await axios.post('http://localhost:3001/schedules', scheduleData);
+      if (selectedSectionId) {
+        fetchSectionSchedules(selectedSectionId);
+      }
       setIsModalOpen(false);
     } catch (error) {
       console.error('Error adding schedule:', error);
@@ -396,15 +404,15 @@ function Principal_SchedulePage() {
               ))}
             </select>
             <select
-              name="subject_name"
-              value={newSchedule.subject_name}
+              name="subject_id"
+              value={newSchedule.subject_id}
               onChange={handleInputChange}
               required
               disabled={!newSchedule.section_id}
             >
               <option value="">Select Subject</option>
               {filteredSubjects.map((subject) => (
-                <option key={subject.subject_id} value={subject.subject_name}>
+                <option key={subject.subject_id} value={subject.subject_id}>
                   {subject.subject_name} (Grade {subject.grade_level})
                 </option>
               ))}
