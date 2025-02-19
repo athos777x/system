@@ -19,12 +19,16 @@ function Principal_SchedulePage() {
   const [editFormData, setEditFormData] = useState({});
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newSchedule, setNewSchedule] = useState({
-    subject_name: '',
+    subject_id: '',
     time_start: '',
     time_end: '',
     day: '',
-    teacher_id: ''
+    teacher_id: '',
+    section_id: ''
   });
+  const [subjects, setSubjects] = useState([]);
+  const [filteredSubjects, setFilteredSubjects] = useState([]);
+  const [teachers, setTeachers] = useState([]);
 
   const fetchSections = useCallback(async () => {
     try {
@@ -100,13 +104,47 @@ function Principal_SchedulePage() {
     }
   };
 
-  const startAdding = () => {
-    setIsModalOpen(true);
+  const startAdding = async () => {
+    try {
+      const [subjectsResponse, sectionsResponse, teachersResponse] = await Promise.all([
+        axios.get('http://localhost:3001/subjects', {
+          params: { archive_status: 'unarchive' }
+        }),
+        axios.get('http://localhost:3001/sections'),
+        axios.get('http://localhost:3001/employees', {
+          params: { status: 'active', archive_status: 'unarchive' }
+        })
+      ]);
+      console.log('Fetched subjects:', subjectsResponse.data);
+      setSubjects(subjectsResponse.data);
+      setFilteredSubjects([]); // Reset filtered subjects
+      setSections(sectionsResponse.data);
+      setTeachers(teachersResponse.data);
+      setNewSchedule({
+        subject_id: '',
+        time_start: '',
+        time_end: '',
+        day: '',
+        teacher_id: '',
+        section_id: ''
+      });
+      setIsModalOpen(true);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    }
   };
 
-  const startEditing = (schedule) => {
-    setIsEditing(true);
-    setEditFormData(schedule);
+  const startEditing = async (schedule) => {
+    try {
+      const teachersResponse = await axios.get('http://localhost:3001/employees', {
+        params: { status: 'active', archive_status: 'unarchive' }
+      });
+      setTeachers(teachersResponse.data);
+      setIsEditing(true);
+      setEditFormData(schedule);
+    } catch (error) {
+      console.error('Error fetching teachers:', error);
+    }
   };
 
   const handleEditChange = (event) => {
@@ -150,15 +188,54 @@ function Principal_SchedulePage() {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setNewSchedule({ ...newSchedule, [name]: value });
+
+    // When section is selected, filter subjects by grade level
+    if (name === 'section_id' && value) {
+      const selectedSection = sections.find(section => section.section_id === Number(value));
+      console.log('Selected section:', selectedSection);
+      if (selectedSection) {
+        const sectionGrade = selectedSection.grade_level;
+        console.log('Section grade:', sectionGrade);
+        console.log('All subjects:', subjects);
+        const filteredSubjects = subjects.filter(subject => 
+          String(subject.grade_level) === String(sectionGrade)
+        );
+        console.log('Filtered subjects:', filteredSubjects);
+        setFilteredSubjects(filteredSubjects);
+      } else {
+        setFilteredSubjects([]);
+      }
+    }
   };
 
   const handleAddSchedule = async () => {
     try {
-      await axios.post('http://localhost:3001/schedules', newSchedule);
-      fetchSectionSchedules(selectedSectionId);
+      // Validate all required fields
+      if (!newSchedule.section_id || !newSchedule.subject_id || !newSchedule.time_start || 
+          !newSchedule.time_end || !newSchedule.day || !newSchedule.teacher_id) {
+        alert('Please fill in all required fields');
+        return;
+      }
+
+      // Add schedule_status as Pending Approval
+      const scheduleData = {
+        ...newSchedule,
+        schedule_status: 'Pending Approval'
+      };
+      
+      // Convert IDs to numbers
+      scheduleData.subject_id = Number(scheduleData.subject_id);
+      scheduleData.section_id = Number(scheduleData.section_id);
+      scheduleData.teacher_id = Number(scheduleData.teacher_id);
+      
+      await axios.post('http://localhost:3001/api/schedules', scheduleData);
+      if (selectedSectionId) {
+        fetchSectionSchedules(selectedSectionId);
+      }
       setIsModalOpen(false);
     } catch (error) {
       console.error('Error adding schedule:', error);
+      alert('Error adding schedule. Please check all fields are filled correctly.');
     }
   };
 
@@ -253,12 +330,19 @@ function Principal_SchedulePage() {
                                         </select>
                                       </td>
                                       <td>
-                                        <input
-                                          type="number"
+                                        <select
                                           name="teacher_id"
                                           value={editFormData.teacher_id}
                                           onChange={handleEditChange}
-                                        />
+                                          required
+                                        >
+                                          <option value="">Select Teacher</option>
+                                          {teachers.map((teacher) => (
+                                            <option key={teacher.employee_id} value={teacher.employee_id}>
+                                              {teacher.firstname} {teacher.middlename ? `${teacher.middlename[0]}.` : ''} {teacher.lastname}
+                                            </option>
+                                          ))}
+                                        </select>
                                       </td>
                                       <td>
                                         <select
@@ -319,13 +403,33 @@ function Principal_SchedulePage() {
         <div className="section-modal">
           <div className="section-modal-content">
             <h2>Add New Schedule</h2>
-            <input
-              type="text"
-              name="subject_name"
-              placeholder="Subject Name"
-              value={newSchedule.subject_name}
+            <select
+              name="section_id"
+              value={newSchedule.section_id}
               onChange={handleInputChange}
-            />
+              required
+            >
+              <option value="">Select Section</option>
+              {sections.map((section) => (
+                <option key={section.section_id} value={section.section_id}>
+                  Section {section.section_name} (Grade {section.grade_level})
+                </option>
+              ))}
+            </select>
+            <select
+              name="subject_id"
+              value={newSchedule.subject_id}
+              onChange={handleInputChange}
+              required
+              disabled={!newSchedule.section_id}
+            >
+              <option value="">Select Subject</option>
+              {filteredSubjects.map((subject) => (
+                <option key={subject.subject_id} value={subject.subject_id}>
+                  {subject.subject_name} (Grade {subject.grade_level})
+                </option>
+              ))}
+            </select>
             <input
               type="time"
               name="time_start"
@@ -352,13 +456,19 @@ function Principal_SchedulePage() {
               <option value="Thursday">Thursday</option>
               <option value="Friday">Friday</option>
             </select>
-            <input
-              type="number"
+            <select
               name="teacher_id"
-              placeholder="Teacher ID"
               value={newSchedule.teacher_id}
               onChange={handleInputChange}
-            />
+              required
+            >
+              <option value="">Select Teacher</option>
+              {teachers.map((teacher) => (
+                <option key={teacher.employee_id} value={teacher.employee_id}>
+                  {teacher.firstname} {teacher.middlename ? `${teacher.middlename[0]}.` : ''} {teacher.lastname}
+                </option>
+              ))}
+            </select>
             <div className="button-container">
               <button onClick={handleAddSchedule}>Add Schedule</button>
               <button onClick={() => setIsModalOpen(false)}>Close</button>

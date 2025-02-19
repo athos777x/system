@@ -3191,7 +3191,30 @@ app.get('/api/students/search', (req, res) => {
   });
 });
 
-
+// ENDPOINT USED:
+// SCHEDULE PAGE
+app.post('/api/schedules', (req, res) => {
+  const { subject_id, teacher_id, time_start, time_end, day, section_id, schedule_status } = req.body;
+  
+  const query = `
+    INSERT INTO schedule 
+    (subject_id, teacher_id, time_start, time_end, day, section_id, schedule_status)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `;
+  
+  db.query(
+    query, 
+    [subject_id, teacher_id, time_start, time_end, day, section_id, schedule_status],
+    (err, result) => {
+      if (err) {
+        console.error('Error adding schedule:', err);
+        res.status(500).json({ error: 'Internal server error', details: err.message });
+        return;
+      }
+      res.status(201).json({ message: 'Schedule added successfully', scheduleId: result.insertId });
+    }
+  );
+});
 
 app.listen(3001, () => {
   console.log('Server running on port 3001');
