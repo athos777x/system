@@ -2136,7 +2136,7 @@ app.get('/subjects', (req, res) => {
   const { searchTerm, school_year, grade, archive_status } = req.query;
   
   let query = `
-    SELECT s.subject_id, s.grade_level, s.subject_name, s.status, s.grading_criteria, s.description, s.archive_status, sy.school_year_id
+    SELECT s.subject_id, s.grade_level, s.subject_name, s.status, s.grading_criteria, s.description, s.archive_status, sy.school_year_id, sy.status
     FROM subject s  
     JOIN school_year sy ON s.school_year_id = sy.school_year_id
     WHERE s.archive_status = ? order by s.grade_level DESC
