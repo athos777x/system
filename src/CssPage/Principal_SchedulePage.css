@@ -95,14 +95,14 @@
   transform: translateY(-1px);
 }
 
-/* Specific color for approve button */
-.schedule-approve-button {
+/* Remove the specific color override for approve button */
+/* .schedule-approve-button {
   background-color: #007bff;
 }
 
 .schedule-approve-button:hover {
   background-color: #0056b3;
-}
+} */
 
 .cancel-button {
   background-color: var(--error-color);

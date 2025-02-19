@@ -279,9 +279,11 @@ function Principal_SchedulePage() {
                                       <td>{schedule.teacher_name}</td>
                                       <td>{schedule.schedule_status}</td>
                                       <td className="actions-column">
-                                        <button className="schedule-edit-button" onClick={() => startEditing(schedule)}>Edit</button>
                                         {schedule.schedule_status === 'Pending Approval' && (
-                                          <button className="schedule-approve-button" onClick={() => handleApproveClick(schedule.schedule_id)}>Approve</button>
+                                          <>
+                                            <button className="schedule-edit-button" onClick={() => startEditing(schedule)}>Edit</button>
+                                            <button className="schedule-edit-button" onClick={() => handleApproveClick(schedule.schedule_id)}>Approve</button>
+                                          </>
                                         )}
                                       </td>
                                     </>
