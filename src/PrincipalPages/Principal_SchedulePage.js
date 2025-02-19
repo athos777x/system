@@ -266,8 +266,8 @@ function Principal_SchedulePage() {
                                         </select>
                                       </td>
                                       <td className="actions-column">
-                                        <button className="save-button" onClick={saveChanges}>Save</button>
-                                        <button className="cancel-button" onClick={cancelEditing}>Cancel</button>
+                                        <button className="schedule-save-button" onClick={saveChanges}>Save</button>
+                                        <button className="schedule-cancel-button" onClick={cancelEditing}>Cancel</button>
                                       </td>
                                     </>
                                   ) : (

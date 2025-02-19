@@ -75,7 +75,9 @@
 /* Button styles */
 .schedule-view-button,
 .schedule-edit-button,
-.schedule-approve-button {
+.schedule-approve-button,
+.schedule-save-button,
+.schedule-cancel-button {
   padding: 8px 16px;
   border: none;
   color: white;
@@ -90,26 +92,19 @@
 
 .schedule-view-button:hover,
 .schedule-edit-button:hover,
-.schedule-approve-button:hover {
+.schedule-approve-button:hover,
+.schedule-save-button:hover {
   background-color: #218838;
   transform: translateY(-1px);
 }
 
-/* Remove the specific color override for approve button */
-/* .schedule-approve-button {
-  background-color: #007bff;
+.schedule-cancel-button {
+  background-color: #dc3545;
 }
 
-.schedule-approve-button:hover {
-  background-color: #0056b3;
-} */
-
-.cancel-button {
-  background-color: var(--error-color);
-}
-
-.cancel-button:hover {
-  opacity: 0.9;
+.schedule-cancel-button:hover {
+  background-color: #c82333;
+  transform: translateY(-1px);
 }
 
 /* Details section */
