@@ -1161,7 +1161,7 @@ const handleStudentNameClick = (student) => {
                   </button>
                 )
               ) : (
-                roleName !== 'principal') && (
+                roleName !== 'principal' && roleName !== 'grade_level_coordinator') && (
                 <button className="submit-grades-btn" onClick={handleSubmitGrades}>
                   Submit Grades
                 </button>

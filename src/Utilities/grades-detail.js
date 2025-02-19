@@ -125,7 +125,7 @@ const GradesDetail = ({
                 <td>{ws}</td>
                 {!isLocked && (
                   <td>
-                     {(roleName !== 'principal') && (
+                     {(roleName !== 'principal' && roleName !== 'grade_level_coordinator') && (
                         <>
                           <button onClick={() => onEditActivity(item, index, title)}>Edit</button>
                           <button onClick={() => onDeleteActivity(item, index, title)}>Delete</button>
@@ -139,11 +139,12 @@ const GradesDetail = ({
         </tbody>
       </table>
     
-      {!isLocked && roleName !== 'principal' && (
+      {!isLocked && roleName !== 'principal' && roleName !== 'grade_level_coordinator' && (
         <button className="add-activity-btn" onClick={onAddActivity}>
           + Add {title}
         </button>
       )}
+
 
     </div>
   );

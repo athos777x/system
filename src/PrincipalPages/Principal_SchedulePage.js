@@ -29,6 +29,7 @@ function Principal_SchedulePage() {
   const [subjects, setSubjects] = useState([]);
   const [filteredSubjects, setFilteredSubjects] = useState([]);
   const [teachers, setTeachers] = useState([]);
+  const [roleName, setRoleName] = useState('');
 
   const fetchSections = useCallback(async () => {
     try {
@@ -239,6 +240,38 @@ function Principal_SchedulePage() {
     }
   };
 
+  useEffect(() => {
+    const userId = localStorage.getItem('userId'); // Retrieve userId from localStorage
+    if (userId) {
+      console.log(`Retrieved userId from localStorage: ${userId}`); // Debugging log
+      fetchUserRole(userId);
+    } else {
+      console.error('No userId found in localStorage');
+    }
+  }, []);
+
+  const fetchUserRole = async (userId) => {
+    try {
+      console.log(`Fetching role for user ID: ${userId}`); // Debugging log
+      const response = await axios.get(`http://localhost:3001/user-role/${userId}`);
+      if (response.status === 200) {
+        console.log('Response received:', response.data); // Debugging log
+        setRoleName(response.data.role_name);
+        console.log('Role name set to:', response.data.role_name); // Debugging log
+      } else {
+        console.error('Failed to fetch role name. Response status:', response.status);
+      }
+    } catch (error) {
+      if (error.response) {
+        console.error('Error response from server:', error.response.data);
+      } else if (error.request) {
+        console.error('No response received from server. Request:', error.request);
+      } else {
+        console.error('Error setting up request:', error.message);
+      }
+    }
+  };
+
   return (
     <div className="schedule-container">
       <h1 className="schedule-title">Schedule</h1>
@@ -251,7 +284,9 @@ function Principal_SchedulePage() {
         />
       </div>
       <div className="section-add-section-button-container">
+        {(roleName !== 'principal') &&(
         <button className="section-add-section-button" onClick={startAdding}>Add New Schedule</button>
+        )}
       </div>
       <table className="attendance-table">
         <thead>
