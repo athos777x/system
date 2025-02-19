@@ -2043,18 +2043,36 @@ app.get('/sections/:sectionId/schedules', (req, res) => {
 app.put('/schedules/:scheduleId', (req, res) => {
   const { scheduleId } = req.params;
   const { teacher_id, time_start, time_end, day, schedule_status } = req.body;
-  const query = 'UPDATE schedule SET teacher_id = ?, time_start = ?, time_end = ?, day = ?, schedule_status = ? WHERE schedule_id = ?';
-  db.query(query, [teacher_id, time_start, time_end, day, schedule_status, scheduleId], (err, results) => {
-    if (err) {
-      console.error('Error updating schedule details:', err);
-      res.status(500).json({ error: 'Internal server error' });
-      return;
+
+  // First check if the schedule is already approved
+  const checkQuery = 'SELECT schedule_status FROM schedule WHERE schedule_id = ?';
+  db.query(checkQuery, [scheduleId], (checkErr, checkResults) => {
+    if (checkErr) {
+      console.error('Error checking schedule status:', checkErr);
+      return res.status(500).json({ error: 'Internal server error' });
     }
-    if (results.affectedRows > 0) {
-      res.json({ message: 'Schedule updated successfully' });
-    } else {
-      res.status(404).json({ error: 'Schedule not found' });
+
+    if (checkResults.length === 0) {
+      return res.status(404).json({ error: 'Schedule not found' });
     }
+
+    if (checkResults[0].schedule_status === 'Approved') {
+      return res.status(403).json({ error: 'Cannot edit approved schedules' });
+    }
+
+    // If schedule is not approved, proceed with the update
+    const query = 'UPDATE schedule SET teacher_id = ?, time_start = ?, time_end = ?, day = ?, schedule_status = ? WHERE schedule_id = ?';
+    db.query(query, [teacher_id, time_start, time_end, day, schedule_status, scheduleId], (err, results) => {
+      if (err) {
+        console.error('Error updating schedule details:', err);
+        return res.status(500).json({ error: 'Internal server error' });
+      }
+      if (results.affectedRows > 0) {
+        res.json({ message: 'Schedule updated successfully' });
+      } else {
+        res.status(404).json({ error: 'Schedule not found' });
+      }
+    });
   });
 });
 

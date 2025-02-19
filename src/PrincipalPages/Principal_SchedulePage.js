@@ -240,12 +240,17 @@ function Principal_SchedulePage() {
                                         />
                                       </td>
                                       <td>
-                                        <input
-                                          type="text"
+                                        <select
                                           name="day"
                                           value={editFormData.day}
                                           onChange={handleEditChange}
-                                        />
+                                        >
+                                          <option value="Monday">Monday</option>
+                                          <option value="Tuesday">Tuesday</option>
+                                          <option value="Wednesday">Wednesday</option>
+                                          <option value="Thursday">Thursday</option>
+                                          <option value="Friday">Friday</option>
+                                        </select>
                                       </td>
                                       <td>
                                         <input
@@ -266,8 +271,8 @@ function Principal_SchedulePage() {
                                         </select>
                                       </td>
                                       <td className="actions-column">
-                                        <button className="save-button" onClick={saveChanges}>Save</button>
-                                        <button className="cancel-button" onClick={cancelEditing}>Cancel</button>
+                                        <button className="schedule-save-button" onClick={saveChanges}>Save</button>
+                                        <button className="schedule-cancel-button" onClick={cancelEditing}>Cancel</button>
                                       </td>
                                     </>
                                   ) : (
@@ -279,9 +284,11 @@ function Principal_SchedulePage() {
                                       <td>{schedule.teacher_name}</td>
                                       <td>{schedule.schedule_status}</td>
                                       <td className="actions-column">
-                                        <button className="schedule-edit-button" onClick={() => startEditing(schedule)}>Edit</button>
                                         {schedule.schedule_status === 'Pending Approval' && (
-                                          <button className="schedule-approve-button" onClick={() => handleApproveClick(schedule.schedule_id)}>Approve</button>
+                                          <>
+                                            <button className="schedule-edit-button" onClick={() => startEditing(schedule)}>Edit</button>
+                                            <button className="schedule-edit-button" onClick={() => handleApproveClick(schedule.schedule_id)}>Approve</button>
+                                          </>
                                         )}
                                       </td>
                                     </>
@@ -333,13 +340,18 @@ function Principal_SchedulePage() {
               value={newSchedule.time_end}
               onChange={handleInputChange}
             />
-            <input
-              type="text"
+            <select
               name="day"
-              placeholder="Day"
               value={newSchedule.day}
               onChange={handleInputChange}
-            />
+            >
+              <option value="">Select Day</option>
+              <option value="Monday">Monday</option>
+              <option value="Tuesday">Tuesday</option>
+              <option value="Wednesday">Wednesday</option>
+              <option value="Thursday">Thursday</option>
+              <option value="Friday">Friday</option>
+            </select>
             <input
               type="number"
               name="teacher_id"
