@@ -157,6 +157,8 @@ select {
   max-width: 500px;
   max-height: 90vh;
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
 }
 
 .section-modal-content h2 {
@@ -169,8 +171,48 @@ select {
   margin-bottom: var(--spacing-md);
 }
 
+.section-modal-content .button-container {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 20px;
+}
+
 /* Actions column */
 .actions-column {
   white-space: nowrap;
   width: 1%;
+}
+
+.section-modal-content button {
+  padding: 8px 16px;
+  border: none;
+  color: white;
+  cursor: pointer;
+  border-radius: 50px;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  min-width: 120px;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.section-modal-content button:first-of-type {
+  background-color: #28a745;
+}
+
+.section-modal-content button:first-of-type:hover {
+  background-color: #218838;
+  transform: translateY(-1px);
+}
+
+.section-modal-content button:last-of-type {
+  background-color: #dc3545;
+}
+
+.section-modal-content button:last-of-type:hover {
+  background-color: #c82333;
+  transform: translateY(-1px);
 }

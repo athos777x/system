@@ -359,8 +359,10 @@ function Principal_SchedulePage() {
               value={newSchedule.teacher_id}
               onChange={handleInputChange}
             />
-            <button onClick={handleAddSchedule}>Add Schedule</button>
-            <button onClick={() => setIsModalOpen(false)}>Close</button>
+            <div className="button-container">
+              <button onClick={handleAddSchedule}>Add Schedule</button>
+              <button onClick={() => setIsModalOpen(false)}>Close</button>
+            </div>
           </div>
         </div>
       )}
