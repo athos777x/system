@@ -211,7 +211,7 @@ function Principal_SchedulePage() {
                               <th>Time Start</th>
                               <th>Time End</th>
                               <th>Day</th>
-                              <th>Teacher ID</th>
+                              <th>Teacher</th>
                               <th>Status</th>
                               <th className="actions-column">Actions</th>
                             </tr>
@@ -276,7 +276,7 @@ function Principal_SchedulePage() {
                                       <td>{schedule.time_start}</td>
                                       <td>{schedule.time_end}</td>
                                       <td>{schedule.day}</td>
-                                      <td>{schedule.teacher_id}</td>
+                                      <td>{schedule.teacher_name}</td>
                                       <td>{schedule.schedule_status}</td>
                                       <td className="actions-column">
                                         <button className="schedule-edit-button" onClick={() => startEditing(schedule)}>Edit</button>
