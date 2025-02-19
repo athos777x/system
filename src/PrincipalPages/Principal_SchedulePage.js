@@ -25,6 +25,7 @@ function Principal_SchedulePage() {
     day: '',
     teacher_id: ''
   });
+  const [subjects, setSubjects] = useState([]);
 
   const fetchSections = useCallback(async () => {
     try {
@@ -100,8 +101,16 @@ function Principal_SchedulePage() {
     }
   };
 
-  const startAdding = () => {
-    setIsModalOpen(true);
+  const startAdding = async () => {
+    try {
+      const response = await axios.get('http://localhost:3001/subjects', {
+        params: { archive_status: 'unarchive' }
+      });
+      setSubjects(response.data);
+      setIsModalOpen(true);
+    } catch (error) {
+      console.error('Error fetching subjects:', error);
+    }
   };
 
   const startEditing = (schedule) => {
@@ -319,13 +328,19 @@ function Principal_SchedulePage() {
         <div className="section-modal">
           <div className="section-modal-content">
             <h2>Add New Schedule</h2>
-            <input
-              type="text"
+            <select
               name="subject_name"
-              placeholder="Subject Name"
               value={newSchedule.subject_name}
               onChange={handleInputChange}
-            />
+              required
+            >
+              <option value="">Select Subject</option>
+              {subjects.map((subject) => (
+                <option key={subject.subject_id} value={subject.subject_name}>
+                  {subject.subject_name} (Grade {subject.grade_level})
+                </option>
+              ))}
+            </select>
             <input
               type="time"
               name="time_start"
