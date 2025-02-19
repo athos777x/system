@@ -8,10 +8,12 @@ function Principal_SchedulePage() {
   const [filteredSections, setFilteredSections] = useState([]);
   const [selectedSectionId, setSelectedSectionId] = useState(null);
   const [sectionSchedules, setSectionSchedules] = useState([]);
+  const [schoolYears, setSchoolYears] = useState([]);
   const [filters, setFilters] = useState({
     searchTerm: '',
     grade: '',
-    section: ''
+    section: '',
+    schoolYear: ''
   });
   const [isEditing, setIsEditing] = useState(false);
   const [editFormData, setEditFormData] = useState({});
@@ -34,9 +36,19 @@ function Principal_SchedulePage() {
     }
   }, []);
 
+  const fetchSchoolYears = useCallback(async () => {
+    try {
+      const response = await axios.get('http://localhost:3001/api/school_years');
+      setSchoolYears(response.data.map(sy => sy.school_year));
+    } catch (error) {
+      console.error('There was an error fetching the school years!', error);
+    }
+  }, []);
+
   useEffect(() => {
     fetchSections();
-  }, [fetchSections]);
+    fetchSchoolYears();
+  }, [fetchSections, fetchSchoolYears]);
 
   const applyFilters = (updatedFilters) => {
     setFilters(updatedFilters);
@@ -54,6 +66,10 @@ function Principal_SchedulePage() {
 
     if (updatedFilters.section) {
       filtered = filtered.filter(section => section.section_id === parseInt(updatedFilters.section));
+    }
+
+    if (updatedFilters.schoolYear) {
+      filtered = filtered.filter(section => section.school_year === updatedFilters.schoolYear);
     }
 
     setFilteredSections(filtered);
@@ -154,6 +170,7 @@ function Principal_SchedulePage() {
           handleApplyFilters={handleApplyFilters}
           grades={['7', '8', '9', '10']}
           sections={sections}
+          schoolYears={schoolYears}
         />
       </div>
       <div className="section-add-section-button-container">
