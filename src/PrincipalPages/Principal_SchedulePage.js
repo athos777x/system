@@ -210,19 +210,32 @@ function Principal_SchedulePage() {
 
   const handleAddSchedule = async () => {
     try {
+      // Validate all required fields
+      if (!newSchedule.section_id || !newSchedule.subject_id || !newSchedule.time_start || 
+          !newSchedule.time_end || !newSchedule.day || !newSchedule.teacher_id) {
+        alert('Please fill in all required fields');
+        return;
+      }
+
       // Add schedule_status as Pending Approval
       const scheduleData = {
         ...newSchedule,
         schedule_status: 'Pending Approval'
       };
       
-      await axios.post('http://localhost:3001/schedules', scheduleData);
+      // Convert IDs to numbers
+      scheduleData.subject_id = Number(scheduleData.subject_id);
+      scheduleData.section_id = Number(scheduleData.section_id);
+      scheduleData.teacher_id = Number(scheduleData.teacher_id);
+      
+      await axios.post('http://localhost:3001/api/schedules', scheduleData);
       if (selectedSectionId) {
         fetchSectionSchedules(selectedSectionId);
       }
       setIsModalOpen(false);
     } catch (error) {
       console.error('Error adding schedule:', error);
+      alert('Error adding schedule. Please check all fields are filled correctly.');
     }
   };
 
