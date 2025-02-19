@@ -139,11 +139,12 @@ const GradesDetail = ({
         </tbody>
       </table>
     
-      {!isLocked && roleName !== 'principal' && (
+      {!isLocked && roleName !== 'principal' && roleName !== 'grade_level_coordinator' && (
         <button className="add-activity-btn" onClick={onAddActivity}>
           + Add {title}
         </button>
       )}
+
 
     </div>
   );
