@@ -28,6 +28,7 @@ function Principal_SchedulePage() {
   });
   const [subjects, setSubjects] = useState([]);
   const [filteredSubjects, setFilteredSubjects] = useState([]);
+  const [teachers, setTeachers] = useState([]);
 
   const fetchSections = useCallback(async () => {
     try {
@@ -105,16 +106,20 @@ function Principal_SchedulePage() {
 
   const startAdding = async () => {
     try {
-      const [subjectsResponse, sectionsResponse] = await Promise.all([
+      const [subjectsResponse, sectionsResponse, teachersResponse] = await Promise.all([
         axios.get('http://localhost:3001/subjects', {
           params: { archive_status: 'unarchive' }
         }),
-        axios.get('http://localhost:3001/sections')
+        axios.get('http://localhost:3001/sections'),
+        axios.get('http://localhost:3001/employees', {
+          params: { status: 'active', archive_status: 'unarchive' }
+        })
       ]);
       console.log('Fetched subjects:', subjectsResponse.data);
       setSubjects(subjectsResponse.data);
       setFilteredSubjects([]); // Reset filtered subjects
       setSections(sectionsResponse.data);
+      setTeachers(teachersResponse.data);
       setNewSchedule({
         subject_name: '',
         time_start: '',
@@ -129,9 +134,17 @@ function Principal_SchedulePage() {
     }
   };
 
-  const startEditing = (schedule) => {
-    setIsEditing(true);
-    setEditFormData(schedule);
+  const startEditing = async (schedule) => {
+    try {
+      const teachersResponse = await axios.get('http://localhost:3001/employees', {
+        params: { status: 'active', archive_status: 'unarchive' }
+      });
+      setTeachers(teachersResponse.data);
+      setIsEditing(true);
+      setEditFormData(schedule);
+    } catch (error) {
+      console.error('Error fetching teachers:', error);
+    }
   };
 
   const handleEditChange = (event) => {
@@ -296,12 +309,19 @@ function Principal_SchedulePage() {
                                         </select>
                                       </td>
                                       <td>
-                                        <input
-                                          type="number"
+                                        <select
                                           name="teacher_id"
                                           value={editFormData.teacher_id}
                                           onChange={handleEditChange}
-                                        />
+                                          required
+                                        >
+                                          <option value="">Select Teacher</option>
+                                          {teachers.map((teacher) => (
+                                            <option key={teacher.employee_id} value={teacher.employee_id}>
+                                              {teacher.firstname} {teacher.middlename ? `${teacher.middlename[0]}.` : ''} {teacher.lastname}
+                                            </option>
+                                          ))}
+                                        </select>
                                       </td>
                                       <td>
                                         <select
@@ -415,13 +435,19 @@ function Principal_SchedulePage() {
               <option value="Thursday">Thursday</option>
               <option value="Friday">Friday</option>
             </select>
-            <input
-              type="number"
+            <select
               name="teacher_id"
-              placeholder="Teacher ID"
               value={newSchedule.teacher_id}
               onChange={handleInputChange}
-            />
+              required
+            >
+              <option value="">Select Teacher</option>
+              {teachers.map((teacher) => (
+                <option key={teacher.employee_id} value={teacher.employee_id}>
+                  {teacher.firstname} {teacher.middlename ? `${teacher.middlename[0]}.` : ''} {teacher.lastname}
+                </option>
+              ))}
+            </select>
             <div className="button-container">
               <button onClick={handleAddSchedule}>Add Schedule</button>
               <button onClick={() => setIsModalOpen(false)}>Close</button>
