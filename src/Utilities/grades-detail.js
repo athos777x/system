@@ -125,7 +125,7 @@ const GradesDetail = ({
                 <td>{ws}</td>
                 {!isLocked && (
                   <td>
-                     {(roleName !== 'principal') && (
+                     {(roleName !== 'principal' && roleName !== 'grade_level_coordinator') && (
                         <>
                           <button onClick={() => onEditActivity(item, index, title)}>Edit</button>
                           <button onClick={() => onDeleteActivity(item, index, title)}>Delete</button>

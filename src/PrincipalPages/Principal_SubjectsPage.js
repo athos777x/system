@@ -195,7 +195,7 @@ function Principal_SubjectsPage() {
                           Edit
                         </button>
                         <button className="delete-button" onClick={handleDelete}>
-                          Delete
+                          Archive
                         </button>
                       </div>
                     </td>
