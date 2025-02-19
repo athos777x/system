@@ -82,8 +82,8 @@ const GradesDetail = ({
       <h4>
         {title} ({percentage}%)
       </h4>
-      <select 
-        value={percentage} 
+      <select
+        value={percentage}
         onChange={(e) => {
           const newValue = parseFloat(e.target.value);
           const maxAllowed = calculateMaxPercentage() + percentage;
@@ -93,6 +93,7 @@ const GradesDetail = ({
             alert(`Total percentage cannot exceed 100%. Maximum allowed for ${title} is ${maxAllowed}%`);
           }
         }}
+        disabled={roleName === 'principal' || roleName === 'grade_level_coordinator'} // Prevent selection
       >
         {generatePercentageOptions().map((option) => (
           <option key={option} value={option}>
@@ -100,6 +101,7 @@ const GradesDetail = ({
           </option>
         ))}
       </select>
+
     
       <table>
         <thead>
