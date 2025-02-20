@@ -27,10 +27,13 @@ function Principal_SubjectsPage() {
 
   const fetchSubjects = useCallback(async () => {
     try {
-      const response = await axios.get('http://localhost:3001/subjects', {
-        params: filters,
-      });
+      // Ensure subjects are updated if the school year is inactive
+      await axios.put('http://localhost:3001/update-subjects-status');
+  
+      // Fetch subjects after updating
+      const response = await axios.get('http://localhost:3001/subjects', { params: filters });
       setSubjects(response.data);
+  
       if (selectedGrade) {
         setFilteredSubjects(
           response.data.filter((subject) => String(subject.grade_level) === String(selectedGrade))
@@ -42,7 +45,7 @@ function Principal_SubjectsPage() {
       console.error('Error fetching subjects:', error);
     }
   }, [filters, selectedGrade]);
-
+  
   useEffect(() => {
     fetchSubjects();
   }, [fetchSubjects]);
@@ -197,7 +200,7 @@ function Principal_SubjectsPage() {
                         <button 
                           className="delete-button" 
                           onClick={handleDelete} 
-                          disabled={selectedSubject?.status === 'active'} // Disable if status is not 'active'
+                          disabled={selectedSubject?.sy_status === 'active'} // Disable if status is not 'active'
                         >
                           Archive
                         </button>

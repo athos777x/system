@@ -2136,7 +2136,7 @@ app.get('/subjects', (req, res) => {
   const { searchTerm, school_year, grade, archive_status } = req.query;
   
   let query = `
-    SELECT s.subject_id, s.grade_level, s.subject_name, s.status, s.grading_criteria, s.description, s.archive_status, sy.school_year_id, sy.status
+    SELECT s.subject_id, s.grade_level, s.subject_name, s.status, s.grading_criteria, s.description, s.archive_status, sy.school_year_id
     FROM subject s  
     JOIN school_year sy ON s.school_year_id = sy.school_year_id
     WHERE s.archive_status = ? order by s.grade_level DESC
@@ -2163,6 +2163,23 @@ app.get('/subjects', (req, res) => {
       return res.status(500).send(error);
     }
     res.send(results);
+  });
+});
+
+app.put('/update-subjects-status', (req, res) => {
+  const query = `
+    UPDATE subject 
+    SET status = 'inactive' 
+    WHERE school_year_id IN (
+      SELECT school_year_id FROM school_year WHERE status = 'inactive'
+    )
+  `;
+
+  db.query(query, (error, results) => {
+    if (error) {
+      return res.status(500).send(error);
+    }
+    res.send({ message: 'Subjects updated successfully', affectedRows: results.affectedRows });
   });
 });
 
