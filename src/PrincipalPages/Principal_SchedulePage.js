@@ -22,7 +22,7 @@ function Principal_SchedulePage() {
     subject_id: '',
     time_start: '',
     time_end: '',
-    day: '',
+    day: [],
     teacher_id: '',
     section_id: ''
   });
@@ -30,6 +30,12 @@ function Principal_SchedulePage() {
   const [filteredSubjects, setFilteredSubjects] = useState([]);
   const [teachers, setTeachers] = useState([]);
   const [roleName, setRoleName] = useState('');
+
+  // Helper function to sort days in chronological order
+  const sortDays = (days) => {
+    const dayOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+    return days.sort((a, b) => dayOrder.indexOf(a) - dayOrder.indexOf(b));
+  };
 
   const fetchSections = useCallback(async () => {
     try {
@@ -85,6 +91,7 @@ function Principal_SchedulePage() {
   };
 
   const handleViewClick = async (sectionId) => {
+    console.log('View clicked for section:', sectionId);
     if (selectedSectionId === sectionId) {
       setSelectedSectionId(null);
       setSectionSchedules([]);
@@ -92,16 +99,49 @@ function Principal_SchedulePage() {
     } else {
       setSelectedSectionId(sectionId);
       setIsEditing(false);
-      fetchSectionSchedules(sectionId);
+      await fetchSectionSchedules(sectionId);
     }
   };
 
   const fetchSectionSchedules = async (sectionId) => {
     try {
+      console.log('Fetching schedules for section:', sectionId);
       const response = await axios.get(`http://localhost:3001/sections/${sectionId}/schedules`);
-      setSectionSchedules(response.data);
+      console.log('Raw response data:', response.data);
+      
+      // Handle both single day and array formats
+      const schedulesWithParsedDays = response.data.map(schedule => {
+        let parsedDay;
+        try {
+          // If the day is already a string and doesn't start with [, treat it as a single day
+          if (typeof schedule.day === 'string' && !schedule.day.startsWith('[')) {
+            parsedDay = [schedule.day];
+          } else {
+            // Try to parse as JSON array
+            parsedDay = typeof schedule.day === 'string' ? 
+              JSON.parse(schedule.day) : 
+              Array.isArray(schedule.day) ? schedule.day : [schedule.day];
+          }
+          // Sort days after parsing
+          parsedDay = sortDays([...parsedDay]);
+        } catch (error) {
+          console.error('Error parsing day for schedule:', schedule);
+          console.error('Parse error:', error);
+          // Fallback to single day if parsing fails
+          parsedDay = [schedule.day];
+        }
+
+        return {
+          ...schedule,
+          day: parsedDay
+        };
+      });
+      
+      console.log('Processed schedules:', schedulesWithParsedDays);
+      setSectionSchedules(schedulesWithParsedDays);
     } catch (error) {
-      console.error('There was an error fetching the section schedules!', error);
+      console.error('Error fetching section schedules:', error);
+      console.error('Error details:', error.response?.data);
     }
   };
 
@@ -125,7 +165,7 @@ function Principal_SchedulePage() {
         subject_id: '',
         time_start: '',
         time_end: '',
-        day: '',
+        day: [],
         teacher_id: '',
         section_id: ''
       });
@@ -142,7 +182,11 @@ function Principal_SchedulePage() {
       });
       setTeachers(teachersResponse.data);
       setIsEditing(true);
-      setEditFormData(schedule);
+      // Make sure day is an array when starting to edit
+      setEditFormData({
+        ...schedule,
+        day: Array.isArray(schedule.day) ? schedule.day : JSON.parse(schedule.day)
+      });
     } catch (error) {
       console.error('Error fetching teachers:', error);
     }
@@ -150,20 +194,40 @@ function Principal_SchedulePage() {
 
   const handleEditChange = (event) => {
     const { name, value } = event.target;
-    setEditFormData(prevFormData => ({
-      ...prevFormData,
-      [name]: value
-    }));
+    
+    if (name === 'day') {
+      // Handle checkbox selection for edit mode
+      const day = event.target.value;
+      const isChecked = event.target.checked;
+      const currentDays = editFormData.day || [];
+      
+      setEditFormData(prev => ({
+        ...prev,
+        day: isChecked 
+          ? [...currentDays, day]
+          : currentDays.filter(d => d !== day)
+      }));
+    } else {
+      setEditFormData(prevFormData => ({
+        ...prevFormData,
+        [name]: value
+      }));
+    }
   };
 
   const saveChanges = async () => {
     try {
       const { schedule_id, teacher_id, time_start, time_end, day, schedule_status } = editFormData;
+      
+      // Sort days before storing
+      const sortedDays = sortDays([...day]);
+
       await axios.put(`http://localhost:3001/schedules/${schedule_id}`, {
         teacher_id,
         time_start,
         time_end,
-        day,
+        // If only one day is selected, send as string, otherwise as JSON array
+        day: sortedDays.length === 1 ? sortedDays[0] : JSON.stringify(sortedDays),
         schedule_status
       });
       fetchSectionSchedules(selectedSectionId);
@@ -188,20 +252,30 @@ function Principal_SchedulePage() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setNewSchedule({ ...newSchedule, [name]: value });
+    
+    if (name === 'day') {
+      // Handle checkbox selection
+      const day = e.target.value;
+      const isChecked = e.target.checked;
+      
+      setNewSchedule(prev => ({
+        ...prev,
+        day: isChecked 
+          ? [...prev.day, day]  // Add day if checked
+          : prev.day.filter(d => d !== day)  // Remove day if unchecked
+      }));
+    } else {
+      setNewSchedule({ ...newSchedule, [name]: value });
+    }
 
     // When section is selected, filter subjects by grade level
     if (name === 'section_id' && value) {
       const selectedSection = sections.find(section => section.section_id === Number(value));
-      console.log('Selected section:', selectedSection);
       if (selectedSection) {
         const sectionGrade = selectedSection.grade_level;
-        console.log('Section grade:', sectionGrade);
-        console.log('All subjects:', subjects);
         const filteredSubjects = subjects.filter(subject => 
           String(subject.grade_level) === String(sectionGrade)
         );
-        console.log('Filtered subjects:', filteredSubjects);
         setFilteredSubjects(filteredSubjects);
       } else {
         setFilteredSubjects([]);
@@ -213,15 +287,20 @@ function Principal_SchedulePage() {
     try {
       // Validate all required fields
       if (!newSchedule.section_id || !newSchedule.subject_id || !newSchedule.time_start || 
-          !newSchedule.time_end || !newSchedule.day || !newSchedule.teacher_id) {
+          !newSchedule.time_end || newSchedule.day.length === 0 || !newSchedule.teacher_id) {
         alert('Please fill in all required fields');
         return;
       }
 
+      // Sort days before storing
+      const sortedDays = sortDays([...newSchedule.day]);
+
       // Add schedule_status as Pending Approval
       const scheduleData = {
         ...newSchedule,
-        schedule_status: 'Pending Approval'
+        schedule_status: 'Pending Approval',
+        // If only one day is selected, send as string, otherwise as JSON array
+        day: sortedDays.length === 1 ? sortedDays[0] : JSON.stringify(sortedDays)
       };
       
       // Convert IDs to numbers
@@ -329,96 +408,104 @@ function Principal_SchedulePage() {
                             </tr>
                           </thead>
                           <tbody>
-                            {sectionSchedules.length > 0 ? (
-                              sectionSchedules.map(schedule => (
-                                <tr key={schedule.schedule_id}>
-                                  {isEditing && editFormData.schedule_id === schedule.schedule_id ? (
-                                    <>
-                                      <td>{schedule.subject_name}</td>
-                                      <td>
-                                        <input
-                                          type="time"
-                                          name="time_start"
-                                          value={editFormData.time_start}
-                                          onChange={handleEditChange}
-                                        />
-                                      </td>
-                                      <td>
-                                        <input
-                                          type="time"
-                                          name="time_end"
-                                          value={editFormData.time_end}
-                                          onChange={handleEditChange}
-                                        />
-                                      </td>
-                                      <td>
-                                        <select
-                                          name="day"
-                                          value={editFormData.day}
-                                          onChange={handleEditChange}
-                                        >
-                                          <option value="Monday">Monday</option>
-                                          <option value="Tuesday">Tuesday</option>
-                                          <option value="Wednesday">Wednesday</option>
-                                          <option value="Thursday">Thursday</option>
-                                          <option value="Friday">Friday</option>
-                                        </select>
-                                      </td>
-                                      <td>
-                                        <select
-                                          name="teacher_id"
-                                          value={editFormData.teacher_id}
-                                          onChange={handleEditChange}
-                                          required
-                                        >
-                                          <option value="">Select Teacher</option>
-                                          {teachers.map((teacher) => (
-                                            <option key={teacher.employee_id} value={teacher.employee_id}>
-                                              {teacher.firstname} {teacher.middlename ? `${teacher.middlename[0]}.` : ''} {teacher.lastname}
-                                            </option>
-                                          ))}
-                                        </select>
-                                      </td>
-                                      <td>
-                                        <select
-                                          name="schedule_status"
-                                          value={editFormData.schedule_status}
-                                          onChange={handleEditChange}
-                                        >
-                                          <option value="Approved">Approved</option>
-                                          <option value="Pending Approval">Pending Approval</option>
-                                        </select>
-                                      </td>
-                                      <td className="actions-column">
-                                        <button className="schedule-save-button" onClick={saveChanges}>Save</button>
-                                        <button className="schedule-cancel-button" onClick={cancelEditing}>Cancel</button>
-                                      </td>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <td>{schedule.subject_name}</td>
-                                      <td>{schedule.time_start}</td>
-                                      <td>{schedule.time_end}</td>
-                                      <td>{schedule.day}</td>
-                                      <td>{schedule.teacher_name}</td>
-                                      <td>{schedule.schedule_status}</td>
-                                      <td className="actions-column">
-                                        {schedule.schedule_status === 'Pending Approval' && (
-                                          <>
-                                            <button className="schedule-edit-button" onClick={() => startEditing(schedule)}>Edit</button>
-                                            {(roleName != 'academic_coordinator') && (
-                                              <button className="schedule-edit-button" onClick={() => handleApproveClick(schedule.schedule_id)}>Approve</button>
-                                            )}
-                                          </>
-                                        )}
-                                      </td>
-                                    </>
-                                  )}
-                                </tr>
-                              ))
+                            {sectionSchedules && sectionSchedules.length > 0 ? (
+                              sectionSchedules.map(schedule => {
+                                console.log('Rendering schedule:', schedule);
+                                return (
+                                  <tr key={schedule.schedule_id}>
+                                    {isEditing && editFormData.schedule_id === schedule.schedule_id ? (
+                                      <>
+                                        <td>{schedule.subject_name}</td>
+                                        <td>
+                                          <input
+                                            type="time"
+                                            name="time_start"
+                                            value={editFormData.time_start}
+                                            onChange={handleEditChange}
+                                          />
+                                        </td>
+                                        <td>
+                                          <input
+                                            type="time"
+                                            name="time_end"
+                                            value={editFormData.time_end}
+                                            onChange={handleEditChange}
+                                          />
+                                        </td>
+                                        <td>
+                                          <div className="day-checkboxes">
+                                            {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].map(day => (
+                                              <label key={day} className="day-checkbox-label">
+                                                <input
+                                                  type="checkbox"
+                                                  name="day"
+                                                  value={day}
+                                                  checked={(editFormData.day || []).includes(day)}
+                                                  onChange={handleEditChange}
+                                                />
+                                                {day}
+                                              </label>
+                                            ))}
+                                          </div>
+                                        </td>
+                                        <td>
+                                          <select
+                                            name="teacher_id"
+                                            value={editFormData.teacher_id}
+                                            onChange={handleEditChange}
+                                            required
+                                          >
+                                            <option value="">Select Teacher</option>
+                                            {teachers.map((teacher) => (
+                                              <option key={teacher.employee_id} value={teacher.employee_id}>
+                                                {teacher.firstname} {teacher.middlename ? `${teacher.middlename[0]}.` : ''} {teacher.lastname}
+                                              </option>
+                                            ))}
+                                          </select>
+                                        </td>
+                                        <td>
+                                          <select
+                                            name="schedule_status"
+                                            value={editFormData.schedule_status}
+                                            onChange={handleEditChange}
+                                          >
+                                            <option value="Approved">Approved</option>
+                                            <option value="Pending Approval">Pending Approval</option>
+                                          </select>
+                                        </td>
+                                        <td className="actions-column">
+                                          <button className="schedule-save-button" onClick={saveChanges}>Save</button>
+                                          <button className="schedule-cancel-button" onClick={cancelEditing}>Cancel</button>
+                                        </td>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <td>{schedule.subject_name}</td>
+                                        <td>{schedule.time_start}</td>
+                                        <td>{schedule.time_end}</td>
+                                        <td>{Array.isArray(schedule.day) ? schedule.day.join(', ') : schedule.day}</td>
+                                        <td>{schedule.teacher_name}</td>
+                                        <td>{schedule.schedule_status}</td>
+                                        <td className="actions-column">
+                                          {schedule.schedule_status === 'Pending Approval' && (
+                                            <>
+                                              <button className="schedule-edit-button" onClick={() => startEditing(schedule)}>Edit</button>
+                                              {(roleName !== 'academic_coordinator') && (
+                                                <button className="schedule-edit-button" onClick={() => handleApproveClick(schedule.schedule_id)}>Approve</button>
+                                              )}
+                                            </>
+                                          )}
+                                        </td>
+                                      </>
+                                    )}
+                                  </tr>
+                                );
+                              })
                             ) : (
                               <tr>
-                                <td colSpan="7" style={{ textAlign: 'center' }}>No schedules available</td>
+                                <td colSpan="7" style={{ textAlign: 'center' }}>
+                                  {sectionSchedules === null ? 'Loading schedules...' : 'No schedules available'}
+                                </td>
                               </tr>
                             )}
                           </tbody>
@@ -481,18 +568,20 @@ function Principal_SchedulePage() {
               value={newSchedule.time_end}
               onChange={handleInputChange}
             />
-            <select
-              name="day"
-              value={newSchedule.day}
-              onChange={handleInputChange}
-            >
-              <option value="">Select Day</option>
-              <option value="Monday">Monday</option>
-              <option value="Tuesday">Tuesday</option>
-              <option value="Wednesday">Wednesday</option>
-              <option value="Thursday">Thursday</option>
-              <option value="Friday">Friday</option>
-            </select>
+            <div className="day-checkboxes">
+              {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].map(day => (
+                <label key={day} className="day-checkbox-label">
+                  <input
+                    type="checkbox"
+                    name="day"
+                    value={day}
+                    checked={newSchedule.day.includes(day)}
+                    onChange={handleInputChange}
+                  />
+                  {day}
+                </label>
+              ))}
+            </div>
             <select
               name="teacher_id"
               value={newSchedule.teacher_id}
