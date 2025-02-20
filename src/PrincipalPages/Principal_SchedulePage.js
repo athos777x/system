@@ -406,7 +406,9 @@ function Principal_SchedulePage() {
                                         {schedule.schedule_status === 'Pending Approval' && (
                                           <>
                                             <button className="schedule-edit-button" onClick={() => startEditing(schedule)}>Edit</button>
-                                            <button className="schedule-edit-button" onClick={() => handleApproveClick(schedule.schedule_id)}>Approve</button>
+                                            {(roleName != 'academic_coordinator') && (
+                                              <button className="schedule-edit-button" onClick={() => handleApproveClick(schedule.schedule_id)}>Approve</button>
+                                            )}
                                           </>
                                         )}
                                       </td>
