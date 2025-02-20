@@ -216,3 +216,89 @@ select {
   background-color: #c82333;
   transform: translateY(-1px);
 }
+
+.day-checkboxes {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);  /* 2 columns */
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: white;
+  margin-bottom: var(--spacing-md);
+  width: 100%;
+}
+
+.day-checkbox-label {
+  display: flex;
+  align-items: center;
+  padding: 6px 10px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s;
+  background-color: #f8f9fa;
+  border: 1px solid #e9ecef;
+  margin: 0;
+  font-size: 14px;
+  width: 100%;  /* Ensure consistent width */
+}
+
+.day-checkbox-label:hover {
+  background-color: #e9ecef;
+}
+
+.day-checkbox-label input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  margin: 0 8px 0 0;
+  cursor: pointer;
+}
+
+/* Custom checkbox styling */
+.day-checkbox-label input[type="checkbox"] {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-color: #fff;
+  border: 2px solid #ccc;
+  border-radius: 3px;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.day-checkbox-label input[type="checkbox"]:checked {
+  background-color: #28a745;
+  border-color: #28a745;
+}
+
+.day-checkbox-label input[type="checkbox"]:checked::after {
+  content: '✓';
+  position: absolute;
+  color: white;
+  font-size: 12px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* Specific styling for modal day checkboxes */
+.section-modal-content .day-checkboxes {
+  margin-bottom: 16px;
+}
+
+/* Adjust spacing in table cells */
+td .day-checkboxes {
+  margin: 0;
+  padding: 8px;
+  min-width: 250px;  /* Increased to accommodate two columns better */
+  max-width: 300px;  /* Limit maximum width */
+}
+
+/* Remove old multi-select styles */
+.multi-select,
+.multi-select option,
+.multi-select option:checked {
+  display: none;
+}
