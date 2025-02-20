@@ -1,0 +1,253 @@
+/* Teacher Modal Container Styles */
+.teacher-modal {
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.teacher-modal-content {
+  background-color: #f5f5f5;
+  padding: 20px;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.teacher-modal-content h2 {
+  margin-bottom: 20px;
+  text-align: center;
+  color: #333;
+}
+
+/* Teacher Modal Styles */
+.teacher-modal-grade-buttons {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.teacher-modal-grade-button {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: white;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.teacher-modal-grade-button.active {
+  background-color: #28a745;
+  color: white;
+  border: 1px solid #28a745;
+}
+
+.teacher-modal-sections-list,
+.teacher-modal-subjects-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 15px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.teacher-modal-section-item,
+.teacher-modal-subject-item {
+  padding: 12px 15px;
+  background-color: white;
+  color: #333;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.teacher-modal-section-item.selected,
+.teacher-modal-subject-item.selected {
+  background-color: #28a745;
+  color: white;
+  border: 1px solid #28a745;
+}
+
+.teacher-modal-footer {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.teacher-modal-action-button {
+  padding: 10px 20px;
+  border-radius: 50px;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.teacher-modal-assign-button {
+  background-color: #28a745;
+  color: white;
+}
+
+.teacher-modal-assign-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.teacher-modal-cancel-button {
+  background-color: #dc3545;
+  color: white;
+}
+
+/* Hover effects */
+.teacher-modal-grade-button:hover:not(.active) {
+  background-color: #f0f0f0;
+}
+
+.teacher-modal-section-item:hover:not(.selected),
+.teacher-modal-subject-item:hover:not(.selected) {
+  background-color: #f0f0f0;
+  transform: translateY(-1px);
+}
+
+.teacher-modal-assign-button:hover:not(:disabled) {
+  background-color: #218838;
+}
+
+.teacher-modal-cancel-button:hover {
+  background-color: #c82333;
+}
+
+/* Action buttons in teacher details */
+.teacher-details-container .assign-button, 
+.teacher-details-container .delete-button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  color: white;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  margin: 0 2px;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 4px;
+  margin-top: 15px;
+}
+
+.teacher-details-container .assign-button {
+  background-color: #28a745;
+}
+
+.teacher-details-container .assign-button:hover {
+  background-color: #218838;
+}
+
+.teacher-details-container .delete-button {
+  background-color: #dc3545;
+}
+
+.teacher-details-container .delete-button:hover {
+  background-color: #c82333;
+}
+
+.teacher-details-container .delete-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Archive modal buttons */
+.archive-modal-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  margin-top: 20px;
+}
+
+.archive-modal-buttons button,
+.archive-modal-buttons .confirm-button,
+.archive-modal-buttons .cancel-button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  color: white;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  margin: 0;
+}
+
+.archive-modal-buttons .confirm-button {
+  background-color: #28a745;
+}
+
+.archive-modal-buttons .confirm-button:hover {
+  background-color: #218838;
+}
+
+.archive-modal-buttons .cancel-button {
+  background-color: #dc3545;
+}
+
+.archive-modal-buttons .cancel-button:hover {
+  background-color: #c82333;
+}
+
+/* Archive modal styles */
+.archive-modal {
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.archive-modal-content {
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 400px;
+  text-align: center;
+}
+
+.archive-modal-content h2 {
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.archive-modal-content select {
+  width: 100%;
+  padding: 8px;
+  margin: 10px 0 20px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.archive-modal-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 20px;
+} 

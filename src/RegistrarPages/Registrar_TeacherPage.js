@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import SearchFilter from '../RoleSearchFilters/SearchFilter';
 import Pagination from '../Utilities/pagination';
 import axios from 'axios';
-import '../RegistrarPagesCss/Registrar_StudentsPage.css';
+import '../RegistrarPagesCss/Registrar_TeacherPage.css';
 
 function Registrar_TeacherPage() {
   const [teachers, setTeachers] = useState([]);
@@ -810,15 +810,15 @@ function Registrar_TeacherPage() {
         </div>
       )}
       {showAssignSubjectModal && (
-        <div className="section-modal">
-          <div className="section-modal-content">
+        <div className="teacher-modal">
+          <div className="teacher-modal-content">
             <h2>Assign Subject</h2>
             
-            <div className="grade-buttons">
+            <div className="teacher-modal-grade-buttons">
               {[7, 8, 9, 10].map((grade) => (
                 <button
                   key={grade}
-                  className={`grade-button ${selectedGradeLevel === grade.toString() ? 'active' : ''}`}
+                  className={`teacher-modal-grade-button ${selectedGradeLevel === grade.toString() ? 'active' : ''}`}
                   onClick={() => handleGradeLevelChange(grade.toString())}
                 >
                   Grade {grade}
@@ -826,11 +826,11 @@ function Registrar_TeacherPage() {
               ))}
             </div>
 
-            <div className="subjects-list">
+            <div className="teacher-modal-subjects-list">
               {subjectsByGrade.map((subject, index) => (
                 <div 
                   key={index}
-                  className={`subject-item ${selectedSubject === subject.subject_name ? 'selected' : ''}`}
+                  className={`teacher-modal-subject-item ${selectedSubject === subject.subject_name ? 'selected' : ''}`}
                   onClick={() => setSelectedSubject(subject.subject_name)}
                 >
                   {subject.subject_name}
@@ -838,16 +838,16 @@ function Registrar_TeacherPage() {
               ))}
             </div>
 
-            <div className="modal-footer">
+            <div className="teacher-modal-footer">
               <button 
-                className="assign-button"
+                className={`teacher-modal-action-button teacher-modal-assign-button`}
                 onClick={handleSubjectAssignment}
                 disabled={!selectedSubject}
               >
                 Assign Subject
               </button>
               <button 
-                className="cancel-button"
+                className="teacher-modal-action-button teacher-modal-cancel-button"
                 onClick={() => {
                   setShowAssignSubjectModal(false);
                   setSelectedSubject('');
@@ -861,15 +861,15 @@ function Registrar_TeacherPage() {
         </div>
       )}
       {showAssignSectionModal && (
-        <div className="section-modal">
-          <div className="section-modal-content">
+        <div className="teacher-modal">
+          <div className="teacher-modal-content">
             <h2>Assign Section</h2>
             
-            <div className="grade-buttons">
+            <div className="teacher-modal-grade-buttons">
               {[7, 8, 9, 10].map((grade) => (
                 <button
                   key={grade}
-                  className={`grade-button ${selectedGradeLevelForSection === grade.toString() ? 'active' : ''}`}
+                  className={`teacher-modal-grade-button ${selectedGradeLevelForSection === grade.toString() ? 'active' : ''}`}
                   onClick={() => handleGradeLevelChangeForSection(grade.toString())}
                 >
                   Grade {grade}
@@ -877,11 +877,11 @@ function Registrar_TeacherPage() {
               ))}
             </div>
 
-            <div className="sections-list">
+            <div className="teacher-modal-sections-list">
               {sectionsByGrade.map((section, index) => (
                 <div 
                   key={index}
-                  className={`subject-item ${selectedSection === section.section_name ? 'selected' : ''}`}
+                  className={`teacher-modal-section-item ${selectedSection === section.section_name ? 'selected' : ''}`}
                   onClick={() => setSelectedSection(section.section_name)}
                 >
                   {section.section_name}
@@ -889,16 +889,16 @@ function Registrar_TeacherPage() {
               ))}
             </div>
 
-            <div className="modal-footer">
+            <div className="teacher-modal-footer">
               <button 
-                className="assign-button"
+                className={`teacher-modal-action-button teacher-modal-assign-button`}
                 onClick={handleSectionAssignment}
                 disabled={!selectedSection}
               >
                 Assign Section
               </button>
               <button 
-                className="cancel-button"
+                className="teacher-modal-action-button teacher-modal-cancel-button"
                 onClick={() => {
                   setShowAssignSectionModal(false);
                   setSelectedSection('');
