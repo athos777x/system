@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import '../StudentPagesCss/Student_ProfilePage.css'; // Import the CSS file
+import '../StudentPagesCss/Student_ProfilePage.css';
 
 function Student_ProfilePage() {
   const [studentData, setStudentData] = useState(null);
-  const userId = localStorage.getItem('userId'); 
+  const userId = localStorage.getItem('userId');
 
   useEffect(() => {
     const fetchStudentData = async () => {
@@ -25,60 +25,122 @@ function Student_ProfilePage() {
   };
 
   if (!studentData) {
-    return <div>Loading...</div>;
+    return (
+      <div className="student-profile-container">
+        <div className="loading-state">Loading student information...</div>
+      </div>
+    );
   }
 
   return (
     <div className="student-profile-container">
       <div className="student-profile-header">
-        <img src="/path/to/profile-picture.jpg" alt="" className="student-profile-picture" />
+        <img 
+          src={studentData.profile_picture || '/default-avatar.png'} 
+          alt="" 
+          className="student-profile-picture" 
+        />
         <div className="student-profile-info">
           <h1>{`${studentData.firstname} ${studentData.middlename} ${studentData.lastname}`}</h1>
           <p>{studentData.username}</p>
           <p>Grade {studentData.current_yr_lvl}</p>
         </div>
       </div>
+
       <div className="student-profile-details">
         <h2>Student Details</h2>
         <div className="student-details-row">
           <div className="student-details-column">
-            <p><strong>Birthday:</strong> {formatDate(studentData.birthdate)}</p>
-            <p><strong>Gender:</strong> {studentData.gender}</p>
+            <p>
+              <strong>Birthday</strong>
+              <span>{formatDate(studentData.birthdate)}</span>
+            </p>
+            <p>
+              <strong>Gender</strong>
+              <span>{studentData.gender}</span>
+            </p>
           </div>
           <div className="student-details-column">
-            <p><strong>Current Grade Level:</strong> Grade {studentData.current_yr_lvl}</p>
-            <p><strong>Age:</strong> {studentData.age}</p>
+            <p>
+              <strong>Current Grade Level</strong>
+              <span>Grade {studentData.current_yr_lvl}</span>
+            </p>
+            <p>
+              <strong>Age</strong>
+              <span>{studentData.age}</span>
+            </p>
           </div>
         </div>
+
         <h2>Standard Information</h2>
         <div className="student-details-row">
           <div className="student-details-column">
-            <p><strong>First Name:</strong> {studentData.firstname}</p>
-            <p><strong>Middle Name:</strong> {studentData.middlename}</p>
+            <p>
+              <strong>First Name</strong>
+              <span>{studentData.firstname}</span>
+            </p>
+            <p>
+              <strong>Middle Name</strong>
+              <span>{studentData.middlename}</span>
+            </p>
           </div>
           <div className="student-details-column">
-            <p><strong>Last Name:</strong> {studentData.lastname}</p>
-            <p><strong>Email Address:</strong> {studentData.email_address}</p>
+            <p>
+              <strong>Last Name</strong>
+              <span>{studentData.lastname}</span>
+            </p>
+            <p data-type="email">
+              <strong>Email Address</strong>
+              <span>{studentData.email_address}</span>
+            </p>
           </div>
         </div>
+
+        <h2>Contact Information</h2>
         <div className="student-details-row">
           <div className="student-details-column">
-            <p><strong>Home Address:</strong> {studentData.home_address}</p>
-            <p><strong>Barangay:</strong> {studentData.barangay}</p>
+            <p>
+              <strong>Home Address</strong>
+              <span>{studentData.home_address}</span>
+            </p>
+            <p>
+              <strong>Barangay</strong>
+              <span>{studentData.barangay}</span>
+            </p>
+            <p data-type="contact">
+              <strong>Contact Number</strong>
+              <span>{studentData.contact_number}</span>
+            </p>
           </div>
           <div className="student-details-column">
-            <p><strong>City/Municipality:</strong> {studentData.city_municipality}</p>
-            <p><strong>Province:</strong> {studentData.province}</p>
+            <p>
+              <strong>City/Municipality</strong>
+              <span>{studentData.city_municipality}</span>
+            </p>
+            <p>
+              <strong>Province</strong>
+              <span>{studentData.province}</span>
+            </p>
+            <p data-type="email">
+              <strong>Email Address</strong>
+              <span>{studentData.email_address}</span>
+            </p>
           </div>
         </div>
+
+        <h2>Parent Information</h2>
         <div className="student-details-row">
           <div className="student-details-column">
-            <p><strong>Contact Number:</strong> {studentData.contact_number}</p>
-            <p><strong>Email Address:</strong> {studentData.email_address}</p>
+            <p>
+              <strong>Mother's Name</strong>
+              <span>{studentData.mother_name}</span>
+            </p>
           </div>
           <div className="student-details-column">
-            <p><strong>Mother's Name:</strong> {studentData.mother_name}</p>
-            <p><strong>Father's Name:</strong> {studentData.father_name}</p>
+            <p>
+              <strong>Father's Name</strong>
+              <span>{studentData.father_name}</span>
+            </p>
           </div>
         </div>
       </div>
