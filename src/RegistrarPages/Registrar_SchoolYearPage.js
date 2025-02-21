@@ -36,9 +36,14 @@ function Registrar_SchoolYearPage() {
           await axios.put(`http://localhost:3001/school-years/${sy.school_year_id}`, { status: 'inactive' });
         }
       });
+      
+      // Get all school years without filters to check for active status
+      const allSchoolYearsResponse = await axios.get('http://localhost:3001/school-years');
+      const hasActive = allSchoolYearsResponse.data.some(sy => sy.status === 'active');
+      
       setSchoolYears(sortedSchoolYears);
       setFilteredSchoolYears(sortedSchoolYears);
-      setHasActiveSchoolYear(sortedSchoolYears.some(sy => sy.status === 'active'));
+      setHasActiveSchoolYear(hasActive);
     } catch (error) {
       console.error('Error fetching school years:', error);
     }
@@ -47,10 +52,6 @@ function Registrar_SchoolYearPage() {
   useEffect(() => {
     fetchSchoolYears();
   }, [fetchSchoolYears]);
-
-  const handleSearch = (searchTerm) => {
-    setFilters(prevFilters => ({ ...prevFilters, searchTerm }));
-  };
 
   const handleApplyFilters = (newFilters) => {
     setFilters(newFilters);
@@ -185,7 +186,6 @@ function Registrar_SchoolYearPage() {
       <h1 className="school-year-title">School Year Management</h1>
       <div className="school-year-search-filter-container">
         <SchoolYearSearchFilter
-          handleSearch={handleSearch}
           handleApplyFilters={handleApplyFilters}
         />
       </div>

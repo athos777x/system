@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import '../CssFiles/searchfilter.css';
 import axios from 'axios';
 
-function SchoolYearSearchFilter({ handleSearch, handleApplyFilters }) {
-  const [searchTerm, setSearchTerm] = useState('');
+function SchoolYearSearchFilter({ handleApplyFilters }) {
   const [selectedSchoolYear, setSelectedSchoolYear] = useState('');
   const [schoolYears, setSchoolYears] = useState([]);
 
@@ -17,17 +16,13 @@ function SchoolYearSearchFilter({ handleSearch, handleApplyFilters }) {
       });
   }, []);
 
-  const handleSearchChange = (event) => {
-    setSearchTerm(event.target.value);
-  };
-
   const handleSchoolYearChange = (event) => {
     setSelectedSchoolYear(event.target.value);
   };
 
   const applyFilters = () => {
     const filters = {
-      searchTerm,
+      searchTerm: '',
       school_year: selectedSchoolYear,
     };
     handleApplyFilters(filters);
@@ -35,13 +30,6 @@ function SchoolYearSearchFilter({ handleSearch, handleApplyFilters }) {
 
   return (
     <div className="search-filter">
-      <input
-        type="text"
-        placeholder="Search by year..."
-        value={searchTerm}
-        onChange={handleSearchChange}
-        className="filter-input"
-      />
       <select id="school_year" value={selectedSchoolYear} onChange={handleSchoolYearChange} className="filter-select">
         <option value="">Select School Year</option>
         {schoolYears.map((schoolYear, index) => (
