@@ -250,7 +250,7 @@ app.get('/students/pending-enrollment', (req, res) => {
       SELECT s.student_id, s.user_id, s.lastname, s.firstname, s.middlename, 
              s.current_yr_lvl, s.birthdate, s.gender, s.age, 
              s.home_address, s.barangay, s.city_municipality, s.province, 
-             s.contact_number, s.email_address, 
+             s.contact_number, s.email_address, s.status as stud_status,
              s.mother_name, s.father_name, s.parent_address, s.father_occupation, 
              s.mother_occupation, s.annual_hshld_income, s.number_of_siblings, 
              s.father_educ_lvl, s.mother_educ_lvl, s.father_contact_number, 
@@ -1360,9 +1360,8 @@ app.get('/employees', (req, res) => {
   }
 
   if (position) {
-    const formattedPosition = position.replace(/\s/g, '_').toLowerCase();
     query += ' AND role_name = ?';
-    queryParams.push(formattedPosition);
+    queryParams.push(position);
   }
 
   if (department) {
@@ -1500,42 +1499,56 @@ app.put('/employees/:employeeId/archive', (req, res) => {
 // TEACHER PAGE
 app.post('/assign-subject/:teacherId', (req, res) => {
   const teacherId = req.params.teacherId;
-  const { subject_name, grade_level } = req.body; // Get grade_level from request body
-  
-  console.log('Received assignment request:', { teacherId, subject_name, grade_level }); // Debug log
+  const { subject_id, grade_level, section_id, type } = req.body;
 
   const query = `
-    UPDATE subject 
-    SET employee_id = ? 
-    WHERE subject_name = ?
-    AND grade_level = ?
+    INSERT INTO subject_assigned 
+    (subject_assigned_id, subject_id, level, section_id, employee_id, elective) 
+    VALUES (NULL, ?, ?, ?, ?, ?)
+    ON DUPLICATE KEY UPDATE 
+      subject_id = VALUES(subject_id),
+      level = VALUES(level),
+      section_id = VALUES(section_id),
+      employee_id = VALUES(employee_id),
+      elective = VALUES(elective)
   `;
 
-  db.query(query, [teacherId, subject_name, grade_level], (err, result) => { // Add grade_level to query params
-    if (err) {
-      console.error('Error assigning subject:', err);
-      res.status(500).json({ error: 'Internal server error' });
-      return;
+  // If elective, insert elective_id into the subject_id column
+  const isElective = type === 'elective' ? 1 : 0;
+  const assignedSubjectId = isElective ? subject_id : subject_id; // Use elective_id as subject_id if it's elective
+
+  db.query(
+    query,
+    [assignedSubjectId, grade_level, section_id, teacherId, isElective],
+    (err, result) => {
+      if (err) {
+        console.error('Error assigning subject:', err);
+        return res.status(500).json({ error: 'Internal server error' });
+      }
+      console.log('Subject assigned successfully');
+      res.json({ message: 'Subject assigned successfully' });
     }
-    console.log('Subject assigned successfully');
-    res.json({ message: 'Subject assigned successfully' });
-  });
+  );
 });
+
+
 
 // ENDPOINT USED:
 // TEACHER PAGE
 app.post('/assign-section/:teacherId', (req, res) => {
   const teacherId = req.params.teacherId;
-  const { section_name, grade_level } = req.body;
+  const { section_id, grade_level } = req.body;  // Use section_id instead of section_name
   
   const query = `
-    UPDATE section 
-    SET section_adviser = ? 
-    WHERE grade_level = ?
-    AND section_name = ?
+    INSERT INTO section_assigned (section_assigned_id, section_id, LEVEL, employee_id) 
+    VALUES (NULL, ?, ?, ?)
+    ON DUPLICATE KEY UPDATE 
+      section_id = VALUES(section_id), 
+      LEVEL = VALUES(LEVEL), 
+      employee_id = VALUES(employee_id)
   `;
 
-  db.query(query, [teacherId, grade_level, section_name], (err, result) => {
+  db.query(query, [section_id, grade_level, teacherId], (err, result) => {
     if (err) {
       console.error('Error assigning section:', err);
       res.status(500).json({ error: 'Internal server error' });
@@ -1546,23 +1559,29 @@ app.post('/assign-section/:teacherId', (req, res) => {
   });
 });
 
+
 // ENDPOINT USED:
 // TEACHER PAGE
 app.get('/teacher-subjects/:teacherId', (req, res) => {
   const teacherId = req.params.teacherId;
-  
+
   const query = `
-    SELECT subject_name, grade_level 
-    FROM subject 
-    WHERE employee_id = ?
-    ORDER BY grade_level ASC, subject_name ASC
+  SELECT  CONCAT('Grade ', a.level) AS grade_level, 
+  CASE WHEN a.elective = 1 THEN d.name  
+  ELSE b.subject_name END AS subject_name,
+  c.section_name
+  FROM subject_assigned a
+  LEFT JOIN subject b ON a.subject_id = b.subject_id
+  LEFT JOIN elective d ON a.subject_id = d.elective_id
+  LEFT JOIN section c ON a.section_id = c.section_id
+  WHERE a.employee_id = ?
+
   `;
 
   db.query(query, [teacherId], (err, results) => {
     if (err) {
-      console.error('Error fetching teacher subjects:', err);
-      res.status(500).json({ error: 'Internal server error' });
-      return;
+      console.error('Error fetching assigned subjects:', err);
+      return res.status(500).json({ error: 'Internal server error' });
     }
     res.json(results);
   });
@@ -1572,20 +1591,20 @@ app.get('/teacher-subjects/:teacherId', (req, res) => {
 // TEACHER PAGE
 app.get('/teacher-section/:teacherId', (req, res) => {
   const teacherId = req.params.teacherId;
-  
+
   const query = `
-    SELECT section_name, grade_level 
-    FROM section 
-    WHERE section_adviser = ?
+    SELECT b.section_name, CONCAT('Grade ', a.level) AS grade_level
+    FROM section_assigned a
+    LEFT JOIN section b ON a.section_id = b.section_id
+    WHERE a.employee_id = ?
   `;
 
   db.query(query, [teacherId], (err, results) => {
     if (err) {
-      console.error('Error fetching teacher section:', err);
-      res.status(500).json({ error: 'Internal server error' });
-      return;
+      console.error('Error fetching assigned sections:', err);
+      return res.status(500).json({ error: 'Internal server error' });
     }
-    res.json(results[0]); // Return first result since a teacher can only have one section
+    res.json(results);
   });
 });
 
@@ -2136,7 +2155,7 @@ app.get('/subjects', (req, res) => {
   const { searchTerm, school_year, grade, archive_status } = req.query;
   
   let query = `
-    SELECT s.subject_id, s.grade_level, s.subject_name, s.status, s.grading_criteria, s.description, s.archive_status, sy.school_year_id
+    SELECT s.subject_id, s.grade_level, s.subject_name, s.status, s.grading_criteria, s.description, s.archive_status, sy.school_year_id, sy.status as
     FROM subject s  
     JOIN school_year sy ON s.school_year_id = sy.school_year_id
     WHERE s.archive_status = ? order by s.grade_level DESC
@@ -2479,7 +2498,7 @@ app.get('/subjects-for-assignment/:gradeLevel', (req, res) => {
     SELECT 
       a.subject_name,
       'subject' as type,
-      a.subject_id as id
+      a.subject_id
     FROM subject a  
     WHERE a.grade_level = ? 
     UNION 

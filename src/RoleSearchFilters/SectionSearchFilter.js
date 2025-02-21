@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import '../CssFiles/searchfilter.css';
 
-function SectionSearchFilter({ handleApplyFilters, grades, sections }) {
+function SectionSearchFilter({ handleSearch, handleApplyFilters, grades, sections }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedGrade, setSelectedGrade] = useState('');
   const [filteredSections, setFilteredSections] = useState([]);
@@ -18,6 +18,7 @@ function SectionSearchFilter({ handleApplyFilters, grades, sections }) {
 
   const handleSearchChange = (event) => {
     setSearchTerm(event.target.value);
+    handleSearch(event.target.value);
   };
 
   const handleGradeChange = (event) => {
