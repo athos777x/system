@@ -1,44 +1,249 @@
 /* Student_SchedulePage.css */
 
 .student-schedule-container {
-  margin: 20px;
-  padding: 20px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  background-color: #f9f9f9;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: calc(100% - 40px);
-  box-sizing: border-box;
+  padding: 24px;
+  max-width: 1100px;
+  margin: 0 auto;
 }
 
 .student-schedule-title {
-  font-size: 24px;
-  font-weight: bold;
-  margin-bottom: 20px;
   text-align: center;
+  margin-bottom: 24px;
+  color: #2c3e50;
+  font-size: 22px;
+  font-weight: 500;
 }
 
 .student-schedule-table-container {
-  width: 100%;
-  max-width: 1200px;
-  overflow: auto;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  overflow: hidden; /* Keep the border-radius clean */
 }
 
 .schedule-table {
   width: 100%;
-  border-collapse: collapse;
+  table-layout: fixed; /* This ensures equal column widths */
+  border-collapse: separate;
+  border-spacing: 0;
+  background-color: white;
+  min-width: 800px;
 }
 
 .schedule-table th,
 .schedule-table td {
-  border: 1px solid #ddd;
-  padding: 8px;
+  border: none;
+  padding: 10px;
   text-align: center;
+  vertical-align: middle;
+  font-size: 13px;
+  width: calc(100% / 6); /* Divide by number of columns (time + 5 days) */
+}
+
+/* Add subtle borders between cells */
+.schedule-table td {
+  border-top: 1px solid #f0f0f0;
 }
 
 .schedule-table th {
-  background-color: #f2f2f2;
-  font-weight: bold;
+  background-color: #f8f9fa;
+  color: #2c3e50;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  padding: 12px 10px;
+}
+
+/* Remove the fixed width for first column */
+.schedule-table th:first-child,
+.schedule-table td:first-child {
+  width: calc(100% / 6); /* Same width as other columns */
+}
+
+.schedule-table td:first-child {
+  background-color: #f8f9fa;
+  color: #5c6b7a;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap; /* Prevent time from wrapping */
+}
+
+/* Time column styling */
+.schedule-table td:first-child {
+  position: relative;
+}
+
+.schedule-table td:first-child::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: #eaeaea;
+}
+
+.schedule-subject-cell {
+  background-color: #f0f9f0 !important; /* Light green background */
+  transition: all 0.2s ease;
+  padding: 8px 12px !important;
+  border-radius: 6px;
+  border: 1px solid #e0f0e0 !important; /* Light green border */
+}
+
+.schedule-subject-cell:hover {
+  background-color: #e8f5e8 !important; /* Slightly darker green on hover */
+  transform: scale(1.02);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.subject-name {
+  font-weight: 600;
+  color: #2e7d32; /* Dark green text */
+  margin-bottom: 2px;
+  font-size: 13px;
+}
+
+.teacher-name {
+  font-size: 11px;
+  color: #558b59; /* Muted green text */
+}
+
+/* Empty cell styling */
+.schedule-table td:empty {
+  background-color: white;
+}
+
+/* Add zebra striping for better readability */
+.schedule-table tbody tr:nth-child(even) td:not(.schedule-subject-cell) {
+  background-color: #fafbfc;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .student-schedule-container {
+    padding: 16px;
+  }
+  
+  .student-schedule-title {
+    font-size: 20px;
+    margin-bottom: 16px;
+  }
+
+  .schedule-table th,
+  .schedule-table td {
+    padding: 8px;
+  }
+}
+
+/* Add a subtle gradient background to the page */
+body {
+  background: linear-gradient(to bottom, #f8f9fa, #ffffff);
+  min-height: 100vh;
+}
+
+/* Add smooth scrolling for the table container */
+.student-schedule-table-container {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e0 #f8f9fa;
+}
+
+.student-schedule-table-container::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.student-schedule-table-container::-webkit-scrollbar-track {
+  background: #f8f9fa;
+}
+
+.student-schedule-table-container::-webkit-scrollbar-thumb {
+  background-color: #cbd5e0;
+  border-radius: 3px;
+}
+
+/* Add subtle transitions */
+.schedule-table th,
+.schedule-table td {
+  transition: background-color 0.2s ease;
+}
+
+/* Print button styling */
+.print-button-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 24px;
+}
+
+.print-button {
+  padding: 12px 32px;
+  background-color: #2e7d32;
+  color: white;
+  border: none;
+  border-radius: 50px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.print-button:hover:not(:disabled) {
+  background-color: #246b27;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.print-button:disabled {
+  background-color: #90a492;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Print media styles */
+@media print {
+  body {
+    background: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .student-schedule-container {
+    padding: 0;
+    max-width: none;
+  }
+
+  .student-schedule-table-container {
+    box-shadow: none;
+    border-radius: 0;
+  }
+
+  .schedule-subject-cell {
+    box-shadow: none !important;
+    transform: none !important;
+  }
+
+  .print-button-container {
+    display: none;
+  }
+
+  /* Ensure table fits on the page */
+  .schedule-table {
+    width: 100%;
+    min-width: 0;
+    font-size: 11pt;
+  }
+
+  /* Force background colors and borders to print */
+  .schedule-subject-cell {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Improve table borders for print */
+  .schedule-table th,
+  .schedule-table td {
+    border: 1px solid #ddd;
+  }
 }
