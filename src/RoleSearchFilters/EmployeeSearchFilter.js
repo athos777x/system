@@ -62,9 +62,9 @@ function EmployeeSearchFilter({ handleSearch, handleApplyFilters }) {
       />
       <select id="status" value={selectedStatus} onChange={handleStatusChange} className="filter-select">
         <option value="">Select Status</option>
-        <option value="showAll">Show All</option>
         <option value="active">Active</option>
-        <option value="inactive">Inactive</option>
+        <option value="resigned">Resigned</option>
+        <option value="retired">Retired</option>
       </select>
       <select id="position" value={selectedPosition} onChange={handlePositionChange} className="filter-select">
         <option value="">Select Position</option>
@@ -72,10 +72,10 @@ function EmployeeSearchFilter({ handleSearch, handleApplyFilters }) {
           <option key={index} value={position}>{position}</option>
         ))}
       </select>
-      <select id="showArchive" value={showArchive} onChange={handleShowArchiveChange} className="filter-select">
+      {/* <select id="showArchive" value={showArchive} onChange={handleShowArchiveChange} className="filter-select">
         <option value="unarchive">Show Unarchived</option>
         <option value="archive">Show Archived</option>
-      </select>
+      </select> */}
       <button onClick={applyFilters} className="filter-button">Apply Filters</button>
     </div>
   );

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import SearchFilter from '../RoleSearchFilters/SearchFilter';
 import Pagination from '../Utilities/pagination';
 import axios from 'axios';
 import '../RegistrarPagesCss/Registrar_TeacherPage.css';
+import EmployeeSearchFilter from '../RoleSearchFilters/EmployeeSearchFilter';
 
 function Registrar_TeacherPage() {
   const [teachers, setTeachers] = useState([]);
@@ -96,29 +96,43 @@ function Registrar_TeacherPage() {
   };
 
   const handleSearch = (searchTerm) => {
-    setFilters(prevFilters => {
-      const updatedFilters = { ...prevFilters, searchTerm };
-      applyFilters(updatedFilters);
-      return updatedFilters;
-    });
+    setFilters((prevFilters) => ({ ...prevFilters, searchTerm }));
+    applyFilters({ ...filters, searchTerm });
   };
 
-  const applyFilters = (updatedFilters) => {
+  const applyFilters = (appliedFilters) => {
     let filtered = teachers;
-    if (updatedFilters.searchTerm) {
-      filtered = filtered.filter(teacher =>
-        teacher.firstname.toLowerCase().includes(updatedFilters.searchTerm.toLowerCase()) ||
-        teacher.lastname.toLowerCase().includes(updatedFilters.searchTerm.toLowerCase())
-      );
+  
+    if (appliedFilters.status) {
+      filtered = filtered.filter(teacher => String(teacher.status) === appliedFilters.status);
     }
+    if (appliedFilters.position) {
+      const normalizedPosition = appliedFilters.position.toLowerCase().replace(/\s/g, '_');
+      filtered = filtered.filter(teacher => String(teacher.role_name).toLowerCase() === normalizedPosition);
+    }
+    
+    if (appliedFilters.searchTerm) {
+      filtered = filtered.filter(teacher => {
+        const firstName = teacher.firstname ? teacher.firstname.toLowerCase() : "";
+        const lastName = teacher.lastname ? teacher.lastname.toLowerCase() : "";
+        return (
+          firstName.includes(appliedFilters.searchTerm.toLowerCase()) ||
+          lastName.includes(appliedFilters.searchTerm.toLowerCase())
+        );
+      });
+    }
+  
     setFilteredTeachers(filtered);
-    setCurrentPage(1); // Reset to the first page when filters are applied
+    console.log('Filtered teachers:', filtered);
+    setCurrentPage(1); // Reset to first page
+  };
+  
+
+  const handleApplyFilters = (newFilters) => {
+    setFilters(newFilters);
+    applyFilters(newFilters);
   };
 
-  const handleApplyFilters = () => {
-    console.log('Applying filters:', filters);
-    fetchTeachers(filters);
-  };
 
   const startAdding = () => {
     setIsAdding(true);
@@ -221,14 +235,14 @@ function Registrar_TeacherPage() {
     setShowModal(false);
   };
 
-  const toggleTeacherDetails = (teacherId) => {
-    setSelectedTeacherId(selectedTeacherId === teacherId ? null : teacherId);
-  };
+  // const toggleTeacherDetails = (teacherId) => {
+  //   setSelectedTeacherId(selectedTeacherId === teacherId ? null : teacherId);
+  // };
 
-  const formatDate = (isoString) => {
-    const date = new Date(isoString);
-    return date.toLocaleDateString();
-  };
+  // const formatDate = (isoString) => {
+  //   const date = new Date(isoString);
+  //   return date.toLocaleDateString();
+  // };
 
   const formatRoleName = (roleName) => {
     return roleName.replace(/_/g, ' ').toUpperCase();
@@ -292,34 +306,64 @@ function Registrar_TeacherPage() {
   };
 
   const handleSubjectAssignment = async () => {
-    if (!selectedSubject || !selectedGradeLevel) {
-      alert('Please select both a subject and grade level');
+    if (!selectedSubject || !selectedGradeLevelForSection || !selectedSection) {
+      alert('Please select a subject, grade level, and section.');
       return;
     }
-
+  
+    // Extract subject type and ID from the formatted selectedSubject string
+    const [type, id] = selectedSubject.split('-');
+    const subjectId = parseInt(id, 10);
+  
+    // Find the subject details
+    const selectedSubjectDetails = subjectsByGrade.find((subject) => {
+      return type === 'elective'
+        ? subject.subject_id === subjectId && subject.type === 'elective'
+        : subject.subject_id === subjectId && subject.type === 'subject';
+    });
+  
+    if (!selectedSubjectDetails) {
+      alert('Invalid subject selection.');
+      return;
+    }
+  
+    // Determine if it's an elective
+    const isElective = selectedSubjectDetails.type === 'elective';
+  
     try {
       console.log('Assigning subject with:', {
         teacherId: currentTeacherId,
-        subject: selectedSubject,
-        gradeLevel: selectedGradeLevel
+        subjectId: subjectId, // Pass the actual numeric ID
+        gradeLevel: selectedGradeLevelForSection,
+        sectionId: selectedSection,
+        type: isElective ? 'elective' : 'subject',
       });
-
-      const response = await axios.post(`http://localhost:3001/assign-subject/${currentTeacherId}`, {
-        subject_name: selectedSubject,
-        grade_level: selectedGradeLevel
-      });
-
+  
+      const response = await axios.post(
+        `http://localhost:3001/assign-subject/${currentTeacherId}`,
+        {
+          subject_id: subjectId,
+          grade_level: selectedGradeLevelForSection,
+          section_id: selectedSection,
+          type: isElective ? 'elective' : 'subject',
+        }
+      );
+  
       if (response.status === 200) {
         alert('Subject assigned successfully');
         setShowAssignSubjectModal(false);
         setSelectedSubject('');
-        setSelectedGradeLevel('7');
+        setSelectedGradeLevelForSection('7');
+        setSectionsByGrade([]);
       }
     } catch (error) {
       console.error('Error assigning subject:', error);
       alert('Error assigning subject: ' + (error.response?.data?.error || error.message));
     }
   };
+  
+  
+  
 
   const handleGradeLevelChangeForSection = async (gradeLevel) => {
     console.log('Selected grade level for section:', gradeLevel);
@@ -354,7 +398,7 @@ function Registrar_TeacherPage() {
       });
 
       const response = await axios.post(`http://localhost:3001/assign-section/${currentTeacherId}`, {
-        section_name: selectedSection,
+        section_id: selectedSection,
         grade_level: selectedGradeLevelForSection
       });
 
@@ -383,12 +427,14 @@ function Registrar_TeacherPage() {
   const fetchTeacherSection = async (teacherId) => {
     try {
       const response = await axios.get(`http://localhost:3001/teacher-section/${teacherId}`);
-      setTeacherSection(response.data);
+      setTeacherSection(response.data); // This sets an array of sections
     } catch (error) {
       console.error('Error fetching teacher section:', error);
     }
   };
+  
 
+  
   const handleViewDetails = (teacherId, roleId) => {
     if (selectedTeacherId === teacherId) {
       setSelectedTeacherId(null);
@@ -412,7 +458,7 @@ function Registrar_TeacherPage() {
   const indexOfLastStudent = currentPage * studentsPerPage;
   const indexOfFirstStudent = indexOfLastStudent - studentsPerPage;
   const CurrentTeachers = filteredTeachers.slice(indexOfFirstStudent, indexOfLastStudent);
-
+  const [subjects, setSubjects] = useState([]);
   const totalPages = Math.ceil(filteredTeachers.length / studentsPerPage);
   const [roleName, setRoleName] = useState('');
 
@@ -447,6 +493,23 @@ function Registrar_TeacherPage() {
       }
     }
   };
+
+  // Fetch subjects (including electives)
+const fetchSubjects = async (gradeLevel) => {
+  try {
+    const response = await axios.get(`http://localhost:3001/subjects-for-assignment/${gradeLevel}`);
+    setSubjects(response.data);
+  } catch (error) {
+    console.error('Error fetching subjects:', error);
+  }
+};
+
+// Call this when grade level changes
+useEffect(() => {
+  if (selectedGradeLevel) {
+    fetchSubjects(selectedGradeLevel);
+  }
+}, [selectedGradeLevel]);
 
   const handleEditClick = (teacher) => {
     setEditTeacherData({
@@ -495,7 +558,7 @@ function Registrar_TeacherPage() {
     <div className="students-container">
       <h1 className="students-title">Employees</h1>
       <div className="students-search-filter-container">
-        <SearchFilter
+        <EmployeeSearchFilter
           handleSearch={handleSearch}
           handleApplyFilters={handleApplyFilters}
         />
@@ -587,36 +650,39 @@ function Registrar_TeacherPage() {
                         </tbody>
                       </table>
 
-                      {teacher.role_id === 3 && (
-                        <div className="assigned-subjects">
-                          <h3>Assigned Subjects</h3>
-                          {teacherSubjects.length > 0 ? (
-                            <table className="subjects-table">
-                              <thead>
-                                <tr>
-                                  <th>Grade Level</th>
-                                  <th>Subject Name</th>
+                      
+                      <div className="assigned-subjects">
+                        <h3>Assigned Subjects</h3>
+                        {teacherSubjects.length > 0 ? (
+                          <table className="subjects-table">
+                            <thead>
+                              <tr>
+                                <th>Grade Level</th>
+                                <th>Subject Name</th>
+                                <th>Section</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {teacherSubjects.map((subject, index) => (
+                                <tr key={index}>
+                                  <td>Grade {subject.grade_level}</td>
+                                  <td>{subject.elective === 1 ? subject.elective_name : subject.subject_name}</td>
+                                  <td>{subject.section_name}</td>
                                 </tr>
-                              </thead>
-                              <tbody>
-                                {teacherSubjects.map((subject, index) => (
-                                  <tr key={index}>
-                                    <td>Grade {subject.grade_level}</td>
-                                    <td>{subject.subject_name}</td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          ) : (
-                            <p>No subjects assigned yet</p>
-                          )}
-                        </div>
-                      )}
+                              ))}
+                            </tbody>
+                          </table>
+                        ) : (
+                          <p>No subjects assigned yet</p>
+                        )}
+                      </div>
+
+
 
                       {teacher.role_id === 4 && (
                         <div className="assigned-section">
                           <h3>Assigned Section</h3>
-                          {teacherSection ? (
+                          {teacherSection && teacherSection.length > 0 ? ( // Check if the array has sections
                             <table className="section-table">
                               <thead>
                                 <tr>
@@ -625,10 +691,12 @@ function Registrar_TeacherPage() {
                                 </tr>
                               </thead>
                               <tbody>
-                                <tr>
-                                  <td>Grade {teacherSection.grade_level}</td>
-                                  <td>{teacherSection.section_name}</td>
-                                </tr>
+                                {teacherSection.map((section, index) => ( // Loop through each section
+                                  <tr key={index}>
+                                    <td>{section.grade_level}</td>
+                                    <td>{section.section_name}</td>
+                                  </tr>
+                                ))}
                               </tbody>
                             </table>
                           ) : (
@@ -637,15 +705,14 @@ function Registrar_TeacherPage() {
                         </div>
                       )}
 
+
                       <div className="action-buttons">
-                        {teacher.role_id === 3 && (
                           <button 
                             className="assign-button"
                             onClick={() => handleAssignSubject(teacher.employee_id)}
                           >
                             Assign Subject
                           </button>
-                        )}
                         {teacher.role_id === 4 && (
                           <button 
                             className="assign-button"
@@ -812,31 +879,48 @@ function Registrar_TeacherPage() {
       {showAssignSubjectModal && (
         <div className="teacher-modal">
           <div className="teacher-modal-content">
-            <h2>Assign Subject</h2>
-            
-            <div className="teacher-modal-grade-buttons">
-              {[7, 8, 9, 10].map((grade) => (
-                <button
-                  key={grade}
-                  className={`teacher-modal-grade-button ${selectedGradeLevel === grade.toString() ? 'active' : ''}`}
-                  onClick={() => handleGradeLevelChange(grade.toString())}
-                >
-                  Grade {grade}
-                </button>
-              ))}
-            </div>
+          <h2>Assign Subject</h2>
+          <div className="teacher-modal-grade-buttons">
+            {[7, 8, 9, 10].map((grade) => (
+              <button
+                key={grade}
+                className={`teacher-modal-grade-button ${selectedGradeLevelForSection === grade.toString() ? 'active' : ''}`}
+                onClick={() => handleGradeLevelChangeForSection(grade.toString())}
+              >
+                Grade {grade}
+              </button>
+            ))}
+          </div>
 
-            <div className="teacher-modal-subjects-list">
-              {subjectsByGrade.map((subject, index) => (
-                <div 
-                  key={index}
-                  className={`teacher-modal-subject-item ${selectedSubject === subject.subject_name ? 'selected' : ''}`}
-                  onClick={() => setSelectedSubject(subject.subject_name)}
+          <div className="teacher-modal-sections-list">
+            {sectionsByGrade.map((section, index) => (
+              <div
+                key={index}
+                className={`teacher-modal-section-item ${selectedSection === section.section_id ? 'selected' : ''}`}
+                onClick={() => setSelectedSection(section.section_id)} // Store section_id
+              >
+                {section.section_name}
+              </div>
+            ))}
+          </div>
+
+          <div className="teacher-modal-subjects-list">
+            {subjectsByGrade.map((subject, index) => {
+              const subjectId = subject.type === 'elective' ? `elective-${subject.subject_id}` : `subject-${subject.subject_id}`;
+              return (
+                <div
+                  key={subjectId}  // Use a truly unique key
+                  className={`teacher-modal-subject-item ${selectedSubject === subjectId ? 'selected' : ''}`}
+                  onClick={() => setSelectedSubject(subjectId)}  // Select specific subject/elective
                 >
                   {subject.subject_name}
                 </div>
-              ))}
-            </div>
+              );
+            })}
+          </div>
+
+
+
 
             <div className="teacher-modal-footer">
               <button 
@@ -881,8 +965,8 @@ function Registrar_TeacherPage() {
               {sectionsByGrade.map((section, index) => (
                 <div 
                   key={index}
-                  className={`teacher-modal-section-item ${selectedSection === section.section_name ? 'selected' : ''}`}
-                  onClick={() => setSelectedSection(section.section_name)}
+                  className={`teacher-modal-section-item ${selectedSection === section.section_id ? 'selected' : ''}`}
+                  onClick={() => setSelectedSection(section.section_id)}
                 >
                   {section.section_name}
                 </div>

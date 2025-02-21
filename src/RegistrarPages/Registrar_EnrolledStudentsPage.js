@@ -41,22 +41,31 @@ function Registrar_EnrolledStudentsPage() {
   };
 
   const handleFilterChange = (type, value) => {
-    setFilters((prevFilters) => ({ ...prevFilters, [type]: value }));
-    applyFilters({ ...filters, [type]: value });
+    setFilters(prevFilters => ({
+        ...prevFilters,
+        [type]: value
+    }));
+  };
+
+  const handleApplyFilters = () => {
+    console.log('Applying filters:', filters);
+    applyFilters(); // Apply filters only when the button is clicked
   };
 
   const applyFilters = (updatedFilters) => {
     let filtered = students;
 
-    if (updatedFilters.grade) {
-      filtered = filtered.filter((student) => student.grade_level === updatedFilters.grade);
+    if (filters.grade) {
+      filtered = filtered.filter(student => student.grade_level === filters.grade);
     }
-    if (updatedFilters.searchTerm) {
-      filtered = filtered.filter((student) =>
-        student.firstname.toLowerCase().includes(updatedFilters.searchTerm.toLowerCase()) ||
-        student.lastname.toLowerCase().includes(updatedFilters.searchTerm.toLowerCase())
-      );
-    }
+    if (filters.searchTerm) {
+      filtered = filtered.filter(student => {
+          const firstName = student.firstname ? student.firstname.toLowerCase() : "";
+          const lastName = student.lastname ? student.lastname.toLowerCase() : "";
+          return firstName.includes(filters.searchTerm.toLowerCase()) || 
+                 lastName.includes(filters.searchTerm.toLowerCase());
+      });
+  }
 
     setFilteredStudents(filtered);
     setCurrentPage(1); // Reset to the first page when filters are applied
@@ -80,6 +89,7 @@ function Registrar_EnrolledStudentsPage() {
         <EnrolledStudentsSearchFilter
           handleSearch={handleSearch}
           handleFilter={handleFilterChange}
+          handleApplyFilters={handleApplyFilters}
         />
       </div>
       <div className="enrolled-students-summary">

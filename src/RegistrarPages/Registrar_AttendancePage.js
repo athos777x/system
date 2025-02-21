@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import SearchFilter from '../RoleSearchFilters/SearchFilter';
 import axios from 'axios';
-import Pagination from '../Utilities/pagination'; // Assuming you have a Pagination component
+import Pagination from '../Utilities/pagination';
 import '../CssPage/Principal_AttendancePage.css';
 
 function Registrar_AttendancePage() {
@@ -56,6 +56,53 @@ function Registrar_AttendancePage() {
     setSelectedStudentId(selectedStudentId === studentId ? null : studentId);
   };
 
+  // Auto-apply search filter
+  useEffect(() => {
+    if (filters.searchTerm !== '') {
+      applyFilters({ ...filters, searchTerm: filters.searchTerm });
+    } else {
+      applyFilters(filters);
+    }
+  }, [filters.searchTerm]);
+
+  const applyFilters = (updatedFilters) => {
+    let filtered = students;
+
+    if (updatedFilters.searchTerm) {
+      filtered = filtered.filter((student) =>
+        `${student.firstname} ${student.middlename} ${student.lastname}`
+          .toLowerCase()
+          .includes(updatedFilters.searchTerm.toLowerCase())
+      );
+    }
+
+    if (updatedFilters.grade) {
+      filtered = filtered.filter((student) => student.current_yr_lvl === updatedFilters.grade);
+    }
+
+    if (updatedFilters.section) {
+      filtered = filtered.filter((student) => student.section_name === updatedFilters.section);
+    }
+
+    if (filters.school_year) {
+      filtered = filtered.filter(student => String(student.school_year) === filters.school_year);
+    }
+
+    setFilteredStudents(filtered);
+    setCurrentPage(1); // Reset to the first page when filters are applied
+  };
+
+  const handleApplyFilters = () => {
+    applyFilters(filters);
+  };
+
+  const handleSearch = (searchTerm) => {
+    setFilters((prevFilters) => ({
+      ...prevFilters,
+      searchTerm,
+    }));
+  };
+
   // Pagination logic
   const indexOfLastStudent = currentPage * studentsPerPage;
   const indexOfFirstStudent = indexOfLastStudent - studentsPerPage;
@@ -68,18 +115,17 @@ function Registrar_AttendancePage() {
       <h1 className="attendance-title">Attendance</h1>
       <div className="attendance-search-filter-container">
         <SearchFilter
-          handleSearch={(searchTerm) =>
-            setFilters((prevFilters) => {
-              const updatedFilters = { ...prevFilters, searchTerm };
-              return updatedFilters;
-            })
-          }
+          handleSearch={handleSearch}
           handleFilter={(type, value) =>
-            setFilters((prevFilters) => ({ ...prevFilters, [type]: value }))
+            setFilters((prevFilters) => ({
+              ...prevFilters,
+              [type]: value,
+            }))
           }
-          handleApplyFilters={() => fetchStudents(filters)}
+          handleApplyFilters={handleApplyFilters}
         />
       </div>
+
       <table className="attendance-table">
         <thead>
           <tr>
@@ -109,50 +155,53 @@ function Registrar_AttendancePage() {
                   </button>
                 </td>
               </tr>
-              {selectedStudentId === student.student_id && attendanceData[student.student_id] && (
-                <tr>
-                  <td colSpan="5">
-                    <table className="attendance-details-table">
-                      <thead>
-                        <tr>
-                          <th colSpan="2">
-                            <div className="attendance-details-header">
-                              <span>
-                                Grade Level: {attendanceData[student.student_id].grade_level}
-                              </span>
-                              <span>
-                                School Year: {attendanceData[student.student_id].school_year}
-                              </span>
-                            </div>
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr>
-                          <th>Total School Days</th>
-                          <td>{attendanceData[student.student_id].total_school_days}</td>
-                        </tr>
-                        <tr>
-                          <th>Total Days Present</th>
-                          <td>{attendanceData[student.student_id].days_present}</td>
-                        </tr>
-                        <tr>
-                          <th>Total Days Absent</th>
-                          <td>{attendanceData[student.student_id].days_absent}</td>
-                        </tr>
-                        <tr>
-                          <th>Total Days Late</th>
-                          <td>{attendanceData[student.student_id].days_late}</td>
-                        </tr>
-                        <tr>
-                          <th>Brigada Attendance</th>
-                          <td>{attendanceData[student.student_id].brigada_attendance}</td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </td>
-                </tr>
-              )}
+              {selectedStudentId === student.student_id &&
+                attendanceData[student.student_id] && (
+                  <tr>
+                    <td colSpan="5">
+                      <table className="attendance-details-table">
+                        <thead>
+                          <tr>
+                            <th colSpan="2">
+                              <div className="attendance-details-header">
+                                <span>
+                                  Grade Level:{' '}
+                                  {attendanceData[student.student_id].grade_level}
+                                </span>
+                                <span>
+                                  School Year:{' '}
+                                  {attendanceData[student.student_id].school_year}
+                                </span>
+                              </div>
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <th>Total School Days</th>
+                            <td>{attendanceData[student.student_id].total_school_days}</td>
+                          </tr>
+                          <tr>
+                            <th>Total Days Present</th>
+                            <td>{attendanceData[student.student_id].days_present}</td>
+                          </tr>
+                          <tr>
+                            <th>Total Days Absent</th>
+                            <td>{attendanceData[student.student_id].days_absent}</td>
+                          </tr>
+                          <tr>
+                            <th>Total Days Late</th>
+                            <td>{attendanceData[student.student_id].days_late}</td>
+                          </tr>
+                          <tr>
+                            <th>Brigada Attendance</th>
+                            <td>{attendanceData[student.student_id].brigada_attendance}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </td>
+                  </tr>
+                )}
             </React.Fragment>
           ))}
           {currentStudents.length === 0 && (
@@ -164,6 +213,7 @@ function Registrar_AttendancePage() {
           )}
         </tbody>
       </table>
+
       <Pagination
         totalItems={filteredStudents.length}
         itemsPerPage={studentsPerPage}

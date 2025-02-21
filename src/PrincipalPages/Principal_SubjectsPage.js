@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
-import SubjectsSearchFilter from '../RoleSearchFilters/SubjectsSearchFilter';
+//import SubjectsSearchFilter from '../RoleSearchFilters/SubjectsSearchFilter';
 import '../CssPage/Principal_SubjectsPage.css';
 
 function Principal_SubjectsPage() {
@@ -124,9 +124,9 @@ function Principal_SubjectsPage() {
   return (
     <div className="grades-container">
       <h2 className="grades-title">Subjects</h2>
-      <div className="subjects-add-subject-button-container">
+      {/* <div className="subjects-add-subject-button-container">
         <SubjectsSearchFilter handleSearch={handleSearch} />
-      </div>
+      </div> */}
       <div className="subjects-add-subject-button-container">
         <button className="subjects-add-subject-button" onClick={startAdding}>
           + Add New Subject

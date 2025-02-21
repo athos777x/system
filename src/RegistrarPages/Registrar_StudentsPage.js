@@ -104,11 +104,9 @@ function Registrar_StudentsPage() {
   
 
   const handleSearch = (searchTerm) => {
-    setFilters(prevFilters => ({
-        ...prevFilters,
-        searchTerm
-    }));
-};
+    setFilters((prevFilters) => ({ ...prevFilters, searchTerm }));
+    applyFilters({ ...filters, searchTerm });
+  };
 
 const handleFilterChange = (type, value) => {
     setFilters(prevFilters => ({

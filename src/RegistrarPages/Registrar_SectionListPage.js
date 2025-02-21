@@ -83,6 +83,11 @@ function Registrar_SectionListPage() {
     applyFilters(filters);
   };
 
+  const handleSearch = (searchTerm) => {
+    setFilters((prevFilters) => ({ ...prevFilters, searchTerm }));
+    applyFilters({ ...filters, searchTerm });
+  };
+
   const handleViewClick = async (sectionId) => {
     if (selectedSectionId === sectionId) {
       setSelectedSectionId(null);
@@ -141,6 +146,7 @@ function Registrar_SectionListPage() {
       <h1 className="sectionlist-title">Section List</h1>
       <div className="sectionlist-search-filter-container">
         <SectionSearchFilter
+          handleSearch={handleSearch}
           handleApplyFilters={handleApplyFilters}
           grades={getUniqueGrades(sections)}
           sections={sections}
