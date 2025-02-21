@@ -1,71 +1,573 @@
 /* Student_AttendancePage.css */
 
 .student-attendance-container {
-  margin: 20px;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  background-color: #f9f9f9;
+  padding: 24px;
+  max-width: 1100px;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  gap: 24px;
 }
 
 .student-attendance-title {
-  font-size: 24px;
-  font-weight: bold;
-  margin-bottom: 20px;
   text-align: center;
+  margin-bottom: 0;
+  color: #2c3e50;
+  font-size: 22px;
+  font-weight: 500;
 }
 
+/* Calendar container styling */
 .react-calendar {
-  width: 100%;
+  width: 100% !important;
   max-width: 600px;
-  height: auto;
-  background-color: white;
-  border-radius: 10px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  border: none;
-  font-family: Arial, Helvetica, sans-serif;
+  margin: 0 auto;
+  border: none !important;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  padding: 16px;
+  background: white;
 }
 
+/* Calendar navigation buttons */
+.react-calendar__navigation {
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Hide double arrow buttons */
+.react-calendar__navigation__arrow.react-calendar__navigation__prev2-button,
+.react-calendar__navigation__arrow.react-calendar__navigation__next2-button {
+  display: none;
+}
+
+/* Navigation button styling */
 .react-calendar__navigation button {
-  min-width: 44px;
+  font-size: 14px;
+  color: #2c3e50;
+  min-width: 36px;
   background: none;
-  border: none;
-  color: black;
-  padding: 8px 16px;
-  cursor: pointer;
+  border-radius: 8px;
+  margin: 0 2px;
+  padding: 8px 12px;
+  transition: all 0.2s ease;
 }
 
+/* Month/year label button */
+.react-calendar__navigation__label {
+  font-weight: 600;
+  font-size: 16px;
+  flex-grow: 0;
+  padding: 8px 16px !important;
+  border-radius: 8px;
+}
+
+/* Arrow navigation buttons */
+.react-calendar__navigation__arrow {
+  font-size: 20px;
+  padding: 8px 12px !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Hover and focus states for navigation buttons */
+.react-calendar__navigation button:enabled:hover,
+.react-calendar__navigation button:enabled:focus {
+  background-color: #e8f5e8 !important;
+  color: #2e7d32;
+}
+
+/* Disabled state for navigation buttons */
+.react-calendar__navigation button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Calendar tile styling - apply to all views */
 .react-calendar__tile {
+  padding: 8px 4px;
+  font-size: 13px;
+  color: #2c3e50;
+  position: relative;
+  height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  background: none !important;
+  border: none !important;
+  outline: none !important;
+}
+
+/* Remove these conflicting styles */
+.react-calendar__tile abbr,
+.react-calendar__year-view__months__month,
+.react-calendar__decade-view__years__year,
+.react-calendar__century-view__decades__decade {
+  z-index: 2;
+  position: relative;
+  text-decoration: none;
+  font-weight: normal;
+}
+
+/* Remove these conflicting styles */
+.react-calendar__tile::before,
+.react-calendar__year-view__months__month::before,
+.react-calendar__decade-view__years__year::before,
+.react-calendar__century-view__decades__decade::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  z-index: 1;
+}
+
+/* Remove these conflicting hover states */
+.react-calendar__tile:enabled:hover,
+.react-calendar__year-view__months__month:enabled:hover,
+.react-calendar__decade-view__years__year:enabled:hover,
+.react-calendar__century-view__decades__decade:enabled:hover {
+  color: #2e7d32;
+  font-weight: 600;
+}
+
+/* Remove these conflicting hover states */
+.react-calendar__tile:enabled:hover::before,
+.react-calendar__tile:enabled:focus::before,
+.react-calendar__year-view__months__month:enabled:hover::before,
+.react-calendar__year-view__months__month:enabled:focus::before,
+.react-calendar__decade-view__years__year:enabled:hover::before,
+.react-calendar__decade-view__years__year:enabled:focus::before,
+.react-calendar__century-view__decades__decade:enabled:hover::before,
+.react-calendar__century-view__decades__decade:enabled:focus::before {
+  background-color: #e8f5e8;
+  z-index: 1;
+}
+
+/* Remove these conflicting active states */
+.react-calendar__tile--active::before,
+.react-calendar__year-view__months__month--active::before,
+.react-calendar__decade-view__years__year--active::before,
+.react-calendar__century-view__decades__decade--active::before {
+  background-color: #2e7d32 !important;
+  z-index: 1;
+}
+
+/* Remove these conflicting active states */
+.react-calendar__tile--active,
+.react-calendar__year-view__months__month--active,
+.react-calendar__decade-view__years__year--active,
+.react-calendar__century-view__decades__decade--active {
+  color: white !important;
+  font-weight: 600;
+  z-index: 2;
+}
+
+/* Remove these conflicting now states */
+.react-calendar__tile--now::before,
+.react-calendar__year-view__months__month--now::before,
+.react-calendar__decade-view__years__year--now::before,
+.react-calendar__century-view__decades__decade--now::before {
+  background-color: #e8f5e8;
+  border: 2px solid #2e7d32;
+  z-index: 1;
+}
+
+/* Remove these conflicting now states */
+.react-calendar__tile--now,
+.react-calendar__year-view__months__month--now,
+.react-calendar__decade-view__years__year--now,
+.react-calendar__century-view__decades__decade--now {
+  color: #2e7d32;
+  font-weight: 600;
+  z-index: 2;
+}
+
+/* Specific adjustments for year and month views */
+.react-calendar__year-view__months__month,
+.react-calendar__decade-view__years__year,
+.react-calendar__century-view__decades__decade {
+  padding: 1em 0.5em;
+  height: auto;
+}
+
+/* Remove any default button styles */
+.react-calendar button {
+  border: none !important;
+  outline: none !important;
+  background: none !important;
+}
+
+.react-calendar button:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Remove default calendar borders */
+.react-calendar {
+  border: none !important;
+  outline: none !important;
+}
+
+/* Remove borders from month view */
+.react-calendar__month-view {
+  background: none !important;
+}
+
+.react-calendar__month-view__days {
+  background: none !important;
+}
+
+/* Remove borders from weekday headers */
+.react-calendar__month-view__weekdays__weekday {
+  border: none !important;
+  background: none !important;
+}
+
+/* Ensure navigation buttons are clean */
+.react-calendar__navigation button {
+  border: none !important;
+  outline: none !important;
+}
+
+/* Tile content (dots) styling */
+.tile-content {
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 2px;
+  justify-content: center;
+}
+
+.tile-content div {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  font-size: 0;
+}
+
+/* Status indicators as dots */
+.status-present {
+  background-color: #2e7d32;
+}
+
+.status-absent {
+  background-color: #c62828;
+}
+
+.status-late {
+  background-color: #ef6c00;
+}
+
+/* Weekday headers */
+.react-calendar__month-view__weekdays {
   text-align: center;
-  padding: 10px;
+  text-transform: uppercase;
+  font-size: 11px;
+  font-weight: 600;
+  color: #2c3e50;
+  padding: 4px 0;
+  margin-bottom: 4px;
 }
 
-.status-p {
-  color: green;
+.react-calendar__month-view__weekdays__weekday abbr {
+  text-decoration: none;
+  font-weight: 600;
 }
 
-.status-a {
-  color: red;
+.react-calendar__month-view__weekdays__weekday {
+  padding: 4px;
 }
 
-.status-l {
-  color: orange;
+/* Attendance status indicators */
+.status-present, .status-absent, .status-late {
+  font-size: 11px;
+  padding: 2px 4px;
+  margin: 2px 0;
+  border-radius: 4px;
+  list-style: none;
 }
 
+.status-present {
+  background-color: #e8f5e8;
+  color: #2e7d32;
+}
+
+.status-absent {
+  background-color: #ffebee;
+  color: #c62828;
+}
+
+.status-late {
+  background-color: #fff3e0;
+  color: #ef6c00;
+}
+
+/* Attendance details section */
 .attendance-details {
-  margin-top: 20px;
-  text-align: center;
+  margin-top: 24px;
+  padding: 24px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
 }
 
 .attendance-details h2 {
-  font-size: 20px;
-  font-weight: bold;
-  margin-bottom: 10px;
+  color: #2c3e50;
+  font-size: 18px;
+  font-weight: 500;
+  margin-bottom: 20px;
 }
 
-.attendance-details p {
-  margin: 5px 0;
+.attendance-entry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  margin: 8px 0;
+  border-radius: 8px;
+  background-color: white;
+  border: 1px solid #e0e0e0;
+  transition: all 0.2s ease;
+}
+
+.attendance-entry:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.attendance-entry p {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.attendance-entry strong {
+  color: #2c3e50;
+  font-weight: 500;
+  font-size: 15px;
+  flex: 1;
+}
+
+/* Status badges - updated to match mobile style */
+.status-badge {
+  padding: 6px 12px;
+  border-radius: 50px;
+  font-size: 13px;
+  font-weight: 500;
+  min-width: 80px;
+  text-align: center;
+}
+
+.status-badge.present {
+  background-color: #e8f5e8;
+  color: #2e7d32;
+}
+
+.status-badge.absent {
+  background-color: #ffebee;
+  color: #c62828;
+}
+
+.status-badge.late {
+  background-color: #fff3e0;
+  color: #ef6c00;
+}
+
+/* Time display */
+.attendance-time {
+  color: #666;
+  font-size: 13px;
+  margin-right: 12px;
+  min-width: 70px;
+}
+
+/* Empty state styling */
+.attendance-entry.empty-state {
+  color: #666;
+  text-align: center;
+  padding: 24px;
+  background-color: #f8f9fa;
+  border: 1px dashed #e0e0e0;
+}
+
+.attendance-entry.empty-state p {
+  justify-content: center;
+  color: #666;
+  font-style: italic;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .student-attendance-container {
+    padding: 16px;
+  }
+
+  .react-calendar {
+    padding: 12px;
+  }
+
+  .react-calendar__tile {
+    padding: 12px 4px;
+    font-size: 13px;
+  }
+
+  .attendance-details {
+    padding: 16px;
+  }
+
+  .student-info-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .student-info-divider {
+    display: none;
+  }
+
+  .student-info-header {
+    padding: 16px;
+  }
+}
+
+/* Year view specific styles */
+.react-calendar__decade-view__years {
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: 8px;
+  padding: 8px;
+}
+
+/* Remove any potential flex layout that might be interfering */
+.react-calendar__decade-view,
+.react-calendar__decade-view > *,
+.react-calendar__decade-view__years > * {
+  display: contents;
+}
+
+.react-calendar__decade-view__years__year {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 46px;
+  padding: 8px 4px;
+  position: relative;
+  color: #2c3e50;
+  background: none !important;
+  border: none !important;
+  outline: none !important;
+  font-size: 14px;
+  width: 100%;
+}
+
+.react-calendar__decade-view__years__year::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  background: transparent;
+  z-index: -1;
+}
+
+/* Active state */
+.react-calendar__decade-view__years__year--active {
+  position: relative;
+  color: white !important;
+  font-weight: 600;
+}
+
+.react-calendar__decade-view__years__year--active::before {
+  background-color: #2e7d32 !important;
+}
+
+/* Current year state */
+.react-calendar__decade-view__years__year--now {
+  position: relative;
+  color: #2e7d32 !important;
+  font-weight: 600;
+}
+
+.react-calendar__decade-view__years__year--now::before {
+  border: 2px solid #2e7d32 !important;
+  background-color: #e8f5e8 !important;
+}
+
+/* Hover state */
+.react-calendar__decade-view__years__year:enabled:hover {
+  position: relative;
+  color: #1b5e20 !important;
+  font-weight: 600;
+  z-index: 2;
+}
+
+.react-calendar__decade-view__years__year:enabled:hover::before {
+  background-color: #c8e6c9 !important; /* Darker shade of green */
+  z-index: -1;
+}
+
+/* Remove the separate text z-index rule since we're handling it in the hover state */
+.react-calendar__decade-view__years__year abbr,
+.react-calendar__decade-view__years__year span {
+  position: relative;
+}
+
+/* Student info header */
+.student-info-header {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  padding: 20px;
+  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.student-info-row {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.student-info-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.student-info-label {
+  color: #666;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.student-info-value {
+  color: #2c3e50;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.student-info-divider {
+  width: 1px;
+  height: 20px;
+  background-color: #e0e0e0;
+  margin: 0 8px;
 }
