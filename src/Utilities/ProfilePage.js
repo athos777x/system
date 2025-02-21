@@ -87,11 +87,19 @@ function ProfilePage() {
   };
 
   if (loading) {
-    return <div className="profile-page">Loading...</div>;
+    return (
+      <div className="profile-page">
+        <div className="loading-state">Loading profile information...</div>
+      </div>
+    );
   }
 
   if (error) {
-    return <div className="profile-page">Error: {error}</div>;
+    return (
+      <div className="profile-page">
+        <div className="error-state">Error: {error}</div>
+      </div>
+    );
   }
 
   return (
@@ -105,90 +113,101 @@ function ProfilePage() {
             accept="image/*"
             id="profile-pic-input"
             onChange={handleProfilePictureChange}
+            style={{ display: 'none' }}
           />
           <label htmlFor="profile-pic-input" className="upload-button">
             Change Profile Picture
           </label>
         </div>
+
         <div className="profile-info">
           {isEditing ? (
             <>
               <p>
-                <strong>First Name:</strong>{' '}
+                <strong>First Name</strong>
                 <input
                   type="text"
                   name="firstname"
                   value={userInfo.firstname}
                   onChange={handleInputChange}
+                  placeholder="Enter first name"
                 />
               </p>
               <p>
-                <strong>Middle Name:</strong>{' '}
+                <strong>Middle Name</strong>
                 <input
                   type="text"
                   name="middle_name"
                   value={userInfo.middle_name || ''}
                   onChange={handleInputChange}
+                  placeholder="Enter middle name"
                 />
               </p>
               <p>
-                <strong>Last Name:</strong>{' '}
+                <strong>Last Name</strong>
                 <input
                   type="text"
                   name="lastname"
                   value={userInfo.lastname}
                   onChange={handleInputChange}
+                  placeholder="Enter last name"
                 />
               </p>
               <p>
-                <strong>Username:</strong>{' '}
+                <strong>Username</strong>
                 <input
                   type="text"
                   name="username"
                   value={userInfo.username}
                   onChange={handleInputChange}
+                  placeholder="Enter username"
                 />
               </p>
               <p>
-                <strong>Password:</strong>{' '}
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  name="password"
-                  value={userInfo.password}
-                  onChange={handleInputChange}
-                />
-                <button 
-                  type="button" 
-                  onClick={() => setShowPassword(prev => !prev)} 
-                  className="password-toggle-button"
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
-                >
-                  {showPassword ? (
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" className="bi bi-eye" viewBox="0 0 16 16">
-                      <path d="M8 3.5C4.5 3.5 1.5 6.5 0 8c1.5 1.5 4.5 4.5 8 4.5s6.5-3 8-4.5c-1.5-1.5-4.5-4.5-8-4.5zM8 12c-2.5 0-4.5-1.5-5.5-2.5C3.5 8.5 5.5 7 8 7s4.5 1.5 5.5 2.5C12.5 10.5 10.5 12 8 12z"/>
-                      <path d="M8 9a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/>
-                    </svg>
-                  ) : (
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" className="bi bi-eye-slash" viewBox="0 0 16 16">
-                      <path d="M13.5 8c-.5 0-1 .5-1 1s.5 1 1 1 1-.5 1-1-.5-1-1-1zM8 3.5c-2.5 0-4.5 1.5-5.5 2.5C3.5 8.5 5.5 10 8 10s4.5-1.5 5.5-2.5C12.5 5 10.5 3.5 8 3.5zM1.5 8c.5 0 1-.5 1-1s-.5-1-1-1-1 .5-1 1 .5 1 1 1zM8 0c-4.5 0-8 4-8 8s3.5 8 8 8c1.5 0 3-.5 4.5-1.5l-1-1.5C10.5 14 9 15 8 15c-3.5 0-6-3-6-6s2.5-6 6-6c1 0 2.5.5 3.5 1.5l1-1.5C11.5 1 9.5 0 8 0z"/>
-                      <path d="M1.5 1.5l13 13 1-1-13-13-1 1z"/>
-                    </svg>
-                  )}
-                </button>
+                <strong>Password</strong>
+                <div style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    name="password"
+                    value={userInfo.password}
+                    onChange={handleInputChange}
+                    placeholder="Enter password"
+                    style={{ flex: 1 }}
+                  />
+                  <button 
+                    type="button" 
+                    onClick={() => setShowPassword(prev => !prev)} 
+                    className="password-toggle-button"
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showPassword ? (
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+                        <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zM1.173 8a13.133 13.133 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.133 13.133 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5c-2.12 0-3.879-1.168-5.168-2.457A13.134 13.134 0 0 1 1.172 8z"/>
+                        <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0z"/>
+                      </svg>
+                    ) : (
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+                        <path d="M13.359 11.238C15.06 9.72 16 8 16 8s-3-5.5-8-5.5a7.028 7.028 0 0 0-2.79.588l.77.771A5.944 5.944 0 0 1 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.134 13.134 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755-.165.165-.337.328-.517.486l.708.709z"/>
+                        <path d="M11.297 9.176a3.5 3.5 0 0 0-4.474-4.474l.823.823a2.5 2.5 0 0 1 2.829 2.829l.822.822zm-2.943 1.299.822.822a3.5 3.5 0 0 1-4.474-4.474l.823.823a2.5 2.5 0 0 0 2.829 2.829z"/>
+                        <path d="M3.35 5.47c-.18.16-.353.322-.518.487A13.134 13.134 0 0 0 1.172 8l.195.288c.335.48.83 1.12 1.465 1.755C4.121 11.332 5.881 12.5 8 12.5c.716 0 1.39-.133 2.02-.36l.77.772A7.029 7.029 0 0 1 8 13.5C3 13.5 0 8 0 8s.939-1.721 2.641-3.238l.708.709zm10.296 8.884-12-12 .708-.708 12 12-.708.708z"/>
+                      </svg>
+                    )}
+                  </button>
+                </div>
               </p>
               <div className="button-group">
-                <button onClick={handleSave}>Save</button>
-                <button onClick={() => setIsEditing(false)}>Cancel</button>
+                <button className="save-button" onClick={handleSave}>Save Changes</button>
+                <button className="cancel-button" onClick={() => setIsEditing(false)}>Cancel</button>
               </div>
             </>
           ) : (
             <>
-              <p><strong>First Name:</strong> {userInfo.firstname}</p>
-              <p><strong>Middle Name:</strong> {userInfo.middle_name || 'N/A'}</p>
-              <p><strong>Last Name:</strong> {userInfo.lastname}</p>
-              <p><strong>Username:</strong> {userInfo.username}</p>
-              <p><strong>Password:</strong> ******</p>
-              <button onClick={() => setIsEditing(true)}>Edit</button>
+              <p><strong>First Name</strong> {userInfo.firstname}</p>
+              <p><strong>Middle Name</strong> {userInfo.middle_name || 'N/A'}</p>
+              <p><strong>Last Name</strong> {userInfo.lastname}</p>
+              <p><strong>Username</strong> {userInfo.username}</p>
+              <p><strong>Password</strong> ******</p>
+              <button className="edit-button" onClick={() => setIsEditing(true)}>Edit Profile</button>
             </>
           )}
         </div>

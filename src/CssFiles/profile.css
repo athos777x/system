@@ -1,32 +1,49 @@
 .profile-page {
-    padding: 20px;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 24px;
+    min-height: calc(100vh - 64px);
+    background-color: #f8f9fa;
+    display: flex;
+    flex-direction: column;
+}
+
+h1 {
     text-align: center;
-    background-color: #f8f9fa; /* Light background for a soft look */
+    margin: 0 0 24px 0;
+    color: #000000;
+    font-size: 24px;
+    font-weight: 600;
 }
 
 .profile-card {
-    display: inline-block;
-    border: none; /* Remove border for a cleaner look */
-    border-radius: 10px;
-    padding: 20px;
-    width: 100%;
-    max-width: 350px; /* Ensure the card stays responsive */
-    background-color: #ffffff; /* Bright background for better focus */
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Softer shadow for depth */
-    margin: 10px auto; /* Center the card horizontally */
+    flex: 1;
+    background: white;
+    padding: 32px;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    position: relative;
+    margin: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
 }
 
 .profile-pic-container {
-    position: relative;
-    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
 }
 
 .profile-pic-large {
-    width: 100px; /* Slightly smaller for a minimalist look */
-    height: 100px;
+    width: 150px;
+    height: 150px;
     border-radius: 50%;
-    border: 2px solid #ccc; /* Thinner border for subtlety */
-    object-fit: cover; /* Handle different image aspect ratios */
+    object-fit: cover;
+    border: 4px solid #e8f5e8;
+    background-color: #f8f9fa;
 }
 
 #profile-pic-input {
@@ -34,59 +51,177 @@
 }
 
 .upload-button {
-    display: inline-block;
-    margin-top: 10px;
-    padding: 5px 10px;
-    font-size: 12px;
-    color: #fff;
-    background-color: #007bff;
-    border: none;
-    border-radius: 5px;
+    background-color: #28a745;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 50px;
     cursor: pointer;
-    transition: background-color 0.3s ease;
+    font-size: 14px;
+    transition: all 0.2s ease;
 }
 
 .upload-button:hover {
-    background-color: #0056b3;
+    background-color: #218838;
+    transform: translateY(-1px);
 }
 
 .profile-info {
-    text-align: left;
+    width: 100%;
+    max-width: 500px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
 }
 
 .profile-info p {
-    margin: 5px 0;
-    font-size: 14px;
-    color: #333; /* Darker text for better readability */
+    display: flex;
+    align-items: center;
+    margin: 0;
+    padding: 12px 16px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
 }
 
-button {
-    display: inline-block;
+.profile-info strong {
+    min-width: 120px;
+    color: #666;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.profile-info input {
+    flex: 1;
     padding: 8px 12px;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
     font-size: 14px;
-    color: #fff;
-    background-color: #28a745; /* Green for primary actions */
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
+    color: #2c3e50;
+    background: white;
 }
 
-button:hover {
-    background-color: #218838;
+.profile-info input:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.1);
 }
 
 .button-group {
-    display: flex; /* Use flexbox for alignment */
-    justify-content: left; /* Center the buttons */
-    gap: 10px; /* Space between buttons */
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 16px;
+}
+
+.profile-page button {
+    padding: 10px 24px;
+    border: none;
+    border-radius: 50px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.profile-page button.edit-button {
+    background-color: #28a745;
+    color: white;
+    align-self: center;
+    min-width: 120px;
+}
+
+.profile-page button.edit-button:hover {
+    background-color: #218838;
+    transform: translateY(-1px);
+}
+
+.profile-page button.save-button {
+    background-color: #28a745;
+    color: white;
+}
+
+.profile-page button.save-button:hover {
+    background-color: #218838;
+    transform: translateY(-1px);
+}
+
+.profile-page button.cancel-button {
+    background-color: #dc3545;
+    color: white;
+}
+
+.profile-page button.cancel-button:hover {
+    background-color: #c82333;
+    transform: translateY(-1px);
 }
 
 .password-toggle-button {
     background: none;
     border: none;
+    padding: 4px;
+    margin-left: 8px;
     cursor: pointer;
-    margin-left: 5px;
-    padding: 0;
-    color: #007bff; /* Change to your desired color */
-  }
+    color: #666;
+    min-width: auto;
+}
+
+.password-toggle-button:hover {
+    color: #2c3e50;
+}
+
+.password-toggle-button svg {
+    width: 20px;
+    height: 20px;
+}
+
+/* Loading and error states */
+.loading-state,
+.error-state {
+    text-align: center;
+    padding: 48px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    margin: 24px auto;
+    max-width: 600px;
+}
+
+.error-state {
+    color: #dc3545;
+    background-color: #fff5f5;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .profile-page {
+        padding: 16px;
+    }
+
+    .profile-card {
+        padding: 24px;
+        margin: 8px;
+    }
+
+    .profile-info p {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .profile-info strong {
+        min-width: auto;
+    }
+
+    .profile-info input {
+        width: 100%;
+    }
+
+    .button-group {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    button {
+        width: 100%;
+    }
+}
