@@ -18,8 +18,28 @@ function Student_AttendancePage() {
   useEffect(() => {
     const fetchStudentInfo = async () => {
       try {
-        const response = await axios.get(`http://localhost:3001/user/${userId}/info`);
-        setStudentInfo(response.data);
+        // First get the student ID and grade level
+        const studentResponse = await axios.get(`http://localhost:3001/user-id/convert/student-id?userId=${userId}`);
+        console.log('Student Response:', studentResponse.data);
+        
+        if (studentResponse.data.success) {
+          // Then get the section name
+          const sectionResponse = await axios.get(`http://localhost:3001/student-section/${userId}`);
+          console.log('Section Response:', sectionResponse.data);
+          
+          // Get the active school year - this endpoint defaults to active school years
+          const schoolYearResponse = await axios.get('http://localhost:3001/school-years');
+          console.log('School Year Response:', schoolYearResponse.data);
+          
+          // The response will be an array with the active school year
+          const activeSchoolYear = schoolYearResponse.data[0]?.school_year;
+          
+          setStudentInfo({
+            grade_level: `Grade ${studentResponse.data.gradeLevel}`,
+            section_name: sectionResponse.data.section || 'Not Assigned',
+            school_year: activeSchoolYear || 'Not Set'
+          });
+        }
       } catch (error) {
         console.error('Error fetching student info:', error);
       }
@@ -27,7 +47,7 @@ function Student_AttendancePage() {
 
     const fetchAttendance = async () => {
       try {
-        const response = await axios.get(`http://localhost:3001/user/${userId}/attendance`);
+        const response = await axios.get(`http://localhost:3001/attendance/${userId}`);
         setAttendanceData(response.data);
       } catch (error) {
         console.error('Error fetching attendance data:', error);

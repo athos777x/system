@@ -430,7 +430,8 @@
 
   .student-info-row {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: center;
+    text-align: center;
     gap: 12px;
   }
 
@@ -438,8 +439,8 @@
     display: none;
   }
 
-  .student-info-header {
-    padding: 16px;
+  .student-info-item {
+    justify-content: center;
   }
 }
 
@@ -544,6 +545,7 @@
 .student-info-row {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 24px;
 }
 
@@ -551,18 +553,21 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  text-align: center;
 }
 
 .student-info-label {
   color: #666;
   font-size: 14px;
   font-weight: 500;
+  white-space: nowrap;
 }
 
 .student-info-value {
   color: #2c3e50;
   font-size: 15px;
   font-weight: 600;
+  white-space: nowrap;
 }
 
 .student-info-divider {
