@@ -55,6 +55,7 @@
 
 .sidebar .buttons button:hover {
   background-color: #f0f0f0; /* Hover background color */
+  border-radius: 50px;
 }
 
 .sidebar .buttons button .icon {
