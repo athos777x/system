@@ -1499,18 +1499,19 @@ app.put('/employees/:employeeId/archive', (req, res) => {
 // TEACHER PAGE
 app.post('/assign-subject/:teacherId', (req, res) => {
   const teacherId = req.params.teacherId;
-  const { subject_id, grade_level, section_id, type } = req.body;
+  const { subject_id, grade_level, section_id, type, school_year_id } = req.body;
 
   const insertQuery = `
     INSERT INTO subject_assigned 
-    (subject_assigned_id, subject_id, level, section_id, employee_id, elective) 
-    VALUES (NULL, ?, ?, ?, ?, ?)
+    (subject_assigned_id, subject_id, level, section_id, employee_id, elective, school_year_id) 
+    VALUES (NULL, ?, ?, ?, ?, ?, ?)
     ON DUPLICATE KEY UPDATE 
       subject_id = VALUES(subject_id),
       level = VALUES(level),
       section_id = VALUES(section_id),
       employee_id = VALUES(employee_id),
-      elective = VALUES(elective)
+      elective = VALUES(elective),
+      school_year_id = VALUES(school_year_id)
   `;
 
   const isElective = type === 'elective' ? 1 : 0;
@@ -1519,7 +1520,7 @@ app.post('/assign-subject/:teacherId', (req, res) => {
   // Insert or update subject assignment
   db.query(
     insertQuery,
-    [assignedSubjectId, grade_level, section_id, teacherId, isElective],
+    [assignedSubjectId, grade_level, section_id, teacherId, isElective, school_year_id],
     (err, result) => {
       if (err) {
         console.error('Error assigning subject:', err);
@@ -1584,18 +1585,19 @@ app.post('/assign-subject/:teacherId', (req, res) => {
 // TEACHER PAGE
 app.post('/assign-section/:teacherId', (req, res) => {
   const teacherId = req.params.teacherId;
-  const { section_id, grade_level } = req.body;  // Use section_id instead of section_name
+  const { section_id, grade_level, school_year_id } = req.body;  // Use section_id instead of section_name
   
   const query = `
-    INSERT INTO section_assigned (section_assigned_id, section_id, LEVEL, employee_id) 
-    VALUES (NULL, ?, ?, ?)
+    INSERT INTO section_assigned (section_assigned_id, section_id, LEVEL, employee_id, school_year_id) 
+    VALUES (NULL, ?, ?, ?, ?)
     ON DUPLICATE KEY UPDATE 
       section_id = VALUES(section_id), 
       LEVEL = VALUES(LEVEL), 
-      employee_id = VALUES(employee_id)
+      employee_id = VALUES(employee_id),
+      school_year_id =VALUES(school_year_id)
   `;
 
-  db.query(query, [section_id, grade_level, teacherId], (err, result) => {
+  db.query(query, [section_id, grade_level, teacherId, school_year_id], (err, result) => {
     if (err) {
       console.error('Error assigning section:', err);
       res.status(500).json({ error: 'Internal server error' });
@@ -1788,6 +1790,26 @@ app.get('/school-years', (req, res) => {
   } else {
     query += ' WHERE status = "active"'; // Default filter to show only active school years
   }
+
+  console.log('Query:', query);
+  console.log('QueryParams:', queryParams);
+
+  db.query(query, queryParams, (err, result) => {
+    if (err) {
+      console.error('Error fetching school years:', err); // Detailed error logging
+      res.status(500).send({ error: 'Error fetching school years', details: err.message });
+    } else {
+      console.log('Result:', result);
+      res.send(result);
+    }
+  });
+});
+
+app.get('/school-years-assign', (req, res) => {
+  const { searchTerm, school_year } = req.query;
+
+  let query = 'SELECT * FROM school_year';
+  const queryParams = [];
 
   console.log('Query:', query);
   console.log('QueryParams:', queryParams);
@@ -2202,7 +2224,7 @@ app.get('/subjects', (req, res) => {
   const { searchTerm, school_year, grade, archive_status } = req.query;
   
   let query = `
-    SELECT s.subject_id, s.grade_level, s.subject_name, s.status, s.grading_criteria, s.description, s.archive_status, sy.school_year_id, sy.status 
+    SELECT s.subject_id, s.grade_level, s.subject_name, s.status, s.grading_criteria, s.description, s.archive_status, sy.school_year_id, sy.status as sy_status 
     FROM subject s  
     JOIN school_year sy ON s.school_year_id = sy.school_year_id
     WHERE s.archive_status = ? order by s.grade_level DESC
@@ -2655,7 +2677,7 @@ app.get('/section-students/:sectionId/:gradeLevel/:subjectId?/:type?', (req, res
           ' ',
           UPPER(SUBSTRING(IFNULL(a.middlename, ''), 1, 1)),
           LOWER(SUBSTRING(IFNULL(a.middlename, '') FROM 2))
-        ) AS NAME
+        ) AS name
       FROM student a 
       LEFT JOIN SUBJECT b ON a.current_yr_lvl = b.grade_level
       WHERE a.section_id = ? AND a.current_yr_lvl = ?
