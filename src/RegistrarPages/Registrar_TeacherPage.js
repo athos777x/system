@@ -418,11 +418,13 @@ function Registrar_TeacherPage() {
   const fetchTeacherSubjects = async (teacherId) => {
     try {
       const response = await axios.get(`http://localhost:3001/teacher-subjects/${teacherId}`);
+      console.log('Fetched subjects from backend:', response.data); // Debugging output
       setTeacherSubjects(response.data);
     } catch (error) {
       console.error('Error fetching teacher subjects:', error);
     }
   };
+  
 
   const fetchTeacherSection = async (teacherId) => {
     try {
@@ -442,9 +444,7 @@ function Registrar_TeacherPage() {
       setTeacherSection(null);
     } else {
       setSelectedTeacherId(teacherId);
-      if (roleId === 3) {
-        fetchTeacherSubjects(teacherId);
-      }
+      fetchTeacherSubjects(teacherId);
       if (roleId === 4) {
         fetchTeacherSection(teacherId);
       }
@@ -665,8 +665,8 @@ useEffect(() => {
                             <tbody>
                               {teacherSubjects.map((subject, index) => (
                                 <tr key={index}>
-                                  <td>Grade {subject.grade_level}</td>
-                                  <td>{subject.elective === 1 ? subject.elective_name : subject.subject_name}</td>
+                                  <td>{subject.grade_level}</td> {/* Already includes 'Grade X' from the backend */}
+                                  <td>{subject.subject_name}</td> {/* Elective name or subject_name is already decided in the backend */}
                                   <td>{subject.section_name}</td>
                                 </tr>
                               ))}
@@ -676,6 +676,7 @@ useEffect(() => {
                           <p>No subjects assigned yet</p>
                         )}
                       </div>
+
 
 
 
