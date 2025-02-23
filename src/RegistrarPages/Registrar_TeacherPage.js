@@ -44,6 +44,8 @@ function Registrar_TeacherPage() {
   const [sectionsByGrade, setSectionsByGrade] = useState([]);
   const [teacherSection, setTeacherSection] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [schoolYears, setSchoolYears] = useState([]);
+  const [selectedSchoolYear, setSelectedSchoolYear] = useState('');
   const [editTeacherData, setEditTeacherData] = useState({
     firstname: '',
     lastname: '',
@@ -80,6 +82,29 @@ function Registrar_TeacherPage() {
       console.error('Error fetching teachers:', error);
     }
   };
+
+  useEffect(() => {
+    const fetchSchoolYears = async () => {
+      try {
+        const response = await axios.get('http://localhost:3001/school-years-assign');
+        setSchoolYears(response.data);
+
+        // Auto-select the active school year by default
+        const activeYear = response.data.find((year) => year.status === 'active');
+        if (activeYear) {
+          setSelectedSchoolYear(activeYear.school_year_id);
+        } else if (response.data.length) {
+          // Fallback to the first year if no active year is found
+          setSelectedSchoolYear(response.data[0].school_year_id);
+        }
+      } catch (error) {
+        console.error('Error fetching school years:', error);
+      }
+    };
+
+    fetchSchoolYears();
+  }, []);
+
 
   const fetchRoles = async () => {
     try {
@@ -306,16 +331,14 @@ function Registrar_TeacherPage() {
   };
 
   const handleSubjectAssignment = async () => {
-    if (!selectedSubject || !selectedGradeLevelForSection || !selectedSection) {
-      alert('Please select a subject, grade level, and section.');
+    if (!selectedSubject || !selectedGradeLevelForSection || !selectedSection || !selectedSchoolYear) {
+      alert('Please select a subject, grade level, section, and school year.');
       return;
     }
   
-    // Extract subject type and ID from the formatted selectedSubject string
     const [type, id] = selectedSubject.split('-');
     const subjectId = parseInt(id, 10);
   
-    // Find the subject details
     const selectedSubjectDetails = subjectsByGrade.find((subject) => {
       return type === 'elective'
         ? subject.subject_id === subjectId && subject.type === 'elective'
@@ -327,16 +350,16 @@ function Registrar_TeacherPage() {
       return;
     }
   
-    // Determine if it's an elective
     const isElective = selectedSubjectDetails.type === 'elective';
   
     try {
       console.log('Assigning subject with:', {
         teacherId: currentTeacherId,
-        subjectId: subjectId, // Pass the actual numeric ID
+        subjectId: subjectId,
         gradeLevel: selectedGradeLevelForSection,
         sectionId: selectedSection,
         type: isElective ? 'elective' : 'subject',
+        schoolYearId: selectedSchoolYear,
       });
   
       const response = await axios.post(
@@ -346,11 +369,12 @@ function Registrar_TeacherPage() {
           grade_level: selectedGradeLevelForSection,
           section_id: selectedSection,
           type: isElective ? 'elective' : 'subject',
+          school_year_id: selectedSchoolYear,
         }
       );
   
       if (response.status === 200) {
-        alert('Subject assigned successfully');
+        alert(response.data.message || 'Subject assigned successfully');
         setShowAssignSubjectModal(false);
         setSelectedSubject('');
         setSelectedGradeLevelForSection('7');
@@ -385,23 +409,25 @@ function Registrar_TeacherPage() {
   };
 
   const handleSectionAssignment = async () => {
-    if (!selectedSection || !selectedGradeLevelForSection) {
-      alert('Please select both a section and grade level');
+    if (!selectedSection || !selectedGradeLevelForSection || !selectedSchoolYear) {
+      alert('Please select a section, grade level, and school year');
       return;
     }
-
+  
     try {
       console.log('Assigning section with:', {
         teacherId: currentTeacherId,
         section: selectedSection,
-        gradeLevel: selectedGradeLevelForSection
+        gradeLevel: selectedGradeLevelForSection,
+        schoolYearId: selectedSchoolYear,
       });
-
+  
       const response = await axios.post(`http://localhost:3001/assign-section/${currentTeacherId}`, {
         section_id: selectedSection,
-        grade_level: selectedGradeLevelForSection
+        grade_level: selectedGradeLevelForSection,
+        school_year_id: selectedSchoolYear,
       });
-
+  
       if (response.status === 200) {
         alert('Section assigned successfully');
         setShowAssignSectionModal(false);
@@ -414,6 +440,7 @@ function Registrar_TeacherPage() {
       alert('Error assigning section: ' + (error.response?.data?.error || error.message));
     }
   };
+  
 
   const fetchTeacherSubjects = async (teacherId) => {
     try {
@@ -879,8 +906,26 @@ useEffect(() => {
       )}
       {showAssignSubjectModal && (
         <div className="teacher-modal">
-          <div className="teacher-modal-content">
+        <div className="teacher-modal-content">
           <h2>Assign Subject</h2>
+      
+          {/* School Year Dropdown */}
+          <div className="teacher-modal-school-year">
+            <label htmlFor="schoolYear">Select School Year:</label>
+            <select
+              id="schoolYear"
+              value={selectedSchoolYear}
+              onChange={(e) => setSelectedSchoolYear(e.target.value)}
+            >
+              {schoolYears.map((year) => (
+                <option key={year.school_year_id} value={year.school_year_id}>
+                  {year.school_year}
+                </option>
+              ))}
+            </select>
+          </div>
+      
+          {/* Grade Level Buttons */}
           <div className="teacher-modal-grade-buttons">
             {[7, 8, 9, 10].map((grade) => (
               <button
@@ -892,64 +937,80 @@ useEffect(() => {
               </button>
             ))}
           </div>
-
+      
+          {/* Sections List */}
           <div className="teacher-modal-sections-list">
             {sectionsByGrade.map((section, index) => (
               <div
                 key={index}
                 className={`teacher-modal-section-item ${selectedSection === section.section_id ? 'selected' : ''}`}
-                onClick={() => setSelectedSection(section.section_id)} // Store section_id
+                onClick={() => setSelectedSection(section.section_id)}
               >
                 {section.section_name}
               </div>
             ))}
           </div>
-
+      
+          {/* Subjects List */}
           <div className="teacher-modal-subjects-list">
             {subjectsByGrade.map((subject, index) => {
               const subjectId = subject.type === 'elective' ? `elective-${subject.subject_id}` : `subject-${subject.subject_id}`;
               return (
                 <div
-                  key={subjectId}  // Use a truly unique key
+                  key={subjectId}
                   className={`teacher-modal-subject-item ${selectedSubject === subjectId ? 'selected' : ''}`}
-                  onClick={() => setSelectedSubject(subjectId)}  // Select specific subject/elective
+                  onClick={() => setSelectedSubject(subjectId)}
                 >
                   {subject.subject_name}
                 </div>
               );
             })}
           </div>
-
-
-
-
-            <div className="teacher-modal-footer">
-              <button 
-                className={`teacher-modal-action-button teacher-modal-assign-button`}
-                onClick={handleSubjectAssignment}
-                disabled={!selectedSubject}
-              >
-                Assign Subject
-              </button>
-              <button 
-                className="teacher-modal-action-button teacher-modal-cancel-button"
-                onClick={() => {
-                  setShowAssignSubjectModal(false);
-                  setSelectedSubject('');
-                  setSelectedGradeLevel('7');
-                }}
-              >
-                Cancel
-              </button>
-            </div>
+      
+          {/* Footer Actions */}
+          <div className="teacher-modal-footer">
+            <button
+              className="teacher-modal-action-button teacher-modal-assign-button"
+              onClick={handleSubjectAssignment}
+              disabled={!selectedSubject}
+            >
+              Assign Subject
+            </button>
+            <button
+              className="teacher-modal-action-button teacher-modal-cancel-button"
+              onClick={() => {
+                setShowAssignSubjectModal(false);
+                setSelectedSubject('');
+                setSelectedGradeLevel('7');
+              }}
+            >
+              Cancel
+            </button>
           </div>
         </div>
+      </div>
+      
       )}
       {showAssignSectionModal && (
         <div className="teacher-modal">
           <div className="teacher-modal-content">
             <h2>Assign Section</h2>
             
+            <div className="teacher-modal-school-year">
+            <label htmlFor="schoolYear">Select School Year:</label>
+            <select
+              id="schoolYear"
+              value={selectedSchoolYear}
+              onChange={(e) => setSelectedSchoolYear(e.target.value)}
+            >
+              {schoolYears.map((year) => (
+                <option key={year.school_year_id} value={year.school_year_id}>
+                  {year.school_year}
+                </option>
+              ))}
+            </select>
+          </div>
+
             <div className="teacher-modal-grade-buttons">
               {[7, 8, 9, 10].map((grade) => (
                 <button
