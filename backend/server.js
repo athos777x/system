@@ -1501,7 +1501,7 @@ app.post('/assign-subject/:teacherId', (req, res) => {
   const teacherId = req.params.teacherId;
   const { subject_id, grade_level, section_id, type } = req.body;
 
-  const query = `
+  const insertQuery = `
     INSERT INTO subject_assigned 
     (subject_assigned_id, subject_id, level, section_id, employee_id, elective) 
     VALUES (NULL, ?, ?, ?, ?, ?)
@@ -1513,23 +1513,70 @@ app.post('/assign-subject/:teacherId', (req, res) => {
       elective = VALUES(elective)
   `;
 
-  // If elective, insert elective_id into the subject_id column
   const isElective = type === 'elective' ? 1 : 0;
-  const assignedSubjectId = isElective ? subject_id : subject_id; // Use elective_id as subject_id if it's elective
+  const assignedSubjectId = isElective ? subject_id : subject_id;
 
+  // Insert or update subject assignment
   db.query(
-    query,
+    insertQuery,
     [assignedSubjectId, grade_level, section_id, teacherId, isElective],
     (err, result) => {
       if (err) {
         console.error('Error assigning subject:', err);
         return res.status(500).json({ error: 'Internal server error' });
       }
+
       console.log('Subject assigned successfully');
-      res.json({ message: 'Subject assigned successfully' });
+
+      // Get user_id from employee table
+      const userIdQuery = `SELECT user_id FROM employee WHERE employee_id = ?`;
+      db.query(userIdQuery, [teacherId], (err, userResult) => {
+        if (err) {
+          console.error('Error fetching user ID from employee table:', err);
+          return res.status(500).json({ error: 'Internal server error' });
+        }
+
+        if (userResult.length === 0) {
+          return res.status(404).json({ error: 'User not found for this employee' });
+        }
+
+        const userId = userResult[0]?.user_id;
+
+        // Check current role from users table
+        const roleQuery = `SELECT role_name FROM users WHERE user_id = ?`;
+        db.query(roleQuery, [userId], (err, roleResult) => {
+          if (err) {
+            console.error('Error fetching role from users table:', err);
+            return res.status(500).json({ error: 'Internal server error' });
+          }
+
+          const currentRole = roleResult[0]?.role_name;
+
+          // If the role is not already subject_teacher, update other_role_name
+          if (currentRole !== 'subject_teacher') {
+            const updateRoleQuery = `
+              UPDATE users 
+              SET other_role_name = 'subject_teacher' 
+              WHERE user_id = ?
+            `;
+
+            db.query(updateRoleQuery, [userId], (err, updateResult) => {
+              if (err) {
+                console.error('Error updating role:', err);
+                return res.status(500).json({ error: 'Internal server error' });
+              }
+
+              return res.json({ message: 'Subject assigned and role updated successfully' });
+            });
+          } else {
+            return res.json({ message: 'Subject assigned successfully' });
+          }
+        });
+      });
     }
   );
 });
+
 
 
 
@@ -2155,7 +2202,7 @@ app.get('/subjects', (req, res) => {
   const { searchTerm, school_year, grade, archive_status } = req.query;
   
   let query = `
-    SELECT s.subject_id, s.grade_level, s.subject_name, s.status, s.grading_criteria, s.description, s.archive_status, sy.school_year_id, sy.status as
+    SELECT s.subject_id, s.grade_level, s.subject_name, s.status, s.grading_criteria, s.description, s.archive_status, sy.school_year_id, sy.status 
     FROM subject s  
     JOIN school_year sy ON s.school_year_id = sy.school_year_id
     WHERE s.archive_status = ? order by s.grade_level DESC
