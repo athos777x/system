@@ -2202,7 +2202,7 @@ app.get('/subjects', (req, res) => {
   const { searchTerm, school_year, grade, archive_status } = req.query;
   
   let query = `
-    SELECT s.subject_id, s.grade_level, s.subject_name, s.status, s.grading_criteria, s.description, s.archive_status, sy.school_year_id, sy.status 
+    SELECT s.subject_id, s.grade_level, s.subject_name, s.status, s.grading_criteria, s.description, s.archive_status, sy.school_year_id, sy.status as sy_status 
     FROM subject s  
     JOIN school_year sy ON s.school_year_id = sy.school_year_id
     WHERE s.archive_status = ? order by s.grade_level DESC
@@ -2235,17 +2235,18 @@ app.get('/subjects', (req, res) => {
 app.put('/update-subjects-status', (req, res) => {
   const query = `
     UPDATE subject 
-    SET status = 'inactive' 
-    WHERE school_year_id IN (
-      SELECT school_year_id FROM school_year WHERE status = 'inactive'
-    )
+    SET status = CASE 
+      WHEN school_year_id IN (SELECT school_year_id FROM school_year WHERE status = 'active') THEN 'active'
+      WHEN school_year_id IN (SELECT school_year_id FROM school_year WHERE status = 'inactive') THEN 'inactive'
+      ELSE status
+    END
   `;
 
   db.query(query, (error, results) => {
     if (error) {
       return res.status(500).send(error);
     }
-    res.send({ message: 'Subjects updated successfully', affectedRows: results.affectedRows });
+    res.send({ message: 'Subjects status updated successfully', affectedRows: results.affectedRows });
   });
 });
 
@@ -2655,7 +2656,7 @@ app.get('/section-students/:sectionId/:gradeLevel/:subjectId?/:type?', (req, res
           ' ',
           UPPER(SUBSTRING(IFNULL(a.middlename, ''), 1, 1)),
           LOWER(SUBSTRING(IFNULL(a.middlename, '') FROM 2))
-        ) AS NAME
+        ) AS name
       FROM student a 
       LEFT JOIN SUBJECT b ON a.current_yr_lvl = b.grade_level
       WHERE a.section_id = ? AND a.current_yr_lvl = ?
