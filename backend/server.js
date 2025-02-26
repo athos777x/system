@@ -1394,7 +1394,17 @@ app.get('/employees', (req, res) => {
 app.post('/employees', (req, res) => {
   console.log('Received employee data:', req.body);
 
-  const { lastname, firstname, middlename, contact_number, address, year_started, role_name } = req.body;
+  const {
+    lastname,
+    firstname,
+    middlename,
+    birthday,
+    gender,
+    contact_number,
+    address,
+    year_started,
+    role_name
+  } = req.body;
 
   // First, get the role_id based on the role_name
   const getRoleIdQuery = `SELECT role_id FROM roles WHERE role_name = ?`;
@@ -1411,22 +1421,36 @@ app.post('/employees', (req, res) => {
 
     const role_id = roleResult[0].role_id;
 
-    // Insert employee details
+    // Insert employee details with role_id, birthday, and gender
     const employeeQuery = `
       INSERT INTO employee (
         lastname,
         firstname,
         middlename,
+        birthday,
+        gender,
         contact_number,
         address,
         year_started,
+        role_id,
         role_name,
         status,
         archive_status
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, 'active', 'unarchive')
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', 'unarchive')
     `;
 
-    const employeeValues = [lastname, firstname, middlename, contact_number, address, year_started, role_name];
+    const employeeValues = [
+      lastname,
+      firstname,
+      middlename,
+      birthday,
+      gender,
+      contact_number,
+      address,
+      year_started,
+      role_id,
+      role_name
+    ];
 
     db.query(employeeQuery, employeeValues, (employeeError, employeeResult) => {
       if (employeeError) {
@@ -1439,28 +1463,46 @@ app.post('/employees', (req, res) => {
       const defaultPassword = '1234'; // Default password
       const encryptedPassword = `SHA1('${defaultPassword}')`; // SHA1 encryption (consider bcrypt for security)
 
-      // Insert user account
+      // Insert user account with role_id
       const userQuery = `
         INSERT INTO users (username, password, role_id, role_name, password1)
-        VALUES (?,${defaultPassword}, ?, ?, ${encryptedPassword})
+        VALUES (?, ${defaultPassword}, ?, ?, ${encryptedPassword})
       `;
 
       const userValues = [username, role_id, role_name];
 
-      db.query(userQuery, userValues, (userError) => {
+      db.query(userQuery, userValues, (userError, userResult) => {
         if (userError) {
           console.error('Failed to create user account:', userError);
           return res.status(500).json({ error: 'Failed to create user account' });
         }
 
-        res.status(201).json({ 
-          message: 'Employee and user account added successfully', 
-          employeeId 
+        const userId = userResult.insertId;
+
+        // Update the employee table with the user_id
+        const updateEmployeeQuery = `
+          UPDATE employee SET user_id = ? WHERE employee_id = ?
+        `;
+
+        db.query(updateEmployeeQuery, [userId, employeeId], (updateError) => {
+          if (updateError) {
+            console.error('Failed to update employee with user_id:', updateError);
+            return res.status(500).json({ error: 'Failed to update employee user_id' });
+          }
+
+          res.status(201).json({
+            message: 'Employee and user account added successfully, user_id linked',
+            employeeId,
+            userId
+          });
         });
       });
     });
   });
 });
+
+
+
 
 
 
@@ -1615,15 +1657,15 @@ app.get('/teacher-subjects/:teacherId', (req, res) => {
   const teacherId = req.params.teacherId;
 
   const query = `
-  SELECT  CONCAT('Grade ', a.level) AS grade_level, 
+  SELECT  CONCAT('Grade ', c.grade_level) AS grade_level, 
   CASE WHEN a.elective = 1 THEN d.name  
   ELSE b.subject_name END AS subject_name,
-  c.section_name
-  FROM subject_assigned a
-  LEFT JOIN subject b ON a.subject_id = b.subject_id
+  c.section_name 
+  FROM SCHEDULE a 
+  LEFT JOIN SUBJECT b ON a.subject_id = b.subject_id
   LEFT JOIN elective d ON a.subject_id = d.elective_id
   LEFT JOIN section c ON a.section_id = c.section_id
-  WHERE a.employee_id = ?
+  WHERE a.teacher_id = ? AND a.schedule_status = 'Approved'
 
   `;
 
@@ -2139,7 +2181,8 @@ app.get('/schedules', (req, res) => {
 app.get('/sections/:sectionId/schedules', (req, res) => {
   const { sectionId } = req.params;
   const query = `
-    SELECT sc.schedule_id, sc.teacher_id, sb.subject_name, 
+    SELECT sc.schedule_id, sc.teacher_id,
+           IF(sc.elective='0',sb.subject_name,f.name) AS subject_name, 
            TIME_FORMAT(sc.time_start, '%h:%i %p') as time_start, 
            TIME_FORMAT(sc.time_end, '%h:%i %p') as time_end, 
            sc.day, sc.section_id, sc.schedule_status,
@@ -2147,6 +2190,7 @@ app.get('/sections/:sectionId/schedules', (req, res) => {
     FROM schedule sc
     JOIN subject sb ON sc.subject_id = sb.subject_id
     LEFT JOIN employee e ON sc.teacher_id = e.employee_id
+    LEFT JOIN elective f ON sc.elective=f.elective_id
     WHERE sc.section_id = ?
     ORDER BY sc.time_start
   `;
@@ -3334,27 +3378,69 @@ app.get('/api/students/search', (req, res) => {
 // ENDPOINT USED:
 // SCHEDULE PAGE
 app.post('/api/schedules', (req, res) => {
-  const { subject_id, teacher_id, time_start, time_end, day, section_id, schedule_status } = req.body;
-  
-  const query = `
-    INSERT INTO schedule 
-    (subject_id, teacher_id, time_start, time_end, day, section_id, schedule_status)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
-  `;
-  
-  db.query(
-    query, 
-    [subject_id, teacher_id, time_start, time_end, day, section_id, schedule_status],
-    (err, result) => {
-      if (err) {
-        console.error('Error adding schedule:', err);
-        res.status(500).json({ error: 'Internal server error', details: err.message });
-        return;
-      }
-      res.status(201).json({ message: 'Schedule added successfully', scheduleId: result.insertId });
+  const {
+    subject_id,
+    teacher_id,
+    time_start,
+    time_end,
+    day,
+    section_id,
+    schedule_status,
+    grade_level,
+    elective = 0, // Default to 0 if not provided
+  } = req.body;
+
+  // First, get the active school year ID
+  const getActiveSchoolYearQuery = `SELECT school_year_id FROM school_year WHERE status = 'active' LIMIT 1`;
+
+  db.query(getActiveSchoolYearQuery, (err, schoolYearResult) => {
+    if (err) {
+      console.error('Error fetching active school year:', err);
+      res.status(500).json({ error: 'Failed to fetch active school year', details: err.message });
+      return;
     }
-  );
+
+    if (schoolYearResult.length === 0) {
+      res.status(400).json({ error: 'No active school year found' });
+      return;
+    }
+
+    const school_year_id = schoolYearResult[0].school_year_id;
+
+    // Insert the schedule with elective status
+    const insertScheduleQuery = `
+      INSERT INTO schedule 
+      (subject_id, teacher_id, time_start, time_end, day, section_id, schedule_status, grade_level, school_year_id, elective)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `;
+
+    db.query(
+      insertScheduleQuery,
+      [
+        subject_id,
+        teacher_id,
+        time_start,
+        time_end,
+        day,
+        section_id,
+        schedule_status,
+        grade_level,
+        school_year_id,
+        elective, // Insert elective flag
+      ],
+      (err, result) => {
+        if (err) {
+          console.error('Error adding schedule:', err);
+          res.status(500).json({ error: 'Internal server error', details: err.message });
+          return;
+        }
+        res.status(201).json({ message: 'Schedule added successfully', scheduleId: result.insertId });
+      }
+    );
+  });
 });
+
+
 
 app.listen(3001, () => {
   console.log('Server running on port 3001');

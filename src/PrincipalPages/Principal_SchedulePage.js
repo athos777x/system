@@ -147,20 +147,33 @@ function Principal_SchedulePage() {
 
   const startAdding = async () => {
     try {
+      // Find the selected section to get its grade level
+      const selectedSection = sections.find(
+        (section) => section.section_id === Number(newSchedule.section_id)
+      );
+      const gradeLevel = selectedSection ? selectedSection.grade_level : null;
+  
+      if (!gradeLevel) {
+        alert('Please select a section first to determine the grade level.');
+        return;
+      }
+  
+      // Fetch subjects based on grade level
       const [subjectsResponse, sectionsResponse, teachersResponse] = await Promise.all([
-        axios.get('http://localhost:3001/subjects', {
-          params: { archive_status: 'unarchive' }
-        }),
+        axios.get(`http://localhost:3001/subjects-for-assignment/${gradeLevel}`),
         axios.get('http://localhost:3001/sections'),
         axios.get('http://localhost:3001/employees', {
           params: { status: 'active', archive_status: 'unarchive' }
-        })
+        }),
       ]);
+  
       console.log('Fetched subjects:', subjectsResponse.data);
       setSubjects(subjectsResponse.data);
       setFilteredSubjects([]); // Reset filtered subjects
       setSections(sectionsResponse.data);
       setTeachers(teachersResponse.data);
+  
+      // Reset the schedule form
       setNewSchedule({
         subject_id: '',
         time_start: '',
@@ -169,11 +182,14 @@ function Principal_SchedulePage() {
         teacher_id: '',
         section_id: ''
       });
+  
+      // Open the modal for adding a new schedule
       setIsModalOpen(true);
     } catch (error) {
       console.error('Error fetching data:', error);
     }
   };
+  
 
   const startEditing = async (schedule) => {
     try {
@@ -286,38 +302,70 @@ function Principal_SchedulePage() {
   const handleAddSchedule = async () => {
     try {
       // Validate all required fields
-      if (!newSchedule.section_id || !newSchedule.subject_id || !newSchedule.time_start || 
-          !newSchedule.time_end || newSchedule.day.length === 0 || !newSchedule.teacher_id) {
+      if (
+        !newSchedule.section_id ||
+        !newSchedule.subject_id ||
+        !newSchedule.time_start ||
+        !newSchedule.time_end ||
+        newSchedule.day.length === 0 ||
+        !newSchedule.teacher_id
+      ) {
         alert('Please fill in all required fields');
         return;
       }
-
+  
+      // Find the grade level based on the selected section
+      const selectedSection = sections.find(
+        (section) => section.section_id === Number(newSchedule.section_id)
+      );
+      const grade_level = selectedSection ? selectedSection.grade_level : null;
+  
+      if (!grade_level) {
+        alert('Grade level information is missing for the selected section.');
+        return;
+      }
+  
+      // Find the subject type (subject or elective)
+      const selectedSubject = filteredSubjects.find(
+        (subject) => subject.subject_id === Number(newSchedule.subject_id)
+      );
+      const isElective = selectedSubject?.type === 'elective' ? 1 : 0;
+  
       // Sort days before storing
       const sortedDays = sortDays([...newSchedule.day]);
-
-      // Add schedule_status as Pending Approval
+  
+      // Prepare schedule data
       const scheduleData = {
         ...newSchedule,
         schedule_status: 'Pending Approval',
-        // If only one day is selected, send as string, otherwise as JSON array
-        day: sortedDays.length === 1 ? sortedDays[0] : JSON.stringify(sortedDays)
+        grade_level,
+        elective: isElective, // Add elective field
+        day: sortedDays.length === 1 ? sortedDays[0] : JSON.stringify(sortedDays),
       };
-      
+  
       // Convert IDs to numbers
       scheduleData.subject_id = Number(scheduleData.subject_id);
       scheduleData.section_id = Number(scheduleData.section_id);
       scheduleData.teacher_id = Number(scheduleData.teacher_id);
-      
+  
+      // Send data to the backend
       await axios.post('http://localhost:3001/api/schedules', scheduleData);
+  
+      // Refresh the schedule list if a section is selected
       if (selectedSectionId) {
         fetchSectionSchedules(selectedSectionId);
       }
+  
+      // Close the modal after successful submission
       setIsModalOpen(false);
     } catch (error) {
       console.error('Error adding schedule:', error);
       alert('Error adding schedule. Please check all fields are filled correctly.');
     }
   };
+  
+  
+  
 
   useEffect(() => {
     const userId = localStorage.getItem('userId'); // Retrieve userId from localStorage
@@ -530,7 +578,25 @@ function Principal_SchedulePage() {
             <select
               name="section_id"
               value={newSchedule.section_id}
-              onChange={handleInputChange}
+              onChange={async (e) => {
+                handleInputChange(e);
+                const selectedSection = sections.find(
+                  (section) => section.section_id === Number(e.target.value)
+                );
+
+                if (selectedSection) {
+                  try {
+                    const response = await axios.get(
+                      `http://localhost:3001/subjects-for-assignment/${selectedSection.grade_level}`
+                    );
+                    setFilteredSubjects(response.data); // Dynamically update subjects
+                  } catch (error) {
+                    console.error('Error fetching subjects by grade level:', error);
+                  }
+                } else {
+                  setFilteredSubjects([]); // Reset if no section selected
+                }
+              }}
               required
             >
               <option value="">Select Section</option>
@@ -540,6 +606,7 @@ function Principal_SchedulePage() {
                 </option>
               ))}
             </select>
+
             <select
               name="subject_id"
               value={newSchedule.subject_id}
@@ -549,11 +616,12 @@ function Principal_SchedulePage() {
             >
               <option value="">Select Subject</option>
               {filteredSubjects.map((subject) => (
-                <option key={subject.subject_id} value={subject.subject_id}>
-                  {subject.subject_name} (Grade {subject.grade_level})
+                <option key={subject.subject_id || subject.id} value={subject.subject_id || subject.id}>
+                  {subject.subject_name}
                 </option>
               ))}
             </select>
+
             <input
               type="time"
               name="time_start"
@@ -582,6 +650,7 @@ function Principal_SchedulePage() {
                 </label>
               ))}
             </div>
+
             <select
               name="teacher_id"
               value={newSchedule.teacher_id}
@@ -595,6 +664,7 @@ function Principal_SchedulePage() {
                 </option>
               ))}
             </select>
+
             <div className="button-container">
               <button onClick={handleAddSchedule}>Add Schedule</button>
               <button onClick={() => setIsModalOpen(false)}>Close</button>
@@ -602,6 +672,7 @@ function Principal_SchedulePage() {
           </div>
         </div>
       )}
+
     </div>
   );
 }
