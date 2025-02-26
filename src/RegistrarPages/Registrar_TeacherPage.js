@@ -735,12 +735,12 @@ useEffect(() => {
 
 
                       <div className="action-buttons">
-                          <button 
+                          {/* <button 
                             className="assign-button"
                             onClick={() => handleAssignSubject(teacher.employee_id)}
                           >
                             Assign Subject
-                          </button>
+                          </button> */}
                         {teacher.role_id === 4 && (
                           <button 
                             className="assign-button"
@@ -813,8 +813,8 @@ useEffect(() => {
       )}
       {showModal && (
         <div className="section-modal">
-          <div className="section-modal-content">
-            <h2>Add New Teacher</h2>
+        <div className="section-modal-content">
+          <h2>Add New Teacher</h2>
             <label>
               Lastname:
               <input
@@ -843,6 +843,29 @@ useEffect(() => {
                 value={newTeacherData.middlename}
                 onChange={handleAddChange}
               />
+            </label>
+            <label>
+              Birthday:
+              <input
+                type="date"
+                name="birthday"
+                value={newTeacherData.birthday}
+                onChange={handleAddChange}
+                required
+              />
+            </label>
+            <label>
+              Gender:
+              <select
+                name="gender"
+                value={newTeacherData.gender}
+                onChange={handleAddChange}
+                required
+              >
+                <option value="">Select Gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+              </select>
             </label>
             <label>
               Contact Number:
@@ -903,6 +926,7 @@ useEffect(() => {
             </div>
           </div>
         </div>
+      
       )}
       {showAssignSubjectModal && (
         <div className="teacher-modal">
