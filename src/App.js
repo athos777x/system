@@ -7,6 +7,7 @@ import Layout from './Utilities/Layout';
 import HomePage from './Pages/HomePage';
 import Principal_SubjectsPage from './PrincipalPages/Principal_SubjectsPage';
 import Principal_SchedulePage from './PrincipalPages/Principal_SchedulePage'; 
+import TestSubjectsPage from './PrincipalPages/test_subjectsPage';
 import Student_ProfilePage from './StudentPages/Student_ProfilePage';
 import Student_EnrollmentPage from './StudentPages/Student_EnrollmentPage';
 import Student_SchedulePage from './StudentPages/Student_SchedulePage'; 
@@ -82,6 +83,7 @@ function App() {
             <Route path="/account" element={<Student_AccountPage />} />
 
             <Route path="/subjects" element={<Principal_SubjectsPage />} />
+            <Route path="/test-subjects" element={<TestSubjectsPage />} />
             <Route path="/schedule" element={<Principal_SchedulePage />} />
 
             <Route path="/student" element={<Registrar_StudentsPage />} />

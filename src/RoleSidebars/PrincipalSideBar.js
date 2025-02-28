@@ -123,6 +123,9 @@ function PrincipalSideBar({ showSidebar, toggleSidebar, handleLogout }) {
         <button onClick={() => handleNavigate('/subjects')}>
           <FiBook className="icon" /> Subjects
         </button>
+        <button onClick={() => handleNavigate('/test-subjects')}>
+          <FiBook className="icon" /> Test Subjects
+        </button>
         <div className={`menu-with-submenu ${showReportsSubMenu ? 'active' : ''}`}>
           <button onClick={toggleReportsSubMenu}>
             <FiBarChart2 className="icon" /> Generate Reports
