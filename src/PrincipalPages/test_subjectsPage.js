@@ -103,15 +103,16 @@ function TestSubjectsPage() {
     setShowModal(false);
   };
 
-  const handleEdit = () => {
+  const handleEdit = (subject) => {
+    setSelectedSubject(subject);
     setShowModal(true);
     setIsEditing(true);
-    setNewSubjectData(selectedSubject);
+    setNewSubjectData(subject);
   };
 
-  const handleDelete = async () => {
+  const handleDelete = async (subject) => {
     try {
-      await axios.put(`http://localhost:3001/subjects/${selectedSubject.subject_id}/archive`);
+      await axios.put(`http://localhost:3001/subjects/${subject.subject_id}/archive`);
       fetchSubjects();
       setSelectedSubject(null);
       setShowDetails(false);
@@ -121,17 +122,17 @@ function TestSubjectsPage() {
   };
 
   return (
-    <div className="sectionlist-container">
-      <h1 className="sectionlist-title">Subjects</h1>
-      <div className="sectionlist-search-filter-container">
+    <div className="section-container">
+      <h1 className="section-title">Subject Management</h1>
+      <div className="section-search-filter-container">
         <SubjectsSearchFilter 
           handleSearch={handleSearch} 
           handleApplyFilters={handleApplyFilters} 
         />
       </div>
-      <div style={{ display: 'flex', justifyContent: 'center', margin: '20px 0' }}>
-        <button className="subjects-add-subject-button" onClick={startAdding}>
-          + Add New Subject
+      <div className="section-add-section-button-container">
+        <button className="section-add-section-button" onClick={startAdding}>
+          Add New Subject
         </button>
       </div>
       <table className="attendance-table">
@@ -154,13 +155,21 @@ function TestSubjectsPage() {
                   <td>Grade {subject.grade_level}</td>
                   <td>{subject.status.charAt(0).toUpperCase() + subject.status.slice(1)}</td>
                   <td>
-                    <button className="sectionlist-view-button" onClick={() => handleViewClick(subject)}>View</button>
+                    <button className="section-view-button" onClick={() => handleViewClick(subject)}>View</button>
+                    <button className="section-edit-button" onClick={() => handleEdit(subject)}>Edit</button>
+                    <button 
+                      className="section-archive-button" 
+                      onClick={() => handleDelete(subject)} 
+                      disabled={subject?.sy_status === 'active'}
+                    >
+                      Archive
+                    </button>
                   </td>
                 </tr>
                 {selectedSubject && selectedSubject.subject_id === subject.subject_id && showDetails && (
                   <tr>
                     <td colSpan="5">
-                      <div className="sectionlist-details">
+                      <div className="section-details">
                         <table>
                           <tbody>
                             <tr>
@@ -185,18 +194,7 @@ function TestSubjectsPage() {
                             </tr>
                           </tbody>
                         </table>
-                        <div className="subject-actions">
-                          <button className="edit-button" onClick={handleEdit}>
-                            Edit
-                          </button>
-                          <button 
-                            className="delete-button" 
-                            onClick={handleDelete} 
-                            disabled={selectedSubject?.sy_status === 'active'} 
-                          >
-                            Archive
-                          </button>
-                        </div>
+                        {/* Buttons moved to main row */}
                       </div>
                     </td>
                   </tr>
@@ -212,22 +210,17 @@ function TestSubjectsPage() {
       </table>
 
       {showModal && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h3>{isEditing ? 'Edit Subject' : 'Add New Subject'}</h3>
-              <button className="close-btn" onClick={cancelAdding}>
-                &times;
-              </button>
-            </div>
+        <div className="section-modal">
+          <div className="section-modal-content">
+            <h2>{isEditing ? 'Edit Subject' : 'Add New Subject'}</h2>
             <form
               onSubmit={(e) => {
                 e.preventDefault();
                 saveNewSubject();
               }}
             >
-              <div className="form-group">
-                <label>Subject Name:</label>
+              <label>
+                Subject Name:
                 <input
                   type="text"
                   name="subject_name"
@@ -235,9 +228,9 @@ function TestSubjectsPage() {
                   onChange={handleAddChange}
                   required
                 />
-              </div>
-              <div className="form-group">
-                <label>Grade Level:</label>
+              </label>
+              <label>
+                Grade Level:
                 <select
                   name="grade_level"
                   value={newSubjectData.grade_level}
@@ -249,9 +242,9 @@ function TestSubjectsPage() {
                     </option>
                   ))}
                 </select>
-              </div>
-              <div className="form-group">
-                <label>Status:</label>
+              </label>
+              <label>
+                Status:
                 <select
                   name="status"
                   value={newSubjectData.status}
@@ -260,20 +253,20 @@ function TestSubjectsPage() {
                   <option value="active">Active</option>
                   <option value="inactive">Inactive</option>
                 </select>
-              </div>
-              <div className="form-group">
-                <label>Description:</label>
+              </label>
+              <label>
+                Description:
                 <textarea
                   name="description"
                   value={newSubjectData.description}
                   onChange={handleAddChange}
                 />
-              </div>
-              <div className="modal-buttons">
-                <button type="button" onClick={cancelAdding}>
+              </label>
+              <div className="section-button-group">
+                <button className="section-cancel-button" onClick={cancelAdding}>
                   Cancel
                 </button>
-                <button type="submit">{isEditing ? 'Update' : 'Save'}</button>
+                <button className="section-save-button" type="submit">{isEditing ? 'Update' : 'Save'}</button>
               </div>
             </form>
           </div>
