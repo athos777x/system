@@ -46,6 +46,19 @@ function Registrar_AttendancePage() {
       }));
     } catch (error) {
       console.error('There was an error fetching the attendance data!', error);
+      // Set default values when no attendance data is found
+      setAttendanceData((prevData) => ({
+        ...prevData,
+        [studentId]: {
+          grade_level: '-',
+          school_year: '-',
+          total_school_days: 0,
+          days_present: 0,
+          days_absent: 0,
+          days_late: 0,
+          brigada_attendance: 0
+        },
+      }));
     }
   };
 
@@ -126,6 +139,17 @@ function Registrar_AttendancePage() {
         />
       </div>
 
+      <div className="attendance-header" style={{ 
+        backgroundColor: '#4CAF50', 
+        color: 'white', 
+        padding: '10px', 
+        marginBottom: '10px',
+        fontWeight: 'bold',
+        textAlign: 'center'
+      }}>
+        GRADE LEVEL: {filters.grade ? filters.grade : '-'} SCHOOL YEAR: {filters.school_year ? filters.school_year : '-'}
+      </div>
+
       <table className="attendance-table">
         <thead>
           <tr>
@@ -155,8 +179,7 @@ function Registrar_AttendancePage() {
                   </button>
                 </td>
               </tr>
-              {selectedStudentId === student.student_id &&
-                attendanceData[student.student_id] && (
+              {selectedStudentId === student.student_id && (
                   <tr>
                     <td colSpan="5">
                       <table className="attendance-details-table">
@@ -166,11 +189,11 @@ function Registrar_AttendancePage() {
                               <div className="attendance-details-header">
                                 <span>
                                   Grade Level:{' '}
-                                  {attendanceData[student.student_id].grade_level}
+                                  {attendanceData[student.student_id]?.grade_level || '-'}
                                 </span>
                                 <span>
                                   School Year:{' '}
-                                  {attendanceData[student.student_id].school_year}
+                                  {attendanceData[student.student_id]?.school_year || '-'}
                                 </span>
                               </div>
                             </th>
@@ -179,23 +202,23 @@ function Registrar_AttendancePage() {
                         <tbody>
                           <tr>
                             <th>Total School Days</th>
-                            <td>{attendanceData[student.student_id].total_school_days}</td>
+                            <td>{attendanceData[student.student_id]?.total_school_days || 0}</td>
                           </tr>
                           <tr>
                             <th>Total Days Present</th>
-                            <td>{attendanceData[student.student_id].days_present}</td>
+                            <td>{attendanceData[student.student_id]?.days_present || 0}</td>
                           </tr>
                           <tr>
                             <th>Total Days Absent</th>
-                            <td>{attendanceData[student.student_id].days_absent}</td>
+                            <td>{attendanceData[student.student_id]?.days_absent || 0}</td>
                           </tr>
                           <tr>
                             <th>Total Days Late</th>
-                            <td>{attendanceData[student.student_id].days_late}</td>
+                            <td>{attendanceData[student.student_id]?.days_late || 0}</td>
                           </tr>
                           <tr>
                             <th>Brigada Attendance</th>
-                            <td>{attendanceData[student.student_id].brigada_attendance}</td>
+                            <td>{attendanceData[student.student_id]?.brigada_attendance || 0}</td>
                           </tr>
                         </tbody>
                       </table>
