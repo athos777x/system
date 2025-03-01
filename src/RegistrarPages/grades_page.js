@@ -36,7 +36,7 @@ function GradesPage() {
       return;
     }
     setSelectedSectionId(sectionId);
-    fetchStudents({ section: sectionId });
+    fetchStudents({ section_id: sectionId });
     fetchSubjects(sectionId);
   };
 
@@ -111,8 +111,8 @@ function GradesPage() {
           {students.map((student, index) => (
             <tr key={student.student_id}>
               <td>{index + 1}</td>
-              <td>{student.firstname} {student.lastname}</td>
-              <td>Grade {student.current_yr_lvl}</td>
+              <td>{student.name}</td>
+              <td>Grade {student.grade_level}</td>
               <td>Section {student.section_name}</td>
               <td>
                 <button className="section-view-button" onClick={() => handleSectionClick(student.section_id)}>
@@ -148,7 +148,7 @@ function GradesPage() {
               {students.map((student) => (
                 <tr key={student.student_id}>
                   <td>{student.student_id}</td>
-                  <td>{student.firstname} {student.lastname}</td>
+                  <td>{student.name}</td>
                   {subjects.map((subject) => (
                     <td key={subject.id}>{grades[`${student.student_id}-${subject.subject_name}`] || '-'}</td>
                   ))}
