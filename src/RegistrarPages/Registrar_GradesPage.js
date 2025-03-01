@@ -801,7 +801,7 @@ const handleStudentNameClick = (student) => {
                 {students.map((student, index) => (
                   <tr key={index}>
                     <td>{student.student_id}</td>
-                    <td>{student.NAME}</td>
+                    <td>{student.name}</td>
                     {subjects.map((subject, subIndex) => {
                       const key = `${student.student_id}-${subject.subject_name}`;
                       const gradeData = studentGrades[key] || [];

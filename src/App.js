@@ -33,7 +33,7 @@ import LateEnrollees from './Utilities/late_enrollee';
 import StudentGrades from './Pages/selected_grade';
 import Registrar_PendingEnrollmentPage from './RegistrarPages/Registrar_PendingEnrollment';
 import Form138 from './reports/form_138';
-
+import Grades_page from './RegistrarPages/grades_page';
 
 
 
@@ -98,6 +98,7 @@ function App() {
             <Route path="/summary-report-promotion" element={<Registrar_SummaryReportonPromotionPage />} />
             <Route path="/brigada-eskwela" element={<Registrar_BrigadaEskwela />} />
             <Route path="/pending-enrollment" element={<Registrar_PendingEnrollmentPage />} />
+            <Route path="/new-grades" element={<Grades_page/>} />
 
             <Route path="/form-137" element={<Form137 />} />
             <Route path="/form-138" element={<Form138 />} />

@@ -78,6 +78,9 @@ function RegistrarSideBar({ showSidebar, toggleSidebar, handleLogout }) {
             <button onClick={() => handleNavigate('/grades')}>
               <FiFileText className="icon" /> Grades
             </button>
+            <button onClick={() => handleNavigate('/new-grades')}>
+              <FiFileText className="icon" /> New Grades
+            </button>
             <button onClick={() => handleNavigate('/attendance')}>
               <FiCheckSquare className="icon" /> Attendance
             </button>
