@@ -1,327 +1,306 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios"; // Import axios
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 import "../CssFiles/form_137.css";
-import { jsPDF } from "jspdf"; // Import jsPDF
-import { useLocation } from "react-router-dom"; // Import useLocation to access passed data
+import { jsPDF } from "jspdf";
+import { useLocation, useNavigate } from "react-router-dom";
 
 function Form137() {
-  const { state } = useLocation(); // Access passed data
-  const { student } = state || {}; // Destructure student data
-  const [studentDetails, setStudentDetails] = useState([]); // State for student details
+  const { state } = useLocation();
+  const navigate = useNavigate();
+  const student = state?.student;
+  const [studentDetails, setStudentDetails] = useState(null);
   const [academicRecords, setAcademicRecords] = useState([]);
-  const [attendance, setAttendance] = useState({});
-  const [values, setValues] = useState([]);
-  const [subjects, setSubjects] = useState([]); // State for subjects
   const [loading, setLoading] = useState(true);
-  const [grade, setGrade] = useState(student?.grade || "");  // Set the initial value of grade
-  const [gradesFetched, setGradesFetched] = useState(false); // State to track if grades have been fetched
+  const [error, setError] = useState(null);
 
-  const date = new Date().toLocaleDateString();
-
-  // Fetch student details using the student's name or other unique identifiers
-  const fetchStudentDetails = async () => {
-    if (student) {
-      // Remove commas and extra spaces, then split the name
-      const [lastName, firstName] = student.name.replace(',', '').trim().split(/\s+/); 
-      
-      try {
-        const response = await axios.get(`http://localhost:3001/api/student/details`, {
-          params: { lastName, firstName },
-        });
-  
-        if (response.data.length > 0) {
-          setStudentDetails(response.data[0]);
-        } else {
-          setStudentDetails(null);
-        }
-      } catch (error) {
-        console.error("Error fetching student details:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-  };
-
-  // Fetch subjects based on the student ID
-  const fetchSubjects = async () => {
-    if (studentDetails?.student_id) {
-      try {
-        const response = await axios.get(`http://localhost:3001/api/subjects-card`, {
-          params: { studentId: studentDetails.student_id },
-        });
-  
-        if (response.data) {
-          setSubjects(response.data);
-        } else {
-          setSubjects([]);
-        }
-      } catch (error) {
-        console.error("Error fetching subjects:", error);
-      }
-    }
-  };
-
-  // Fetch grades based on student details and grade, but only fetch once
-  const fetchGrades = async () => {
-    if (studentDetails?.student_id && grade && !gradesFetched) { // Check if grades have already been fetched
-      try {
-        const response = await axios.get('http://localhost:3001/api/grades', {
-          params: {
-            studentId: studentDetails.student_id,
-            gradeLevel: grade, // Pass grade here
-          },
-        });
-
-        console.log(response.data); // Log the response
-
-        if (response.data.success) {
-          const grades = response.data.grades;
-          const updatedSubjects = subjects.map(subject => {
-            const subjectGrades = grades.find(grade => grade.subject_name === subject.subject_name) || {};
-            return { ...subject, ...subjectGrades };
-          });
-
-          setSubjects(updatedSubjects); // Update subjects with grades
-          setGradesFetched(true); // Set gradesFetched to true to prevent further fetches
-        } else {
-          console.warn('No grades found for this student.');
-        }
-      } catch (error) {
-        console.error('Error fetching grades:', error);
-      }
-    }
-  };
-
-  // Fetch academic records
-  const fetchAcademicRecords = async () => {
-    if (student) {
-      try {
-        const response = await axios.get(`/api/academic-records`, {
-          params: { studentId: student.id },
-        });
-        setAcademicRecords(response.data);
-      } catch (error) {
-        console.error("Error fetching academic records:", error);
-      }
-    }
-  };
-
-  // Fetch attendance data
-  const fetchAttendance = async () => {
-    if (student) {
-      try {
-        const response = await axios.get(`/api/attendance`, {
-          params: { studentId: student.id },
-        });
-        setAttendance(response.data);
-      } catch (error) {
-        console.error("Error fetching attendance:", error);
-      }
-    }
-  };
-
-  // Fetch values data
-  const fetchValues = async () => {
-    if (student) {
-      try {
-        const response = await axios.get(`/api/values`, {
-          params: { studentId: student.id },
-        });
-        setValues(response.data);
-      } catch (error) {
-        console.error("Error fetching values:", error);
-      }
-    }
-  };
-
-  // Fetch student details once student data is available
   useEffect(() => {
     if (student) {
       fetchStudentDetails();
+      fetchAcademicRecords();
+    } else {
+      setError("No student data provided");
+      setLoading(false);
     }
   }, [student]);
 
-  // Fetch subjects only once the student details are loaded
-  useEffect(() => {
-    if (studentDetails?.student_id) {
-      fetchSubjects();
-    }
-  }, [studentDetails]);
+  const fetchStudentDetails = async () => {
+    try {
+      // Extract student name components
+      const [lastName, firstName] = student.name.replace(",", "").trim().split(/\s+/);
 
-  // Fetch grades once both subjects and grade are available, and prevent multiple fetches
-  useEffect(() => {
-    if (subjects.length > 0 && grade && !gradesFetched) { // Prevent fetching if grades have already been fetched
-      fetchGrades();
-    }
-  }, [subjects, grade, gradesFetched]); // Added gradesFetched as a dependency
+      const response = await axios.get(`http://localhost:3001/api/student/details`, {
+        params: { lastName, firstName },
+      });
 
-  // Fetch academic records, attendance, and values after student details are available
-  useEffect(() => {
-    if (studentDetails?.student_id && grade) {
-      fetchAcademicRecords();
-      fetchAttendance();
-      fetchValues();
+      if (response.data.length > 0) {
+        setStudentDetails(response.data[0]);
+      } else {
+        setError("Student details not found");
+      }
+    } catch (error) {
+      console.error("Error fetching student details:", error);
+      setError("Failed to fetch student details");
     }
-  }, [studentDetails, grade]);
+  };
 
-  // Function to generate and open PDF in a new tab
+  const fetchAcademicRecords = async () => {
+    try {
+      // This would be replaced with your actual API endpoint for fetching academic records
+      // For now, we'll create mock data
+      const mockAcademicRecords = [
+        {
+          schoolYear: "2020-2021",
+          gradeLevel: "7",
+          schoolName: "Lourdes National High School",
+          schoolAddress: "Dauis - Panglao Rd, Dauis, Bohol",
+          subjects: [
+            { name: "Filipino", q1: "85", q2: "87", q3: "88", q4: "90", final: "88" },
+            { name: "English", q1: "88", q2: "90", q3: "92", q4: "94", final: "91" },
+            { name: "Mathematics", q1: "82", q2: "84", q3: "86", q4: "88", final: "85" },
+            { name: "Science", q1: "84", q2: "86", q3: "88", q4: "90", final: "87" },
+            { name: "Araling Panlipunan", q1: "86", q2: "88", q3: "90", q4: "92", final: "89" },
+            { name: "MAPEH", q1: "90", q2: "92", q3: "94", q4: "96", final: "93" },
+            { name: "TLE", q1: "88", q2: "90", q3: "92", q4: "94", final: "91" },
+            { name: "Values Education", q1: "92", q2: "94", q3: "96", q4: "98", final: "95" }
+          ],
+          attendance: {
+            daysPresent: 180,
+            daysAbsent: 10,
+            totalDays: 190
+          },
+          generalAverage: "90",
+          remarks: "Promoted"
+        },
+        {
+          schoolYear: "2021-2022",
+          gradeLevel: "8",
+          schoolName: "Lourdes National High School",
+          schoolAddress: "Dauis - Panglao Rd, Dauis, Bohol",
+          subjects: [
+            { name: "Filipino", q1: "86", q2: "88", q3: "90", q4: "92", final: "89" },
+            { name: "English", q1: "90", q2: "92", q3: "94", q4: "96", final: "93" },
+            { name: "Mathematics", q1: "84", q2: "86", q3: "88", q4: "90", final: "87" },
+            { name: "Science", q1: "86", q2: "88", q3: "90", q4: "92", final: "89" },
+            { name: "Araling Panlipunan", q1: "88", q2: "90", q3: "92", q4: "94", final: "91" },
+            { name: "MAPEH", q1: "92", q2: "94", q3: "96", q4: "98", final: "95" },
+            { name: "TLE", q1: "90", q2: "92", q3: "94", q4: "96", final: "93" },
+            { name: "Values Education", q1: "94", q2: "96", q3: "98", q4: "100", final: "97" }
+          ],
+          attendance: {
+            daysPresent: 185,
+            daysAbsent: 5,
+            totalDays: 190
+          },
+          generalAverage: "92",
+          remarks: "Promoted"
+        }
+      ];
+
+      // In a real implementation, you would fetch this data from your API
+      // const response = await axios.get(`http://localhost:3001/api/academic-records/${student.student_id}`);
+      // setAcademicRecords(response.data);
+
+      setAcademicRecords(mockAcademicRecords);
+      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching academic records:", error);
+      setError("Failed to fetch academic records");
+      setLoading(false);
+    }
+  };
+
   const handleConvertToPdf = () => {
     const doc = new jsPDF({
       orientation: "portrait",
       unit: "mm",
-      format: "a4", // Set A4 format
+      format: "a4",
     });
 
-    // Ensure proper scaling and margins for A4
-    const pdfOptions = {
+    const button = document.querySelector(".button-container");
+    if (button) button.style.display = "none";
+
+    doc.html(document.querySelector(".form-137-container"), {
       callback: function (doc) {
-        window.open(doc.output("bloburl"), "_blank"); // Open PDF in a new tab
+        window.open(doc.output("bloburl"), "_blank");
+        if (button) button.style.display = "flex";
       },
       x: 10,
       y: 10,
-      width: 190, // Content width for A4 (210mm - margins)
-      windowWidth: 800, // Ensure proper rendering width
-      scale: 0.9, // Adjust scale to fit the page
-    };
-
-    // Hide the "Convert to PDF" button during PDF generation
-    const button = document.querySelector(".convert-to-pdf");
-    if (button) button.style.display = "none";
-
-    // Generate PDF from the HTML container
-    doc.html(document.querySelector(".form-137-container"), pdfOptions);
-
-    // Restore the button visibility after generation
-    if (button) button.style.display = "block";
+      width: 180,
+      windowWidth: 1000,
+    });
   };
 
-  // Function to handle back navigation
   const handleBack = () => {
-    window.location.href = 'http://localhost:3000/summary-report-promotion'; // Navigate to the specified URL
+    navigate(-1); // Go back to previous page
   };
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
 
   return (
     <div>
       <div className="form-137-container">
-        <div className="form-137">
-          <header className="form-header">
-            <div className="school-logo">
-              <img src="/lnhs-logo.png" alt="School Logo" className="login-logo" />
-            </div>
-            <div className="school-details">
-              <h2>{student?.schoolName || "Lourdes National High School"}</h2>
-              <p>{student?.schoolAddress || "Dauis - Panglao Rd, Dauis, 6340 Bohol"}</p>
-              <h3>PROGRESS REPORT CARD</h3>
-              <p>{student?.level || "High School"}</p>
-            </div>
-          </header>
-
-          <div className="student-info">
-            <table className="info-table">
-              <tbody>
-                <tr>
-                  <td><strong>Name:</strong> {studentDetails?.stud_name || "__________"}</td>
-                  <td><strong>Grade & Section:</strong> {studentDetails?.grade_section || "________"}</td>
-                </tr>
-                <tr>
-                  <td><strong>Age:</strong> {studentDetails?.age || "___"}</td>
-                  <td><strong>School Year:</strong> {studentDetails?.school_year || "____"}</td>
-                </tr>
-                <tr>
-                  <td><strong>Gender:</strong> {studentDetails?.gender || "_____"}</td>
-                  <td><strong>LRN:</strong> {studentDetails?.lrn || "_____"}</td>
-                </tr>
-              </tbody>
-            </table>
+        <div className="form-header">
+          <div className="form-header-logos">
+            <img src="/deped-logo.png" alt="DepEd Logo" className="logo" />
+            <img src="/lnhs-logo.png" alt="School Logo" className="logo" />
           </div>
+          <h1>Republic of the Philippines</h1>
+          <h2>Department of Education</h2>
+          <h3>Region VII Central Visayas</h3>
+          <h3>Division of Bohol</h3>
+          <h3>District of Dauis</h3>
+          <h2>LOURDES NATIONAL HIGH SCHOOL</h2>
+          <h3>Dauis - Panglao Rd, Dauis, Bohol</h3>
+          <h1>PERMANENT RECORD</h1>
+          <h2>Form 137</h2>
+        </div>
 
+        <div className="student-info">
+          <div className="info-item">
+            <span className="info-label">Name:</span>
+            <span>{studentDetails?.stud_name || "N/A"}</span>
+          </div>
+          <div className="info-item">
+            <span className="info-label">LRN:</span>
+            <span>{studentDetails?.student_id || "N/A"}</span>
+          </div>
+          <div className="info-item">
+            <span className="info-label">Gender:</span>
+            <span>{studentDetails?.gender || "N/A"}</span>
+          </div>
+          <div className="info-item">
+            <span className="info-label">Date of Birth:</span>
+            <span>{studentDetails?.birthdate ? new Date(studentDetails.birthdate).toLocaleDateString() : "N/A"}</span>
+          </div>
+          <div className="info-item">
+            <span className="info-label">Address:</span>
+            <span>
+              {studentDetails ? 
+                `${studentDetails.home_address || ""}, ${studentDetails.barangay || ""}, ${studentDetails.city_municipality || ""}, ${studentDetails.province || ""}` 
+                : "N/A"}
+            </span>
+          </div>
+          <div className="info-item">
+            <span className="info-label">Parent/Guardian:</span>
+            <span>
+              {studentDetails ? 
+                `${studentDetails.father_name || "N/A"} / ${studentDetails.mother_name || "N/A"}` 
+                : "N/A"}
+            </span>
+          </div>
+        </div>
 
-          {/* Render Academic Records */}
-          <section className="subjects">
-            <h4>Learning Progress and Achievement</h4>
-            <table className="subjects-table">
-              <thead>
-                <tr>
-                  <th>Subjects</th>
-                  <th>1</th>
-                  <th>2</th>
-                  <th>3</th>
-                  <th>4</th>
-                  <th>Final Grade</th>
-                  <th>Remarks</th>
-                </tr>
-              </thead>
-              <tbody>
-                {subjects?.length > 0 ? (
-                  subjects.map((subject, index) => (
-                    <tr key={index}>
-                      <td>{subject.subject_name}</td>
-                      <td>{subject.q1 || "___"}</td>
-                      <td>{subject.q2 || "___"}</td>
-                      <td>{subject.q3 || "___"}</td>
-                      <td>{subject.q4 || "___"}</td>
-                      <td>{subject.final || "___"}</td>
-                      <td>{subject.remarks || "___"}</td>
-                    </tr>
-                  ))
-                ) : (
+        <div className="academic-records">
+          {academicRecords.map((record, index) => (
+            <div key={index} className="school-year-section">
+              <div className="school-year-header">
+                <div>
+                  <span className="info-label">School Year:</span>
+                  <span>{record.schoolYear}</span>
+                </div>
+                <div>
+                  <span className="info-label">Grade Level:</span>
+                  <span>{record.gradeLevel}</span>
+                </div>
+                <div>
+                  <span className="info-label">School:</span>
+                  <span>{record.schoolName}</span>
+                </div>
+              </div>
+
+              <table className="grades-table">
+                <colgroup>
+                  <col style={{width: "25%"}} />
+                  <col style={{width: "15%"}} />
+                  <col style={{width: "15%"}} />
+                  <col style={{width: "15%"}} />
+                  <col style={{width: "15%"}} />
+                  <col style={{width: "15%"}} />
+                </colgroup>
+                <thead>
                   <tr>
-                    <td colSpan="7" style={{ textAlign: "center" }}>
-                      No academic records available.
-                    </td>
+                    <th>Subject</th>
+                    <th>1st Quarter</th>
+                    <th>2nd Quarter</th>
+                    <th>3rd Quarter</th>
+                    <th>4th Quarter</th>
+                    <th>Final Grade</th>
                   </tr>
-                )}
-              </tbody>
-            </table>
-          </section>
-
-          {/* Render Attendance */}
-          <section className="attendance">
-            <h4>Attendance Report</h4>
-            <table className="attendance-table">
-              <thead>
-                <tr>
-                  <th>Month</th>
-                  {attendance?.months?.map((month, index) => (
-                    <th key={index}>{month}</th>
+                </thead>
+                <tbody>
+                  {record.subjects.map((subject, subIndex) => (
+                    <tr key={subIndex}>
+                      <td>{subject.name}</td>
+                      <td>{subject.q1}</td>
+                      <td>{subject.q2}</td>
+                      <td>{subject.q3}</td>
+                      <td>{subject.q4}</td>
+                      <td>{subject.final}</td>
+                    </tr>
                   ))}
-                  <th>Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                {/* Render attendance data here */}
-              </tbody>
-            </table>
-          </section>
+                  <tr>
+                    <td colSpan="5"><strong>General Average</strong></td>
+                    <td><strong>{record.generalAverage}</strong></td>
+                  </tr>
+                </tbody>
+              </table>
 
-          {/* Render Learner's Values */}
-          <section className="observed-values">
-            <h4>Learner's Observed Values</h4>
-            <table className="values-table">
-              <thead>
-                <tr>
-                  <th>The Student:</th>
-                  <th>1</th>
-                  <th>2</th>
-                  <th>3</th>
-                  <th>4</th>
-                </tr>
-              </thead>
-              <tbody>
-                {/* Render learner values here */}
-              </tbody>
-            </table>
-          </section>
+              <div className="attendance-section">
+                <h3>Attendance Record</h3>
+                <table className="attendance-table">
+                  <thead>
+                    <tr>
+                      <th>Days Present</th>
+                      <th>Days Absent</th>
+                      <th>Total School Days</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>{record.attendance.daysPresent}</td>
+                      <td>{record.attendance.daysAbsent}</td>
+                      <td>{record.attendance.totalDays}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
 
-          <footer className="form-footer">
-            <p>
-              <strong>{student?.adviser || "Class Adviser"}</strong>: _________________
-            </p>
-          </footer>
+              <div className="summary-section">
+                <div className="info-item">
+                  <span className="info-label">Remarks:</span>
+                  <span>{record.remarks}</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="certification-section">
+          <p>
+            I hereby certify that this is a true record of {studentDetails?.stud_name || "[Student Name]"}.
+            This certification is issued for whatever legal purpose it may serve.
+          </p>
+        </div>
+
+        <div className="signature-section">
+          <div className="signature-box">
+            <div className="signature-line"></div>
+            <p>Class Adviser</p>
+          </div>
+          <div className="signature-box">
+            <div className="signature-line"></div>
+            <p>School Principal</p>
+          </div>
         </div>
       </div>
 
-      {/* Button Container for Print and Back, positioned outside the form */}
       <div className="button-container">
         <button onClick={handleBack}>Back</button>
         <button onClick={handleConvertToPdf}>Print</button>

@@ -1,7 +1,7 @@
-/* Form 137 - Permanent Record CSS */
+/* Form 138 - Current Grade Level Record CSS */
 
-.form-137-container {
-  max-width: 1100px;
+.form-138-container {
+  max-width: 1000px;
   margin: 0 auto;
   padding: 20px;
   font-family: 'Arial', sans-serif;
@@ -46,7 +46,7 @@
 
 .student-info {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr;
   gap: 15px;
   margin-bottom: 20px;
   padding: 15px;
@@ -63,22 +63,8 @@
   margin-right: 5px;
 }
 
-.academic-records {
+.grades-section {
   margin-bottom: 30px;
-}
-
-.school-year-section {
-  margin-bottom: 30px;
-  border: 1px solid #ddd;
-  padding: 15px;
-}
-
-.school-year-header {
-  background-color: #f0f0f0;
-  padding: 10px;
-  margin-bottom: 15px;
-  display: flex;
-  justify-content: space-between;
 }
 
 .grades-table {
@@ -117,6 +103,22 @@
   background-color: #f9f9f9;
 }
 
+.grades-table .subject-name {
+  text-align: left;
+  font-weight: bold;
+  width: 25%;
+}
+
+.grades-table .final-grade {
+  font-weight: bold;
+}
+
+/* Ensure all data columns have equal width */
+.grades-table th:not(:first-child),
+.grades-table td:not(:first-child) {
+  width: calc(75% / 6); /* Distribute remaining width equally among 6 columns */
+}
+
 .attendance-section {
   margin-top: 20px;
 }
@@ -124,8 +126,6 @@
 .attendance-table {
   width: 100%;
   border-collapse: collapse;
-  margin-bottom: 20px;
-  table-layout: fixed;
 }
 
 .attendance-table th, 
@@ -133,7 +133,6 @@
   border: 1px solid #ddd;
   padding: 8px;
   text-align: center;
-  vertical-align: middle;
 }
 
 .attendance-table th {
@@ -147,11 +146,10 @@
   border: 1px solid #ddd;
 }
 
-.certification-section {
-  margin-top: 30px;
+.promotion-section {
+  margin-top: 20px;
   padding: 15px;
   border: 1px solid #ddd;
-  text-align: justify;
 }
 
 .signature-section {
@@ -205,9 +203,9 @@
     display: none;
   }
   
-  .form-137-container {
+  .form-138-container {
     box-shadow: none;
     margin: 0;
     padding: 0;
   }
-}
+} 
