@@ -290,7 +290,7 @@ function Form137() {
                 </tbody>
               </table>
 
-              <div style={{display: "flex", justifyContent: "space-between"}}>
+              <div style={{display: "flex", justifyContent: "space-between", alignItems: "center"}}>
                 <div className="attendance-section" style={{width: "70%"}}>
                   <table className="student-attendance-table">
                     <thead>
@@ -309,8 +309,16 @@ function Form137() {
                     </tbody>
                   </table>
                 </div>
-                <div className="summary-section" style={{width: "28%"}}>
-                  <div className="info-item">
+                <div className="summary-section" style={{
+                  width: "28%", 
+                  display: "flex", 
+                  alignItems: "center", 
+                  height: "100%",
+                  border: "1px solid #ddd",
+                  padding: "8px",
+                  backgroundColor: "#f0f0f0"
+                }}>
+                  <div className="info-item" style={{margin: 0}}>
                     <span className="info-label">Remarks:</span>
                     <span>{record.remarks}</span>
                   </div>

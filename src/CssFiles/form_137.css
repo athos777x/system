@@ -68,6 +68,8 @@
 
 .info-item {
   margin-bottom: 5px;
+  display: flex;
+  align-items: center;
 }
 
 .info-label {
@@ -163,6 +165,10 @@
 .summary-section {
   margin-top: 5px;
   font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
 }
 
 .certification-section {
