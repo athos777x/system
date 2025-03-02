@@ -290,32 +290,30 @@ function Form137() {
                 </tbody>
               </table>
 
-              <div className="attendance-section">
-                <table className="student-attendance-table">
-                  <thead>
-                    <tr>
-                      <th colSpan="3">Attendance Record</th>
-                    </tr>
-                    <tr>
-                      <th>Days Present</th>
-                      <th>Days Absent</th>
-                      <th>Total School Days</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>{record.attendance.daysPresent}</td>
-                      <td>{record.attendance.daysAbsent}</td>
-                      <td>{record.attendance.totalDays}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-
-              <div className="summary-section">
-                <div className="info-item">
-                  <span className="info-label">Remarks:</span>
-                  <span>{record.remarks}</span>
+              <div style={{display: "flex", justifyContent: "space-between"}}>
+                <div className="attendance-section" style={{width: "70%"}}>
+                  <table className="student-attendance-table">
+                    <thead>
+                      <tr>
+                        <th>Days Present</th>
+                        <th>Days Absent</th>
+                        <th>Total Days</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>{record.attendance.daysPresent}</td>
+                        <td>{record.attendance.daysAbsent}</td>
+                        <td>{record.attendance.totalDays}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div className="summary-section" style={{width: "28%"}}>
+                  <div className="info-item">
+                    <span className="info-label">Remarks:</span>
+                    <span>{record.remarks}</span>
+                  </div>
                 </div>
               </div>
             </div>
