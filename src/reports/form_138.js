@@ -182,28 +182,16 @@ function Form138() {
 
         <div className="grades-section">
           <h3>Academic Performance</h3>
-          <table className="grades-table">
-            <colgroup>
-              <col style={{width: "25%"}} />
-              <col style={{width: "12.5%"}} />
-              <col style={{width: "12.5%"}} />
-              <col style={{width: "12.5%"}} />
-              <col style={{width: "12.5%"}} />
-              <col style={{width: "12.5%"}} />
-              <col style={{width: "12.5%"}} />
-            </colgroup>
+          <table className="academic-grades-table">
             <thead>
               <tr>
-                <th rowSpan="2">Learning Areas</th>
-                <th colSpan="4">Quarter Rating</th>
-                <th rowSpan="2">Final Grade</th>
-                <th rowSpan="2">Remarks</th>
-              </tr>
-              <tr>
-                <th>1st</th>
-                <th>2nd</th>
-                <th>3rd</th>
-                <th>4th</th>
+                <th style={{width: "25%"}}>Subject</th>
+                <th style={{width: "12.5%"}}>1st Quarter</th>
+                <th style={{width: "12.5%"}}>2nd Quarter</th>
+                <th style={{width: "12.5%"}}>3rd Quarter</th>
+                <th style={{width: "12.5%"}}>4th Quarter</th>
+                <th style={{width: "12.5%"}}>Final Grade</th>
+                <th style={{width: "12.5%"}}>Remarks</th>
               </tr>
             </thead>
             <tbody>
@@ -229,7 +217,7 @@ function Form138() {
 
         <div className="attendance-section">
           <h3>Attendance Record</h3>
-          <table className="attendance-table">
+          <table className="student-attendance-table">
             <thead>
               <tr>
                 <th>Month</th>

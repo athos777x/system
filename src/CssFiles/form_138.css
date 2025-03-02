@@ -67,19 +67,12 @@
   margin-bottom: 30px;
 }
 
+/* Simple table styles */
 .grades-table {
   width: 100%;
   border-collapse: collapse;
+  border: 1px solid #ddd;
   margin-bottom: 20px;
-  table-layout: fixed;
-}
-
-.grades-table thead {
-  display: table-header-group;
-}
-
-.grades-table tbody {
-  display: table-row-group;
 }
 
 .grades-table th, 
@@ -87,16 +80,11 @@
   border: 1px solid #ddd;
   padding: 8px;
   text-align: center;
-  vertical-align: middle;
 }
 
 .grades-table th {
   background-color: #f0f0f0;
   font-weight: bold;
-}
-
-.grades-table tr {
-  display: table-row;
 }
 
 .grades-table tr:nth-child(even) {
@@ -106,17 +94,10 @@
 .grades-table .subject-name {
   text-align: left;
   font-weight: bold;
-  width: 25%;
 }
 
 .grades-table .final-grade {
   font-weight: bold;
-}
-
-/* Ensure all data columns have equal width */
-.grades-table th:not(:first-child),
-.grades-table td:not(:first-child) {
-  width: calc(75% / 6); /* Distribute remaining width equally among 6 columns */
 }
 
 .attendance-section {
@@ -126,6 +107,8 @@
 .attendance-table {
   width: 100%;
   border-collapse: collapse;
+  border: 1px solid #ddd;
+  margin-bottom: 20px;
 }
 
 .attendance-table th, 
@@ -140,10 +123,8 @@
   font-weight: bold;
 }
 
-.summary-section {
-  margin-top: 30px;
-  padding: 15px;
-  border: 1px solid #ddd;
+.attendance-table tr:nth-child(even) {
+  background-color: #f9f9f9;
 }
 
 .promotion-section {
@@ -208,4 +189,61 @@
     margin: 0;
     padding: 0;
   }
+}
+
+/* Academic grades table - completely separate styling */
+.academic-grades-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid #ddd;
+  margin-bottom: 20px;
+}
+
+.academic-grades-table th, 
+.academic-grades-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: center;
+}
+
+.academic-grades-table th {
+  background-color: #f0f0f0;
+  font-weight: bold;
+}
+
+.academic-grades-table tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+.academic-grades-table .subject-name {
+  text-align: left;
+  font-weight: bold;
+}
+
+.academic-grades-table .final-grade {
+  font-weight: bold;
+}
+
+/* Student attendance table - completely separate styling */
+.student-attendance-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid #ddd;
+  margin-bottom: 20px;
+}
+
+.student-attendance-table th, 
+.student-attendance-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: center;
+}
+
+.student-attendance-table th {
+  background-color: #f0f0f0;
+  font-weight: bold;
+}
+
+.student-attendance-table tr:nth-child(even) {
+  background-color: #f9f9f9;
 } 

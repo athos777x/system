@@ -215,34 +215,26 @@ function Form137() {
                 </div>
               </div>
 
-              <table className="grades-table">
-                <colgroup>
-                  <col style={{width: "25%"}} />
-                  <col style={{width: "15%"}} />
-                  <col style={{width: "15%"}} />
-                  <col style={{width: "15%"}} />
-                  <col style={{width: "15%"}} />
-                  <col style={{width: "15%"}} />
-                </colgroup>
+              <table className="academic-grades-table">
                 <thead>
                   <tr>
-                    <th>Subject</th>
-                    <th>1st Quarter</th>
-                    <th>2nd Quarter</th>
-                    <th>3rd Quarter</th>
-                    <th>4th Quarter</th>
-                    <th>Final Grade</th>
+                    <th style={{width: "25%"}}>Subject</th>
+                    <th style={{width: "15%"}}>1st Quarter</th>
+                    <th style={{width: "15%"}}>2nd Quarter</th>
+                    <th style={{width: "15%"}}>3rd Quarter</th>
+                    <th style={{width: "15%"}}>4th Quarter</th>
+                    <th style={{width: "15%"}}>Final Grade</th>
                   </tr>
                 </thead>
                 <tbody>
                   {record.subjects.map((subject, subIndex) => (
                     <tr key={subIndex}>
-                      <td>{subject.name}</td>
+                      <td className="subject-name">{subject.name}</td>
                       <td>{subject.q1}</td>
                       <td>{subject.q2}</td>
                       <td>{subject.q3}</td>
                       <td>{subject.q4}</td>
-                      <td>{subject.final}</td>
+                      <td className="final-grade">{subject.final}</td>
                     </tr>
                   ))}
                   <tr>
@@ -254,7 +246,7 @@ function Form137() {
 
               <div className="attendance-section">
                 <h3>Attendance Record</h3>
-                <table className="attendance-table">
+                <table className="student-attendance-table">
                   <thead>
                     <tr>
                       <th>Days Present</th>
