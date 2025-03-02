@@ -149,17 +149,17 @@ function Form137() {
         <div className="form-header">
           <div className="form-header-logos">
             <img src="/deped-logo.png" alt="DepEd Logo" className="logo" />
+          </div>
+          <div className="form-header-text">
+            <h1>Republic of the Philippines • Department of Education</h1>
+            <h2>Region VII Central Visayas • Division of Bohol • District of Dauis</h2>
+            <h2>LOURDES NATIONAL HIGH SCHOOL</h2>
+            <h3>Dauis - Panglao Rd, Dauis, Bohol</h3>
+            <h3>PERMANENT RECORD (Form 137)</h3>
+          </div>
+          <div className="form-header-logos">
             <img src="/lnhs-logo.png" alt="School Logo" className="logo" />
           </div>
-          <h1>Republic of the Philippines</h1>
-          <h2>Department of Education</h2>
-          <h3>Region VII Central Visayas</h3>
-          <h3>Division of Bohol</h3>
-          <h3>District of Dauis</h3>
-          <h2>LOURDES NATIONAL HIGH SCHOOL</h2>
-          <h3>Dauis - Panglao Rd, Dauis, Bohol</h3>
-          <h1>PERMANENT RECORD</h1>
-          <h2>Form 137</h2>
         </div>
 
         <div className="student-info">
@@ -183,7 +183,7 @@ function Form137() {
             <span className="info-label">Address:</span>
             <span>
               {studentDetails ? 
-                `${studentDetails.home_address || ""}, ${studentDetails.barangay || ""}, ${studentDetails.city_municipality || ""}, ${studentDetails.province || ""}` 
+                `${studentDetails.home_address || ""}, ${studentDetails.barangay || ""}, ${studentDetails.city_municipality || ""}` 
                 : "N/A"}
             </span>
           </div>
@@ -202,11 +202,11 @@ function Form137() {
             <div key={index} className="school-year-section">
               <div className="school-year-header">
                 <div>
-                  <span className="info-label">School Year:</span>
+                  <span className="info-label">SY:</span>
                   <span>{record.schoolYear}</span>
                 </div>
                 <div>
-                  <span className="info-label">Grade Level:</span>
+                  <span className="info-label">Grade:</span>
                   <span>{record.gradeLevel}</span>
                 </div>
                 <div>
@@ -218,12 +218,12 @@ function Form137() {
               <table className="academic-grades-table">
                 <thead>
                   <tr>
-                    <th style={{width: "25%"}}>Subject</th>
-                    <th style={{width: "15%"}}>1st Quarter</th>
-                    <th style={{width: "15%"}}>2nd Quarter</th>
-                    <th style={{width: "15%"}}>3rd Quarter</th>
-                    <th style={{width: "15%"}}>4th Quarter</th>
-                    <th style={{width: "15%"}}>Final Grade</th>
+                    <th style={{width: "30%"}}>Subject</th>
+                    <th style={{width: "14%"}}>Q1</th>
+                    <th style={{width: "14%"}}>Q2</th>
+                    <th style={{width: "14%"}}>Q3</th>
+                    <th style={{width: "14%"}}>Q4</th>
+                    <th style={{width: "14%"}}>Final</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -245,9 +245,11 @@ function Form137() {
               </table>
 
               <div className="attendance-section">
-                <h3>Attendance Record</h3>
                 <table className="student-attendance-table">
                   <thead>
+                    <tr>
+                      <th colSpan="3">Attendance Record</th>
+                    </tr>
                     <tr>
                       <th>Days Present</th>
                       <th>Days Absent</th>

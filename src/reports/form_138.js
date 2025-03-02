@@ -140,17 +140,17 @@ function Form138() {
         <div className="form-header">
           <div className="form-header-logos">
             <img src="/deped-logo.png" alt="DepEd Logo" className="logo" />
+          </div>
+          <div className="form-header-text">
+            <h1>Republic of the Philippines • Department of Education</h1>
+            <h2>Region VII Central Visayas • Division of Bohol • District of Dauis</h2>
+            <h2>LOURDES NATIONAL HIGH SCHOOL</h2>
+            <h3>Dauis - Panglao Rd, Dauis, Bohol</h3>
+            <h3>REPORT CARD (Form 138)</h3>
+          </div>
+          <div className="form-header-logos">
             <img src="/lnhs-logo.png" alt="School Logo" className="logo" />
           </div>
-          <h1>Republic of the Philippines</h1>
-          <h2>Department of Education</h2>
-          <h3>Region VII Central Visayas</h3>
-          <h3>Division of Bohol</h3>
-          <h3>District of Dauis</h3>
-          <h2>LOURDES NATIONAL HIGH SCHOOL</h2>
-          <h3>Dauis - Panglao Rd, Dauis, Bohol</h3>
-          <h1>REPORT CARD</h1>
-          <h2>Form 138</h2>
         </div>
 
         <div className="student-info">
@@ -185,13 +185,13 @@ function Form138() {
           <table className="academic-grades-table">
             <thead>
               <tr>
-                <th style={{width: "25%"}}>Subject</th>
-                <th style={{width: "12.5%"}}>1st Quarter</th>
-                <th style={{width: "12.5%"}}>2nd Quarter</th>
-                <th style={{width: "12.5%"}}>3rd Quarter</th>
-                <th style={{width: "12.5%"}}>4th Quarter</th>
-                <th style={{width: "12.5%"}}>Final Grade</th>
-                <th style={{width: "12.5%"}}>Remarks</th>
+                <th style={{width: "30%"}}>Subject</th>
+                <th style={{width: "12%"}}>Q1</th>
+                <th style={{width: "12%"}}>Q2</th>
+                <th style={{width: "12%"}}>Q3</th>
+                <th style={{width: "12%"}}>Q4</th>
+                <th style={{width: "12%"}}>Final</th>
+                <th style={{width: "10%"}}>Remarks</th>
               </tr>
             </thead>
             <tbody>
@@ -216,9 +216,11 @@ function Form138() {
         </div>
 
         <div className="attendance-section">
-          <h3>Attendance Record</h3>
           <table className="student-attendance-table">
             <thead>
+              <tr>
+                <th colSpan="13">Attendance Record</th>
+              </tr>
               <tr>
                 <th>Month</th>
                 <th>Jun</th>
@@ -237,7 +239,7 @@ function Form138() {
             </thead>
             <tbody>
               <tr>
-                <td>Days Present</td>
+                <td>Present</td>
                 <td>20</td>
                 <td>20</td>
                 <td>18</td>
@@ -252,7 +254,7 @@ function Form138() {
                 <td>{currentGrades?.attendance.daysPresent || "N/A"}</td>
               </tr>
               <tr>
-                <td>Days Absent</td>
+                <td>Absent</td>
                 <td>0</td>
                 <td>0</td>
                 <td>0</td>
