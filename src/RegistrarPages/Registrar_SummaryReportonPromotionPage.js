@@ -49,7 +49,6 @@ function Registrar_SummaryReportonPromotionPage() {
   };
 
   const handleGenerateForm137 = () => {
-
     if (!grade || !section || !studentName) {
       alert('Please fill in all the required fields before generating.');
       return;
@@ -59,9 +58,17 @@ function Registrar_SummaryReportonPromotionPage() {
     navigate('/form-137', { state: { student: studentData } });
   };
   
+  const handleGenerateForm138 = () => {
+    if (!grade || !section || !studentName) {
+      alert('Please fill in all the required fields before generating.');
+      return;
+    }
+
+    const studentData = { grade, section, name: studentName };
+    navigate('/form-138', { state: { student: studentData } });
+  };
 
   const handleGenerateGoodMoral = () => {
-
     if (!grade || !section || !studentName) {
       alert('Please fill in all the required fields before generating.');
       return;
@@ -72,7 +79,6 @@ function Registrar_SummaryReportonPromotionPage() {
   };
 
   const handleLateEnrolleesReport = () => {
-
     if (!grade || !section ) {
       alert('Please fill in all the required fields before generating.');
       return;
@@ -158,22 +164,22 @@ function Registrar_SummaryReportonPromotionPage() {
       {/* Form 137 Section */}
       <div className="form137-section">
         <div>
-          <h2 className="form137-title">Form 138</h2>
-          <p className="report-description">Generate Form 138 for a specific student.</p>
+          <h2 className="form137-title">Form 137</h2>
+          <p className="report-description">Generate Form 137 for a specific student.</p>
         </div>
         <button className="report-button" onClick={() => openModal('form_137')}>
-          Generate Form 138
+          Generate Form 137
         </button>
       </div>
 
       {/* Form 138 Section */}
       <div className="form137-section">
         <div>
-          <h2 className="form137-title">Form 137</h2>
-          <p className="report-description">Generate Form 137 for a specific student.</p>
+          <h2 className="form137-title">Form 138</h2>
+          <p className="report-description">Generate Form 138 for a specific student.</p>
         </div>
         <button className="report-button" onClick={() => openModal('form_138')}>
-          Generate Form 137
+          Generate Form 138
         </button>
       </div>
 
@@ -203,7 +209,56 @@ function Registrar_SummaryReportonPromotionPage() {
         <div className="modal-overlay">
           <div className="modal">
             <button className="close-modal" onClick={closeModal}>&times;</button>
-            {(modalContent === 'form_137' || modalContent === 'form_138')  &&  (
+            {modalContent === 'form_137' && (
+              <div>
+                <h3>Generate Form 137</h3>
+                <form onSubmit={(e) => e.preventDefault()}> 
+                  <label>School Year:</label>
+                  <select value={selectedSchoolYear} onChange={(e) => setSelectedSchoolYear(e.target.value)} required>
+                    <option value="">--Select One--</option>
+                    {schoolYears.map((year, index) => (
+                      <option key={index} value={year}>{year}</option>
+                    ))}
+                  </select>
+                  <label>Grade:</label>
+                  <select value={grade} onChange={handleGradeChange} required> 
+                    <option value="">--Select One--</option>
+                    <option value="7">Grade 7</option>
+                    <option value="8">Grade 8</option>
+                    <option value="9">Grade 9</option>
+                    <option value="10">Grade 10</option>
+                  </select>
+                  <label>Section:</label>
+                  <select value={section} onChange={(e) => setSection(e.target.value)} required>
+                    <option value="">--Select One--</option>
+                    {sections.map((sec) => (
+                      <option key={sec.section_name} value={sec.section_name}>
+                        {sec.section_name}
+                      </option>
+                    ))}
+                  </select>
+                  <label>Student Name:</label>
+                  <input
+                    type="text"
+                    value={studentName}
+                    onChange={handleStudentNameChange}
+                    placeholder="Enter student name"
+                    required
+                  />
+                  {suggestions.length > 0 && (
+                    <ul className="suggestions-list">
+                      {suggestions.map((suggestion, index) => (
+                        <li key={index} onClick={() => handleSuggestionClick(suggestion.stud_name)}>
+                          {suggestion.stud_name}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  <button type="button" onClick={handleGenerateForm137}>Generate</button>
+                </form>
+              </div>
+            )}
+            {modalContent === 'form_138' && (
               <div>
                 <h3>Generate Form 138</h3>
                 <form onSubmit={(e) => e.preventDefault()}> 
@@ -248,7 +303,7 @@ function Registrar_SummaryReportonPromotionPage() {
                       ))}
                     </ul>
                   )}
-                  <button type="button" onClick={handleGenerateForm137}>Generate</button>
+                  <button type="button" onClick={handleGenerateForm138}>Generate</button>
                 </form>
               </div>
             )}

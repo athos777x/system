@@ -1,327 +1,296 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios"; // Import axios
-import "../CssFiles/form_137.css";
-import { jsPDF } from "jspdf"; // Import jsPDF
-import { useLocation } from "react-router-dom"; // Import useLocation to access passed data
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import "../CssFiles/form_138.css";
+import { jsPDF } from "jspdf";
+import { useLocation, useNavigate } from "react-router-dom";
 
 function Form138() {
-  const { state } = useLocation(); // Access passed data
-  const { student } = state || {}; // Destructure student data
-  const [studentDetails, setStudentDetails] = useState([]); // State for student details
-  const [academicRecords, setAcademicRecords] = useState([]);
-  const [attendance, setAttendance] = useState({});
-  const [values, setValues] = useState([]);
-  const [subjects, setSubjects] = useState([]); // State for subjects
+  const { state } = useLocation();
+  const navigate = useNavigate();
+  const student = state?.student;
+  const [studentDetails, setStudentDetails] = useState(null);
+  const [currentGrades, setCurrentGrades] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [grade, setGrade] = useState(student?.grade || "");  // Set the initial value of grade
-  const [gradesFetched, setGradesFetched] = useState(false); // State to track if grades have been fetched
+  const [error, setError] = useState(null);
+  const [currentSchoolYear, setCurrentSchoolYear] = useState("");
 
-  const date = new Date().toLocaleDateString();
-
-  // Fetch student details using the student's name or other unique identifiers
-  const fetchStudentDetails = async () => {
-    if (student) {
-      // Remove commas and extra spaces, then split the name
-      const [lastName, firstName] = student.name.replace(',', '').trim().split(/\s+/); 
-      
-      try {
-        const response = await axios.get(`http://localhost:3001/api/student/details`, {
-          params: { lastName, firstName },
-        });
-  
-        if (response.data.length > 0) {
-          setStudentDetails(response.data[0]);
-        } else {
-          setStudentDetails(null);
-        }
-      } catch (error) {
-        console.error("Error fetching student details:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-  };
-
-  // Fetch subjects based on the student ID
-  const fetchSubjects = async () => {
-    if (studentDetails?.student_id) {
-      try {
-        const response = await axios.get(`http://localhost:3001/api/subjects-card`, {
-          params: { studentId: studentDetails.student_id },
-        });
-  
-        if (response.data) {
-          setSubjects(response.data);
-        } else {
-          setSubjects([]);
-        }
-      } catch (error) {
-        console.error("Error fetching subjects:", error);
-      }
-    }
-  };
-
-  // Fetch grades based on student details and grade, but only fetch once
-  const fetchGrades = async () => {
-    if (studentDetails?.student_id && grade && !gradesFetched) { // Check if grades have already been fetched
-      try {
-        const response = await axios.get('http://localhost:3001/api/grades', {
-          params: {
-            studentId: studentDetails.student_id,
-            gradeLevel: grade, // Pass grade here
-          },
-        });
-
-        console.log(response.data); // Log the response
-
-        if (response.data.success) {
-          const grades = response.data.grades;
-          const updatedSubjects = subjects.map(subject => {
-            const subjectGrades = grades.find(grade => grade.subject_name === subject.subject_name) || {};
-            return { ...subject, ...subjectGrades };
-          });
-
-          setSubjects(updatedSubjects); // Update subjects with grades
-          setGradesFetched(true); // Set gradesFetched to true to prevent further fetches
-        } else {
-          console.warn('No grades found for this student.');
-        }
-      } catch (error) {
-        console.error('Error fetching grades:', error);
-      }
-    }
-  };
-
-  // Fetch academic records
-  const fetchAcademicRecords = async () => {
-    if (student) {
-      try {
-        const response = await axios.get(`/api/academic-records`, {
-          params: { studentId: student.id },
-        });
-        setAcademicRecords(response.data);
-      } catch (error) {
-        console.error("Error fetching academic records:", error);
-      }
-    }
-  };
-
-  // Fetch attendance data
-  const fetchAttendance = async () => {
-    if (student) {
-      try {
-        const response = await axios.get(`/api/attendance`, {
-          params: { studentId: student.id },
-        });
-        setAttendance(response.data);
-      } catch (error) {
-        console.error("Error fetching attendance:", error);
-      }
-    }
-  };
-
-  // Fetch values data
-  const fetchValues = async () => {
-    if (student) {
-      try {
-        const response = await axios.get(`/api/values`, {
-          params: { studentId: student.id },
-        });
-        setValues(response.data);
-      } catch (error) {
-        console.error("Error fetching values:", error);
-      }
-    }
-  };
-
-  // Fetch student details once student data is available
   useEffect(() => {
     if (student) {
       fetchStudentDetails();
+      fetchCurrentGrades();
+      fetchCurrentSchoolYear();
+    } else {
+      setError("No student data provided");
+      setLoading(false);
     }
   }, [student]);
 
-  // Fetch subjects only once the student details are loaded
-  useEffect(() => {
-    if (studentDetails?.student_id) {
-      fetchSubjects();
-    }
-  }, [studentDetails]);
+  const fetchStudentDetails = async () => {
+    try {
+      // Extract student name components
+      const [lastName, firstName] = student.name.replace(",", "").trim().split(/\s+/);
 
-  // Fetch grades once both subjects and grade are available, and prevent multiple fetches
-  useEffect(() => {
-    if (subjects.length > 0 && grade && !gradesFetched) { // Prevent fetching if grades have already been fetched
-      fetchGrades();
-    }
-  }, [subjects, grade, gradesFetched]); // Added gradesFetched as a dependency
+      const response = await axios.get(`http://localhost:3001/api/student/details`, {
+        params: { lastName, firstName },
+      });
 
-  // Fetch academic records, attendance, and values after student details are available
-  useEffect(() => {
-    if (studentDetails?.student_id && grade) {
-      fetchAcademicRecords();
-      fetchAttendance();
-      fetchValues();
+      if (response.data.length > 0) {
+        setStudentDetails(response.data[0]);
+      } else {
+        setError("Student details not found");
+      }
+    } catch (error) {
+      console.error("Error fetching student details:", error);
+      setError("Failed to fetch student details");
     }
-  }, [studentDetails, grade]);
+  };
 
-  // Function to generate and open PDF in a new tab
+  const fetchCurrentSchoolYear = async () => {
+    try {
+      // In a real implementation, you would fetch the current school year from your API
+      // const response = await axios.get('http://localhost:3001/school-years');
+      // setCurrentSchoolYear(response.data[0]?.school_year || "");
+      
+      // For now, we'll use a mock value
+      setCurrentSchoolYear("2023-2024");
+    } catch (error) {
+      console.error("Error fetching current school year:", error);
+    }
+  };
+
+  const fetchCurrentGrades = async () => {
+    try {
+      // This would be replaced with your actual API endpoint for fetching current grades
+      // For now, we'll create mock data
+      const mockCurrentGrades = {
+        schoolYear: "2023-2024",
+        gradeLevel: "9",
+        section: "Rizal",
+        schoolName: "Lourdes National High School",
+        schoolAddress: "Dauis - Panglao Rd, Dauis, Bohol",
+        subjects: [
+          { name: "Filipino", q1: "87", q2: "89", q3: "91", q4: "93", final: "90" },
+          { name: "English", q1: "92", q2: "94", q3: "96", q4: "98", final: "95" },
+          { name: "Mathematics", q1: "86", q2: "88", q3: "90", q4: "92", final: "89" },
+          { name: "Science", q1: "88", q2: "90", q3: "92", q4: "94", final: "91" },
+          { name: "Araling Panlipunan", q1: "90", q2: "92", q3: "94", q4: "96", final: "93" },
+          { name: "MAPEH", q1: "94", q2: "96", q3: "98", q4: "100", final: "97" },
+          { name: "TLE", q1: "92", q2: "94", q3: "96", q4: "98", final: "95" },
+          { name: "Values Education", q1: "96", q2: "98", q3: "100", q4: "100", final: "99" }
+        ],
+        attendance: {
+          daysPresent: 190,
+          daysAbsent: 0,
+          totalDays: 190
+        },
+        generalAverage: "94",
+        remarks: "Promoted"
+      };
+
+      // In a real implementation, you would fetch this data from your API
+      // const response = await axios.get(`http://localhost:3001/api/current-grades/${student.student_id}`);
+      // setCurrentGrades(response.data);
+
+      setCurrentGrades(mockCurrentGrades);
+      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching current grades:", error);
+      setError("Failed to fetch current grades");
+      setLoading(false);
+    }
+  };
+
   const handleConvertToPdf = () => {
     const doc = new jsPDF({
       orientation: "portrait",
       unit: "mm",
-      format: "a4", // Set A4 format
+      format: "a4",
     });
 
-    // Ensure proper scaling and margins for A4
-    const pdfOptions = {
+    const button = document.querySelector(".button-container");
+    if (button) button.style.display = "none";
+
+    doc.html(document.querySelector(".form-138-container"), {
       callback: function (doc) {
-        window.open(doc.output("bloburl"), "_blank"); // Open PDF in a new tab
+        window.open(doc.output("bloburl"), "_blank");
+        if (button) button.style.display = "flex";
       },
       x: 10,
       y: 10,
-      width: 190, // Content width for A4 (210mm - margins)
-      windowWidth: 800, // Ensure proper rendering width
-      scale: 0.9, // Adjust scale to fit the page
-    };
-
-    // Hide the "Convert to PDF" button during PDF generation
-    const button = document.querySelector(".convert-to-pdf");
-    if (button) button.style.display = "none";
-
-    // Generate PDF from the HTML container
-    doc.html(document.querySelector(".form-137-container"), pdfOptions);
-
-    // Restore the button visibility after generation
-    if (button) button.style.display = "block";
+      width: 180,
+      windowWidth: 1000,
+    });
   };
 
-  // Function to handle back navigation
   const handleBack = () => {
-    window.location.href = 'http://localhost:3000/summary-report-promotion'; // Navigate to the specified URL
+    navigate(-1); // Go back to previous page
   };
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
 
   return (
     <div>
-      <div className="form-137-container">
-        <div className="form-137">
-          <header className="form-header">
-            <div className="school-logo">
-              <img src="/lnhs-logo.png" alt="School Logo" className="login-logo" />
-            </div>
-            <div className="school-details">
-              <h2>{student?.schoolName || "Lourdes National High School"}</h2>
-              <p>{student?.schoolAddress || "Dauis - Panglao Rd, Dauis, 6340 Bohol"}</p>
-              <h3>PROGRESS REPORT CARD</h3>
-              <p>{student?.level || "High School"}</p>
-            </div>
-          </header>
-
-          <div className="student-info">
-            <table className="info-table">
-              <tbody>
-                <tr>
-                  <td><strong>Name:</strong> {studentDetails?.stud_name || "__________"}</td>
-                  <td><strong>Grade & Section:</strong> {studentDetails?.grade_section || "________"}</td>
-                </tr>
-                <tr>
-                  <td><strong>Age:</strong> {studentDetails?.age || "___"}</td>
-                  <td><strong>School Year:</strong> {studentDetails?.school_year || "____"}</td>
-                </tr>
-                <tr>
-                  <td><strong>Gender:</strong> {studentDetails?.gender || "_____"}</td>
-                  <td><strong>LRN:</strong> {studentDetails?.lrn || "_____"}</td>
-                </tr>
-              </tbody>
-            </table>
+      <div className="form-138-container">
+        <div className="form-header">
+          <div className="form-header-logos">
+            <img src="/deped-logo.png" alt="DepEd Logo" className="logo" />
           </div>
+          <div className="form-header-text">
+            <h1>Republic of the Philippines • Department of Education</h1>
+            <h2>Region VII Central Visayas • Division of Bohol • District of Dauis</h2>
+            <h2>LOURDES NATIONAL HIGH SCHOOL</h2>
+            <h3>Dauis - Panglao Rd, Dauis, Bohol</h3>
+            <h3>REPORT CARD (Form 138)</h3>
+          </div>
+          <div className="form-header-logos">
+            <img src="/lnhs-logo.png" alt="School Logo" className="logo" />
+          </div>
+        </div>
 
+        <div className="student-info">
+          <div className="info-item">
+            <span className="info-label">Name:</span>
+            <span>{studentDetails?.stud_name || "N/A"}</span>
+          </div>
+          <div className="info-item">
+            <span className="info-label">LRN:</span>
+            <span>{studentDetails?.student_id || "N/A"}</span>
+          </div>
+          <div className="info-item">
+            <span className="info-label">Grade & Section:</span>
+            <span>{currentGrades?.gradeLevel || "N/A"} - {currentGrades?.section || "N/A"}</span>
+          </div>
+          <div className="info-item">
+            <span className="info-label">School Year:</span>
+            <span>{currentGrades?.schoolYear || currentSchoolYear || "N/A"}</span>
+          </div>
+          <div className="info-item">
+            <span className="info-label">Age:</span>
+            <span>{studentDetails?.age || "N/A"}</span>
+          </div>
+          <div className="info-item">
+            <span className="info-label">Gender:</span>
+            <span>{studentDetails?.gender || "N/A"}</span>
+          </div>
+        </div>
 
-          {/* Render Academic Records */}
-          <section className="subjects">
-            <h4>Learning Progress and Achievement</h4>
-            <table className="subjects-table">
-              <thead>
-                <tr>
-                  <th>Subjects</th>
-                  <th>1</th>
-                  <th>2</th>
-                  <th>3</th>
-                  <th>4</th>
-                  <th>Final Grade</th>
-                  <th>Remarks</th>
+        <div className="grades-section">
+          <h3>Academic Performance</h3>
+          <table className="academic-grades-table">
+            <thead>
+              <tr>
+                <th style={{width: "30%"}}>Subject</th>
+                <th style={{width: "12%"}}>Q1</th>
+                <th style={{width: "12%"}}>Q2</th>
+                <th style={{width: "12%"}}>Q3</th>
+                <th style={{width: "12%"}}>Q4</th>
+                <th style={{width: "12%"}}>Final</th>
+                <th style={{width: "10%"}}>Remarks</th>
+              </tr>
+            </thead>
+            <tbody>
+              {currentGrades?.subjects.map((subject, index) => (
+                <tr key={index}>
+                  <td className="subject-name">{subject.name}</td>
+                  <td>{subject.q1}</td>
+                  <td>{subject.q2}</td>
+                  <td>{subject.q3}</td>
+                  <td>{subject.q4}</td>
+                  <td className="final-grade">{subject.final}</td>
+                  <td>{parseInt(subject.final) >= 75 ? "Passed" : "Failed"}</td>
                 </tr>
-              </thead>
-              <tbody>
-                {subjects?.length > 0 ? (
-                  subjects.map((subject, index) => (
-                    <tr key={index}>
-                      <td>{subject.subject_name}</td>
-                      <td>{subject.q1 || "___"}</td>
-                      <td>{subject.q2 || "___"}</td>
-                      <td>{subject.q3 || "___"}</td>
-                      <td>{subject.q4 || "___"}</td>
-                      <td>{subject.final || "___"}</td>
-                      <td>{subject.remarks || "___"}</td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="7" style={{ textAlign: "center" }}>
-                      No academic records available.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </section>
+              ))}
+              <tr>
+                <td colSpan="5" className="subject-name">General Average</td>
+                <td className="final-grade">{currentGrades?.generalAverage || "N/A"}</td>
+                <td>{parseInt(currentGrades?.generalAverage || 0) >= 75 ? "Passed" : "Failed"}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
-          {/* Render Attendance */}
-          <section className="attendance">
-            <h4>Attendance Report</h4>
-            <table className="attendance-table">
-              <thead>
-                <tr>
-                  <th>Month</th>
-                  {attendance?.months?.map((month, index) => (
-                    <th key={index}>{month}</th>
-                  ))}
-                  <th>Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                {/* Render attendance data here */}
-              </tbody>
-            </table>
-          </section>
+        <div className="attendance-section">
+          <table className="student-attendance-table">
+            <thead>
+              <tr>
+                <th colSpan="13">Attendance Record</th>
+              </tr>
+              <tr>
+                <th>Month</th>
+                <th>Jun</th>
+                <th>Jul</th>
+                <th>Aug</th>
+                <th>Sep</th>
+                <th>Oct</th>
+                <th>Nov</th>
+                <th>Dec</th>
+                <th>Jan</th>
+                <th>Feb</th>
+                <th>Mar</th>
+                <th>Apr</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Present</td>
+                <td>20</td>
+                <td>20</td>
+                <td>18</td>
+                <td>20</td>
+                <td>18</td>
+                <td>19</td>
+                <td>15</td>
+                <td>18</td>
+                <td>18</td>
+                <td>20</td>
+                <td>4</td>
+                <td>{currentGrades?.attendance.daysPresent || "N/A"}</td>
+              </tr>
+              <tr>
+                <td>Absent</td>
+                <td>0</td>
+                <td>0</td>
+                <td>0</td>
+                <td>0</td>
+                <td>0</td>
+                <td>0</td>
+                <td>0</td>
+                <td>0</td>
+                <td>0</td>
+                <td>0</td>
+                <td>0</td>
+                <td>{currentGrades?.attendance.daysAbsent || "N/A"}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
-          {/* Render Learner's Values */}
-          <section className="observed-values">
-            <h4>Learner's Observed Values</h4>
-            <table className="values-table">
-              <thead>
-                <tr>
-                  <th>The Student:</th>
-                  <th>1</th>
-                  <th>2</th>
-                  <th>3</th>
-                  <th>4</th>
-                </tr>
-              </thead>
-              <tbody>
-                {/* Render learner values here */}
-              </tbody>
-            </table>
-          </section>
+        <div className="promotion-section">
+          <h3>Promotion Status</h3>
+          <p>
+            <strong>Remarks:</strong> {currentGrades?.remarks || "N/A"}
+          </p>
+        </div>
 
-          <footer className="form-footer">
-            <p>
-              <strong>{student?.adviser || "Class Adviser"}</strong>: _________________
-            </p>
-          </footer>
+        <div className="signature-section">
+          <div className="signature-box">
+            <div className="signature-line"></div>
+            <p>Class Adviser</p>
+          </div>
+          <div className="signature-box">
+            <div className="signature-line"></div>
+            <p>School Principal</p>
+          </div>
         </div>
       </div>
 
-      {/* Button Container for Print and Back, positioned outside the form */}
       <div className="button-container">
         <button onClick={handleBack}>Back</button>
         <button onClick={handleConvertToPdf}>Print</button>
