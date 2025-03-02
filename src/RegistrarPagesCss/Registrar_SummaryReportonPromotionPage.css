@@ -45,7 +45,7 @@
   .report-description {
     color: #666;
     font-size: 14px;
-    margin-bottom: 20px;
+    margin-bottom: 0;
     line-height: 1.5;
     text-align: left;
   }
@@ -62,6 +62,7 @@
     background-color: #28a745;
     min-width: 150px;
     text-align: center;
+    align-self: center;
   }
   
   .report-button:hover {
@@ -81,11 +82,17 @@
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   }
   
+  .form137-section > div {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  
   .form137-title {
     font-size: 18px;
     font-weight: 600;
     color: #333;
-    margin: 0;
+    margin: 0 0 5px 0;
     text-align: left;
   }
   
@@ -101,11 +108,17 @@
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   }
   
+  .good-moral-section > div {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  
   .good-moral-title {
     font-size: 18px;
     font-weight: 600;
     color: #333;
-    margin: 0;
+    margin: 0 0 5px 0;
     text-align: left;
   }
   
@@ -284,11 +297,17 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
+.late-enrollees-section > div {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
 .late-enrollees-title {
   font-size: 18px;
   font-weight: 600;
   color: #333;
-  margin: 0;
+  margin: 0 0 5px 0;
   text-align: left;
 }
 
