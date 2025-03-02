@@ -47,6 +47,7 @@
     font-size: 14px;
     margin-bottom: 20px;
     line-height: 1.5;
+    text-align: left;
   }
   
   .report-button {
@@ -85,6 +86,7 @@
     font-weight: 600;
     color: #333;
     margin: 0;
+    text-align: left;
   }
   
   /* Good Moral Section */
@@ -104,6 +106,7 @@
     font-weight: 600;
     color: #333;
     margin: 0;
+    text-align: left;
   }
   
   /* Modal Styles */
@@ -286,5 +289,6 @@
   font-weight: 600;
   color: #333;
   margin: 0;
+  text-align: left;
 }
 
