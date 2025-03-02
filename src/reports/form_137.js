@@ -93,6 +93,52 @@ function Form137() {
           },
           generalAverage: "92",
           remarks: "Promoted"
+        },
+        {
+          schoolYear: "2022-2023",
+          gradeLevel: "9",
+          schoolName: "Lourdes National High School",
+          schoolAddress: "Dauis - Panglao Rd, Dauis, Bohol",
+          subjects: [
+            { name: "Filipino", q1: "87", q2: "89", q3: "91", q4: "93", final: "90" },
+            { name: "English", q1: "91", q2: "93", q3: "95", q4: "97", final: "94" },
+            { name: "Mathematics", q1: "85", q2: "87", q3: "89", q4: "91", final: "88" },
+            { name: "Science", q1: "87", q2: "89", q3: "91", q4: "93", final: "90" },
+            { name: "Araling Panlipunan", q1: "89", q2: "91", q3: "93", q4: "95", final: "92" },
+            { name: "MAPEH", q1: "93", q2: "95", q3: "97", q4: "99", final: "96" },
+            { name: "TLE", q1: "91", q2: "93", q3: "95", q4: "97", final: "94" },
+            { name: "Values Education", q1: "95", q2: "97", q3: "99", q4: "100", final: "98" }
+          ],
+          attendance: {
+            daysPresent: 182,
+            daysAbsent: 8,
+            totalDays: 190
+          },
+          generalAverage: "93",
+          remarks: "Promoted"
+        },
+        {
+          schoolYear: "2023-2024",
+          gradeLevel: "10",
+          schoolName: "Lourdes National High School",
+          schoolAddress: "Dauis - Panglao Rd, Dauis, Bohol",
+          subjects: [
+            { name: "Filipino", q1: "88", q2: "90", q3: "92", q4: "94", final: "91" },
+            { name: "English", q1: "92", q2: "94", q3: "96", q4: "98", final: "95" },
+            { name: "Mathematics", q1: "86", q2: "88", q3: "90", q4: "92", final: "89" },
+            { name: "Science", q1: "88", q2: "90", q3: "92", q4: "94", final: "91" },
+            { name: "Araling Panlipunan", q1: "90", q2: "92", q3: "94", q4: "96", final: "93" },
+            { name: "MAPEH", q1: "94", q2: "96", q3: "98", q4: "100", final: "97" },
+            { name: "TLE", q1: "92", q2: "94", q3: "96", q4: "98", final: "95" },
+            { name: "Values Education", q1: "96", q2: "98", q3: "100", q4: "100", final: "99" }
+          ],
+          attendance: {
+            daysPresent: 186,
+            daysAbsent: 4,
+            totalDays: 190
+          },
+          generalAverage: "94",
+          remarks: "Graduated"
         }
       ];
 
