@@ -1,5 +1,5 @@
 // PrincipalSideBar.js
-import React, { useState } from 'react';
+import React from 'react';
 import '../CssFiles/sidebar.css';
 import {
   FiHome,
@@ -11,13 +11,12 @@ import {
   FiUser,
   FiSettings
 } from 'react-icons/fi';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import LogoutButton from '../Buttons/LogoutButton';
 
 function SubjectCoordinatorSideBar({ showSidebar, toggleSidebar, handleLogout }) {
   const navigate = useNavigate();
-
-  
+  const location = useLocation();
 
   const handleNavigate = (path) => {
     navigate(path);
@@ -29,16 +28,28 @@ function SubjectCoordinatorSideBar({ showSidebar, toggleSidebar, handleLogout })
         {showSidebar ? <FiChevronLeft /> : <FiMenu />}
       </button>
       <div className="buttons">
-        <button onClick={() => handleNavigate('/home')}>
+        <button 
+          onClick={() => handleNavigate('/home')}
+          className={location.pathname === '/home' ? 'active' : ''}
+        >
           <FiHome className="icon" /> Home
         </button>
-        <button onClick={() => handleNavigate('/profile')}>
+        <button 
+          onClick={() => handleNavigate('/profile')}
+          className={location.pathname === '/profile' ? 'active' : ''}
+        >
           <FiUser className="icon" /> Profile
         </button>
-        <button onClick={() => handleNavigate('/student')}>
+        <button 
+          onClick={() => handleNavigate('/student')}
+          className={location.pathname === '/student' ? 'active' : ''}
+        >
           <FiUsers className="icon" /> Students
         </button>
-        <button onClick={() => handleNavigate('/subjects')}>
+        <button 
+          onClick={() => handleNavigate('/subjects')}
+          className={location.pathname === '/subjects' ? 'active' : ''}
+        >
           <FiBook className="icon" /> Subjects
         </button>
         {/* <button onClick={() => handleNavigate('/account')}>

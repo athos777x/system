@@ -1,17 +1,16 @@
 /* dashboard.css */
 .sidebar {
-  width: 280px; /* Adjusted width */
-  background-color: #fff; /* White background */
-  color: black;
-  transition: transform 0.3s ease;
+  width: 280px;
+  background-color: #fff;
+  color: #000; /* Changed to black */
+  transition: all 0.3s ease;
   padding: 0;
-  height: 100vh; /* Full height */
+  height: 100vh;
   position: fixed;
   top: 0;
   left: 0;
-  z-index: 1100; /* Ensure it's above the header */
-  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1); /* Add shadow for depth */
-  border-right: 1px solid #ddd; /* Light border on the right */
+  z-index: 1100;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.05); /* Softer shadow */
 }
 
 .sidebar.show {
@@ -25,72 +24,152 @@
 .sidebar .buttons {
   display: flex;
   flex-direction: column;
-  margin-top: 60px; /* Space below the toggle button */
+  margin-top: 60px;
+  padding: 0 15px; /* Add padding to the button container */
 }
 
 .sidebar .buttons button {
-  background-color: #fff; /* Button background */
-  color: black;
+  background-color: transparent; /* Remove background */
+  color: #000; /* Changed to black */
   border: none;
-  padding: 15px 20px; /* Increase padding */
+  padding: 12px 16px; /* Slightly reduced padding */
   width: 100%;
   text-align: left;
   cursor: pointer;
-  font-size: 16px; /* Increase font size */
-  transition: background-color 0.3s;
+  font-size: 15px; /* Slightly smaller font */
+  transition: all 0.2s ease;
   display: flex;
-  align-items: center; /* Align icon and text */
-  margin-bottom: 15px; /* Add spacing between buttons */
+  align-items: center;
+  margin-bottom: 5px; /* Reduced spacing */
+  border-radius: 8px; /* Smaller border radius */
+}
+
+.sidebar .buttons button.active {
+  background-color: #e8f5e8;
+  color: #1a7431; /* Darker green for better contrast */
+}
+
+.sidebar .buttons button.active .icon {
+  color: #1a7431; /* Darker green for better contrast */
+}
+
+.sidebar .buttons button:hover {
+  background-color: #f8f9fa; /* Very light gray on hover */
+  color: #000; /* Keep black on hover */
+}
+
+.sidebar .buttons button.active:hover {
+  background-color: #e8f5e8; /* Keep the same background on hover */
+  color: #1a7431;
 }
 
 .sidebar .buttons .submenu {
   display: flex;
   flex-direction: column;
-  padding-left: 20px;
+  padding-left: 36px; /* Increased indent for submenu */
+  margin-top: -2px; /* Tighten up spacing */
 }
 
 .sidebar .buttons .submenu button {
-  padding: 10px 20px; /* Adjust padding for submenu buttons */
+  padding: 10px 16px;
+  font-size: 14px;
+  opacity: 1;
+  color: #000;
 }
 
-.sidebar .buttons button:hover {
-  background-color: #f0f0f0; /* Hover background color */
-  border-radius: 50px;
+.sidebar .buttons .submenu button:not(.active):hover {
+  background-color: #f8f9fa;
+  color: #000;
+}
+
+.sidebar .buttons .submenu button.active {
+  background-color: #e8f5e8;
+  color: #1a7431;
+}
+
+.sidebar .buttons .submenu button.active:hover {
+  background-color: #e8f5e8;
+  color: #1a7431;
 }
 
 .sidebar .buttons button .icon {
-  margin-right: 10px; /* Space between icon and text */
+  margin-right: 12px;
+  font-size: 18px; /* Slightly smaller icons */
+  color: #000; /* Changed to black */
 }
 
 .content {
   transition: margin-left 0.3s ease;
   margin-left: 0;
-  padding-top: 60px; /* Ensure the content is pushed down by the header height */
+  padding-top: 60px;
 }
 
 .content-shift {
-  margin-left: 280px; /* Adjust to match the width of the sidebar */
+  margin-left: 280px;
 }
 
 .logout-btn {
-  background-color: #fff; /* Button background */
-  color: black;
+  background-color: transparent;
+  color: #000; /* Changed to black */
   border: none;
-  padding: 15px 20px; /* Increase padding */
+  padding: 12px 16px;
   width: 100%;
   text-align: left;
   cursor: pointer;
-  font-size: 16px; /* Increase font size */
-  transition: background-color 0.3s;
+  font-size: 15px;
+  transition: all 0.2s ease;
   display: flex;
-  align-items: center; /* Align icon and text */
-  margin-bottom: 15px; /* Add spacing between buttons */
+  align-items: center;
+  margin-bottom: 5px;
+  border-radius: 8px;
 }
 
 .logout-btn:hover {
-  background-color: #f0f0f0; /* Hover background color */
+  background-color: #fff1f0; /* Very light red background */
+  color: #dc3545; /* Red text */
 }
 
 .logout-btn .icon {
-  margin-right: 10px; /* Space between icon and text */
+  margin-right: 12px;
+  font-size: 18px;
+  color: #000; /* Changed to black */
+}
+
+.logout-btn:hover .icon {
+  color: #dc3545; /* Red icon on hover */
+}
+
+.sidebar .buttons .menu-with-submenu button {
+  background-color: transparent;
+  color: #000;
+  border: none;
+  padding: 12px 16px;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  font-size: 15px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  margin-bottom: 5px;
+  border-radius: 8px;
+}
+
+.sidebar .buttons .menu-with-submenu.active > button {
+  background-color: #e8f5e8;
+  color: #1a7431;
+}
+
+.sidebar .buttons .menu-with-submenu.active > button .icon {
+  color: #1a7431;
+}
+
+.sidebar .buttons .menu-with-submenu button:hover {
+  background-color: #f8f9fa;
+  color: #000;
+}
+
+.sidebar .buttons .menu-with-submenu.active > button:hover {
+  background-color: #e8f5e8;
+  color: #1a7431;
 }

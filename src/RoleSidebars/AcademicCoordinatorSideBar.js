@@ -12,18 +12,32 @@ import {
   FiSettings,
   FiUser,
 } from 'react-icons/fi';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import LogoutButton from '../Buttons/LogoutButton';
 
 function AcademicCoordinatorSideBar({ showSidebar, toggleSidebar, handleLogout }) {
   const [showClassesSubMenu, setShowClassesSubMenu] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Check if current path is under a specific submenu
+  const isClassesPath = ['/section', '/schedule'].includes(location.pathname);
+
+  // Update useEffect to handle initial submenu state based on path
+  React.useEffect(() => {
+    setShowClassesSubMenu(isClassesPath);
+  }, [location.pathname]);
 
   const toggleClassesSubMenu = () => {
     setShowClassesSubMenu(!showClassesSubMenu);
+    if (!showClassesSubMenu) {
+      navigate('/section');
+    }
   };
 
   const handleNavigate = (path) => {
+    // Close all submenus when navigating
+    setShowClassesSubMenu(false);
     navigate(path);
   };
 
@@ -33,30 +47,48 @@ function AcademicCoordinatorSideBar({ showSidebar, toggleSidebar, handleLogout }
         {showSidebar ? <FiChevronLeft /> : <FiMenu />}
       </button>
       <div className="buttons">
-        <button onClick={() => handleNavigate('/home')}>
+        <button 
+          onClick={() => handleNavigate('/home')}
+          className={location.pathname === '/home' ? 'active' : ''}
+        >
           <FiHome className="icon" /> Home
         </button>
-        <button onClick={() => handleNavigate('/profile')}>
+        <button 
+          onClick={() => handleNavigate('/profile')}
+          className={location.pathname === '/profile' ? 'active' : ''}
+        >
           <FiUser className="icon" /> Profile
         </button>
-        <div className={`menu-with-submenu ${showClassesSubMenu ? 'active' : ''}`}>
+        <div className={`menu-with-submenu ${showClassesSubMenu || isClassesPath ? 'active' : ''}`}>
           <button onClick={toggleClassesSubMenu}>
             <FiClipboard className="icon" /> Classes
           </button>
           {showClassesSubMenu && (
             <div className="submenu">
-              <button onClick={() => handleNavigate('/section')}>
+              <button 
+                onClick={() => handleNavigate('/section')}
+                className={location.pathname === '/section' ? 'active' : ''}
+              >
                 <FiBook className="icon" /> Section
               </button>
-              <button onClick={() => handleNavigate('/schedule')}>
+              <button 
+                onClick={() => handleNavigate('/schedule')}
+                className={location.pathname === '/schedule' ? 'active' : ''}
+              >
                 <FiCalendar className="icon" /> Schedule
               </button>
             </div>
           )}
+        </div>
+        <button 
+          onClick={() => handleNavigate('/subjects')}
+          className={location.pathname === '/subjects' ? 'active' : ''}
+        >
+          <FiBook className="icon" /> Subjects
+        </button>
         {/* <button onClick={() => handleNavigate('/account')}>
         <FiSettings className="icon" /> Account
         </button> */}
-        </div>
         <LogoutButton onClick={handleLogout}>
           <FiLogOut className="icon" /> Logout
         </LogoutButton>
