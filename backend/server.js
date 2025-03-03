@@ -152,17 +152,17 @@ app.get('/students', (req, res) => {
     // Build the main query
     let query = `
       SELECT s.student_id, s.user_id, s.lastname, s.firstname, s.middlename, 
-             s.current_yr_lvl, s.birthdate, s.gender, s.age, 
-             s.home_address, s.barangay, s.city_municipality, s.province, 
-             s.contact_number, s.email_address, z.section_name, sy.school_year,
-             s.mother_name, s.father_name, s.parent_address, s.father_occupation, 
-             s.mother_occupation, s.annual_hshld_income, s.number_of_siblings, 
-             s.father_educ_lvl, s.mother_educ_lvl, s.father_contact_number, 
-             s.mother_contact_number, IF(s.brigada_eskwela=1,'Attended','Not Attended') AS brigada_eskwela,
-             (SELECT ss.status FROM student_school_year ss
-              JOIN school_year sy ON ss.school_year_id = sy.school_year_id
-              WHERE ss.student_id = s.student_id AND sy.status = 'active') as active_status,
-             se.enrollment_status, se.student_elective_id
+      s.current_yr_lvl, s.birthdate, s.gender, s.age, 
+      s.home_address, s.barangay, s.city_municipality, s.province, 
+      s.contact_number, s.email_address, z.section_name, sy.school_year,
+      s.mother_name, s.father_name, s.parent_address, s.father_occupation, 
+      s.mother_occupation, s.annual_hshld_income, s.number_of_siblings, 
+      s.father_educ_lvl, s.mother_educ_lvl, s.father_contact_number, 
+      s.mother_contact_number, IF(s.brigada_eskwela=1,'Attended','Not Attended') AS brigada_eskwela,
+      (SELECT ss.status FROM student_school_year ss
+      JOIN school_year sy ON ss.school_year_id = sy.school_year_id
+      WHERE ss.student_id = s.student_id AND sy.status = 'active') as active_status,
+      se.enrollment_status, se.student_elective_id
       FROM student s
       LEFT JOIN student_elective se ON s.student_id = se.student_id
       LEFT JOIN section z ON s.section_id=z.section_id
@@ -248,17 +248,17 @@ app.get('/students/pending-enrollment', (req, res) => {
     // Build the main query
     let query = `
       SELECT s.student_id, s.user_id, s.lastname, s.firstname, s.middlename, 
-             s.current_yr_lvl, s.birthdate, s.gender, s.age, 
-             s.home_address, s.barangay, s.city_municipality, s.province, 
-             s.contact_number, s.email_address, s.status as stud_status,
-             s.mother_name, s.father_name, s.parent_address, s.father_occupation, 
-             s.mother_occupation, s.annual_hshld_income, s.number_of_siblings, 
-             s.father_educ_lvl, s.mother_educ_lvl, s.father_contact_number, 
-             s.mother_contact_number, IF(s.brigada_eskwela=1,'Attended','Not Attended') AS brigada_eskwela,
-             (SELECT ss.status FROM student_school_year ss
-              JOIN school_year sy ON ss.school_year_id = sy.school_year_id
-              WHERE ss.student_id = s.student_id AND sy.status = 'active') as active_status,
-             se.enrollment_status, se.student_elective_id
+      s.current_yr_lvl, s.birthdate, s.gender, s.age, 
+      s.home_address, s.barangay, s.city_municipality, s.province, 
+      s.contact_number, s.email_address, s.status as stud_status,
+      s.mother_name, s.father_name, s.parent_address, s.father_occupation, 
+      s.mother_occupation, s.annual_hshld_income, s.number_of_siblings, 
+      s.father_educ_lvl, s.mother_educ_lvl, s.father_contact_number, 
+      s.mother_contact_number, IF(s.brigada_eskwela=1,'Attended','Not Attended') AS brigada_eskwela,
+      (SELECT ss.status FROM student_school_year ss
+      JOIN school_year sy ON ss.school_year_id = sy.school_year_id
+      WHERE ss.student_id = s.student_id AND sy.status = 'active') as active_status,
+      se.enrollment_status, se.student_elective_id
       FROM student s
       LEFT JOIN student_elective se ON s.student_id = se.student_id 
       LEFT JOIN enrollment xx ON s.student_id=xx.student_id
@@ -952,10 +952,10 @@ app.post('/enroll-elective', (req, res) => {
 app.get('/unregistered-students', (req, res) => {
   const query = `
     SELECT s.student_id, s.lastname, s.firstname, s.middlename, s.current_yr_lvl, s.birthdate, s.gender, s.age, 
-           s.home_address, s.barangay, s.city_municipality, s.province, s.contact_number, s.email_address, 
-           s.mother_name, s.father_name, s.parent_address, s.father_occupation, s.mother_occupation, 
-           s.annual_hshld_income, s.number_of_siblings, s.father_educ_lvl, s.mother_educ_lvl, 
-           s.father_contact_number, s.mother_contact_number, IF(s.brigada_eskwela=1,'Attended','Not Attended') AS brigada_eskwela
+    s.home_address, s.barangay, s.city_municipality, s.province, s.contact_number, s.email_address, 
+    s.mother_name, s.father_name, s.parent_address, s.father_occupation, s.mother_occupation, 
+    s.annual_hshld_income, s.number_of_siblings, s.father_educ_lvl, s.mother_educ_lvl, 
+    s.father_contact_number, s.mother_contact_number, IF(s.brigada_eskwela=1,'Attended','Not Attended') AS brigada_eskwela
     FROM student s 
     LEFT JOIN student_school_year ss ON s.student_id = ss.student_id 
     LEFT JOIN enrollment b ON s.student_id = b.student_id
@@ -1115,10 +1115,10 @@ app.get('/api/grades', (req, res) => {
 
   const query = `
     SELECT subject_name, 
-           FORMAT(MAX(CASE WHEN period = 1 THEN grade ELSE NULL END),0) AS q1,
-           FORMAT(MAX(CASE WHEN period = 2 THEN grade ELSE NULL END),0) AS q2,
-           FORMAT(MAX(CASE WHEN period = 3 THEN grade ELSE NULL END),0) AS q3,
-           FORMAT(MAX(CASE WHEN period = 4 THEN grade ELSE NULL END),0) AS q4
+    FORMAT(MAX(CASE WHEN period = 1 THEN grade ELSE NULL END),0) AS q1,
+    FORMAT(MAX(CASE WHEN period = 2 THEN grade ELSE NULL END),0) AS q2,
+    FORMAT(MAX(CASE WHEN period = 3 THEN grade ELSE NULL END),0) AS q3,
+    FORMAT(MAX(CASE WHEN period = 4 THEN grade ELSE NULL END),0) AS q4
     FROM grades
     WHERE student_id = ? AND grade_level = ?
     GROUP BY subject_name;
@@ -1287,10 +1287,10 @@ app.get('/students/:id/details', (req, res) => {
 
   const query = `
     SELECT s.student_id, s.lastname, s.firstname, s.middlename, s.current_yr_lvl, s.birthdate, s.gender, s.age,
-           s.home_address, s.barangay, s.city_municipality, s.province, s.contact_number, s.email_address,
-           s.mother_name, s.father_name, s.parent_address, s.father_occupation, s.mother_occupation, s.annual_hshld_income,
-           s.number_of_siblings, s.father_educ_lvl, s.mother_educ_lvl, s.father_contact_number, s.mother_contact_number,
-           ss.status, sy.school_year
+    s.home_address, s.barangay, s.city_municipality, s.province, s.contact_number, s.email_address,
+    s.mother_name, s.father_name, s.parent_address, s.father_occupation, s.mother_occupation, s.annual_hshld_income,
+    s.number_of_siblings, s.father_educ_lvl, s.mother_educ_lvl, s.father_contact_number, s.mother_contact_number,
+    ss.status, sy.school_year
     FROM student s
     LEFT JOIN student_school_year ss ON s.student_id = ss.student_id
     LEFT JOIN school_year sy ON ss.school_year_id = sy.school_year_id
@@ -2266,14 +2266,21 @@ app.put('/schedules/:scheduleId/approve', (req, res) => {
 // SUBJECT PAGE
 app.get('/subjects', (req, res) => {
   const { searchTerm, school_year, grade, archive_status } = req.query;
-  
+
   let query = `
-    SELECT s.subject_id, s.grade_level, s.subject_name, s.status, s.grading_criteria, s.description, s.archive_status, sy.school_year_id, sy.status as sy_status 
+    SELECT s.subject_id, s.grade_level, s.subject_name, s.status, s.grading_criteria, 
+    s.description, s.archive_status, sy.school_year_id, sy.status as sy_status 
     FROM subject s  
     JOIN school_year sy ON s.school_year_id = sy.school_year_id
-    WHERE s.archive_status = ? order by s.grade_level DESC
-  `;
-  const queryParams = [archive_status];
+    WHERE 1 = 1
+  `; // Using `WHERE 1 = 1` makes it easier to append conditions dynamically
+
+  const queryParams = [];
+
+  if (archive_status) {
+    query += ' AND s.archive_status = ?';
+    queryParams.push(archive_status);
+  }
 
   if (searchTerm) {
     query += ' AND s.subject_name LIKE ?';
@@ -2290,6 +2297,8 @@ app.get('/subjects', (req, res) => {
     queryParams.push(grade);
   }
 
+  query += ' ORDER BY s.grade_level DESC'; // Keeping the order by clause at the end
+
   db.query(query, queryParams, (error, results) => {
     if (error) {
       return res.status(500).send(error);
@@ -2297,6 +2306,7 @@ app.get('/subjects', (req, res) => {
     res.send(results);
   });
 });
+
 
 app.put('/update-subjects-status', (req, res) => {
   const query = `
@@ -2431,11 +2441,11 @@ app.get('/student/profile/:userId', (req, res) => {
 
   const query = `
     SELECT s.student_id, s.lastname, s.firstname, s.middlename, s.current_yr_lvl, s.birthdate, s.gender,
-           s.age, s.home_address, s.barangay, s.city_municipality, s.province, s.contact_number, s.email_address,
-           s.mother_name, s.father_name, s.parent_address, s.father_occupation, s.mother_occupation,
-           s.annual_hshld_income, s.number_of_siblings, s.father_educ_lvl, s.mother_educ_lvl,
-           s.father_contact_number, s.mother_contact_number, s.id_picture, s.birth_certificate, 
-           s.form_138, s.goodmoral_cert, s.rcv_test, s.section_id, s.user_id, u.username
+    s.age, s.home_address, s.barangay, s.city_municipality, s.province, s.contact_number, s.email_address,
+    s.mother_name, s.father_name, s.parent_address, s.father_occupation, s.mother_occupation,
+    s.annual_hshld_income, s.number_of_siblings, s.father_educ_lvl, s.mother_educ_lvl,
+    s.father_contact_number, s.mother_contact_number, s.id_picture, s.birth_certificate, 
+    s.form_138, s.goodmoral_cert, s.rcv_test, s.section_id, s.user_id, u.username
     FROM student s
     JOIN users u ON s.user_id = u.user_id
     WHERE s.user_id = ?
@@ -3039,9 +3049,9 @@ app.get('/api/user-info/:userId', (req, res) => {
 
   const query = `
     SELECT u.username, u.role_id, u.password,
-           COALESCE(s.firstname, e.firstname) AS firstname, 
-           COALESCE(s.lastname, e.lastname) AS lastname, 
-           COALESCE(s.middlename, e.middlename) AS middle_name
+    COALESCE(s.firstname, e.firstname) AS firstname, 
+    COALESCE(s.lastname, e.lastname) AS lastname, 
+    COALESCE(s.middlename, e.middlename) AS middle_name
     FROM users u
     LEFT JOIN student s ON u.user_id = s.user_id
     LEFT JOIN employee e ON u.user_id = e.user_id
@@ -3160,8 +3170,8 @@ app.get('/get-students', async (req, res) => {
 
   const query = `
     SELECT CONCAT(a.lastname, ', ', a.firstname, ' ', IFNULL(a.middlename, '')) AS student_name, 
-           a.current_yr_lvl AS grade_level, 
-           b.section_name AS section 
+    a.current_yr_lvl AS grade_level, 
+    b.section_name AS section 
     FROM student a 
     LEFT JOIN section b ON a.section_id = b.section_id 
     WHERE a.current_yr_lvl = ? AND b.section_name = ?
@@ -3439,6 +3449,59 @@ app.post('/api/schedules', (req, res) => {
     );
   });
 });
+
+app.post("/api/save-grade", (req, res) => {
+  const { student_id, student_name, grade_level, school_year_id, subjects } = req.body;
+
+  if (!student_id || !subjects || subjects.length === 0) {
+    return res.status(400).json({ success: false, message: "Invalid request data." });
+  }
+
+  // SQL query for inserting/updating grades
+  const query = `
+    INSERT INTO grades (
+      grade_level,
+      subject_name,
+      grade,
+      period,
+      student_id,
+      student_name,
+      school_year_id
+    ) 
+    VALUES ?
+    ON DUPLICATE KEY UPDATE 
+      grade = VALUES(grade),
+      grade_level = VALUES(grade_level),
+      subject_name = VALUES(subject_name),
+      student_name = VALUES(student_name),
+      school_year_id = VALUES(school_year_id)
+  `;
+
+  // Prepare the values array
+  let values = [];
+
+  subjects.forEach(subject => {
+    if (subject.q1 !== null) values.push([grade_level, subject.subject_name, subject.q1, 1, student_id, student_name, school_year_id]);
+    if (subject.q2 !== null) values.push([grade_level, subject.subject_name, subject.q2, 2, student_id, student_name, school_year_id]);
+    if (subject.q3 !== null) values.push([grade_level, subject.subject_name, subject.q3, 3, student_id, student_name, school_year_id]);
+    if (subject.q4 !== null) values.push([grade_level, subject.subject_name, subject.q4, 4, student_id, student_name, school_year_id]);
+  });
+
+  if (values.length === 0) {
+    return res.status(400).json({ success: false, message: "No valid grades to insert." });
+  }
+
+  // Execute the query
+  db.query(query, [values], (err, result) => {
+    if (err) {
+      console.error("Error inserting/updating grades:", err);
+      return res.status(500).json({ success: false, message: "Failed to save grades." });
+    }
+    res.json({ success: true, message: "Grades saved successfully!" });
+  });
+});
+
+
 
 
 
