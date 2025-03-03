@@ -153,10 +153,10 @@ function Principal_SchedulePage() {
       );
       const gradeLevel = selectedSection ? selectedSection.grade_level : null;
   
-      if (!gradeLevel) {
-        alert('Please select a section first to determine the grade level.');
-        return;
-      }
+      // if (!gradeLevel) {
+      //   alert('Please select a section first to determine the grade level.');
+      //   return;
+      // }
   
       // Fetch subjects based on grade level
       const [subjectsResponse, sectionsResponse, teachersResponse] = await Promise.all([

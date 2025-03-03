@@ -41,25 +41,25 @@ function TestSubjectsPage() {
   
   useEffect(() => {
     fetchSubjects();
-  }, [fetchSubjects]);
+  }, [filters]);
+  
 
   const handleSearch = (searchTerm) => {
     setFilters((prevFilters) => ({ ...prevFilters, searchTerm }));
   };
 
-  const handleApplyFilters = (newFilters) => {
+  const applyFilters = (newFilters) => {
     setFilters(newFilters);
+    fetchSubjects(); // Fetch subjects after updating filters
   };
+  
+  
 
   const handleViewClick = (subject) => {
-    if (selectedSubject && selectedSubject.subject_id === subject.subject_id) {
-      setSelectedSubject(null);
-      setShowDetails(false);
-    } else {
-      setSelectedSubject(subject);
-      setShowDetails(true);
-    }
+    setSelectedSubject(selectedSubject?.subject_id === subject.subject_id ? null : subject);
+    setShowDetails(!showDetails);
   };
+
 
   const startAdding = () => {
     setShowModal(true);
@@ -125,10 +125,7 @@ function TestSubjectsPage() {
     <div className="section-container">
       <h1 className="section-title">Subject Management</h1>
       <div className="section-search-filter-container">
-        <SubjectsSearchFilter 
-          handleSearch={handleSearch} 
-          handleApplyFilters={handleApplyFilters} 
-        />
+        <SubjectsSearchFilter handleSearch={handleSearch} handleApplyFilters={applyFilters} />
       </div>
       <div className="section-add-section-button-container">
         <button className="section-add-section-button" onClick={startAdding}>
