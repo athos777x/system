@@ -143,6 +143,7 @@
 .attendance-table th {
   background-color: #f0f0f0;
   font-weight: bold;
+  background-color: #28a745;
 }
 
 .attendance-table tr:nth-child(even) {
@@ -272,6 +273,7 @@
 .student-attendance-table th {
   background-color: #f0f0f0;
   font-weight: bold;
+  background-color: #28a745;
 }
 
 .student-attendance-table tr:nth-child(even) {
