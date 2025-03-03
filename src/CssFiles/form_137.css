@@ -1,6 +1,6 @@
 /* Form 137 - Permanent Record CSS */
 
-.form-137-container {
+.f137-container {
   max-width: 950px;
   margin: 0 auto;
   padding: 15px;
@@ -10,7 +10,7 @@
   font-size: 12px;
 }
 
-.form-header {
+.f137-header {
   text-align: center;
   margin-bottom: 8px;
   border-bottom: 1px solid #000;
@@ -20,43 +20,43 @@
   justify-content: space-between;
 }
 
-.form-header-text {
+.f137-header-text {
   flex: 1;
   padding: 0 10px;
 }
 
-.form-header h1, .form-header h2, .form-header h3 {
+.f137-header h1, .f137-header h2, .f137-header h3 {
   font-size: 14px;
   margin: 2px 0;
   font-weight: normal;
 }
 
-.form-header h1 {
+.f137-header h1 {
   text-transform: uppercase;
   font-weight: bold;
 }
 
-.form-header h2:nth-of-type(2) {
+.f137-header h2:nth-of-type(2) {
   font-weight: bold;
 }
 
-.form-header h3:last-child {
+.f137-header h3:last-child {
   font-weight: bold;
 }
 
-.form-header-logos {
+.f137-header-logos {
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
-.logo {
+.f137-logo {
   width: 65px;
   height: auto;
   margin: 0 5px;
 }
 
-.student-info {
+.f137-student-info {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
   gap: 8px;
@@ -66,25 +66,25 @@
   background-color: #f9f9f9;
 }
 
-.info-item {
+.f137-info-item {
   margin-bottom: 5px;
   display: flex;
   align-items: center;
 }
 
-.info-label {
+.f137-info-label {
   font-weight: bold;
   margin-right: 3px;
 }
 
-.academic-records {
+.f137-academic-records {
   margin-bottom: 15px;
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
 }
 
-.school-year-section {
+.f137-school-year-section {
   width: 49%;
   margin-bottom: 10px;
   border: 1px solid #ddd;
@@ -93,7 +93,7 @@
   font-size: 10px;
 }
 
-.school-year-header {
+.f137-school-year-header {
   background-color: #f0f0f0;
   padding: 3px;
   margin-bottom: 5px;
@@ -102,68 +102,68 @@
   font-size: 10px;
 }
 
-.grades-table {
+.f137-grades-table {
   width: 100%;
   border-collapse: collapse;
   border: 1px solid #ddd;
   margin-bottom: 20px;
 }
 
-.grades-table th, 
-.grades-table td {
+.f137-grades-table th, 
+.f137-grades-table td {
   border: 1px solid #ddd;
   padding: 8px;
   text-align: center;
 }
 
-.grades-table th {
+.f137-grades-table th {
   background-color: #f0f0f0;
   font-weight: bold;
 }
 
-.grades-table tr:nth-child(even) {
+.f137-grades-table tr:nth-child(even) {
   background-color: #f9f9f9;
 }
 
-.grades-table .subject-name {
+.f137-grades-table .f137-subject-name {
   text-align: left;
   font-weight: bold;
 }
 
-.attendance-section {
+.f137-attendance-section {
   margin-top: 5px;
 }
 
-.attendance-section h3 {
+.f137-attendance-section h3 {
   font-size: 14px;
   margin: 5px 0;
 }
 
-.attendance-table {
+.f137-attendance-table {
   width: 100%;
   border-collapse: collapse;
   border: 1px solid #ddd;
   margin-bottom: 20px;
 }
 
-.attendance-table th, 
-.attendance-table td {
+.f137-attendance-table th, 
+.f137-attendance-table td {
   border: 1px solid #ddd;
   padding: 8px;
   text-align: center;
   font-size: 12px;
 }
 
-.attendance-table th {
+.f137-attendance-table th {
   background-color: #f0f0f0;
   font-weight: bold;
 }
 
-.attendance-table tr:nth-child(even) {
+.f137-attendance-table tr:nth-child(even) {
   background-color: #f9f9f9;
 }
 
-.summary-section {
+.f137-summary-section {
   margin-top: 5px;
   font-size: 10px;
   display: flex;
@@ -172,7 +172,7 @@
   height: 100%;
 }
 
-.certification-section {
+.f137-certification-section {
   margin-top: 10px;
   padding: 8px;
   border: 1px solid #ddd;
@@ -180,31 +180,31 @@
   font-size: 11px;
 }
 
-.signature-section {
+.f137-signature-section {
   display: flex;
   justify-content: space-between;
   margin-top: 20px;
 }
 
-.signature-box {
+.f137-signature-box {
   text-align: center;
   width: 150px;
 }
 
-.signature-line {
+.f137-signature-line {
   border-top: 1px solid #000;
   margin-top: 20px;
   padding-top: 3px;
 }
 
-.button-container {
+.f137-button-container {
   display: flex;
   justify-content: center;
   gap: 15px;
   margin-top: 15px;
 }
 
-.button-container button {
+.f137-button-container button {
   padding: 8px 15px;
   background-color: #4CAF50;
   color: white;
@@ -214,24 +214,24 @@
   font-size: 14px;
 }
 
-.button-container button:hover {
+.f137-button-container button:hover {
   background-color: #45a049;
 }
 
-.button-container button:first-child {
+.f137-button-container button:first-child {
   background-color: #f44336;
 }
 
-.button-container button:first-child:hover {
+.f137-button-container button:first-child:hover {
   background-color: #d32f2f;
 }
 
 @media print {
-  .button-container {
+  .f137-button-container {
     display: none !important;
   }
 
-  .form-137-container {
+  .f137-container {
     padding: 10px;
     max-width: 100%;
     margin: 0;
@@ -239,36 +239,36 @@
     font-size: 10px;
   }
 
-  .school-year-section {
+  .f137-school-year-section {
     width: 49%;
     margin-bottom: 5px;
     padding: 3px;
     page-break-inside: avoid;
   }
 
-  .academic-grades-table, 
-  .student-attendance-table {
+  .f137-academic-grades-table, 
+  .f137-student-attendance-table {
     font-size: 9px;
   }
 
-  .academic-grades-table th, 
-  .academic-grades-table td,
-  .student-attendance-table th, 
-  .student-attendance-table td {
+  .f137-academic-grades-table th, 
+  .f137-academic-grades-table td,
+  .f137-student-attendance-table th, 
+  .f137-student-attendance-table td {
     padding: 1px;
   }
 
-  .form-header {
+  .f137-header {
     margin-bottom: 5px;
   }
 
-  .student-info {
+  .f137-student-info {
     margin-bottom: 5px;
   }
 }
 
 /* Academic grades table - completely separate styling */
-.academic-grades-table {
+.f137-academic-grades-table {
   width: 100%;
   border-collapse: collapse;
   border: 1px solid #ddd;
@@ -276,34 +276,34 @@
   font-size: 10px;
 }
 
-.academic-grades-table th, 
-.academic-grades-table td {
+.f137-academic-grades-table th, 
+.f137-academic-grades-table td {
   border: 1px solid #ddd;
   padding: 2px;
   text-align: center;
 }
 
-.academic-grades-table th {
+.f137-academic-grades-table th {
   background-color: #f0f0f0;
   font-weight: bold;
 }
 
-.academic-grades-table tr:nth-child(even) {
+.f137-academic-grades-table tr:nth-child(even) {
   background-color: #f9f9f9;
 }
 
-.academic-grades-table .subject-name {
+.f137-academic-grades-table .f137-subject-name {
   text-align: left;
   font-weight: bold;
   padding-left: 3px;
 }
 
-.academic-grades-table .final-grade {
+.f137-academic-grades-table .f137-final-grade {
   font-weight: bold;
 }
 
 /* Student attendance table - completely separate styling */
-.student-attendance-table {
+.f137-student-attendance-table {
   width: 100%;
   border-collapse: collapse;
   border: 1px solid #ddd;
@@ -311,18 +311,18 @@
   font-size: 10px;
 }
 
-.student-attendance-table th, 
-.student-attendance-table td {
+.f137-student-attendance-table th, 
+.f137-student-attendance-table td {
   border: 1px solid #ddd;
   padding: 2px;
   text-align: center;
 }
 
-.student-attendance-table th {
+.f137-student-attendance-table th {
   background-color: #f0f0f0;
   font-weight: bold;
 }
 
-.student-attendance-table tr:nth-child(even) {
+.f137-student-attendance-table tr:nth-child(even) {
   background-color: #f9f9f9;
 }

@@ -162,10 +162,10 @@ function Form137() {
       format: "a4",
     });
 
-    const button = document.querySelector(".button-container");
+    const button = document.querySelector(".f137-button-container");
     if (button) button.style.display = "none";
 
-    doc.html(document.querySelector(".form-137-container"), {
+    doc.html(document.querySelector(".f137-container"), {
       callback: function (doc) {
         window.open(doc.output("bloburl"), "_blank");
         if (button) button.style.display = "flex";
@@ -191,50 +191,50 @@ function Form137() {
 
   return (
     <div>
-      <div className="form-137-container">
-        <div className="form-header">
-          <div className="form-header-logos">
-            <img src="/deped-logo.png" alt="DepEd Logo" className="logo" />
+      <div className="f137-container">
+        <div className="f137-header">
+          <div className="f137-header-logos">
+            <img src="/deped-logo.png" alt="DepEd Logo" className="f137-logo" />
           </div>
-          <div className="form-header-text">
+          <div className="f137-header-text">
             <h1>Republic of the Philippines • Department of Education</h1>
             <h2>Region VII Central Visayas • Division of Bohol • District of Dauis</h2>
             <h2>LOURDES NATIONAL HIGH SCHOOL</h2>
             <h3>Dauis - Panglao Rd, Dauis, Bohol</h3>
             <h3>PERMANENT RECORD (Form 137)</h3>
           </div>
-          <div className="form-header-logos">
-            <img src="/lnhs-logo.png" alt="School Logo" className="logo" />
+          <div className="f137-header-logos">
+            <img src="/lnhs-logo.png" alt="School Logo" className="f137-logo" />
           </div>
         </div>
 
-        <div className="student-info">
-          <div className="info-item">
-            <span className="info-label">Name:</span>
+        <div className="f137-student-info">
+          <div className="f137-info-item">
+            <span className="f137-info-label">Name:</span>
             <span>{studentDetails?.stud_name || "N/A"}</span>
           </div>
-          <div className="info-item">
-            <span className="info-label">LRN:</span>
+          <div className="f137-info-item">
+            <span className="f137-info-label">LRN:</span>
             <span>{studentDetails?.student_id || "N/A"}</span>
           </div>
-          <div className="info-item">
-            <span className="info-label">Gender:</span>
+          <div className="f137-info-item">
+            <span className="f137-info-label">Gender:</span>
             <span>{studentDetails?.gender || "N/A"}</span>
           </div>
-          <div className="info-item">
-            <span className="info-label">Date of Birth:</span>
+          <div className="f137-info-item">
+            <span className="f137-info-label">Date of Birth:</span>
             <span>{studentDetails?.birthdate ? new Date(studentDetails.birthdate).toLocaleDateString() : "N/A"}</span>
           </div>
-          <div className="info-item">
-            <span className="info-label">Address:</span>
+          <div className="f137-info-item">
+            <span className="f137-info-label">Address:</span>
             <span>
               {studentDetails ? 
                 `${studentDetails.home_address || ""}, ${studentDetails.barangay || ""}, ${studentDetails.city_municipality || ""}` 
                 : "N/A"}
             </span>
           </div>
-          <div className="info-item">
-            <span className="info-label">Parent/Guardian:</span>
+          <div className="f137-info-item">
+            <span className="f137-info-label">Parent/Guardian:</span>
             <span>
               {studentDetails ? 
                 `${studentDetails.father_name || "N/A"} / ${studentDetails.mother_name || "N/A"}` 
@@ -243,25 +243,25 @@ function Form137() {
           </div>
         </div>
 
-        <div className="academic-records">
+        <div className="f137-academic-records">
           {academicRecords.map((record, index) => (
-            <div key={index} className="school-year-section">
-              <div className="school-year-header">
+            <div key={index} className="f137-school-year-section">
+              <div className="f137-school-year-header">
                 <div>
-                  <span className="info-label">SY:</span>
+                  <span className="f137-info-label">SY:</span>
                   <span>{record.schoolYear}</span>
                 </div>
                 <div>
-                  <span className="info-label">Grade:</span>
+                  <span className="f137-info-label">Grade:</span>
                   <span>{record.gradeLevel}</span>
                 </div>
                 <div>
-                  <span className="info-label">School:</span>
+                  <span className="f137-info-label">School:</span>
                   <span>{record.schoolName}</span>
                 </div>
               </div>
 
-              <table className="academic-grades-table">
+              <table className="f137-academic-grades-table">
                 <thead>
                   <tr>
                     <th style={{width: "30%"}}>Subject</th>
@@ -275,12 +275,12 @@ function Form137() {
                 <tbody>
                   {record.subjects.map((subject, subIndex) => (
                     <tr key={subIndex}>
-                      <td className="subject-name">{subject.name}</td>
+                      <td className="f137-subject-name">{subject.name}</td>
                       <td>{subject.q1}</td>
                       <td>{subject.q2}</td>
                       <td>{subject.q3}</td>
                       <td>{subject.q4}</td>
-                      <td className="final-grade">{subject.final}</td>
+                      <td className="f137-final-grade">{subject.final}</td>
                     </tr>
                   ))}
                   <tr>
@@ -291,8 +291,8 @@ function Form137() {
               </table>
 
               <div style={{display: "flex", justifyContent: "space-between", alignItems: "center"}}>
-                <div className="attendance-section" style={{width: "70%"}}>
-                  <table className="student-attendance-table">
+                <div className="f137-attendance-section" style={{width: "70%"}}>
+                  <table className="f137-student-attendance-table">
                     <thead>
                       <tr>
                         <th>Days Present</th>
@@ -309,7 +309,7 @@ function Form137() {
                     </tbody>
                   </table>
                 </div>
-                <div className="summary-section" style={{
+                <div className="f137-summary-section" style={{
                   width: "28%", 
                   display: "flex", 
                   alignItems: "center", 
@@ -318,8 +318,8 @@ function Form137() {
                   padding: "8px",
                   backgroundColor: "#f0f0f0"
                 }}>
-                  <div className="info-item" style={{margin: 0}}>
-                    <span className="info-label">Remarks:</span>
+                  <div className="f137-info-item" style={{margin: 0}}>
+                    <span className="f137-info-label">Remarks:</span>
                     <span>{record.remarks}</span>
                   </div>
                 </div>
@@ -328,26 +328,26 @@ function Form137() {
           ))}
         </div>
 
-        <div className="certification-section">
+        <div className="f137-certification-section">
           <p>
             I hereby certify that this is a true record of {studentDetails?.stud_name || "[Student Name]"}.
             This certification is issued for whatever legal purpose it may serve.
           </p>
         </div>
 
-        <div className="signature-section">
-          <div className="signature-box">
-            <div className="signature-line"></div>
+        <div className="f137-signature-section">
+          <div className="f137-signature-box">
+            <div className="f137-signature-line"></div>
             <p>Class Adviser</p>
           </div>
-          <div className="signature-box">
-            <div className="signature-line"></div>
+          <div className="f137-signature-box">
+            <div className="f137-signature-line"></div>
             <p>School Principal</p>
           </div>
         </div>
       </div>
 
-      <div className="button-container">
+      <div className="f137-button-container">
         <button onClick={handleBack}>Back</button>
         <button onClick={handleConvertToPdf}>Print</button>
       </div>

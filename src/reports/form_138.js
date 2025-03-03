@@ -107,10 +107,10 @@ function Form138() {
       format: "a4",
     });
 
-    const button = document.querySelector(".button-container");
+    const button = document.querySelector(".f138-button-container");
     if (button) button.style.display = "none";
 
-    doc.html(document.querySelector(".form-138-container"), {
+    doc.html(document.querySelector(".f138-container"), {
       callback: function (doc) {
         window.open(doc.output("bloburl"), "_blank");
         if (button) button.style.display = "flex";
@@ -136,53 +136,53 @@ function Form138() {
 
   return (
     <div>
-      <div className="form-138-container">
-        <div className="form-header">
-          <div className="form-header-logos">
-            <img src="/deped-logo.png" alt="DepEd Logo" className="logo" />
+      <div className="f138-container">
+        <div className="f138-header">
+          <div className="f138-header-logos">
+            <img src="/deped-logo.png" alt="DepEd Logo" className="f138-logo" />
           </div>
-          <div className="form-header-text">
+          <div className="f138-header-text">
             <h1>Republic of the Philippines • Department of Education</h1>
             <h2>Region VII Central Visayas • Division of Bohol • District of Dauis</h2>
             <h2>LOURDES NATIONAL HIGH SCHOOL</h2>
             <h3>Dauis - Panglao Rd, Dauis, Bohol</h3>
             <h3>REPORT CARD (Form 138)</h3>
           </div>
-          <div className="form-header-logos">
-            <img src="/lnhs-logo.png" alt="School Logo" className="logo" />
+          <div className="f138-header-logos">
+            <img src="/lnhs-logo.png" alt="School Logo" className="f138-logo" />
           </div>
         </div>
 
-        <div className="student-info">
-          <div className="info-item">
-            <span className="info-label">Name:</span>
+        <div className="f138-student-info">
+          <div className="f138-info-item">
+            <span className="f138-info-label">Name:</span>
             <span>{studentDetails?.stud_name || "N/A"}</span>
           </div>
-          <div className="info-item">
-            <span className="info-label">LRN:</span>
+          <div className="f138-info-item">
+            <span className="f138-info-label">LRN:</span>
             <span>{studentDetails?.student_id || "N/A"}</span>
           </div>
-          <div className="info-item">
-            <span className="info-label">Grade & Section:</span>
+          <div className="f138-info-item">
+            <span className="f138-info-label">Grade & Section:</span>
             <span>{currentGrades?.gradeLevel || "N/A"} - {currentGrades?.section || "N/A"}</span>
           </div>
-          <div className="info-item">
-            <span className="info-label">School Year:</span>
+          <div className="f138-info-item">
+            <span className="f138-info-label">School Year:</span>
             <span>{currentGrades?.schoolYear || currentSchoolYear || "N/A"}</span>
           </div>
-          <div className="info-item">
-            <span className="info-label">Age:</span>
+          <div className="f138-info-item">
+            <span className="f138-info-label">Age:</span>
             <span>{studentDetails?.age || "N/A"}</span>
           </div>
-          <div className="info-item">
-            <span className="info-label">Gender:</span>
+          <div className="f138-info-item">
+            <span className="f138-info-label">Gender:</span>
             <span>{studentDetails?.gender || "N/A"}</span>
           </div>
         </div>
 
-        <div className="grades-section">
+        <div className="f138-grades-section">
           <h3>Academic Performance</h3>
-          <table className="academic-grades-table">
+          <table className="f138-academic-grades-table">
             <thead>
               <tr>
                 <th style={{width: "30%"}}>Subject</th>
@@ -197,26 +197,26 @@ function Form138() {
             <tbody>
               {currentGrades?.subjects.map((subject, index) => (
                 <tr key={index}>
-                  <td className="subject-name">{subject.name}</td>
+                  <td className="f138-subject-name">{subject.name}</td>
                   <td>{subject.q1}</td>
                   <td>{subject.q2}</td>
                   <td>{subject.q3}</td>
                   <td>{subject.q4}</td>
-                  <td className="final-grade">{subject.final}</td>
+                  <td className="f138-final-grade">{subject.final}</td>
                   <td>{parseInt(subject.final) >= 75 ? "Passed" : "Failed"}</td>
                 </tr>
               ))}
               <tr>
-                <td colSpan="5" className="subject-name">General Average</td>
-                <td className="final-grade">{currentGrades?.generalAverage || "N/A"}</td>
+                <td colSpan="5" className="f138-subject-name">General Average</td>
+                <td className="f138-final-grade">{currentGrades?.generalAverage || "N/A"}</td>
                 <td>{parseInt(currentGrades?.generalAverage || 0) >= 75 ? "Passed" : "Failed"}</td>
               </tr>
             </tbody>
           </table>
         </div>
 
-        <div className="attendance-section">
-          <table className="student-attendance-table">
+        <div className="f138-attendance-section">
+          <table className="f138-student-attendance-table">
             <thead>
               <tr>
                 <th colSpan="13">Attendance Record</th>
@@ -272,26 +272,26 @@ function Form138() {
           </table>
         </div>
 
-        <div className="promotion-section">
+        <div className="f138-promotion-section">
           <h3>Promotion Status</h3>
           <p>
             <strong>Remarks:</strong> {currentGrades?.remarks || "N/A"}
           </p>
         </div>
 
-        <div className="signature-section">
-          <div className="signature-box">
-            <div className="signature-line"></div>
+        <div className="f138-signature-section">
+          <div className="f138-signature-box">
+            <div className="f138-signature-line"></div>
             <p>Class Adviser</p>
           </div>
-          <div className="signature-box">
-            <div className="signature-line"></div>
+          <div className="f138-signature-box">
+            <div className="f138-signature-line"></div>
             <p>School Principal</p>
           </div>
         </div>
       </div>
 
-      <div className="button-container">
+      <div className="f138-button-container">
         <button onClick={handleBack}>Back</button>
         <button onClick={handleConvertToPdf}>Print</button>
       </div>
