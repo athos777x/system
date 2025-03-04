@@ -35,6 +35,11 @@ import StudentGrades from './Pages/selected_grade';
 import Registrar_PendingEnrollmentPage from './RegistrarPages/Registrar_PendingEnrollment';
 import Form138 from './reports/form_138';
 import Grades_page from './RegistrarPages/grades_page';
+import SF1 from './reports/sf1';
+import SF2 from './reports/sf2';
+import SF4 from './reports/sf4';
+import SF5 from './reports/sf5';
+import SF6 from './reports/sf6';
 
 
 
@@ -106,6 +111,11 @@ function App() {
             <Route path="/form-138" element={<Form138 />} />
             <Route path="/good-moral" element={<GoodMoral />} />
             <Route path="/late-enrollee" element={<LateEnrollees/>} />
+            <Route path="/sf1" element={<SF1 />} />
+            <Route path="/sf2" element={<SF2 />} />
+            <Route path="/sf4" element={<SF4 />} />
+            <Route path="/sf5" element={<SF5 />} />
+            <Route path="/sf6" element={<SF6 />} />
 
             <Route path="/student-grades" element={<StudentGrades />} />
             

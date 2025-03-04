@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import '../RegistrarPagesCss/Registrar_SummaryReportonPromotionPage.css';
 
 function Registrar_SummaryReportonPromotionPage() {
+  const navigate = useNavigate();
   const [modalContent, setModalContent] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [grade, setGrade] = useState("");
@@ -12,7 +13,6 @@ function Registrar_SummaryReportonPromotionPage() {
   const [suggestions, setSuggestions] = useState([]);
   const [schoolYears, setSchoolYears] = useState([]); // Store fetched school years
   const [selectedSchoolYear, setSelectedSchoolYear] = useState(""); // Selected school year
-  const navigate = useNavigate();
 
   useEffect(() => {
     // Fetch school years from the backend
@@ -202,6 +202,61 @@ function Registrar_SummaryReportonPromotionPage() {
         </div>
         <button className="report-button" onClick={() => openModal('late_enrollee')}>
           Generate Late Enrollees Report
+        </button>
+      </div>
+
+      {/* SF1 Section */}
+      <div className="form137-section">
+        <div>
+          <h2 className="form137-title">SF1 - School Register</h2>
+          <p className="report-description">Generate School Register report with complete student information.</p>
+        </div>
+        <button className="report-button" onClick={() => navigate('/sf1')}>
+          Generate SF1
+        </button>
+      </div>
+
+      {/* SF2 Section */}
+      <div className="form137-section">
+        <div>
+          <h2 className="form137-title">SF2 - School Summary Report of Enrollment</h2>
+          <p className="report-description">Generate enrollment summary report by grade level.</p>
+        </div>
+        <button className="report-button" onClick={() => navigate('/sf2')}>
+          Generate SF2
+        </button>
+      </div>
+
+      {/* SF4 Section */}
+      <div className="form137-section">
+        <div>
+          <h2 className="form137-title">SF4 - Monthly Learner's Movement and Attendance</h2>
+          <p className="report-description">Generate monthly attendance and movement report.</p>
+        </div>
+        <button className="report-button" onClick={() => navigate('/sf4')}>
+          Generate SF4
+        </button>
+      </div>
+
+      {/* SF5 Section */}
+      <div className="form137-section">
+        <div>
+          <h2 className="form137-title">SF5 - Report on Promotion and Learning Progress</h2>
+          <p className="report-description">Generate detailed promotion and learning progress report.</p>
+        </div>
+        <button className="report-button" onClick={() => navigate('/sf5')}>
+          Generate SF5
+        </button>
+      </div>
+
+      {/* SF6 Section */}
+      <div className="form137-section">
+        <div>
+          <h2 className="form137-title">SF6 - Summarized Report on Promotion</h2>
+          <p className="report-description">Generate summarized promotion and learning progress report.</p>
+        </div>
+        <button className="report-button" onClick={() => navigate('/sf6')}>
+          Generate SF6
         </button>
       </div>
 
