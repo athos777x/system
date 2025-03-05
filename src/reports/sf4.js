@@ -53,47 +53,53 @@ function SF4() {
     <div className="sf4-page">
       <div className="sf4-container">
         <div className="sf4-header">
-          <div className="sf4-logos">
+          <div className="sf4-header-logos">
             <img src="/deped-logo.png" alt="DepEd Logo" className="sf4-logo" />
-            <img src="/lnhs-logo.png" alt="School Logo" className="sf4-logo" />
           </div>
-          <div className="sf4-title">
-            <h1>Department of Education</h1>
-            <h2>MONTHLY LEARNER'S MOVEMENT AND ATTENDANCE REPORT</h2>
-            <h3>SF4</h3>
+          <div className="sf4-header-text">
+            <h1>Republic of the Philippines • Department of Education</h1>
+            <h2>Region VII Central Visayas • Division of Bohol • District of Dauis</h2>
+            <h2>LOURDES NATIONAL HIGH SCHOOL</h2>
+            <h3>Dauis - Panglao Rd, Dauis, Bohol</h3>
+            <h3>MONTHLY LEARNER'S MOVEMENT AND ATTENDANCE REPORT (SF4)</h3>
+          </div>
+          <div className="sf4-header-logos">
+            <img src="/lnhs-logo.png" alt="School Logo" className="sf4-logo" />
           </div>
         </div>
 
         <div className="sf4-school-info">
-          <div className="sf4-info-row">
-            <div className="sf4-info-item">
-              <span>School Name: {schoolData.schoolName}</span>
-            </div>
-            <div className="sf4-info-item">
-              <span>School ID: {schoolData.schoolId}</span>
-            </div>
+          <div className="sf4-info-item">
+            <span className="sf4-info-label">School Name:</span>
+            <span>{schoolData.schoolName}</span>
           </div>
-          <div className="sf4-info-row">
-            <div className="sf4-info-item">
-              <span>District: {schoolData.district}</span>
-            </div>
-            <div className="sf4-info-item">
-              <span>Division: {schoolData.division}</span>
-            </div>
-            <div className="sf4-info-item">
-              <span>Region: {schoolData.region}</span>
-            </div>
+          <div className="sf4-info-item">
+            <span className="sf4-info-label">School ID:</span>
+            <span>{schoolData.schoolId}</span>
           </div>
-          <div className="sf4-info-row">
-            <div className="sf4-info-item">
-              <span>School Year: {schoolData.schoolYear}</span>
-            </div>
-            <div className="sf4-info-item">
-              <span>Month: {schoolData.month}</span>
-            </div>
-            <div className="sf4-info-item">
-              <span>Grade & Section: {schoolData.grade}-{schoolData.section}</span>
-            </div>
+          <div className="sf4-info-item">
+            <span className="sf4-info-label">District:</span>
+            <span>{schoolData.district}</span>
+          </div>
+          <div className="sf4-info-item">
+            <span className="sf4-info-label">Division:</span>
+            <span>{schoolData.division}</span>
+          </div>
+          <div className="sf4-info-item">
+            <span className="sf4-info-label">Region:</span>
+            <span>{schoolData.region}</span>
+          </div>
+          <div className="sf4-info-item">
+            <span className="sf4-info-label">School Year:</span>
+            <span>{schoolData.schoolYear}</span>
+          </div>
+          <div className="sf4-info-item">
+            <span className="sf4-info-label">Month:</span>
+            <span>{schoolData.month}</span>
+          </div>
+          <div className="sf4-info-item">
+            <span className="sf4-info-label">Grade & Section:</span>
+            <span>{schoolData.grade}-{schoolData.section}</span>
           </div>
         </div>
 

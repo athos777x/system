@@ -84,44 +84,49 @@ function SF5() {
     <div className="sf5-page">
       <div className="sf5-container">
         <div className="sf5-header">
-          <div className="sf5-logos">
+          <div className="sf5-header-logos">
             <img src="/deped-logo.png" alt="DepEd Logo" className="sf5-logo" />
-            <img src="/lnhs-logo.png" alt="School Logo" className="sf5-logo" />
           </div>
-          <div className="sf5-title">
-            <h1>Department of Education</h1>
-            <h2>REPORT ON PROMOTION AND LEARNING PROGRESS & ACHIEVEMENT</h2>
-            <h3>SF5</h3>
+          <div className="sf5-header-text">
+            <h1>Republic of the Philippines • Department of Education</h1>
+            <h2>Region VII Central Visayas • Division of Bohol • District of Dauis</h2>
+            <h2>LOURDES NATIONAL HIGH SCHOOL</h2>
+            <h3>Dauis - Panglao Rd, Dauis, Bohol</h3>
+            <h3>REPORT ON PROMOTION AND LEARNING PROGRESS & ACHIEVEMENT (SF5)</h3>
+          </div>
+          <div className="sf5-header-logos">
+            <img src="/lnhs-logo.png" alt="School Logo" className="sf5-logo" />
           </div>
         </div>
 
         <div className="sf5-school-info">
-          <div className="sf5-info-row">
-            <div className="sf5-info-item">
-              <span>School Name: {schoolData.schoolName}</span>
-            </div>
-            <div className="sf5-info-item">
-              <span>School ID: {schoolData.schoolId}</span>
-            </div>
+          <div className="sf5-info-item">
+            <span className="sf5-info-label">School Name:</span>
+            <span>{schoolData.schoolName}</span>
           </div>
-          <div className="sf5-info-row">
-            <div className="sf5-info-item">
-              <span>District: {schoolData.district}</span>
-            </div>
-            <div className="sf5-info-item">
-              <span>Division: {schoolData.division}</span>
-            </div>
-            <div className="sf5-info-item">
-              <span>Region: {schoolData.region}</span>
-            </div>
+          <div className="sf5-info-item">
+            <span className="sf5-info-label">School ID:</span>
+            <span>{schoolData.schoolId}</span>
           </div>
-          <div className="sf5-info-row">
-            <div className="sf5-info-item">
-              <span>School Year: {schoolData.schoolYear}</span>
-            </div>
-            <div className="sf5-info-item">
-              <span>Grade & Section: {schoolData.grade}-{schoolData.section}</span>
-            </div>
+          <div className="sf5-info-item">
+            <span className="sf5-info-label">District:</span>
+            <span>{schoolData.district}</span>
+          </div>
+          <div className="sf5-info-item">
+            <span className="sf5-info-label">Division:</span>
+            <span>{schoolData.division}</span>
+          </div>
+          <div className="sf5-info-item">
+            <span className="sf5-info-label">Region:</span>
+            <span>{schoolData.region}</span>
+          </div>
+          <div className="sf5-info-item">
+            <span className="sf5-info-label">School Year:</span>
+            <span>{schoolData.schoolYear}</span>
+          </div>
+          <div className="sf5-info-item">
+            <span className="sf5-info-label">Grade & Section:</span>
+            <span>{schoolData.grade}-{schoolData.section}</span>
           </div>
         </div>
 
