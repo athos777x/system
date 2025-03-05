@@ -67,7 +67,8 @@
 .students-validate-button,
 .students-approve-button,
 .students-edit-button,
-.sectionlist-view-button {
+.sectionlist-view-button,
+.print-button {
   padding: 8px 16px;
   border: none;
   color: white;
@@ -85,8 +86,28 @@
 .students-validate-button:hover,
 .students-approve-button:hover,
 .students-edit-button:hover,
-.sectionlist-view-button:hover {
+.sectionlist-view-button:hover,
+.print-button:hover {
   background-color: #218838;
+  transform: translateY(-1px);
+}
+
+/* Archive button specific style */
+.archive-button {
+  padding: 8px 16px;
+  border: none;
+  color: white;
+  cursor: pointer;
+  border-radius: 50px;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  margin: 0 4px;
+  background-color: #dc3545;
+  min-width: 90px;
+}
+
+.archive-button:hover {
+  background-color: #c82333;
   transform: translateY(-1px);
 }
 
