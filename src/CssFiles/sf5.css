@@ -1,0 +1,223 @@
+.sf5-page {
+  padding: 20px;
+  background-color: #f5f5f5;
+  min-height: 100vh;
+}
+
+.sf5-container {
+  max-width: 850px;
+  margin: 0 auto;
+  padding: 15px;
+  font-family: 'Arial', sans-serif;
+  background-color: #fff;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  font-size: 12px;
+}
+
+.sf5-header {
+  text-align: center;
+  margin-bottom: 8px;
+  border-bottom: 1px solid #000;
+  padding-bottom: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sf5-header-text {
+  flex: 1;
+  padding: 0 10px;
+}
+
+.sf5-header h1, .sf5-header h2, .sf5-header h3 {
+  font-size: 14px;
+  margin: 2px 0;
+  font-weight: normal;
+}
+
+.sf5-header h1 {
+  text-transform: uppercase;
+  font-weight: bold;
+}
+
+.sf5-header h2:nth-of-type(2) {
+  font-weight: bold;
+}
+
+.sf5-header h3:last-child {
+  font-weight: bold;
+}
+
+.sf5-header-logos {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.sf5-logo {
+  width: 65px;
+  height: auto;
+  margin: 0 5px;
+}
+
+.sf5-school-info {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding: 8px;
+  border: 1px solid #ddd;
+  background-color: #f9f9f9;
+}
+
+.sf5-info-item {
+  margin-bottom: 5px;
+}
+
+.sf5-info-label {
+  font-weight: bold;
+  margin-right: 3px;
+}
+
+.sf5-title {
+  margin: 0 40px;
+}
+
+.sf5-title h1 {
+  font-size: 18px;
+  margin: 0;
+}
+
+.sf5-title h2 {
+  font-size: 24px;
+  margin: 10px 0;
+}
+
+.sf5-title h3 {
+  font-size: 16px;
+  margin: 0;
+  color: #666;
+}
+
+.sf5-content {
+  margin: 20px 0;
+}
+
+.sf5-subjects-section,
+.sf5-summary-section {
+  margin-bottom: 30px;
+}
+
+.sf5-subjects-section h3,
+.sf5-summary-section h3 {
+  font-size: 16px;
+  margin-bottom: 15px;
+  text-align: center;
+  color: #333;
+}
+
+.sf5-subjects-table,
+.sf5-summary-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.sf5-subjects-table th,
+.sf5-subjects-table td,
+.sf5-summary-table th,
+.sf5-summary-table td {
+  border: 1px solid #000;
+  padding: 8px;
+  text-align: center;
+}
+
+.sf5-subjects-table th,
+.sf5-summary-table th {
+  background-color: #f0f0f0;
+  font-weight: bold;
+}
+
+.sf5-subjects-table tbody tr:nth-child(even),
+.sf5-summary-table tbody tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+.sf5-total-row {
+  font-weight: bold;
+  background-color: #f0f0f0 !important;
+}
+
+.sf5-footer {
+  margin-top: 40px;
+}
+
+.sf5-signature-section {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 30px;
+}
+
+.sf5-signature {
+  text-align: center;
+  width: 200px;
+}
+
+.sf5-signature-line {
+  margin-bottom: 20px;
+}
+
+.sf5-signature-name {
+  font-weight: bold;
+  border-top: 1px solid #000;
+  padding-top: 5px;
+  margin-bottom: 5px;
+}
+
+.sf5-signature-title {
+  font-style: italic;
+  color: #666;
+}
+
+.sf5-date {
+  text-align: right;
+  margin-top: 20px;
+  font-size: 14px;
+}
+
+.sf5-buttons {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.sf5-buttons button {
+  padding: 10px 20px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s;
+}
+
+.sf5-buttons button:hover {
+  background-color: #218838;
+}
+
+@media print {
+  .sf5-buttons {
+    display: none;
+  }
+  
+  .sf5-container {
+    box-shadow: none;
+    margin: 0;
+    padding: 0;
+  }
+  
+  .sf5-page {
+    padding: 0;
+    background-color: white;
+  }
+} 
