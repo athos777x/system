@@ -130,15 +130,19 @@ function Registrar_SectionListPage() {
       </colgroup>
       <thead>
         <tr>
-          <th>Boys</th>
-          <th>Girls</th>
+          <th style={{ textAlign: 'center' }}>Boys</th>
+          <th style={{ textAlign: 'center' }}>Girls</th>
         </tr>
       </thead>
       <tbody>
         {Array.from({ length: Math.max(studentsByGender.boys.length, studentsByGender.girls.length) }).map((_, index) => (
           <tr key={index}>
-            <td>{studentsByGender.boys[index] ? `${index + 1}. ${studentsByGender.boys[index].firstname} ${studentsByGender.boys[index].lastname}` : ''}</td>
-            <td>{studentsByGender.girls[index] ? `${index + 1}. ${studentsByGender.girls[index].firstname} ${studentsByGender.girls[index].lastname}` : ''}</td>
+            <td style={{ textAlign: 'center' }}>
+              {studentsByGender.boys[index] ? `${index + 1}. ${studentsByGender.boys[index].firstname} ${studentsByGender.boys[index].lastname}` : ''}
+            </td>
+            <td style={{ textAlign: 'center' }}>
+              {studentsByGender.girls[index] ? `${index + 1}. ${studentsByGender.girls[index].firstname} ${studentsByGender.girls[index].lastname}` : ''}
+            </td>
           </tr>
         ))}
       </tbody>

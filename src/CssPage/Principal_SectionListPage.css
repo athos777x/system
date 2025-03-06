@@ -111,7 +111,7 @@
 .sectionlist-students-table td {
   padding: var(--spacing-sm);
   border: 1px solid var(--border-color);
-  text-align: left;
+  text-align: center;
   word-wrap: break-word;
 }
 
