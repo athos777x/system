@@ -124,6 +124,10 @@ function Registrar_SectionListPage() {
 
   const renderStudentsTable = () => (
     <table className="sectionlist-students-table">
+      <colgroup>
+        <col style={{ width: "50%" }} />
+        <col style={{ width: "50%" }} />
+      </colgroup>
       <thead>
         <tr>
           <th>Boys</th>

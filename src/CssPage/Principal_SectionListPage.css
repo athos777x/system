@@ -104,6 +104,7 @@
   border-collapse: collapse;
   background-color: white;
   box-shadow: var(--shadow-sm);
+  table-layout: fixed;
 }
 
 .sectionlist-students-table th,
@@ -111,6 +112,7 @@
   padding: var(--spacing-sm);
   border: 1px solid var(--border-color);
   text-align: left;
+  word-wrap: break-word;
 }
 
 .sectionlist-students-table th {
