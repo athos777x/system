@@ -53,12 +53,7 @@ function AcademicCoordinatorSideBar({ showSidebar, toggleSidebar, handleLogout }
         >
           <FiHome className="icon" /> Home
         </button>
-        <button 
-          onClick={() => handleNavigate('/profile')}
-          className={location.pathname === '/profile' ? 'active' : ''}
-        >
-          <FiUser className="icon" /> Profile
-        </button>
+        
         <div className={`menu-with-submenu ${showClassesSubMenu || isClassesPath ? 'active' : ''}`}>
           <button onClick={toggleClassesSubMenu}>
             <FiClipboard className="icon" /> Classes
@@ -86,6 +81,12 @@ function AcademicCoordinatorSideBar({ showSidebar, toggleSidebar, handleLogout }
         >
           <FiBook className="icon" /> Subjects
         </button>
+        {/* <button 
+          onClick={() => handleNavigate('/profile')}
+          className={location.pathname === '/profile' ? 'active' : ''}
+        >
+          <FiUser className="icon" /> Profile
+        </button> */}
         {/* <button onClick={() => handleNavigate('/account')}>
         <FiSettings className="icon" /> Account
         </button> */}

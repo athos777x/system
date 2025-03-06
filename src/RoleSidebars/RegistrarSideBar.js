@@ -83,12 +83,7 @@ function RegistrarSideBar({ showSidebar, toggleSidebar, handleLogout }) {
         >
           <FiHome className="icon" /> Home
         </button>
-        <button 
-          onClick={() => handleNavigate('/profile')}
-          className={location.pathname === '/profile' ? 'active' : ''}
-        >
-          <FiUser className="icon" /> Profile
-        </button>
+        
         <button 
           onClick={() => handleNavigate('/student')}
           className={location.pathname === '/student' ? 'active' : ''}
@@ -188,6 +183,12 @@ function RegistrarSideBar({ showSidebar, toggleSidebar, handleLogout }) {
             </div>
           )}
         </div>
+        {/* <button 
+          onClick={() => handleNavigate('/profile')}
+          className={location.pathname === '/profile' ? 'active' : ''}
+        >
+          <FiUser className="icon" /> Profile
+        </button> */}
         <LogoutButton onClick={handleLogout}>
           <FiLogOut className="icon" /> Logout
         </LogoutButton>
