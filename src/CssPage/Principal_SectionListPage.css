@@ -104,13 +104,15 @@
   border-collapse: collapse;
   background-color: white;
   box-shadow: var(--shadow-sm);
+  table-layout: fixed;
 }
 
 .sectionlist-students-table th,
 .sectionlist-students-table td {
   padding: var(--spacing-sm);
   border: 1px solid var(--border-color);
-  text-align: left;
+  text-align: center;
+  word-wrap: break-word;
 }
 
 .sectionlist-students-table th {

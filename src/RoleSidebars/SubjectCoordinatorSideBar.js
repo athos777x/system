@@ -33,13 +33,7 @@ function SubjectCoordinatorSideBar({ showSidebar, toggleSidebar, handleLogout })
           className={location.pathname === '/home' ? 'active' : ''}
         >
           <FiHome className="icon" /> Home
-        </button>
-        <button 
-          onClick={() => handleNavigate('/profile')}
-          className={location.pathname === '/profile' ? 'active' : ''}
-        >
-          <FiUser className="icon" /> Profile
-        </button>
+        
         <button 
           onClick={() => handleNavigate('/student')}
           className={location.pathname === '/student' ? 'active' : ''}
@@ -52,6 +46,13 @@ function SubjectCoordinatorSideBar({ showSidebar, toggleSidebar, handleLogout })
         >
           <FiBook className="icon" /> Subjects
         </button>
+        </button>
+        {/* <button 
+          onClick={() => handleNavigate('/profile')}
+          className={location.pathname === '/profile' ? 'active' : ''}
+        >
+          <FiUser className="icon" /> Profile
+        </button> */}
         {/* <button onClick={() => handleNavigate('/account')}>
           <FiSettings className="icon" /> Account
         </button> */}

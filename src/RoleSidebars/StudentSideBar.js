@@ -54,8 +54,8 @@ function StudentSideBar({ showSidebar, toggleSidebar, handleLogout }) {
           <FiHome className="icon" /> Home
         </button>
         <button 
-          onClick={() => handleNavigate('/profile')}
-          className={location.pathname === '/profile' ? 'active' : ''}
+          onClick={() => handleNavigate('/stud-profile')}
+          className={location.pathname === '/stud-profile' ? 'active' : ''}
         >
           <FiUser className="icon" /> Profile
         </button>
@@ -92,9 +92,6 @@ function StudentSideBar({ showSidebar, toggleSidebar, handleLogout }) {
         >
           <FiCalendar className="icon" /> Schedule
         </button>
-        {/* <button onClick={() => handleNavigate('/account')}>
-          <FiSettings className="icon" /> Account
-        </button> */}
         <button onClick={() => handleLogout()}>
           <FiLogOut className="icon" /> Logout
         </button>

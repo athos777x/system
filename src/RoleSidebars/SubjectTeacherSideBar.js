@@ -98,12 +98,7 @@ function SubjectTeacherSideBar({ showSidebar, toggleSidebar, handleLogout }) {
         >
           <FiHome className="icon" /> Home
         </button>
-        <button 
-          onClick={() => handleNavigate('/profile')}
-          className={location.pathname === '/profile' ? 'active' : ''}
-        >
-          <FiUser className="icon" /> Profile
-        </button>
+        
         <button 
           onClick={() => handleNavigate('/student')}
           className={location.pathname === '/student' ? 'active' : ''}
@@ -163,7 +158,13 @@ function SubjectTeacherSideBar({ showSidebar, toggleSidebar, handleLogout }) {
               </button>
             </div>
           )}
-        </div>  
+        </div>
+        {/* <button 
+          onClick={() => handleNavigate('/profile')}
+          className={location.pathname === '/profile' ? 'active' : ''}
+        >
+          <FiUser className="icon" /> Profile
+        </button> */}
           {/* <button onClick={() => handleNavigate('/account')}>
             <FiSettings className="icon" /> Account
           </button>  */}
