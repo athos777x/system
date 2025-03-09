@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
-import SectionSearchFilter from '../RoleSearchFilters/SectionListSearchFilter';
-import '../CssPage/Principal_SectionListPage.css';
+import '../RegistrarPagesCss/SectionListManagement.css';
 
 function Registrar_SectionListPage() {
   const [sections, setSections] = useState([]);
@@ -78,14 +77,20 @@ function Registrar_SectionListPage() {
     setFilteredSections(filtered);
   };
 
-  const handleApplyFilters = (filters) => {
-    setFilters(filters);
-    applyFilters(filters);
+  const handleSearch = (event) => {
+    const searchTerm = event.target.value;
+    setFilters(prev => ({ ...prev, searchTerm }));
+    applyFilters({ ...filters, searchTerm });
   };
 
-  const handleSearch = (searchTerm) => {
-    setFilters((prevFilters) => ({ ...prevFilters, searchTerm }));
-    applyFilters({ ...filters, searchTerm });
+  const handleGradeChange = (event) => {
+    const grade = event.target.value;
+    setFilters(prev => ({ ...prev, grade }));
+  };
+
+  const handleSectionChange = (event) => {
+    const section = event.target.value;
+    setFilters(prev => ({ ...prev, section }));
   };
 
   const handleViewClick = async (sectionId) => {
@@ -123,24 +128,20 @@ function Registrar_SectionListPage() {
   };
 
   const renderStudentsTable = () => (
-    <table className="sectionlist-students-table">
-      <colgroup>
-        <col style={{ width: "50%" }} />
-        <col style={{ width: "50%" }} />
-      </colgroup>
+    <table className="section-list-students-table">
       <thead>
         <tr>
-          <th style={{ textAlign: 'center' }}>Boys</th>
-          <th style={{ textAlign: 'center' }}>Girls</th>
+          <th>Boys</th>
+          <th>Girls</th>
         </tr>
       </thead>
       <tbody>
         {Array.from({ length: Math.max(studentsByGender.boys.length, studentsByGender.girls.length) }).map((_, index) => (
           <tr key={index}>
-            <td style={{ textAlign: 'center' }}>
+            <td>
               {studentsByGender.boys[index] ? `${index + 1}. ${studentsByGender.boys[index].firstname} ${studentsByGender.boys[index].lastname}` : ''}
             </td>
-            <td style={{ textAlign: 'center' }}>
+            <td>
               {studentsByGender.girls[index] ? `${index + 1}. ${studentsByGender.girls[index].firstname} ${studentsByGender.girls[index].lastname}` : ''}
             </td>
           </tr>
@@ -150,89 +151,134 @@ function Registrar_SectionListPage() {
   );
 
   return (
-    <div className="sectionlist-container">
-      <h1 className="sectionlist-title">Section List</h1>
-      <div className="sectionlist-search-filter-container">
-        <SectionSearchFilter
-          handleSearch={handleSearch}
-          handleApplyFilters={handleApplyFilters}
-          grades={getUniqueGrades(sections)}
-          sections={sections}
-        />
+    <div className="section-list-container">
+      <div className="section-list-header">
+        <h1 className="section-list-title">Section List</h1>
       </div>
-      <table className="attendance-table">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Section Name</th>
-            <th>Grade Level</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredSections.length > 0 ? (
-            filteredSections.map((section, index) => (
-              <React.Fragment key={section.section_id}>
-                <tr>
-                  <td>{index + 1}</td>
-                  <td>Section {section.section_name}</td>
-                  <td>Grade {section.grade_level}</td>
-                  <td>{section.status.charAt(0).toUpperCase() + section.status.slice(1)}</td>
-                  <td>
-                    <button className="sectionlist-view-button" onClick={() => handleViewClick(section.section_id)}>View</button>
-                  </td>
-                </tr>
-                {selectedSectionId === section.section_id && sectionDetails.section_id && (
+
+      <div className="section-list-filters">
+        <div className="section-list-search">
+          <input
+            type="text"
+            placeholder="Search sections..."
+            value={filters.searchTerm}
+            onChange={handleSearch}
+          />
+        </div>
+        <select
+          className="section-list-select"
+          value={filters.grade}
+          onChange={handleGradeChange}
+        >
+          <option value="">All Grades</option>
+          {getUniqueGrades(sections).map(grade => (
+            <option key={grade} value={grade}>Grade {grade}</option>
+          ))}
+        </select>
+        <select
+          className="section-list-select"
+          value={filters.section}
+          onChange={handleSectionChange}
+        >
+          <option value="">All Sections</option>
+          {sections.map(section => (
+            <option key={section.section_id} value={section.section_id}>
+              Section {section.section_name}
+            </option>
+          ))}
+        </select>
+        <button onClick={() => applyFilters(filters)}>Filter</button>
+      </div>
+
+      <div className="section-list-table-container">
+        <table className="section-list-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Section Name</th>
+              <th>Grade Level</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredSections.length > 0 ? (
+              filteredSections.map((section, index) => (
+                <React.Fragment key={section.section_id}>
                   <tr>
-                    <td colSpan="5">
-                      <div className="sectionlist-details">
-                        <table>
-                          <tbody>
-                            <tr>
-                              <th>Section ID:</th>
-                              <td>{sectionDetails.section_id}</td>
-                            </tr>
-                            <tr>
-                              <th>Section Name:</th>
-                              <td>{sectionDetails.section_name}</td>
-                            </tr>
-                            <tr>
-                              <th>Grade Level:</th>
-                              <td>{sectionDetails.grade_level}</td>
-                            </tr>
-                            <tr>
-                              <th>Status:</th>
-                              <td>{sectionDetails.status}</td>
-                            </tr>
-                            <tr>
-                              <th>Max Capacity:</th>
-                              <td>{sectionDetails.max_capacity}</td>
-                            </tr>
-                            <tr>
-                              <th>School Year:</th>
-                              <td>{sectionDetails.school_year}</td>
-                            </tr>
-                          </tbody>
-                        </table>
-                      </div>
-                      {showStudents && (
-                        <div className="sectionlist-students-container">
-                          {renderStudentsTable()}
-                        </div>
-                      )}
+                    <td>{index + 1}</td>
+                    <td>Section {section.section_name}</td>
+                    <td>Grade {section.grade_level}</td>
+                    <td>
+                      <span className={`status-${section.status.toLowerCase()}`}>
+                        {section.status.charAt(0).toUpperCase() + section.status.slice(1)}
+                      </span>
+                    </td>
+                    <td>
+                      <button 
+                        className="section-list-btn"
+                        onClick={() => handleViewClick(section.section_id)}
+                      >
+                        View
+                      </button>
                     </td>
                   </tr>
-                )}
-              </React.Fragment>
-            ))
-          ) : (
-            <tr>
-              <td colSpan="5" style={{ textAlign: 'center' }}>No sections available.</td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+                  {selectedSectionId === section.section_id && sectionDetails.section_id && (
+                    <tr>
+                      <td colSpan="5">
+                        <div className="section-list-details">
+                          <table>
+                            <tbody>
+                              <tr>
+                                <th>Section ID:</th>
+                                <td>{sectionDetails.section_id}</td>
+                              </tr>
+                              <tr>
+                                <th>Section Name:</th>
+                                <td>{sectionDetails.section_name}</td>
+                              </tr>
+                              <tr>
+                                <th>Grade Level:</th>
+                                <td>{sectionDetails.grade_level}</td>
+                              </tr>
+                              <tr>
+                                <th>Status:</th>
+                                <td>
+                                  <span className={`status-${sectionDetails.status.toLowerCase()}`}>
+                                    {sectionDetails.status}
+                                  </span>
+                                </td>
+                              </tr>
+                              <tr>
+                                <th>Max Capacity:</th>
+                                <td>{sectionDetails.max_capacity}</td>
+                              </tr>
+                              <tr>
+                                <th>School Year:</th>
+                                <td>{sectionDetails.school_year}</td>
+                              </tr>
+                            </tbody>
+                          </table>
+                          {showStudents && (
+                            <div className="section-list-students-container">
+                              <h3>Student List</h3>
+                              {renderStudentsTable()}
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </React.Fragment>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="5" style={{ textAlign: 'center' }}>No sections available.</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
