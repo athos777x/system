@@ -295,6 +295,33 @@
   box-shadow: 0 2px 4px rgba(46, 125, 50, 0.1);
 }
 
+/* Status indicators */
+.status-active,
+.status-inactive {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-weight: 500;
+  font-size: 0.875rem;
+  transition: all 0.3s ease;
+}
+
+.status-active:hover,
+.status-inactive:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.status-active {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+
+.status-inactive {
+  background-color: #ffebee;
+  color: #c62828;
+}
+
 @media (max-width: 1024px) {
   .attendance-mgmt-filters {
     flex-direction: column;

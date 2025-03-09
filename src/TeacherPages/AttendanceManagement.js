@@ -183,7 +183,11 @@ function AttendanceManagement() {
                     {student.firstname} {student.middlename} {student.lastname}
                   </td>
                   <td>Grade {student.current_yr_lvl}</td>
-                  <td>{student.active_status}</td>
+                  <td>
+                    <span className={`status-${student.active_status.toLowerCase()}`}>
+                      {student.active_status.charAt(0).toUpperCase() + student.active_status.slice(1)}
+                    </span>
+                  </td>
                   <td>
                     <button
                       className="attendance-mgmt-btn attendance-mgmt-btn-view"
