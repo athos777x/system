@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../CssFiles/headbar.css';
-import { FaBars, FaTimes } from 'react-icons/fa';
+import { FaBars } from 'react-icons/fa';
 import profilePic from '../png/user_pp.jpg'; // Import the profile picture
 
 function HeaderBar({ showSidebar, toggleSidebar, onLogout }) {
@@ -19,7 +19,7 @@ function HeaderBar({ showSidebar, toggleSidebar, onLogout }) {
   return (
     <div className="header">
       <button className="toggle-btn" onClick={toggleSidebar}>
-        {showSidebar ? <FaTimes /> : <FaBars />}
+        <FaBars />
       </button>
       <h1>LNHS - MIS</h1>
       <div className="profile-container" onClick={toggleDropdown}>
