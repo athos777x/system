@@ -721,7 +721,11 @@ const handleArchive = () => {
                   <td>{index + 1}</td>
                   <td>{student.firstname} {student.middlename && `${student.middlename[0]}.`} {student.lastname}</td>
                   <td>Grade {student.current_yr_lvl}</td>
-                  <td>{student.active_status}</td>
+                  <td>
+                    <span className={`status-${student.active_status ? student.active_status.toLowerCase() : 'pending'}`}>
+                      {student.active_status ? student.active_status.toLowerCase() : 'pending'}
+                    </span>
+                  </td>
                   <td className="student-mgmt-actions">
                     <button 
                       className="student-mgmt-btn student-mgmt-btn-view"

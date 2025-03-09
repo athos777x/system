@@ -270,6 +270,11 @@
 
 .student-mgmt-table > tbody > tr:hover {
   background-color: #f1f8e9 !important;
+  cursor: pointer;
+}
+
+.student-mgmt-table > tbody > tr:hover td {
+  background-color: #f1f8e9 !important;
 }
 
 .student-mgmt-table > tbody > tr:last-child > td {
@@ -806,4 +811,36 @@
   .student-details-actions-right button {
     flex: 1;
   }
+}
+
+/* Status indicators */
+.status-active,
+.status-inactive,
+.status-pending,
+.status-dropped {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-weight: 500;
+  font-size: 0.875rem;
+}
+
+.status-active {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+
+.status-inactive {
+  background-color: #ffebee;
+  color: #c62828;
+}
+
+.status-pending {
+  background-color: #fff3e0;
+  color: #ef6c00;
+}
+
+.status-dropped {
+  background-color: #fafafa;
+  color: #616161;
 } 
