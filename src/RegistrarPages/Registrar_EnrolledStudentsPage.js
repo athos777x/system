@@ -1,18 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import EnrolledStudentsSearchFilter from '../RoleSearchFilters/EnrolledStudentsSearchFilter';
 import Pagination from '../Utilities/pagination';
-import '../CssPage/Principal_EnrolledStudentsPage.css';
+import '../RegistrarPagesCss/EnrolledStudentsManagement.css';
 
 function Registrar_EnrolledStudentsPage() {
   const [students, setStudents] = useState([]);
   const [filteredStudents, setFilteredStudents] = useState([]);
   const [totalEnrolledStudents, setTotalEnrolledStudents] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
-  const [studentsPerPage] = useState(5); // Adjust this number to set how many students per page
+  const [studentsPerPage] = useState(5);
   const [filters, setFilters] = useState({
     searchTerm: '',
-    grade: '',
+    grade: ''
   });
 
   useEffect(() => {
@@ -35,48 +34,39 @@ function Registrar_EnrolledStudentsPage() {
     }
   };
 
-  const handleSearch = (searchTerm) => {
-    setFilters((prevFilters) => ({ ...prevFilters, searchTerm }));
+  const handleSearch = (event) => {
+    const searchTerm = event.target.value;
+    setFilters(prev => ({ ...prev, searchTerm }));
     applyFilters({ ...filters, searchTerm });
   };
 
-  const handleFilterChange = (type, value) => {
-    setFilters(prevFilters => ({
-        ...prevFilters,
-        [type]: value
-    }));
+  const handleGradeChange = (event) => {
+    const grade = event.target.value;
+    setFilters(prev => ({ ...prev, grade }));
   };
 
-  const handleApplyFilters = () => {
-    console.log('Applying filters:', filters);
-    applyFilters(); // Apply filters only when the button is clicked
-  };
-
-  const applyFilters = (updatedFilters) => {
+  const applyFilters = () => {
     let filtered = students;
 
     if (filters.grade) {
-      filtered = filtered.filter(student => student.grade_level === filters.grade);
+      filtered = filtered.filter(student => String(student.grade_level) === String(filters.grade));
     }
     if (filters.searchTerm) {
       filtered = filtered.filter(student => {
-          const firstName = student.firstname ? student.firstname.toLowerCase() : "";
-          const lastName = student.lastname ? student.lastname.toLowerCase() : "";
-          return firstName.includes(filters.searchTerm.toLowerCase()) || 
-                 lastName.includes(filters.searchTerm.toLowerCase());
+        const firstName = student.firstname ? student.firstname.toLowerCase() : "";
+        const lastName = student.lastname ? student.lastname.toLowerCase() : "";
+        return firstName.includes(filters.searchTerm.toLowerCase()) || 
+               lastName.includes(filters.searchTerm.toLowerCase());
       });
-  }
+    }
 
     setFilteredStudents(filtered);
-    setCurrentPage(1); // Reset to the first page when filters are applied
+    setCurrentPage(1);
   };
 
-  // Pagination Logic
   const indexOfLastStudent = currentPage * studentsPerPage;
   const indexOfFirstStudent = indexOfLastStudent - studentsPerPage;
   const currentStudents = filteredStudents.slice(indexOfFirstStudent, indexOfLastStudent);
-
-  const totalPages = Math.ceil(filteredStudents.length / studentsPerPage);
 
   const paginate = (pageNumber) => {
     setCurrentPage(pageNumber);
@@ -84,52 +74,81 @@ function Registrar_EnrolledStudentsPage() {
 
   return (
     <div className="enrolled-students-container">
-      <h1 className="enrolled-students-title">Enrolled Students</h1>
-      <div className="enrolled-students-search-filter-container">
-        <EnrolledStudentsSearchFilter
-          handleSearch={handleSearch}
-          handleFilter={handleFilterChange}
-          handleApplyFilters={handleApplyFilters}
-        />
+      <div className="enrolled-students-header">
+        <h1 className="enrolled-students-title">Enrolled Students</h1>
       </div>
+
       <div className="enrolled-students-summary">
         <p>Total Enrolled Students: {totalEnrolledStudents}</p>
       </div>
-      <table className="attendance-table">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Name</th>
-            <th>Grade Level</th>
-            <th>Enrollment Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {currentStudents.length > 0 ? (
-            currentStudents.map((student, index) => (
-              <tr key={student.student_id}>
-                <td>{index + 1 + (currentPage - 1) * studentsPerPage}</td>
-                <td>{`${student.firstname} ${student.middlename} ${student.lastname}`}</td>
-                <td>Grade {student.grade_level}</td>
-                <td>{student.enrollment_status}</td>
-              </tr>
-            ))
-          ) : (
+
+      <div className="enrolled-students-filters">
+        <div className="enrolled-students-search">
+          <input
+            type="text"
+            placeholder="Search by student name..."
+            value={filters.searchTerm}
+            onChange={handleSearch}
+          />
+        </div>
+        <div className="enrolled-students-filters-group">
+          <select
+            className="enrolled-students-select"
+            value={filters.grade}
+            onChange={handleGradeChange}
+          >
+            <option value="">Select Grade Level</option>
+            {[7, 8, 9, 10].map((grade) => (
+              <option key={grade} value={grade}>Grade {grade}</option>
+            ))}
+          </select>
+        </div>
+        <button onClick={applyFilters}>Filter</button>
+      </div>
+
+      <div className="enrolled-students-table-container">
+        <table className="enrolled-students-table">
+          <thead>
             <tr>
-              <td colSpan="4" style={{ textAlign: 'center' }}>
-                No students found
-              </td>
+              <th>#</th>
+              <th>Name</th>
+              <th>Grade Level</th>
+              <th>Enrollment Status</th>
             </tr>
-          )}
-        </tbody>
-      </table>
-      {/* Pagination Controls */}
-      <Pagination
-        totalItems={filteredStudents.length}
-        itemsPerPage={studentsPerPage}
-        currentPage={currentPage}
-        onPageChange={paginate}
-      />
+          </thead>
+          <tbody>
+            {currentStudents.length > 0 ? (
+              currentStudents.map((student, index) => (
+                <tr key={student.student_id}>
+                  <td>{index + 1 + (currentPage - 1) * studentsPerPage}</td>
+                  <td>{`${student.firstname} ${student.middlename || ''} ${student.lastname}`}</td>
+                  <td>Grade {student.grade_level}</td>
+                  <td>
+                    <span className="status-active">
+                      {student.enrollment_status.charAt(0).toUpperCase() + student.enrollment_status.slice(1)}
+                    </span>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="4" style={{ textAlign: 'center' }}>
+                  No students found
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="enrolled-students-pagination">
+        <Pagination
+          totalItems={filteredStudents.length}
+          itemsPerPage={studentsPerPage}
+          currentPage={currentPage}
+          onPageChange={paginate}
+        />
+      </div>
     </div>
   );
 }
