@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import '../TeacherPagesCss/TestSubjects.css';
 import '../TeacherPagesCss/SummaryReportPromotion.css';
 
 function PromotionReport() {
