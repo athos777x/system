@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import '../RegistrarPagesCss/SectionListManagement.css';
 
-function Registrar_SectionListPage() {
+function SectionList() {
   const [sections, setSections] = useState([]);
   const [filteredSections, setFilteredSections] = useState([]);
   const [selectedSectionId, setSelectedSectionId] = useState(null);
@@ -283,4 +283,4 @@ function Registrar_SectionListPage() {
   );
 }
 
-export default Registrar_SectionListPage;
+export default SectionList;

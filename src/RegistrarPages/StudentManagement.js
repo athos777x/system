@@ -5,7 +5,7 @@ import Pagination from '../Utilities/pagination';
 import axios from 'axios';
 import '../RegistrarPagesCss/StudentManagement.css';
 
-function Registrar_StudentsPage() {
+function StudentManagement() {
   const [students, setStudents] = useState([]);
   const [filteredStudents, setFilteredStudents] = useState([]);
   const [selectedStudentId, setSelectedStudentId] = useState(null);
@@ -1322,4 +1322,4 @@ const handleArchive = () => {
   );
 }
 
-export default Registrar_StudentsPage;
+export default StudentManagement;

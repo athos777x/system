@@ -5,7 +5,7 @@ import GradeDetail from '../Utilities/grades-detail'
 import { useNavigate } from "react-router-dom";
 import Student_Grades_Search from '../RoleSearchFilters/student_grades_search';
 
-const Registrar_GradesPage = () => {
+function GradesManagement() {
   // State variables
   const [selectedGrade, setSelectedGrade] = useState(null);
   const [selectedSection, setSelectedSection] = useState(null);
@@ -1227,6 +1227,6 @@ const handleStudentNameClick = (student) => {
 
     </div>
   );
-};
+}
 
-export default Registrar_GradesPage;
+export default GradesManagement;

@@ -4,7 +4,7 @@ import SearchFilter from '../RoleSearchFilters/SearchFilter';
 import Pagination from '../Utilities/pagination';
 import '../RegistrarPagesCss/BrigadaEskwela.css';
 
-const BrigadaEskwela = () => {
+function BrigadaEskwela() {
   const [students, setStudents] = useState([]);
   const [filteredStudents, setFilteredStudents] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -166,6 +166,6 @@ const BrigadaEskwela = () => {
       </div>
     </div>
   );
-};
+}
 
 export default BrigadaEskwela;

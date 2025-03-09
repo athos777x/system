@@ -1,7 +1,7 @@
 // EarlyEnrollmentReportPage.js
 import React from 'react';
 
-function Registrar_EarlyEnrollmentReportPage() {
+function EarlyEnrollmentReport() {
   return (
     <div>
       <h1>Early Enrollment Report</h1>
@@ -10,4 +10,4 @@ function Registrar_EarlyEnrollmentReportPage() {
   );
 }
 
-export default Registrar_EarlyEnrollmentReportPage;
+export default EarlyEnrollmentReport;

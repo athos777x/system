@@ -3,7 +3,7 @@ import axios from 'axios';
 import { FiEye, FiEyeOff } from 'react-icons/fi';
 import '../StudentPagesCss/Student_AccountPage.css';
 
-function Registrar_AccountPage() {
+function AccountManagement() {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -106,4 +106,4 @@ function Registrar_AccountPage() {
   );
 }
 
-export default Registrar_AccountPage;
+export default AccountManagement;

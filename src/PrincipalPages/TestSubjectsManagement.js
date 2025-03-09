@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import '../PrincipalPagesCss/SubjectsManagement.css';
 
-function TestSubjectsPage() {
+function TestSubjectsManagement() {
   const [subjects, setSubjects] = useState([]);
   const [filteredSubjects, setFilteredSubjects] = useState([]);
   const [selectedSubject, setSelectedSubject] = useState(null);
@@ -328,4 +328,4 @@ function TestSubjectsPage() {
   );
 }
 
-export default TestSubjectsPage;
+export default TestSubjectsManagement;

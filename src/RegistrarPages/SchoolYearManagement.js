@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import '../RegistrarPagesCss/SchoolYearManagement.css';
 
-function Registrar_SchoolYearPage() {
+function SchoolYearManagement() {
   const [schoolYears, setSchoolYears] = useState([]);
   const [filteredSchoolYears, setFilteredSchoolYears] = useState([]);
   const [selectedSchoolYearId, setSelectedSchoolYearId] = useState(null);
@@ -458,4 +458,4 @@ function Registrar_SchoolYearPage() {
   );
 }
 
-export default Registrar_SchoolYearPage;
+export default SchoolYearManagement;

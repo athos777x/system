@@ -5,7 +5,7 @@ import '../RegistrarPagesCss/GradesManagement.css';
 import Pagination from '../Utilities/pagination';
 import { useNavigate } from 'react-router-dom';
 
-function GradesPage() {
+function TestGradesManagement() {
   const navigate = useNavigate();
   const [filteredStudents, setFilteredStudents] = useState([]);
   const [selectedStudent, setSelectedStudent] = useState(null);
@@ -426,4 +426,4 @@ function GradesPage() {
   );
 }
 
-export default GradesPage;
+export default TestGradesManagement;

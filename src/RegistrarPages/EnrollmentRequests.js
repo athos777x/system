@@ -5,7 +5,7 @@ import Pagination from '../Utilities/pagination';
 import axios from 'axios';
 import '../RegistrarPagesCss/PendingEnrollmentManagement.css';
 
-function Registrar_PendingEnrollmentPage() {
+function EnrollmentRequests() {
   const [students, setStudents] = useState([]);
   const [filteredStudents, setFilteredStudents] = useState([]);
   const [selectedStudentId, setSelectedStudentId] = useState(null);
@@ -506,4 +506,4 @@ const approveElective = async (studentElectiveId) => {
   );
 }
 
-export default Registrar_PendingEnrollmentPage;
+export default EnrollmentRequests;

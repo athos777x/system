@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import '../PrincipalPagesCss/SubjectsManagement.css';
 import '../RegistrarPagesCss/SummaryReportPromotion.css';
 
-function Registrar_SummaryReportonPromotionPage() {
+function PromotionReport() {
   const navigate = useNavigate();
   const [modalContent, setModalContent] = useState(null);
   const [showModal, setShowModal] = useState(false);
@@ -605,4 +605,4 @@ function Registrar_SummaryReportonPromotionPage() {
   );
 }
 
-export default Registrar_SummaryReportonPromotionPage;
+export default PromotionReport;

@@ -3,7 +3,7 @@ import axios from 'axios';
 import Pagination from '../Utilities/pagination';
 import '../RegistrarPagesCss/EnrolledStudentsManagement.css';
 
-function Registrar_EnrolledStudentsPage() {
+function EnrolledStudents() {
   const [students, setStudents] = useState([]);
   const [filteredStudents, setFilteredStudents] = useState([]);
   const [totalEnrolledStudents, setTotalEnrolledStudents] = useState(0);
@@ -153,4 +153,4 @@ function Registrar_EnrolledStudentsPage() {
   );
 }
 
-export default Registrar_EnrolledStudentsPage;
+export default EnrolledStudents;

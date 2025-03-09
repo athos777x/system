@@ -5,7 +5,7 @@ import axios from 'axios';
 import '../RegistrarPagesCss/TeacherManagement.css';
 import EmployeeSearchFilter from '../RoleSearchFilters/EmployeeSearchFilter';
 
-function Registrar_TeacherPage() {
+function TeacherManagement() {
   const [teachers, setTeachers] = useState([]);
   const [filteredTeachers, setFilteredTeachers] = useState([]);
   const [selectedTeacherId, setSelectedTeacherId] = useState(null);
@@ -1114,4 +1114,4 @@ useEffect(() => {
   );
 }
 
-export default Registrar_TeacherPage;
+export default TeacherManagement;

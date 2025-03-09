@@ -4,7 +4,7 @@ import axios from 'axios';
 import Pagination from '../Utilities/pagination';
 import '../RegistrarPagesCss/AttendanceManagement.css';
 
-function Registrar_AttendancePage() {
+function AttendanceManagement() {
   const [students, setStudents] = useState([]);
   const [filteredStudents, setFilteredStudents] = useState([]);
   const [selectedStudentId, setSelectedStudentId] = useState(null);
@@ -258,4 +258,4 @@ function Registrar_AttendancePage() {
   );
 }
 
-export default Registrar_AttendancePage;
+export default AttendanceManagement;

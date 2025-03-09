@@ -3,7 +3,7 @@ import axios from 'axios';
 import SectionSearchFilter from '../RoleSearchFilters/SectionSearchFilter'; 
 import '../RegistrarPagesCss/SectionManagement.css';
 
-function Registrar_SectionPage() {
+function SectionManagement() {
   const [roleName, setRoleName] = useState('');
   const [sections, setSections] = useState([]);
   const [filteredSections, setFilteredSections] = useState([]);
@@ -591,4 +591,4 @@ function Registrar_SectionPage() {
   );
 }
 
-export default Registrar_SectionPage;
+export default SectionManagement;

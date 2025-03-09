@@ -1,7 +1,7 @@
 // ListofStudentEnrolleesPage.js
 import React from 'react';
 
-function Registrar_ListofStudentEnrolleesPage() {
+function StudentEnrollees() {
   return (
     <div>
       <h1>List of Student Enrollees</h1>
@@ -10,4 +10,4 @@ function Registrar_ListofStudentEnrolleesPage() {
   );
 }
 
-export default Registrar_ListofStudentEnrolleesPage;
+export default StudentEnrollees;
