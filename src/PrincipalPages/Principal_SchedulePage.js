@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import ScheduleSearchFilter from '../RoleSearchFilters/ScheduleSearchFilter';
-import '../CssPage/Principal_SchedulePage.css';
+import '../PrincipalPagesCss/ScheduleManagement.css';
 
 function Principal_SchedulePage() {
   const [sections, setSections] = useState([]);
@@ -400,66 +400,112 @@ function Principal_SchedulePage() {
   };
 
   return (
-    <div className="schedule-container">
-      <h1 className="schedule-title">Schedule</h1>
-      <div className="schedule-search-filter-container">
-        <ScheduleSearchFilter
-          handleApplyFilters={handleApplyFilters}
-          grades={['7', '8', '9', '10']}
-          sections={sections}
-          schoolYears={schoolYears}
-        />
-      </div>
-      <div className="section-add-section-button-container">
-        {(roleName !== 'principal') &&(
-        <button className="section-add-section-button" onClick={startAdding}>Add New Schedule</button>
+    <div className="schedule-mgmt-container">
+      <div className="schedule-mgmt-header">
+        <h1 className="schedule-mgmt-title">Schedule Management</h1>
+        {(roleName !== 'principal') && (
+          <button className="schedule-mgmt-btn-add" onClick={startAdding}>
+            Add New Schedule
+          </button>
         )}
       </div>
-      <table className="attendance-table">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Section Name</th>
-            <th>Grade Level</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredSections.length > 0 ? (
-            filteredSections.map((section, index) => (
-              <React.Fragment key={section.section_id}>
-                <tr>
-                  <td>{index + 1}</td>
-                  <td>Section {section.section_name}</td>
-                  <td>Grade {section.grade_level}</td>
-                  <td>{section.status.charAt(0).toUpperCase() + section.status.slice(1)}</td>
-                  <td>
-                    <button className="schedule-view-button" onClick={() => handleViewClick(section.section_id)}>View</button>
-                  </td>
-                </tr>
-                {selectedSectionId === section.section_id && (
+
+      <div className="schedule-mgmt-filters">
+        <div className="schedule-mgmt-search">
+          <input
+            type="text"
+            placeholder="Search sections..."
+            value={filters.searchTerm}
+            onChange={(e) => applyFilters({ ...filters, searchTerm: e.target.value })}
+          />
+        </div>
+        <div className="schedule-mgmt-filters-group">
+          <select
+            value={filters.grade}
+            onChange={(e) => applyFilters({ ...filters, grade: e.target.value })}
+          >
+            <option value="">All Grades</option>
+            {['7', '8', '9', '10'].map(grade => (
+              <option key={grade} value={grade}>Grade {grade}</option>
+            ))}
+          </select>
+          <select
+            value={filters.section}
+            onChange={(e) => applyFilters({ ...filters, section: e.target.value })}
+          >
+            <option value="">All Sections</option>
+            {sections.map(section => (
+              <option key={section.section_id} value={section.section_id}>
+                Section {section.section_name}
+              </option>
+            ))}
+          </select>
+          <select
+            value={filters.schoolYear}
+            onChange={(e) => applyFilters({ ...filters, schoolYear: e.target.value })}
+          >
+            <option value="">All School Years</option>
+            {schoolYears.map(year => (
+              <option key={year} value={year}>{year}</option>
+            ))}
+          </select>
+          <button onClick={() => applyFilters(filters)}>Filter</button>
+        </div>
+      </div>
+
+      <div className="schedule-mgmt-table-container">
+        <table className="schedule-mgmt-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Section Name</th>
+              <th>Grade Level</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredSections.length > 0 ? (
+              filteredSections.map((section, index) => (
+                <React.Fragment key={section.section_id}>
                   <tr>
-                    <td colSpan="5">
-                      <div className="schedule-sectionlist-details">
-                        <h2 className="schedule-subtitle">Schedules</h2>
-                        <table className="schedule-table">
-                          <thead>
-                            <tr>
-                              <th>Subject</th>
-                              <th>Time Start</th>
-                              <th>Time End</th>
-                              <th>Day</th>
-                              <th>Teacher</th>
-                              <th>Status</th>
-                              <th className="actions-column">Actions</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {sectionSchedules && sectionSchedules.length > 0 ? (
-                              sectionSchedules.map(schedule => {
-                                console.log('Rendering schedule:', schedule);
-                                return (
+                    <td>{index + 1}</td>
+                    <td>Section {section.section_name}</td>
+                    <td>Grade {section.grade_level}</td>
+                    <td>
+                      <span className={`status-${section.status.toLowerCase()}`}>
+                        {section.status.charAt(0).toUpperCase() + section.status.slice(1)}
+                      </span>
+                    </td>
+                    <td>
+                      <button 
+                        className="schedule-mgmt-btn schedule-mgmt-btn-view" 
+                        onClick={() => handleViewClick(section.section_id)}
+                      >
+                        View
+                      </button>
+                    </td>
+                  </tr>
+                  {selectedSectionId === section.section_id && (
+                    <tr>
+                      <td colSpan="5">
+                        <div className="schedule-mgmt-details">
+                          <h2 className="schedule-mgmt-details-title">Schedules</h2>
+                          <table className="schedule-mgmt-details-table">
+                            <thead>
+                              <tr>
+                                <th>Subject</th>
+                                <th>Time Start</th>
+                                <th>Time End</th>
+                                <th>Day</th>
+                                <th>Teacher</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {sectionSchedules && sectionSchedules.length > 0 ? (
+                                sectionSchedules.map(schedule => (
                                   <tr key={schedule.schedule_id}>
                                     {isEditing && editFormData.schedule_id === schedule.schedule_id ? (
                                       <>
@@ -521,9 +567,11 @@ function Principal_SchedulePage() {
                                             <option value="Pending Approval">Pending Approval</option>
                                           </select>
                                         </td>
-                                        <td className="actions-column">
-                                          <button className="schedule-save-button" onClick={saveChanges}>Save</button>
-                                          <button className="schedule-cancel-button" onClick={cancelEditing}>Cancel</button>
+                                        <td>
+                                          <div className="schedule-mgmt-actions">
+                                            <button className="schedule-mgmt-btn schedule-mgmt-btn-edit" onClick={saveChanges}>Save</button>
+                                            <button className="schedule-mgmt-btn schedule-mgmt-btn-cancel" onClick={cancelEditing}>Cancel</button>
+                                          </div>
                                         </td>
                                       </>
                                     ) : (
@@ -533,47 +581,62 @@ function Principal_SchedulePage() {
                                         <td>{schedule.time_end}</td>
                                         <td>{Array.isArray(schedule.day) ? schedule.day.join(', ') : schedule.day}</td>
                                         <td>{schedule.teacher_name}</td>
-                                        <td>{schedule.schedule_status}</td>
-                                        <td className="actions-column">
+                                        <td>
+                                          <span className={`status-${schedule.schedule_status.toLowerCase().replace(' ', '-')}`}>
+                                            {schedule.schedule_status}
+                                          </span>
+                                        </td>
+                                        <td>
                                           {schedule.schedule_status === 'Pending Approval' && (
-                                            <>
-                                              <button className="schedule-edit-button" onClick={() => startEditing(schedule)}>Edit</button>
+                                            <div className="schedule-mgmt-actions">
+                                              <button 
+                                                className="schedule-mgmt-btn schedule-mgmt-btn-edit" 
+                                                onClick={() => startEditing(schedule)}
+                                              >
+                                                Edit
+                                              </button>
                                               {(roleName !== 'academic_coordinator') && (
-                                                <button className="schedule-edit-button" onClick={() => handleApproveClick(schedule.schedule_id)}>Approve</button>
+                                                <button 
+                                                  className="schedule-mgmt-btn schedule-mgmt-btn-approve" 
+                                                  onClick={() => handleApproveClick(schedule.schedule_id)}
+                                                >
+                                                  Approve
+                                                </button>
                                               )}
-                                            </>
+                                            </div>
                                           )}
                                         </td>
                                       </>
                                     )}
                                   </tr>
-                                );
-                              })
-                            ) : (
-                              <tr>
-                                <td colSpan="7" style={{ textAlign: 'center' }}>
-                                  {sectionSchedules === null ? 'Loading schedules...' : 'No schedules available'}
-                                </td>
-                              </tr>
-                            )}
-                          </tbody>
-                        </table>
-                      </div>
-                    </td>
-                  </tr>
-                )}
-              </React.Fragment>
-            ))
-          ) : (
-            <tr>
-              <td colSpan="5" style={{ textAlign: 'center' }}>No sections available.</td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+                                ))
+                              ) : (
+                                <tr>
+                                  <td colSpan="7" style={{ textAlign: 'center' }}>
+                                    {sectionSchedules === null ? 'Loading schedules...' : 'No schedules available'}
+                                  </td>
+                                </tr>
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </React.Fragment>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="5" style={{ textAlign: 'center' }}>No sections available.</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
       {isModalOpen && (
-        <div className="section-modal">
-          <div className="section-modal-content">
+        <div className="schedule-mgmt-modal">
+          <div className="schedule-mgmt-modal-content">
             <h2>Add New Schedule</h2>
             <select
               name="section_id"
@@ -589,12 +652,12 @@ function Principal_SchedulePage() {
                     const response = await axios.get(
                       `http://localhost:3001/subjects-for-assignment/${selectedSection.grade_level}`
                     );
-                    setFilteredSubjects(response.data); // Dynamically update subjects
+                    setFilteredSubjects(response.data);
                   } catch (error) {
                     console.error('Error fetching subjects by grade level:', error);
                   }
                 } else {
-                  setFilteredSubjects([]); // Reset if no section selected
+                  setFilteredSubjects([]);
                 }
               }}
               required
@@ -636,6 +699,7 @@ function Principal_SchedulePage() {
               value={newSchedule.time_end}
               onChange={handleInputChange}
             />
+
             <div className="day-checkboxes">
               {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].map(day => (
                 <label key={day} className="day-checkbox-label">
@@ -665,14 +729,13 @@ function Principal_SchedulePage() {
               ))}
             </select>
 
-            <div className="button-container">
-              <button onClick={handleAddSchedule}>Add Schedule</button>
-              <button onClick={() => setIsModalOpen(false)}>Close</button>
+            <div className="schedule-mgmt-modal-actions">
+              <button className="schedule-mgmt-btn schedule-mgmt-btn-edit" onClick={handleAddSchedule}>Add Schedule</button>
+              <button className="schedule-mgmt-btn schedule-mgmt-btn-cancel" onClick={() => setIsModalOpen(false)}>Close</button>
             </div>
           </div>
         </div>
       )}
-
     </div>
   );
 }
