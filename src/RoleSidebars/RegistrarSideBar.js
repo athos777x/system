@@ -15,7 +15,6 @@ import {
   FiUser
 } from 'react-icons/fi';
 import { useNavigate, useLocation } from 'react-router-dom';
-import LogoutButton from '../Buttons/LogoutButton';
 
 function RegistrarSideBar({ showSidebar, toggleSidebar, handleLogout }) {
   const [showRecordsSubMenu, setShowRecordsSubMenu] = useState(false);
@@ -69,6 +68,11 @@ function RegistrarSideBar({ showSidebar, toggleSidebar, handleLogout }) {
     setShowEnrollmentSubMenu(false);
     setShowReportsSubMenu(false);
     navigate(path);
+  };
+
+  const handleLogoutClick = () => {
+    handleLogout();
+    navigate('/');
   };
 
   return (
@@ -189,9 +193,9 @@ function RegistrarSideBar({ showSidebar, toggleSidebar, handleLogout }) {
         >
           <FiUser className="icon" /> Profile
         </button> */}
-        <LogoutButton onClick={handleLogout}>
+        <button onClick={handleLogoutClick} className="logout-btn">
           <FiLogOut className="icon" /> Logout
-        </LogoutButton>
+        </button>
       </div>
     </div>
   );

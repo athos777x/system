@@ -6,17 +6,16 @@ import {
   FiUsers,
   FiClipboard,
   FiBook,
-  FiLogOut,
   FiChevronLeft,
   FiMenu,
   FiUser,
   FiCalendar,
   FiBarChart2,
   FiFileText,
-  FiCheckSquare
+  FiCheckSquare,
+  FiLogOut
 } from 'react-icons/fi';
 import { useNavigate, useLocation } from 'react-router-dom';
-import LogoutButton from '../Buttons/LogoutButton';
 
 function PrincipalSideBar({ showSidebar, toggleSidebar, handleLogout }) {
   const [showRecordsSubMenu, setShowRecordsSubMenu] = useState(false);
@@ -87,6 +86,11 @@ function PrincipalSideBar({ showSidebar, toggleSidebar, handleLogout }) {
     setShowReportsSubMenu(false);
     setShowClassesSubMenu(false);
     navigate(path);
+  };
+
+  const handleLogoutClick = () => {
+    handleLogout();
+    navigate('/');
   };
 
   return (
@@ -216,9 +220,9 @@ function PrincipalSideBar({ showSidebar, toggleSidebar, handleLogout }) {
         >
           <FiUser className="icon" /> Profile
         </button> */}
-        <LogoutButton onClick={handleLogout}>
+        <button onClick={handleLogoutClick} className="logout-btn">
           <FiLogOut className="icon" /> Logout
-        </LogoutButton>
+        </button>
       </div>
     </div>
   );

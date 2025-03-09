@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import profilePic from '../png/user_pp.jpg'; // Default profile picture
+import profilePic from '../assets/user_pp.jpg'; // Default profile picture
 import '../CssFiles/profile.css'; // CSS for styling
 import axios from 'axios'; // For API calls
 import { useNavigate } from 'react-router-dom'; // For navigation

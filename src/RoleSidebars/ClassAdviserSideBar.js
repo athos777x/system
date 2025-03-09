@@ -4,7 +4,6 @@ import '../CssFiles/sidebar.css';
 import {
   FiHome,
   FiUsers,
-  FiLogOut,
   FiChevronLeft,
   FiMenu,
   FiUser,
@@ -12,10 +11,10 @@ import {
   FiBarChart2,
   FiFileText,
   FiBook,
-  FiClipboard
+  FiClipboard,
+  FiLogOut
 } from 'react-icons/fi';
 import { useNavigate, useLocation } from 'react-router-dom';
-import LogoutButton from '../Buttons/LogoutButton';
 
 function ClassAdviserSideBar({ showSidebar, toggleSidebar, handleLogout }) {
   const [showEnrollmentSubMenu, setShowEnrollmentSubMenu] = useState(false);
@@ -69,6 +68,11 @@ function ClassAdviserSideBar({ showSidebar, toggleSidebar, handleLogout }) {
     setShowReportsSubMenu(false);
     setShowClassesSubMenu(false);
     navigate(path);
+  };
+
+  const handleLogoutClick = () => {
+    handleLogout();
+    navigate('/');
   };
 
   return (
@@ -158,9 +162,9 @@ function ClassAdviserSideBar({ showSidebar, toggleSidebar, handleLogout }) {
         >
           <FiUser className="icon" /> Profile
         </button> */}
-        <LogoutButton onClick={handleLogout}>
+        <button onClick={handleLogoutClick} className="logout-btn">
           <FiLogOut className="icon" /> Logout
-        </LogoutButton>
+        </button>
       </div>
     </div>
   );

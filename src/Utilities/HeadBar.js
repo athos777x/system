@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../CssFiles/headbar.css';
 import { FaBars } from 'react-icons/fa';
-import profilePic from '../png/user_pp.jpg'; // Import the profile picture
+import profilePic from '../assets/user_pp.jpg'; // Import the profile picture
 
 function HeaderBar({ showSidebar, toggleSidebar, onLogout }) {
   const [dropdownVisible, setDropdownVisible] = useState(false);
