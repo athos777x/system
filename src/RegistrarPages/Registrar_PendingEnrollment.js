@@ -3,17 +3,17 @@ import { useNavigate } from 'react-router-dom';
 import SearchFilter from '../RoleSearchFilters/SearchFilter';
 import Pagination from '../Utilities/pagination';
 import axios from 'axios';
-import '../RegistrarPagesCss/Registrar_StudentsPage.css';
+import '../RegistrarPagesCss/PendingEnrollmentManagement.css';
 
 function Registrar_PendingEnrollmentPage() {
   const [students, setStudents] = useState([]);
   const [filteredStudents, setFilteredStudents] = useState([]);
   const [selectedStudentId, setSelectedStudentId] = useState(null);
-  const [studentsPerPage] = useState(5); // Adjust this number to set how many students per page
+  const [studentsPerPage] = useState(5);
   const [currentPage, setCurrentPage] = useState(1);
-  const [isEditing, setIsEditing] = useState(false); // Tracks edit mode
-  const [editStudentData, setEditStudentData] = useState(null); // Stores the editable student data
-  const [showCancelModal, setShowCancelModal] = useState(false); // Tracks cancel confirmation modal
+  const [isEditing, setIsEditing] = useState(false);
+  const [editStudentData, setEditStudentData] = useState(null);
+  const [showCancelModal, setShowCancelModal] = useState(false);
 
   const [filters, setFilters] = useState({
     searchTerm: '',
@@ -22,9 +22,6 @@ function Registrar_PendingEnrollmentPage() {
     section: '',
     status: ''
   });
-
-
-
 
   useEffect(() => {
     fetchStudents();
@@ -343,430 +340,168 @@ const approveElective = async (studentElectiveId) => {
   
 
   return (
-    <div className="students-container">
-      <h1 className="students-title">Pending Enrollment</h1>
-      <div className="students-search-filter-container">
-        <SearchFilter
-          handleSearch={handleSearch}
-          handleFilter={handleFilterChange}
-          handleApplyFilters={handleApplyFilters}
-        />
+    <div className="pending-enrollment-container">
+      <div className="pending-enrollment-header">
+        <h1 className="pending-enrollment-title">Pending Enrollment</h1>
       </div>
-      <div className="students-button-container">
-      </div>
-      <div className="students-list">
-      <table className="attendance-table">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Name</th>
-            <th>Grade</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {currentStudents.map((student, index) => (
-            <React.Fragment key={student.student_id}>
-              <tr>
-                <td>{index + 1}</td>
-                <td>{student.firstname} {student.middlename && `${student.middlename[0]}.`} {student.lastname}</td>
-                <td>Grade {student.current_yr_lvl}</td>
-                <td>{student.active_status}</td>
-                <td>
-                  <button 
-                    className="students-view-button"
-                    onClick={() => toggleStudentDetails(student.student_id)}
-                  >
-                    View
-                  </button>
-                  {(roleName === 'registrar' || roleName === 'principal') && (
-                    <>
-                  {student.active_status === 'pending' && (
-                    <button 
-                      className="students-validate-button" 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        validateStudent(student.student_id);
-                      }}
-                    >
-                      Validate
-                    </button> 
-                  )}
-                  {student.enrollment_status === 'pending' && (
-                    <button 
-                      className="students-approve-button" 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        approveElective(student.student_elective_id);
-                      }}
-                    >
-                      Approve
-                    </button>
-                  )}
-                  </>
-                  )}
-                </td>
-              </tr>
 
-              {selectedStudentId === student.student_id && (
-              <tr className="student-details-row">
-                <td colSpan="5">
-                  <div className="student-details-container">
-                    <table className="student-details-table">
-                      <tbody>
-                        <tr>
-                          <th>Last Name:</th>
-                          <td>
-                            {isEditing ? (
-                              <input
-                                type="text"
-                                name="lastname"
-                                value={editStudentData ? editStudentData.lastname || "" : ""}
-                                onChange={handleEditChange}
-                              />
-                            ) : (
-                              student.lastname
-                            )}
-                          </td>
-                        </tr>
-                        <tr>
-                          <th>First Name:</th>
-                          <td>
-                            {isEditing ? (
-                              <input
-                                type="text"
-                                name="firstname"
-                                value={editStudentData ? editStudentData.firstname || "" : ""}
-                                onChange={handleEditChange}
-                              />
-                            ) : (
-                              student.firstname
-                            )}
-                          </td>
-                        </tr>
-                        <tr>
-                          <th>Middle Name:</th>
-                          <td>
-                            {isEditing ? (
-                              <input
-                                type="text"
-                                name="middlename"
-                                value={editStudentData ? editStudentData.middlename || "" : ""}
-                                onChange={handleEditChange}
-                              />
-                            ) : (
-                              student.middlename || "N/A"
-                            )}
-                          </td>
-                        </tr>
-                        <tr>
-                          <th>Grade Level:</th>
-                          <td>
-                            {isEditing ? (
-                              <input
-                                type="text"
-                                name="current_yr_lvl"
-                                value={editStudentData ? editStudentData.current_yr_lvl || "" : ""}
-                                onChange={handleEditChange}
-                              />
-                            ) : (
-                              student.current_yr_lvl
-                            )}
-                          </td>
-                        </tr>
-                        <tr>
-                          <th>Birthdate:</th>
-                          <td>
-                            {isEditing ? (
-                              <input
-                                type="date"
-                                name="birthdate"
-                                value={editStudentData ? editStudentData.birthdate || "" : ""}
-                                onChange={handleEditChange}
-                              />
-                            ) : (
-                              formatDate(student.birthdate)
-                            )}
-                          </td>
-                        </tr>
-                        <tr>
-                          <th>Gender:</th>
-                          <td>
-                            {isEditing ? (
-                              <select
-                                name="gender"
-                                vvalue={editStudentData ? editStudentData.gender || "" : ""}
-                                onChange={handleEditChange}
-                              >
-                                <option value="Male">Male</option>
-                                <option value="Female">Female</option>
-                              </select>
-                            ) : (
-                              student.gender
-                            )}
-                          </td>
-                        </tr>
-                        <tr>
-                          <th>Contact Number:</th>
-                          <td>
-                            {isEditing ? (
-                              <input
-                                type="text"
-                                name="contact_number"
-                                value={editStudentData ? editStudentData.contact_number || "" : ""}
-                                onChange={handleEditChange}
-                              />
-                            ) : (
-                              student.contact_number
-                            )}
-                          </td>
-                        </tr>
-                        <tr>
-                          <th>Email:</th>
-                          <td>
-                            {isEditing ? (
-                              <input
-                                type="email"
-                                name="email_address"
-                                value={editStudentData ? editStudentData.email_address || "" : ""}
-                                onChange={handleEditChange}
-                              />
-                            ) : (
-                              student.email_address
-                            )}
-                          </td>
-                        </tr>
-                        <tr>
-                          <th>Mother's Name:</th>
-                          <td>
-                            {isEditing ? (
-                              <input
-                                type="text"
-                                name="mother_name"
-                                value={editStudentData ? editStudentData.mother_name || "" : ""}
-                                onChange={handleEditChange}
-                              />
-                            ) : (
-                              student.mother_name
-                            )}
-                          </td>
-                        </tr>
-                        <tr>
-                          <th>Father's Name:</th>
-                          <td>
-                            {isEditing ? (
-                              <input
-                                type="text"
-                                name="father_name"
-                                value={editStudentData ? editStudentData.father_name || "" : ""}
-                                onChange={handleEditChange}
-                              />
-                            ) : (
-                              student.father_name
-                            )}
-                          </td>
-                        </tr>
-                        <tr>
-                          <th>Parent Address:</th>
-                          <td>
-                            {isEditing ? (
-                              <input
-                                type="text"
-                                name="parent_address"
-                                value={editStudentData ? editStudentData.parent_address || "" : ""}
-                                onChange={handleEditChange}
-                              />
-                            ) : (
-                              student.parent_address
-                            )}
-                          </td>
-                        </tr>
-                        <tr>
-                          <th>Mother's Occupation:</th>
-                          <td>
-                            {isEditing ? (
-                              <input
-                                type="text"
-                                name="mother_occupation"
-                                value={editStudentData ? editStudentData.mother_occupation || "" : ""}
-                                onChange={handleEditChange}
-                              />
-                            ) : (
-                              student.mother_occupation
-                            )}
-                          </td>
-                        </tr>
-                        <tr>
-                          <th>Father's Occupation:</th>
-                          <td>
-                            {isEditing ? (
-                              <input
-                                type="text"
-                                name="father_occupation"
-                                value={editStudentData ? editStudentData.father_occupation || "" : ""}
-                                onChange={handleEditChange}
-                              />
-                            ) : (
-                              student.father_occupation
-                            )}
-                          </td>
-                        </tr>
-                        <tr>
-                          <th>Annual Household Income:</th>
-                          <td>
-                            {isEditing ? (
-                              <input
-                                type="text"
-                                name="annual_hshld_income"
-                                value={editStudentData ? editStudentData.annual_hshld_income || "" : ""}
-                                onChange={handleEditChange}
-                              />
-                            ) : (
-                              student.annual_hshld_income
-                            )}
-                          </td>
-                        </tr>
-                        <tr>
-                          <th>Number of Siblings:</th>
-                          <td>
-                            {isEditing ? (
-                              <input
-                                type="number"
-                                name="number_of_siblings"
-                                value={editStudentData ? editStudentData.number_of_siblings || "" : ""}
-                                onChange={handleEditChange}
-                              />
-                            ) : (
-                              student.number_of_siblings
-                            )}
-                          </td>
-                        </tr>
-                        <tr>
-                          <th>Mother's Educational Level:</th>
-                          <td>
-                            {isEditing ? (
-                              <input
-                                type="text"
-                                name="mother_educ_lvl"
-                                value={editStudentData ? editStudentData.mother_educ_lvl || "" : ""}
-                                onChange={handleEditChange}
-                              />
-                            ) : (
-                              student.mother_educ_lvl
-                            )}
-                          </td>
-                        </tr>
-                        <tr>
-                          <th>Father's Educational Level:</th>
-                          <td>
-                            {isEditing ? (
-                              <input
-                                type="text"
-                                name="father_educ_lvl"
-                                value={editStudentData ? editStudentData.father_educ_lvl || "" : ""}
-                                onChange={handleEditChange}
-                              />
-                            ) : (
-                              student.father_educ_lvl
-                            )}
-                          </td>
-                        </tr>
-                        <tr>
-                          <th>Mother's Contact Number:</th>
-                          <td>
-                            {isEditing ? (
-                              <input
-                                type="number"
-                                name="mother_contact_number"
-                                value={editStudentData ? editStudentData.mother_contact_number || "" : ""}
-                                onChange={handleEditChange}
-                              />
-                            ) : (
-                              student.mother_contact_number
-                            )}
-                          </td>
-                        </tr>
-                        <tr>
-                          <th>Father's Contact Number:</th>
-                          <td>
-                            {isEditing ? (
-                              <input
-                                type="number"
-                                name="father_contact_number"
-                                value={editStudentData ? editStudentData.father_contact_number || "" : ""}
-                                onChange={handleEditChange}
-                              />
-                            ) : (
-                              student.father_contact_number
-                            )}
-                          </td>
-                        </tr>
-                        <tr>
-                          <th>Emergency Contact Number:</th>
-                          <td>
-                            {isEditing ? (
-                              <input
-                                type="number"
-                                name="emergency_contact_number"
-                                value={editStudentData ? editStudentData.emergency_number || "" : ""}
-                                onChange={handleEditChange}
-                              />
-                            ) : (
-                              student.emergency_number
-                            )}
-                          </td>
-                        </tr>
-                        <tr>
-                          <th>Brigada Eskwela:</th>
-                          <td>
-                            {isEditing ? (
-                              <input
-                                type="text"
-                                name="brigada_eskwela"
-                                value={editStudentData ? editStudentData.brigada_eskwela || "" : ""}
-                                onChange={handleEditChange}
-                              />
-                            ) : (
-                              student.brigada_eskwela
-                            )}
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                    <div className="action-buttons">
-                      {isEditing ? (
+      <div className="pending-enrollment-filters">
+        <div className="pending-enrollment-search">
+          <input
+            type="text"
+            placeholder="Search students..."
+            value={filters.searchTerm}
+            onChange={(e) => handleSearch(e.target.value)}
+          />
+        </div>
+        <div className="pending-enrollment-filters-group">
+          <select
+            className="pending-enrollment-select"
+            value={filters.school_year}
+            onChange={(e) => handleFilterChange('school_year', e.target.value)}
+          >
+            <option value="">Select School Year</option>
+            {/* Add school year options */}
+          </select>
+          <select
+            className="pending-enrollment-select"
+            value={filters.grade}
+            onChange={(e) => handleFilterChange('grade', e.target.value)}
+          >
+            <option value="">Select Grade</option>
+            {/* Add grade options */}
+          </select>
+          <select
+            className="pending-enrollment-select"
+            value={filters.section}
+            onChange={(e) => handleFilterChange('section', e.target.value)}
+          >
+            <option value="">Select Section</option>
+            {/* Add section options */}
+          </select>
+          <button onClick={handleApplyFilters}>Filter</button>
+        </div>
+      </div>
+
+      <div className="pending-enrollment-table-container">
+        <table className="pending-enrollment-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Student Name</th>
+              <th>Grade</th>
+              <th>Section</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {currentStudents.length > 0 ? (
+              currentStudents.map((student, index) => (
+                <tr key={student.student_id}>
+                  <td>{indexOfFirstStudent + index + 1}</td>
+                  <td>{student.firstname} {student.middlename && `${student.middlename[0]}.`} {student.lastname}</td>
+                  <td>{student.current_yr_lvl}</td>
+                  <td>{student.section_id}</td>
+                  <td>
+                    <span className={`status-${student.student_status.toLowerCase()}`}>
+                      {student.student_status}
+                    </span>
+                  </td>
+                  <td>
+                    <div className="pending-enrollment-actions">
+                      <button
+                        className="pending-enrollment-btn pending-enrollment-btn-view"
+                        onClick={() => toggleStudentDetails(student.student_id)}
+                      >
+                        View
+                      </button>
+                      {(roleName === 'registrar' || roleName === 'principal') && (
                         <>
-                          <button className="save-button" onClick={handleSave}>
-                            Save
+                        {student.student_status === 'pending' && (
+                          <button 
+                            className="pending-enrollment-btn pending-enrollment-btn-approve" 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              enrollStudent(student.student_id);
+                            }}
+                          >
+                            Approve
                           </button>
-                          <button className="cancel-button" onClick={cancelEdit}>
-                            Cancel
-                          </button>
-                        </>
-                      ) : (
-                        <>
+                        )}
                         </>
                       )}
+                      <button
+                        className="pending-enrollment-btn pending-enrollment-btn-reject"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          validateStudent(student.student_id);
+                        }}
+                      >
+                        Reject
+                      </button>
                     </div>
-                  </div>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="6" style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>
+                  No pending students found
                 </td>
               </tr>
             )}
+          </tbody>
+        </table>
+      </div>
 
+      {selectedStudentId && (
+        <div className="pending-enrollment-details">
+          <table>
+            <tbody>
+              <tr>
+                <th>Student ID</th>
+                <td>{editStudentData?.student_id || ''}</td>
+              </tr>
+              <tr>
+                <th>First Name</th>
+                <td>{editStudentData?.firstname || ''}</td>
+              </tr>
+              <tr>
+                <th>Middle Name</th>
+                <td>{editStudentData?.middlename || ''}</td>
+              </tr>
+              <tr>
+                <th>Last Name</th>
+                <td>{editStudentData?.lastname || ''}</td>
+              </tr>
+              <tr>
+                <th>Grade</th>
+                <td>{editStudentData?.current_yr_lvl || ''}</td>
+              </tr>
+              <tr>
+                <th>Section</th>
+                <td>{editStudentData?.section_id || ''}</td>
+              </tr>
+              <tr>
+                <th>Status</th>
+                <td>
+                  <span className={`status-${editStudentData?.student_status.toLowerCase()}`}>
+                    {editStudentData?.student_status || ''}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      )}
 
-            </React.Fragment>
-          ))}
-        </tbody>
-      </table>
-      {/* Pagination Controls */}
       <Pagination
-        totalItems={filteredStudents.length}
         itemsPerPage={studentsPerPage}
+        totalItems={filteredStudents.length}
+        paginate={paginate}
         currentPage={currentPage}
-        onPageChange={paginate}
       />
-    </div>
     </div>
   );
 }
