@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import '../TeacherPagesCss/TeacherGrades.css';
+import '../TeacherPagesCss/GradesManagement.css';
 import GradeDetail from '../Utilities/grades-detail'
 import { useNavigate } from "react-router-dom";
 import Student_Grades_Search from '../RoleSearchFilters/student_grades_search';
