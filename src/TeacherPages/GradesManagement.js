@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import '../TeacherPagesCss/TestGrades.css';
+import '../TeacherPagesCss/TeacherGrades.css';
 import GradeDetail from '../Utilities/grades-detail'
 import { useNavigate } from "react-router-dom";
 import Student_Grades_Search from '../RoleSearchFilters/student_grades_search';
@@ -757,37 +757,37 @@ const handleStudentNameClick = (student) => {
 
 
   return (
-    <div className="grades-container">
-      <h2 className='grades-title'>Grades</h2>
-      <div className="subjects-add-subject-button-container">
+    <div className="teacher-grades-container">
+      <h2 className='teacher-grades-title'>Grades</h2>
+      <div className="teacher-grades-search-container">
         <Student_Grades_Search handleSearch={handleSearch} />
       </div>
 
       {!showSubjectGrades && !showGradesTable && (
-        <div className="detailed-grades-view">
-          <button onClick={handleBackClick} className="back-button">
+        <div className="teacher-grades-detailed-view">
+          <button onClick={handleBackClick} className="teacher-grades-back-btn">
             ← Back
           </button>
-          <div className="section-header">
+          <div className="teacher-grades-section-header">
             <h3>{selectedSection.section_name}</h3>
             <p>Class Advisor: {selectedSection.adviser_name?.toUpperCase() || 'NOT ASSIGNED'}</p>
           </div>
-          <div className="grading-period-selector">
-              <label htmlFor="grading-period">Grading Period:</label>
-              <select
-                id="grading-period"
-                value={selectedGradingPeriod}
-                onChange={(e) => setSelectedGradingPeriod(parseInt(e.target.value, 10))}
-              >
-                <option value="">Select Grading Period</option>
-                <option value="1">1st Grading</option>
-                <option value="2">2nd Grading</option>
-                <option value="3">3rd Grading</option>
-                <option value="4">4th Grading</option>
-              </select>
-            </div>
-          <div className="grades-detailed-table">
-            <table className="students-table">
+          <div className="teacher-grades-period-selector">
+            <label htmlFor="grading-period">Grading Period:</label>
+            <select
+              id="grading-period"
+              value={selectedGradingPeriod}
+              onChange={(e) => setSelectedGradingPeriod(parseInt(e.target.value, 10))}
+            >
+              <option value="">Select Grading Period</option>
+              <option value="1">1st Grading</option>
+              <option value="2">2nd Grading</option>
+              <option value="3">3rd Grading</option>
+              <option value="4">4th Grading</option>
+            </select>
+          </div>
+          <div className="teacher-grades-table-container">
+            <table className="teacher-grades-data-table">
               <thead>
                 <tr>
                   <th>Student ID</th>
@@ -801,16 +801,13 @@ const handleStudentNameClick = (student) => {
                 {students.map((student, index) => (
                   <tr key={index}>
                     <td>{student.student_id}</td>
-                    <td>{student.name}</td>
+                    <td className="teacher-grades-student-name">{student.name}</td>
                     {subjects.map((subject, subIndex) => {
                       const key = `${student.student_id}-${subject.subject_name}`;
                       const gradeData = studentGrades[key] || [];
-                      
-                      // Find grade for selected period
                       const periodGrade = gradeData.find(g => 
                         g.period === parseInt(selectedGradingPeriod)
                       )?.grade || '-';
-                      
                       return (
                         <td key={subIndex}>
                           {periodGrade}
@@ -826,16 +823,15 @@ const handleStudentNameClick = (student) => {
       )}
 
       {!showSubjectGrades && showGradesTable && (
-        // Original grades table
-        <div className="grades-table">
-          <div className="table-column">
+        <div className="teacher-grades-table">
+          <div className="teacher-grades-column">
             <h3>Grade Levels</h3>
-            <div className="grade-buttons">
+            <div className="teacher-grades-buttons">
               {gradeLevels.map((grade) => (
                 <button
                   key={grade}
                   onClick={() => handleGradeClick(grade)}
-                  className={selectedGrade === grade ? 'active' : ''}
+                  className={`teacher-grades-btn ${selectedGrade === grade ? 'active' : ''}`}
                 >
                   Grade {grade}
                 </button>
@@ -843,16 +839,16 @@ const handleStudentNameClick = (student) => {
             </div>
           </div>
 
-          <div className="table-column">
+          <div className="teacher-grades-column">
             <h3>Sections</h3>
             {selectedGrade ? (
-              <div className="section-list">
+              <div className="teacher-grades-section-list">
                 {sections.length > 0 ? (
                   sections.map((section, index) => (
                     <button
                       key={index}
                       onClick={() => handleSectionClick(section)}
-                      className={selectedSection?.section_name === section.section_name ? 'active' : ''}
+                      className={`teacher-grades-btn ${selectedSection?.section_name === section.section_name ? 'active' : ''}`}
                     >
                       {section.section_name}
                     </button>
@@ -866,24 +862,24 @@ const handleStudentNameClick = (student) => {
             )}
           </div>
 
-          <div className="table-column">
+          <div className="teacher-grades-column">
             <h3>Subjects</h3>
             {selectedSection && (
               <div 
-                className="section-info"
+                className="teacher-grades-section-info"
                 onClick={handleSectionInfoClick}
-                style={{ cursor: 'pointer' }}
               >
-                <span><strong>{selectedSection.section_name}</strong> {selectedSection.adviser_name?.toUpperCase() || 'NOT ASSIGNED'}</span>
+                <span><strong>{selectedSection.section_name}</strong></span>
+                <span>{selectedSection.adviser_name?.toUpperCase() || 'NOT ASSIGNED'}</span>
               </div>
             )}
-            <div className="subject-list">
+            <div className="teacher-grades-subject-list">
               {selectedSection ? (
                 subjects.length > 0 ? (
                   subjects.map((subject, index) => (
                     <button
                       key={index}
-                      className={`subject-button ${subject.type === 'elective' ? 'elective' : ''}`}
+                      className={`teacher-grades-btn ${subject.type === 'elective' ? 'elective' : ''}`}
                       onClick={() => handleSubjectClick({
                         subject_name: subject.subject_name,
                         type: subject.type,
@@ -906,11 +902,11 @@ const handleStudentNameClick = (student) => {
       )}
 
       {showSubjectGrades && !showStudentDetails && (
-        <div className="subject-grades-view">
-          <button onClick={handleBackToGrades} className="back-button">
+        <div className="teacher-grades-subject-view">
+          <button onClick={handleBackToGrades} className="teacher-grades-back-btn">
             ← Back to Grades
           </button>
-          <div className="subject-header">
+          <div className="teacher-grades-subject-header">
             <h3>
               {selectedSubject.subject_name}
               {selectedSubject.type === 'elective' ? ' (Elective)' : ''} - 
@@ -918,8 +914,7 @@ const handleStudentNameClick = (student) => {
               {selectedSection.section_name}
             </h3>
             
-            {/* Grading Period Selector */}
-            <div className="grading-period-selector">
+            <div className="teacher-grades-period-selector">
               <label htmlFor="grading-period">Grading Period:</label>
               <select
                 id="grading-period"
@@ -935,8 +930,8 @@ const handleStudentNameClick = (student) => {
             </div>
           </div>
 
-          <div className="subject-grades-table">
-            <table>
+          <div className="teacher-grades-table-container">
+            <table className="teacher-grades-data-table">
               <thead>
                 <tr>
                   <th>Student ID</th>
@@ -949,68 +944,69 @@ const handleStudentNameClick = (student) => {
                 </tr>
               </thead>
               <tbody>
-              {students.map((student, index) => {
-                const gradesDetail = gradesDetailData[student.student_id] || [];
-                const gradesDetailForPeriod = gradesDetail.filter(
-                  (detail) => detail.period === selectedGradingPeriod
-                );
+                {students.map((student, index) => {
+                  const gradesDetail = gradesDetailData[student.student_id] || [];
+                  const gradesDetailForPeriod = gradesDetail.filter(
+                    (detail) => detail.period === selectedGradingPeriod
+                  );
 
-                return (
-                  <tr key={index}>
-                    <td>{student.student_id}</td>
-                    <td onClick={() => handleStudentNameClick(student)} className="student-name-cell">
-                      {student.name}
-                    </td>
-                    {gradesDetailForPeriod.length > 0 ? (
-                      <>
-                        <td>{gradesDetailForPeriod[0].written_works || 0}</td>
-                        <td>{gradesDetailForPeriod[0].performance_task || 0}</td>
-                        <td>{gradesDetailForPeriod[0].quarterly_assessment || 0}</td>
-                        <td>
-                          {
-                            Math.round(
-                              (gradesDetailForPeriod[0].written_works || 0) +
-                              (gradesDetailForPeriod[0].performance_task || 0) +
-                              (gradesDetailForPeriod[0].quarterly_assessment || 0)
-                            )
-                          }
-                        </td>
-                        <td
-                          className={
-                            Math.round(
-                              (gradesDetailForPeriod[0].written_works || 0) +
-                              (gradesDetailForPeriod[0].performance_task || 0) +
-                              (gradesDetailForPeriod[0].quarterly_assessment || 0)
-                            ) >= 75
-                              ? 'passed'
-                              : 'failed'
-                          }
-                        >
-                          {
-                            Math.round(
-                              (gradesDetailForPeriod[0].written_works || 0) +
-                              (gradesDetailForPeriod[0].performance_task || 0) +
-                              (gradesDetailForPeriod[0].quarterly_assessment || 0)
-                            ) >= 75
-                              ? 'Passed'
-                              : 'Failed'
-                          }
-                        </td>
-                      </>
-                    ) : (
-                      <>
-                        <td>0</td>
-                        <td>0</td>
-                        <td>0</td>
-                        <td>0</td>
-                        <td></td>
-                      </>
-                    )}
-                  </tr>
-                ); 
-                
-              })}
-
+                  return (
+                    <tr key={index}>
+                      <td>{student.student_id}</td>
+                      <td 
+                        onClick={() => handleStudentNameClick(student)}
+                        className="teacher-grades-student-name"
+                      >
+                        {student.name}
+                      </td>
+                      {gradesDetailForPeriod.length > 0 ? (
+                        <>
+                          <td>{gradesDetailForPeriod[0].written_works || 0}</td>
+                          <td>{gradesDetailForPeriod[0].performance_task || 0}</td>
+                          <td>{gradesDetailForPeriod[0].quarterly_assessment || 0}</td>
+                          <td>
+                            {
+                              Math.round(
+                                (gradesDetailForPeriod[0].written_works || 0) +
+                                (gradesDetailForPeriod[0].performance_task || 0) +
+                                (gradesDetailForPeriod[0].quarterly_assessment || 0)
+                              )
+                            }
+                          </td>
+                          <td
+                            className={
+                              Math.round(
+                                (gradesDetailForPeriod[0].written_works || 0) +
+                                (gradesDetailForPeriod[0].performance_task || 0) +
+                                (gradesDetailForPeriod[0].quarterly_assessment || 0)
+                              ) >= 75
+                                ? 'teacher-grades-status-passed'
+                                : 'teacher-grades-status-failed'
+                            }
+                          >
+                            {
+                              Math.round(
+                                (gradesDetailForPeriod[0].written_works || 0) +
+                                (gradesDetailForPeriod[0].performance_task || 0) +
+                                (gradesDetailForPeriod[0].quarterly_assessment || 0)
+                              ) >= 75
+                                ? 'Passed'
+                                : 'Failed'
+                            }
+                          </td>
+                        </>
+                      ) : (
+                        <>
+                          <td>0</td>
+                          <td>0</td>
+                          <td>0</td>
+                          <td>0</td>
+                          <td></td>
+                        </>
+                      )}
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -1018,126 +1014,62 @@ const handleStudentNameClick = (student) => {
       )}
 
       {showStudentDetails && (
-        <div className="student-details-view">
-          <button onClick={handleBackToSubjectGrades} className="back-button">
+        <div className="teacher-grades-details-view">
+          <button onClick={handleBackToSubjectGrades} className="teacher-grades-back-btn">
             ← Back to Subject Grades
           </button>
-          <div className="student-header">
+          <div className="teacher-grades-student-header">
             <h3>
               {selectedSubject.subject_name} 
               {selectedSubject.type === 'elective' ? ' (Elective)' : ''} - 
               Grade {selectedGrade} - 
               {selectedSection.section_name}
             </h3>
-            <div className="student-name">
+            <div className="teacher-grades-student-info">
               <h4>{selectedStudent.name}</h4>
               <p>Student ID: {selectedStudent.student_id}</p>
               <p>Grading Period: {selectedStudent.gradingPeriod}</p>
             </div>
           </div>
-          <div className="student-grades-details">
-            <div className="grade-columns">
-              {/* Written Works */}
-              <GradeDetail
-                title="Written Works"
-                percentage={percentages.WW}
-                data={writtenWorks}
-                onAddActivity={() => handleAddActivity('WW')}
-                onEditActivity={handleEditActivity}
-                onDeleteActivity={handleDeleteActivity}
-                onPercentageChange={(newPercentage) => handlePercentageChange('WW', newPercentage)}
-                otherPercentages={percentages}
-                isLocked={!isEditing && existingGrades[`${selectedStudent?.student_id}-${selectedSubject?.subject_name}-${
-                  {
-                    '1st Grading': 1,
-                    '2nd Grading': 2,
-                    '3rd Grading': 3,
-                    '4th Grading': 4
-                  }[selectedGradingPeriod]
-                }`]}
-              />
 
-              {/* Performance Task */}
-              <GradeDetail
-                title="Performance Task"
-                percentage={percentages.PT}
-                data={performanceTasks}
-                onAddActivity={() => handleAddActivity('PT')}
-                onEditActivity={handleEditActivity}
-                onDeleteActivity={handleDeleteActivity}
-                onPercentageChange={(newPercentage) => handlePercentageChange('PT', newPercentage)}
-                otherPercentages={percentages}
-                isLocked={!isEditing && existingGrades[`${selectedStudent?.student_id}-${selectedSubject?.subject_name}-${
-                  {
-                    '1st Grading': 1,
-                    '2nd Grading': 2,
-                    '3rd Grading': 3,
-                    '4th Grading': 4
-                  }[selectedGradingPeriod]
-                }`]}
-              />
+          <div className="teacher-grades-details">
+            {/* Grade components will be rendered here */}
+          </div>
 
-              {/* Quarterly Assessment */}
-              <GradeDetail
-                title="Quarterly Assessment"
-                percentage={percentages.QA}
-                data={quarterlyAssessments}
-                onAddActivity={() => handleAddActivity('QA')}
-                onEditActivity={handleEditActivity}
-                onDeleteActivity={handleDeleteActivity}
-                onPercentageChange={(newPercentage) => handlePercentageChange('QA', newPercentage)}
-                otherPercentages={percentages}
-                isLocked={!isEditing && existingGrades[`${selectedStudent?.student_id}-${selectedSubject?.subject_name}-${
-                  {
-                    '1st Grading': 1,
-                    '2nd Grading': 2,
-                    '3rd Grading': 3,
-                    '4th Grading': 4
-                  }[selectedGradingPeriod]
-                }`]}
-              />
-            </div>
-            
-            {/* Display Grade Summary */}
-            <div className="grade-column">
-              <h4>Grades</h4>
-              <table>
+          <div className="teacher-grades-summary">
+            <div className="teacher-grades-detail-card">
+              <h4>Grade Summary</h4>
+              <table className="teacher-grades-data-table">
                 <thead>
                   <tr>
                     <th>Component</th>
-                    <th>WS</th>
+                    <th>Score</th>
                     <th>Weight</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {/* Written Works */}
                   <tr>
                     <td>Written Works</td>
                     <td>{calculateWeightedScore(writtenWorks, percentages.WW)}</td>
                     <td>{percentages.WW}%</td>
                   </tr>
-
-                  {/* Performance Task */}
                   <tr>
                     <td>Performance Task</td>
                     <td>{calculateWeightedScore(performanceTasks, percentages.PT)}</td>
                     <td>{percentages.PT}%</td>
                   </tr>
-
-                  {/* Quarterly Assessment */}
                   <tr>
                     <td>Quarterly Assessment</td>
                     <td>{calculateWeightedScore(quarterlyAssessments, percentages.QA)}</td>
                     <td>{percentages.QA}%</td>
                   </tr>
-
-                  {/* Final Weighted Grade */}
                   <tr>
-                    <td>Grade</td>
+                    <td colSpan="2">Final Grade</td>
                     <td>{calculateFinalGrade()}</td>
                   </tr>
                 </tbody>
               </table>
+
               {existingGrades[`${selectedStudent?.student_id}-${selectedSubject?.subject_name}-${
                 {
                   '1st Grading': 1,
@@ -1147,84 +1079,86 @@ const handleStudentNameClick = (student) => {
                 }[selectedGradingPeriod]
               }`] ? (
                 isEditing ? (
-                  <div className="button-group">
-                    <button className="update-grades-btn" onClick={handleSubmitGrades}>
+                  <div className="teacher-grades-button-group">
+                    <button className="teacher-grades-submit-btn" onClick={handleSubmitGrades}>
                       Update Grades
                     </button>
-                    <button className="cancel-edit-btn" onClick={handleCancelEdit}>
+                    <button className="teacher-grades-edit-btn" onClick={handleCancelEdit}>
                       Cancel
                     </button>
                   </div>
                 ) : (
-                  <button className="edit-grades-btn" onClick={handleEditMode}>
+                  <button className="teacher-grades-edit-btn" onClick={handleEditMode}>
                     Edit Grades
                   </button>
                 )
               ) : (
-                roleName !== 'principal' && roleName !== 'grade_level_coordinator') && (
-                <button className="submit-grades-btn" onClick={handleSubmitGrades}>
-                  Submit Grades
-                </button>
+                roleName !== 'principal' && roleName !== 'grade_level_coordinator' && (
+                  <button className="teacher-grades-submit-btn" onClick={handleSubmitGrades}>
+                    Submit Grades
+                  </button>
+                )
               )}
             </div>
           </div>
-
-           {/* Add Activity Modal */}
-          {showAddActivityModal && (
-            <div className="modal-overlay" onClick={handleCloseModal}>
-                <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                    <div className="modal-header">
-                        <h3>
-                            {selectedItem
-                                ? `Edit ${selectedItem.type === 'WW' ? 'Written Work' : selectedItem.type === 'PT' ? 'Performance Task' : 'Quarterly Assessment'}`
-                                : `Add ${activityType === 'WW' ? 'Written Work' : activityType === 'PT' ? 'Performance Task' : 'Quarterly Assessment'}`}
-                        </h3>
-                        <button className="close-btn" onClick={handleCloseModal}>
-                            &times;
-                        </button>
-                    </div>
-                    <form onSubmit={handleUpdateActivity}>
-                        <div className="form-group">
-                            <label>Name:</label>
-                            <input
-                                type="text"
-                                name="remarks"
-                                defaultValue={selectedItem?.remarks || ''} // Pre-fill for edit; empty for new
-                                required
-                            />
-                        </div>
-                        <div className="form-group">
-                            <label>Score:</label>
-                            <input
-                                type="number"
-                                name="scores"
-                                defaultValue={selectedItem?.scores || ''} // Pre-fill for edit; empty for new
-                                min="0"
-                                required
-                            />
-                        </div>
-                        <div className="form-group">
-                            <label>Total Items:</label>
-                            <input
-                                type="number"
-                                name="total_items"
-                                defaultValue={selectedItem?.total_items || ''} // Pre-fill for edit; empty for new
-                                min="1"
-                                required
-                            />
-                            <input type="hidden" name="item_id" value={selectedItem?.item_id || selectedItem?.id} />
-                        </div>
-                        <div className="modal-buttons">
-                            <button type="button" onClick={handleCloseModal}>Cancel</button>
-                            <button type="submit">Save</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        )}
         </div>
       )}
 
+      {showAddActivityModal && (
+        <div className="teacher-grades-modal-overlay" onClick={handleCloseModal}>
+          <div className="teacher-grades-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="teacher-grades-modal-header">
+              <h3>
+                {selectedItem
+                  ? `Edit ${selectedItem.type === 'WW' ? 'Written Work' : selectedItem.type === 'PT' ? 'Performance Task' : 'Quarterly Assessment'}`
+                  : `Add ${activityType === 'WW' ? 'Written Work' : activityType === 'PT' ? 'Performance Task' : 'Quarterly Assessment'}`}
+              </h3>
+              <button className="teacher-grades-modal-close" onClick={handleCloseModal}>
+                &times;
+              </button>
+            </div>
+            <form onSubmit={handleUpdateActivity}>
+              <div className="teacher-grades-form-group">
+                <label>Name:</label>
+                <input
+                  type="text"
+                  name="remarks"
+                  defaultValue={selectedItem?.remarks || ''}
+                  required
+                />
+              </div>
+              <div className="teacher-grades-form-group">
+                <label>Score:</label>
+                <input
+                  type="number"
+                  name="scores"
+                  defaultValue={selectedItem?.scores || ''}
+                  min="0"
+                  required
+                />
+              </div>
+              <div className="teacher-grades-form-group">
+                <label>Total Items:</label>
+                <input
+                  type="number"
+                  name="total_items"
+                  defaultValue={selectedItem?.total_items || ''}
+                  min="1"
+                  required
+                />
+              </div>
+              <div className="teacher-grades-button-group">
+                <button type="button" className="teacher-grades-btn" onClick={handleCloseModal}>
+                  Cancel
+                </button>
+                <button type="submit" className="teacher-grades-submit-btn">
+                  Save
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

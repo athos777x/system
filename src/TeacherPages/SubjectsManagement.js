@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 //import SubjectsSearchFilter from '../RoleSearchFilters/SubjectsSearchFilter';
-import '../TeacherPagesCss/TestSubjects.css';
+import '../TeacherPagesCss/SubjectsManagement.css';
+import { FiPlus, FiEdit2, FiArchive } from 'react-icons/fi';
 
 function SubjectsManagement() {
   const [subjects, setSubjects] = useState([]);
@@ -122,24 +123,24 @@ function SubjectsManagement() {
   };
 
   return (
-    <div className="grades-container">
-      <h2 className="grades-title">Subjects</h2>
+    <div className="subject-mgmt-container">
+      <h2 className="subject-mgmt-title">Subjects Management</h2>
       {/* <div className="subjects-add-subject-button-container">
         <SubjectsSearchFilter handleSearch={handleSearch} />
       </div> */}
-      <div className="subjects-add-subject-button-container">
-        <button className="subjects-add-subject-button" onClick={startAdding}>
-          + Add New Subject
+      <div className="subject-mgmt-add-btn-container">
+        <button className="subject-mgmt-add-btn" onClick={startAdding}>
+          <FiPlus /> Add New Subject
         </button>
       </div>
-      <div className="grades-table">
-        <div className="table-column">
+      <div className="subject-mgmt-grid">
+        <div className="subject-mgmt-column">
           <h3>Grade Levels</h3>
-          <div className="grade-buttons">
+          <div className="subject-mgmt-grade-buttons">
             {grades.map((grade) => (
               <button
                 key={grade}
-                className={selectedGrade === grade ? 'active' : ''}
+                className={`subject-mgmt-grade-btn ${selectedGrade === grade ? 'active' : ''}`}
                 onClick={() => handleGradeClick(grade)}
               >
                 Grade {grade}
@@ -147,92 +148,102 @@ function SubjectsManagement() {
             ))}
           </div>
         </div>
-        <div className="table-column">
+        <div className="subject-mgmt-column">
           <h3>Subjects</h3>
           {selectedGrade ? (
             filteredSubjects.length > 0 ? (
-              <ul className="subjects-list">
+              <ul className="subject-mgmt-list">
                 {filteredSubjects.map((subject) => (
                   <li
                     key={subject.subject_id}
-                    className="subject-item"
+                    className={`subject-mgmt-item ${selectedSubject?.subject_id === subject.subject_id ? 'active' : ''}`}
                     onClick={() => handleSubjectClick(subject)}
                   >
-                    {subject.subject_name} ({subject.status.charAt(0).toUpperCase() + subject.status.slice(1)})
+                    <div className="subject-mgmt-item-name">{subject.subject_name}</div>
+                    <span className={`subject-mgmt-status ${subject.status}`}>
+                      {subject.status.charAt(0).toUpperCase() + subject.status.slice(1)}
+                    </span>
                   </li>
                 ))}
               </ul> 
             ) : (
-              <p>No subjects available for Grade {selectedGrade}.</p>
+              <div className="subject-mgmt-empty-message">
+                No subjects available for Grade {selectedGrade}.
+              </div>
             )
           ) : (
-            <p>Please select a grade level to view its subjects.</p>
+            <div className="subject-mgmt-empty-message">
+              Please select a grade level to view its subjects.
+            </div>
           )}
         </div>
-        <div className="table-column">
+        <div className="subject-mgmt-column">
           <h3>Subject Details</h3>
           {selectedSubject ? (
-            <div className="subject-details">
+            <div className="subject-mgmt-details">
               <table>
                 <tbody>
                   <tr>
-                    <td><strong>Name:</strong></td>
+                    <td>Name</td>
                     <td>{selectedSubject.subject_name}</td>
                   </tr>
                   <tr>
-                    <td><strong>Grade Level:</strong></td>
+                    <td>Grade Level</td>
                     <td>Grade {selectedSubject.grade_level}</td>
                   </tr>
                   <tr>
-                    <td><strong>Status:</strong></td>
-                    <td>{selectedSubject.status}</td>
-                  </tr>
-                  <tr>
-                    <td><strong>Description:</strong></td>
-                    <td>{selectedSubject.description || 'No description provided'}</td>
-                  </tr>
-                  <tr>
-                    <td colSpan="2">
-                      <div className="subject-actions">
-                        <button className="edit-button" onClick={handleEdit}>
-                          Edit
-                        </button>
-                        <button 
-                          className="delete-button" 
-                          onClick={handleDelete} 
-                          disabled={selectedSubject?.sy_status === 'active'} // Disable if status is not 'active'
-                        >
-                          Archive
-                        </button>
-
-                      </div>
+                    <td>Status</td>
+                    <td>
+                      <span className={`subject-mgmt-status ${selectedSubject.status}`}>
+                        {selectedSubject.status.charAt(0).toUpperCase() + selectedSubject.status.slice(1)}
+                      </span>
                     </td>
+                  </tr>
+                  <tr>
+                    <td>Description</td>
+                    <td>{selectedSubject.description || 'No description provided'}</td>
                   </tr>
                 </tbody>
               </table>
+              
+              <div className="subject-mgmt-actions">
+                <button className="subject-mgmt-edit-btn" onClick={handleEdit}>
+                  <FiEdit2 /> Edit
+                </button>
+                <button 
+                  className="subject-mgmt-archive-btn" 
+                  onClick={handleDelete}
+                  disabled={selectedSubject?.sy_status === 'active'}
+                >
+                  <FiArchive /> Archive
+                </button>
+              </div>
             </div>
           ) : (
-            <p>Please select a subject to view its details.</p>
+            <div className="subject-mgmt-empty-message">
+              Please select a subject to view its details.
+            </div>
           )}
         </div>
       </div>
       {showModal && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h3>{isEditing ? 'Edit Subject' : 'Add New Subject'}</h3>
-              <button className="close-btn" onClick={cancelAdding}>
+        <div className="subject-mgmt-modal-overlay">
+          <div className="subject-mgmt-modal">
+            <div className="subject-mgmt-modal-header">
+              <h3 className="subject-mgmt-modal-title">
+                {isEditing ? 'Edit Subject' : 'Add New Subject'}
+              </h3>
+              <button className="subject-mgmt-modal-close" onClick={() => setShowModal(false)}>
                 &times;
               </button>
             </div>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                saveNewSubject();
-              }}
-            >
-              <div className="form-group">
-                <label>Subject Name:</label>
+            
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              saveNewSubject();
+            }}>
+              <div className="subject-mgmt-form-group">
+                <label>Subject Name</label>
                 <input
                   type="text"
                   name="subject_name"
@@ -241,8 +252,9 @@ function SubjectsManagement() {
                   required
                 />
               </div>
-              <div className="form-group">
-                <label>Grade Level:</label>
+
+              <div className="subject-mgmt-form-group">
+                <label>Grade Level</label>
                 <select
                   name="grade_level"
                   value={newSubjectData.grade_level}
@@ -255,8 +267,9 @@ function SubjectsManagement() {
                   ))}
                 </select>
               </div>
-              <div className="form-group">
-                <label>Status:</label>
+
+              <div className="subject-mgmt-form-group">
+                <label>Status</label>
                 <select
                   name="status"
                   value={newSubjectData.status}
@@ -266,19 +279,31 @@ function SubjectsManagement() {
                   <option value="inactive">Inactive</option>
                 </select>
               </div>
-              <div className="form-group">
-                <label>Description:</label>
+
+              <div className="subject-mgmt-form-group">
+                <label>Description</label>
                 <textarea
                   name="description"
                   value={newSubjectData.description}
                   onChange={handleAddChange}
+                  placeholder="Enter subject description..."
                 />
               </div>
-              <div className="modal-buttons">
-                <button type="button" onClick={cancelAdding}>
+
+              <div className="subject-mgmt-modal-buttons">
+                <button 
+                  type="button" 
+                  className="subject-mgmt-modal-btn subject-mgmt-modal-cancel"
+                  onClick={() => setShowModal(false)}
+                >
                   Cancel
                 </button>
-                <button type="submit">{isEditing ? 'Update' : 'Save'}</button>
+                <button 
+                  type="submit"
+                  className="subject-mgmt-modal-btn subject-mgmt-modal-submit"
+                >
+                  {isEditing ? 'Update' : 'Save'}
+                </button>
               </div>
             </form>
           </div>
