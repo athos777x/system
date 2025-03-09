@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import SearchFilter from '../RoleSearchFilters/SearchFilter';
 import Pagination from '../Utilities/pagination';
 import axios from 'axios';
-import '../RegistrarPagesCss/PendingEnrollmentManagement.css';
+import '../TeacherPagesCss/PendingEnrollmentManagement.css';
 
 function EnrollmentRequests() {
   const [students, setStudents] = useState([]);

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import SearchFilter from '../RoleSearchFilters/SearchFilter';
 import Pagination from '../Utilities/pagination';
-import '../RegistrarPagesCss/BrigadaEskwela.css';
+import '../TeacherPagesCss/BrigadaEskwela.css';
 
 function BrigadaEskwela() {
   const [students, setStudents] = useState([]);

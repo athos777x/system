@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
-import '../RegistrarPagesCss/SchoolYearManagement.css';
+import '../TeacherPagesCss/SchoolYearManagement.css';
 
 function SchoolYearManagement() {
   const [schoolYears, setSchoolYears] = useState([]);

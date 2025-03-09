@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import ScheduleSearchFilter from '../RoleSearchFilters/ScheduleSearchFilter';
-import '../PrincipalPagesCss/ScheduleManagement.css';
+import '../TeacherPagesCss/ScheduleManagement.css';
 
 function Principal_SchedulePage() {
   const [sections, setSections] = useState([]);

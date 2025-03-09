@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import SearchFilter from '../RoleSearchFilters/SearchFilter';
 import axios from 'axios';
 import Pagination from '../Utilities/pagination';
-import '../RegistrarPagesCss/AttendanceManagement.css';
+import '../TeacherPagesCss/AttendanceManagement.css';
 
 function AttendanceManagement() {
   const [students, setStudents] = useState([]);

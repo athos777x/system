@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Pagination from '../Utilities/pagination';
 import axios from 'axios';
-import '../RegistrarPagesCss/TeacherManagement.css';
+import '../TeacherPagesCss/TeacherManagement.css';
 import EmployeeSearchFilter from '../RoleSearchFilters/EmployeeSearchFilter';
 
 function TeacherManagement() {

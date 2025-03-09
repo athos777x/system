@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import SearchFilter from '../RoleSearchFilters/SearchFilter';
 import Pagination from '../Utilities/pagination';
 import axios from 'axios';
-import '../RegistrarPagesCss/StudentManagement.css';
+import '../TeacherPagesCss/StudentManagement.css';
 
 function StudentManagement() {
   const [students, setStudents] = useState([]);
