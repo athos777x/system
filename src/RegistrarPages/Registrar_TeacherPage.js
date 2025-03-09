@@ -613,7 +613,11 @@ useEffect(() => {
                 <tr>
                   <td>{index + 1}</td>
                   <td>{teacher.firstname} {teacher.middlename && `${teacher.middlename[0]}.`} {teacher.lastname}</td>
-                  <td>{teacher.status}</td>
+                  <td>
+                    <span className={`status-${teacher.status.toLowerCase()}`}>
+                      {teacher.status.charAt(0).toUpperCase() + teacher.status.slice(1)}
+                    </span>
+                  </td>
                   <td>
                     <div className="teacher-mgmt-actions">
                       <button 
@@ -676,7 +680,11 @@ useEffect(() => {
                               </tr>
                               <tr>
                                 <th>Status:</th>
-                                <td>{teacher.status}</td>
+                                <td>
+                                  <span className={`status-${teacher.status.toLowerCase()}`}>
+                                    {teacher.status.charAt(0).toUpperCase() + teacher.status.slice(1)}
+                                  </span>
+                                </td>
                               </tr>
                             </tbody>
                           </table>

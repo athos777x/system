@@ -237,6 +237,11 @@
 
 .teacher-mgmt-table > tbody > tr:hover {
   background-color: #f1f8e9 !important;
+  cursor: pointer;
+}
+
+.teacher-mgmt-table > tbody > tr:hover td {
+  background-color: #f1f8e9 !important;
 }
 
 /* Actions column styling */
@@ -282,12 +287,12 @@
 }
 
 .teacher-mgmt-btn-archive {
-  background: #ef5350;
+  background: #f44336;
   color: white;
 }
 
 .teacher-mgmt-btn-archive:hover {
-  background: #e53935;
+  background: #d32f2f;
 }
 
 /* Details view styles */
@@ -411,6 +416,38 @@
   outline: none;
   border-color: #4CAF50;
   box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+}
+
+/* Status indicators */
+.status-active,
+.status-inactive,
+.status-resigned,
+.status-retired {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-weight: 500;
+  font-size: 0.875rem;
+}
+
+.status-active {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+
+.status-inactive {
+  background-color: #ffebee;
+  color: #c62828;
+}
+
+.status-resigned {
+  background-color: #fafafa;
+  color: #616161;
+}
+
+.status-retired {
+  background-color: #e3f2fd;
+  color: #1565c0;
 }
 
 /* Responsive adjustments */
