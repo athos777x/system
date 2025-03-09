@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Pagination from '../Utilities/pagination';
 import axios from 'axios';
-import '../RegistrarPagesCss/Registrar_TeacherPage.css';
+import '../RegistrarPagesCss/TeacherManagement.css';
 import EmployeeSearchFilter from '../RoleSearchFilters/EmployeeSearchFilter';
 
 function Registrar_TeacherPage() {
@@ -122,7 +122,7 @@ function Registrar_TeacherPage() {
 
   const handleSearch = (searchTerm) => {
     setFilters((prevFilters) => ({ ...prevFilters, searchTerm }));
-    applyFilters({ ...filters, searchTerm });
+    applyFilters(filters);
   };
 
   const applyFilters = (appliedFilters) => {
@@ -582,218 +582,211 @@ useEffect(() => {
   };
 
   return (
-    <div className="students-container">
-      <h1 className="students-title">Employees</h1>
-      <div className="students-search-filter-container">
-        <EmployeeSearchFilter
-          handleSearch={handleSearch}
-          handleApplyFilters={handleApplyFilters}
-        />
-      </div>
-      <div className="students-button-container">
+    <div className="teacher-mgmt-container">
+      <div className="teacher-mgmt-header">
+        <h1 className="teacher-mgmt-title">Employee Management</h1>
         {(roleName === 'registrar' || roleName === 'principal') && (
-          <button className="students-add-button" onClick={startAdding}>
+          <button className="teacher-mgmt-btn teacher-mgmt-btn-view" onClick={startAdding}>
             Add New Teacher
           </button>
         )}
       </div>
-      <div className="teachers-list">
-      <table className="attendance-table">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Name</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {CurrentTeachers.map((teacher, index) => (
-            <React.Fragment key={teacher.employee_id}>
-              <tr>
-                <td>{index + 1}</td>
-                <td>{teacher.firstname} {teacher.middlename && `${teacher.middlename[0]}.`} {teacher.lastname}</td>
-                <td>{teacher.status}</td>
-                <td>
-                  <button 
-                    className="students-view-button"
-                    onClick={() => handleViewDetails(teacher.employee_id, teacher.role_id)}
-                  >
-                    View
-                  </button>
-                  {(roleName === 'registrar' || roleName === 'principal') && teacher.status === 'active' && (
-                    <button 
-                      className="students-edit-button"
-                      onClick={() => handleEditClick(teacher)}
-                    >
-                      Edit
-                    </button>
-                  )}
-                </td>
-              </tr>
 
-              {selectedTeacherId === teacher.employee_id && (
-                <tr className="teacher-details-row">
-                  <td colSpan="4">
-                    <div className="teacher-details-container">
-                      <table className="teacher-details-table">
-                        <tbody>
-                        <tr>
-                            <th>Employee ID:</th>
-                            <td>{teacher.employee_id}</td>
-                          </tr>
-                          <tr>
-                            <th>Last Name:</th>
-                            <td>{teacher.lastname}</td>
-                          </tr>
-                          <tr>
-                            <th>First Name:</th>
-                            <td>{teacher.firstname}</td>
-                          </tr>
-                          <tr>
-                            <th>Middle Name:</th>
-                            <td>{teacher.middlename || 'N/A'}</td>
-                          </tr>
-                          <tr>
-                            <th>Contact Number:</th>
-                            <td>{teacher.contact_number}</td>
-                          </tr>
-                          <tr>
-                            <th>Address:</th>
-                            <td>{teacher.address}</td>
-                          </tr>
-                          <tr>
-                            <th>Year Started:</th>
-                            <td>{teacher.year_started}</td>
-                          </tr>
-                          <tr>
-                            <th>Role:</th>
-                            <td>{teacher.role_name}</td>
-                          </tr>
-                          <tr>
-                            <th>Status:</th>
-                            <td>{teacher.status}</td>
-                          </tr>
-                        </tbody>
-                      </table>
+      <EmployeeSearchFilter
+        handleSearch={handleSearch}
+        handleApplyFilters={handleApplyFilters}
+      />
 
-                      
-                      <div className="assigned-subjects">
-                        <h3>Assigned Subjects</h3>
-                        {teacherSubjects.length > 0 ? (
-                          <table className="subjects-table">
-                            <thead>
-                              <tr>
-                                <th>Grade Level</th>
-                                <th>Subject Name</th>
-                                <th>Section</th>
-                              </tr>
-                            </thead>
+      <div className="teacher-mgmt-table-container">
+        <table className="teacher-mgmt-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Name</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {CurrentTeachers.map((teacher, index) => (
+              <React.Fragment key={teacher.employee_id}>
+                <tr>
+                  <td>{index + 1}</td>
+                  <td>{teacher.firstname} {teacher.middlename && `${teacher.middlename[0]}.`} {teacher.lastname}</td>
+                  <td>{teacher.status}</td>
+                  <td>
+                    <div className="teacher-mgmt-actions">
+                      <button 
+                        className="teacher-mgmt-btn teacher-mgmt-btn-view"
+                        onClick={() => handleViewDetails(teacher.employee_id, teacher.role_id)}
+                      >
+                        View
+                      </button>
+                      {(roleName === 'registrar' || roleName === 'principal') && teacher.status === 'active' && (
+                        <button 
+                          className="teacher-mgmt-btn teacher-mgmt-btn-edit"
+                          onClick={() => handleEditClick(teacher)}
+                        >
+                          Edit
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+
+                {selectedTeacherId === teacher.employee_id && (
+                  <tr className="teacher-mgmt-details">
+                    <td colSpan="4">
+                      <div className="teacher-mgmt-details-content">
+                        <div className="teacher-mgmt-details-section">
+                          <h3>Personal Information</h3>
+                          <table className="teacher-mgmt-details-table">
                             <tbody>
-                              {teacherSubjects.map((subject, index) => (
-                                <tr key={index}>
-                                  <td>{subject.grade_level}</td> {/* Already includes 'Grade X' from the backend */}
-                                  <td>{subject.subject_name}</td> {/* Elective name or subject_name is already decided in the backend */}
-                                  <td>{subject.section_name}</td>
-                                </tr>
-                              ))}
+                              <tr>
+                                <th>Employee ID:</th>
+                                <td>{teacher.employee_id}</td>
+                              </tr>
+                              <tr>
+                                <th>Last Name:</th>
+                                <td>{teacher.lastname}</td>
+                              </tr>
+                              <tr>
+                                <th>First Name:</th>
+                                <td>{teacher.firstname}</td>
+                              </tr>
+                              <tr>
+                                <th>Middle Name:</th>
+                                <td>{teacher.middlename || 'N/A'}</td>
+                              </tr>
+                              <tr>
+                                <th>Contact Number:</th>
+                                <td>{teacher.contact_number}</td>
+                              </tr>
+                              <tr>
+                                <th>Address:</th>
+                                <td>{teacher.address}</td>
+                              </tr>
+                              <tr>
+                                <th>Year Started:</th>
+                                <td>{teacher.year_started}</td>
+                              </tr>
+                              <tr>
+                                <th>Role:</th>
+                                <td>{formatRoleName(teacher.role_name)}</td>
+                              </tr>
+                              <tr>
+                                <th>Status:</th>
+                                <td>{teacher.status}</td>
+                              </tr>
                             </tbody>
                           </table>
-                        ) : (
-                          <p>No subjects assigned yet</p>
-                        )}
-                      </div>
+                        </div>
 
-
-
-
-                      {teacher.role_id === 4 && (
-                        <div className="assigned-section">
-                          <h3>Assigned Section</h3>
-                          {teacherSection && teacherSection.length > 0 ? ( // Check if the array has sections
-                            <table className="section-table">
+                        <div className="teacher-mgmt-details-section">
+                          <h3>Assigned Subjects</h3>
+                          {teacherSubjects.length > 0 ? (
+                            <table className="teacher-mgmt-details-table">
                               <thead>
                                 <tr>
                                   <th>Grade Level</th>
-                                  <th>Section Name</th>
+                                  <th>Subject Name</th>
+                                  <th>Section</th>
                                 </tr>
                               </thead>
                               <tbody>
-                                {teacherSection.map((section, index) => ( // Loop through each section
+                                {teacherSubjects.map((subject, index) => (
                                   <tr key={index}>
-                                    <td>{section.grade_level}</td>
-                                    <td>{section.section_name}</td>
+                                    <td>{subject.grade_level}</td>
+                                    <td>{subject.subject_name}</td>
+                                    <td>{subject.section_name}</td>
                                   </tr>
                                 ))}
                               </tbody>
                             </table>
                           ) : (
-                            <p>No section assigned yet</p>
+                            <p>No subjects assigned yet</p>
+                          )}
+
+                          {teacher.role_id === 4 && (
+                            <>
+                              <h3>Assigned Section</h3>
+                              {teacherSection && teacherSection.length > 0 ? (
+                                <table className="teacher-mgmt-details-table">
+                                  <thead>
+                                    <tr>
+                                      <th>Grade Level</th>
+                                      <th>Section Name</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {teacherSection.map((section, index) => (
+                                      <tr key={index}>
+                                        <td>{section.grade_level}</td>
+                                        <td>{section.section_name}</td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              ) : (
+                                <p>No section assigned yet</p>
+                              )}
+                            </>
                           )}
                         </div>
-                      )}
 
-
-                      <div className="action-buttons">
-                          {/* <button 
-                            className="assign-button"
-                            onClick={() => handleAssignSubject(teacher.employee_id)}
-                          >
-                            Assign Subject
-                          </button> */}
-                        {teacher.role_id === 4 && (
+                        <div className="teacher-mgmt-details-actions">
+                          {teacher.role_id === 4 && (
+                            <button 
+                              className="teacher-mgmt-btn teacher-mgmt-btn-view"
+                              onClick={() => handleAssignSection(teacher.employee_id)}
+                            >
+                              Assign Section
+                            </button>
+                          )}
                           <button 
-                            className="assign-button"
-                            onClick={() => handleAssignSection(teacher.employee_id)}
+                            className="teacher-mgmt-btn teacher-mgmt-btn-archive"
+                            onClick={() => openArchiveModal(teacher.employee_id)}
+                            disabled={teacher.status !== 'active'}
                           >
-                            Assign Section
+                            Archive Employee
                           </button>
-                        )}
-                        <button 
-                          className="delete-button"
-                          onClick={() => openArchiveModal(teacher.employee_id)}
-                          disabled={teacher.status !== 'active'}
-                        >
-                          Archive Employee
-                        </button>
+                        </div>
                       </div>
-                    </div>
-                  </td>
-                </tr>
-              )}
-            </React.Fragment>
-          ))}
-        </tbody>
-      </table>
-      {/* Pagination Controls */}
+                    </td>
+                  </tr>
+                )}
+              </React.Fragment>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
       <Pagination
         totalItems={filteredTeachers.length}
         itemsPerPage={studentsPerPage}
         currentPage={currentPage}
         onPageChange={paginate}
       />
-    </div>
 
       {showArchiveModal && (
-        <div className="archive-modal">
-          <div className="archive-modal-content">
+        <div className="teacher-mgmt-modal">
+          <div className="teacher-mgmt-modal-content">
             <h2>Archive Employee</h2>
-            <p>Choose an archive status for the employee:</p>
-            <select
-              value={archiveStatus}
-              onChange={(e) => {
-                setArchiveStatus(e.target.value);
-                console.log('Selected archive status:', e.target.value); // Debugging
-              }}
-              required
-            >
-              <option value="">Select Status</option>
-              <option value="resigned">Resigned</option>
-              <option value="retired">Retired</option>
-            </select>
-            <div className="archive-modal-buttons">
+            <div className="teacher-mgmt-form-group">
+              <label>Archive Status:</label>
+              <select
+                value={archiveStatus}
+                onChange={(e) => setArchiveStatus(e.target.value)}
+                required
+              >
+                <option value="">Select Status</option>
+                <option value="resigned">Resigned</option>
+                <option value="retired">Retired</option>
+              </select>
+            </div>
+            <div className="teacher-mgmt-details-actions">
               <button
-                className="confirm-button"
+                className="teacher-mgmt-btn teacher-mgmt-btn-archive"
                 onClick={() => {
                   if (!archiveStatus) {
                     alert('Please select an archive status.');
@@ -804,271 +797,199 @@ useEffect(() => {
               >
                 Confirm
               </button>
-              <button className="cancel-button" onClick={closeArchiveModal}>
+              <button 
+                className="teacher-mgmt-btn teacher-mgmt-btn-view"
+                onClick={closeArchiveModal}
+              >
                 Cancel
               </button>
             </div>
           </div>
         </div>
       )}
+
       {showModal && (
-        <div className="section-modal">
-        <div className="section-modal-content">
-          <h2>Add New Teacher</h2>
-            <label>
-              Lastname:
-              <input
-                type="text"
-                name="lastname"
-                value={newTeacherData.lastname}
-                onChange={handleAddChange}
-                required
-              />
-            </label>
-            <label>
-              Firstname:
-              <input
-                type="text"
-                name="firstname"
-                value={newTeacherData.firstname}
-                onChange={handleAddChange}
-                required
-              />
-            </label>
-            <label>
-              Middlename:
-              <input
-                type="text"
-                name="middlename"
-                value={newTeacherData.middlename}
-                onChange={handleAddChange}
-              />
-            </label>
-            <label>
-              Birthday:
-              <input
-                type="date"
-                name="birthday"
-                value={newTeacherData.birthday}
-                onChange={handleAddChange}
-                required
-              />
-            </label>
-            <label>
-              Gender:
-              <select
-                name="gender"
-                value={newTeacherData.gender}
-                onChange={handleAddChange}
-                required
-              >
-                <option value="">Select Gender</option>
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-              </select>
-            </label>
-            <label>
-              Contact Number:
-              <input
-                type="text"
-                name="contact_number"
-                value={newTeacherData.contact_number}
-                onChange={handleAddChange}
-              />
-            </label>
-            <label>
-              Address:
-              <input
-                type="text"
-                name="address"
-                value={newTeacherData.address}
-                onChange={handleAddChange}
-              />
-            </label>
-            <label>
-              Year Started:
-              <input
-                type="text"
-                name="year_started"
-                value={newTeacherData.year_started}
-                onChange={handleAddChange}
-              />
-            </label>
-            <label>
-              Role: <span style={{ color: 'red' }}>*</span>
-              <select
-                name="role_name"
-                value={newTeacherData.role_name}
-                onChange={handleAddChange}
-                required
-              >
-                <option value="">Select Role</option>
-                {roles.map((role) => (
-                  <option 
-                    key={role.role_id} 
-                    value={role.role_name}
-                  >
-                    {formatRoleName(role.role_name)}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <div className="section-button-group">
+        <div className="teacher-mgmt-modal">
+          <div className="teacher-mgmt-modal-content">
+            <h2>Add New Teacher</h2>
+            <div className="teacher-mgmt-form-grid">
+              <div className="teacher-mgmt-form-group">
+                <label>Last Name: <span style={{ color: 'red' }}>*</span></label>
+                <input
+                  type="text"
+                  name="lastname"
+                  value={newTeacherData.lastname}
+                  onChange={handleAddChange}
+                  required
+                />
+              </div>
+              <div className="teacher-mgmt-form-group">
+                <label>First Name: <span style={{ color: 'red' }}>*</span></label>
+                <input
+                  type="text"
+                  name="firstname"
+                  value={newTeacherData.firstname}
+                  onChange={handleAddChange}
+                  required
+                />
+              </div>
+              <div className="teacher-mgmt-form-group">
+                <label>Middle Name:</label>
+                <input
+                  type="text"
+                  name="middlename"
+                  value={newTeacherData.middlename}
+                  onChange={handleAddChange}
+                />
+              </div>
+              <div className="teacher-mgmt-form-group">
+                <label>Birthday: <span style={{ color: 'red' }}>*</span></label>
+                <input
+                  type="date"
+                  name="birthday"
+                  value={newTeacherData.birthday}
+                  onChange={handleAddChange}
+                  required
+                />
+              </div>
+              <div className="teacher-mgmt-form-group">
+                <label>Gender: <span style={{ color: 'red' }}>*</span></label>
+                <select
+                  name="gender"
+                  value={newTeacherData.gender}
+                  onChange={handleAddChange}
+                  required
+                >
+                  <option value="">Select Gender</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                </select>
+              </div>
+              <div className="teacher-mgmt-form-group">
+                <label>Contact Number:</label>
+                <input
+                  type="text"
+                  name="contact_number"
+                  value={newTeacherData.contact_number}
+                  onChange={handleAddChange}
+                />
+              </div>
+              <div className="teacher-mgmt-form-group">
+                <label>Address:</label>
+                <input
+                  type="text"
+                  name="address"
+                  value={newTeacherData.address}
+                  onChange={handleAddChange}
+                />
+              </div>
+              <div className="teacher-mgmt-form-group">
+                <label>Year Started: <span style={{ color: 'red' }}>*</span></label>
+                <input
+                  type="text"
+                  name="year_started"
+                  value={newTeacherData.year_started}
+                  onChange={handleAddChange}
+                  required
+                />
+              </div>
+              <div className="teacher-mgmt-form-group">
+                <label>Role: <span style={{ color: 'red' }}>*</span></label>
+                <select
+                  name="role_name"
+                  value={newTeacherData.role_name}
+                  onChange={handleAddChange}
+                  required
+                >
+                  <option value="">Select Role</option>
+                  {roles.map((role) => (
+                    <option 
+                      key={role.role_id} 
+                      value={role.role_name}
+                    >
+                      {formatRoleName(role.role_name)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div className="teacher-mgmt-details-actions">
               <button 
-                className="section-save-button" 
+                className="teacher-mgmt-btn teacher-mgmt-btn-view"
                 onClick={saveNewTeacher}
               >
                 Save
               </button>
-              <button className="section-cancel-button" onClick={cancelAdding}>
+              <button 
+                className="teacher-mgmt-btn teacher-mgmt-btn-archive"
+                onClick={cancelAdding}
+              >
                 Cancel
               </button>
             </div>
           </div>
         </div>
-      
       )}
-      {showAssignSubjectModal && (
-        <div className="teacher-modal">
-        <div className="teacher-modal-content">
-          <h2>Assign Subject</h2>
-      
-          {/* School Year Dropdown */}
-          <div className="teacher-modal-school-year">
-            <label htmlFor="schoolYear">Select School Year:</label>
-            <select
-              id="schoolYear"
-              value={selectedSchoolYear}
-              onChange={(e) => setSelectedSchoolYear(e.target.value)}
-            >
-              {schoolYears.map((year) => (
-                <option key={year.school_year_id} value={year.school_year_id}>
-                  {year.school_year}
-                </option>
-              ))}
-            </select>
-          </div>
-      
-          {/* Grade Level Buttons */}
-          <div className="teacher-modal-grade-buttons">
-            {[7, 8, 9, 10].map((grade) => (
-              <button
-                key={grade}
-                className={`teacher-modal-grade-button ${selectedGradeLevelForSection === grade.toString() ? 'active' : ''}`}
-                onClick={() => handleGradeLevelChangeForSection(grade.toString())}
-              >
-                Grade {grade}
-              </button>
-            ))}
-          </div>
-      
-          {/* Sections List */}
-          <div className="teacher-modal-sections-list">
-            {sectionsByGrade.map((section, index) => (
-              <div
-                key={index}
-                className={`teacher-modal-section-item ${selectedSection === section.section_id ? 'selected' : ''}`}
-                onClick={() => setSelectedSection(section.section_id)}
-              >
-                {section.section_name}
-              </div>
-            ))}
-          </div>
-      
-          {/* Subjects List */}
-          <div className="teacher-modal-subjects-list">
-            {subjectsByGrade.map((subject, index) => {
-              const subjectId = subject.type === 'elective' ? `elective-${subject.subject_id}` : `subject-${subject.subject_id}`;
-              return (
-                <div
-                  key={subjectId}
-                  className={`teacher-modal-subject-item ${selectedSubject === subjectId ? 'selected' : ''}`}
-                  onClick={() => setSelectedSubject(subjectId)}
-                >
-                  {subject.subject_name}
-                </div>
-              );
-            })}
-          </div>
-      
-          {/* Footer Actions */}
-          <div className="teacher-modal-footer">
-            <button
-              className="teacher-modal-action-button teacher-modal-assign-button"
-              onClick={handleSubjectAssignment}
-              disabled={!selectedSubject}
-            >
-              Assign Subject
-            </button>
-            <button
-              className="teacher-modal-action-button teacher-modal-cancel-button"
-              onClick={() => {
-                setShowAssignSubjectModal(false);
-                setSelectedSubject('');
-                setSelectedGradeLevel('7');
-              }}
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      </div>
-      
-      )}
+
       {showAssignSectionModal && (
-        <div className="teacher-modal">
-          <div className="teacher-modal-content">
+        <div className="teacher-mgmt-modal">
+          <div className="teacher-mgmt-modal-content">
             <h2>Assign Section</h2>
             
-            <div className="teacher-modal-school-year">
-            <label htmlFor="schoolYear">Select School Year:</label>
-            <select
-              id="schoolYear"
-              value={selectedSchoolYear}
-              onChange={(e) => setSelectedSchoolYear(e.target.value)}
-            >
-              {schoolYears.map((year) => (
-                <option key={year.school_year_id} value={year.school_year_id}>
-                  {year.school_year}
-                </option>
-              ))}
-            </select>
-          </div>
-
-            <div className="teacher-modal-grade-buttons">
-              {[7, 8, 9, 10].map((grade) => (
-                <button
-                  key={grade}
-                  className={`teacher-modal-grade-button ${selectedGradeLevelForSection === grade.toString() ? 'active' : ''}`}
-                  onClick={() => handleGradeLevelChangeForSection(grade.toString())}
-                >
-                  Grade {grade}
-                </button>
-              ))}
+            <div className="teacher-mgmt-form-group">
+              <label>School Year:</label>
+              <select
+                value={selectedSchoolYear}
+                onChange={(e) => setSelectedSchoolYear(e.target.value)}
+              >
+                {schoolYears.map((year) => (
+                  <option key={year.school_year_id} value={year.school_year_id}>
+                    {year.school_year}
+                  </option>
+                ))}
+              </select>
             </div>
 
-            <div className="teacher-modal-sections-list">
-              {sectionsByGrade.map((section, index) => (
-                <div 
-                  key={index}
-                  className={`teacher-modal-section-item ${selectedSection === section.section_id ? 'selected' : ''}`}
-                  onClick={() => setSelectedSection(section.section_id)}
-                >
-                  {section.section_name}
-                </div>
-              ))}
+            <div className="teacher-mgmt-form-group">
+              <label>Grade Level:</label>
+              <div className="teacher-mgmt-grade-buttons">
+                {[7, 8, 9, 10].map((grade) => (
+                  <button
+                    key={grade}
+                    className={`teacher-mgmt-btn ${selectedGradeLevelForSection === grade.toString() ? 'teacher-mgmt-btn-view' : ''}`}
+                    onClick={() => handleGradeLevelChangeForSection(grade.toString())}
+                  >
+                    Grade {grade}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            <div className="teacher-modal-footer">
+            <div className="teacher-mgmt-form-group">
+              <label>Available Sections:</label>
+              <div className="teacher-mgmt-sections-grid">
+                {sectionsByGrade.map((section, index) => (
+                  <button 
+                    key={index}
+                    className={`teacher-mgmt-btn ${selectedSection === section.section_id ? 'teacher-mgmt-btn-view' : ''}`}
+                    onClick={() => setSelectedSection(section.section_id)}
+                  >
+                    {section.section_name}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="teacher-mgmt-details-actions">
               <button 
-                className={`teacher-modal-action-button teacher-modal-assign-button`}
+                className="teacher-mgmt-btn teacher-mgmt-btn-view"
                 onClick={handleSectionAssignment}
                 disabled={!selectedSection}
               >
                 Assign Section
               </button>
               <button 
-                className="teacher-modal-action-button teacher-modal-cancel-button"
+                className="teacher-mgmt-btn teacher-mgmt-btn-archive"
                 onClick={() => {
                   setShowAssignSectionModal(false);
                   setSelectedSection('');
@@ -1081,94 +1002,98 @@ useEffect(() => {
           </div>
         </div>
       )}
+
       {showEditModal && (
-        <div className="section-modal">
-          <div className="section-modal-content">
+        <div className="teacher-mgmt-modal">
+          <div className="teacher-mgmt-modal-content">
             <h2>Edit Teacher</h2>
-            <label>
-              Lastname:
-              <input
-                type="text"
-                name="lastname"
-                value={editTeacherData.lastname}
-                onChange={handleEditChange}
-                required
-              />
-            </label>
-            <label>
-              Firstname:
-              <input
-                type="text"
-                name="firstname"
-                value={editTeacherData.firstname}
-                onChange={handleEditChange}
-                required
-              />
-            </label>
-            <label>
-              Middlename:
-              <input
-                type="text"
-                name="middlename"
-                value={editTeacherData.middlename}
-                onChange={handleEditChange}
-              />
-            </label>
-            <label>
-              Contact Number:
-              <input
-                type="text"
-                name="contact_number"
-                value={editTeacherData.contact_number}
-                onChange={handleEditChange}
-              />
-            </label>
-            <label>
-              Address:
-              <input
-                type="text"
-                name="address"
-                value={editTeacherData.address}
-                onChange={handleEditChange}
-              />
-            </label>
-            <label>
-              Year Started:
-              <input
-                type="text"
-                name="year_started"
-                value={editTeacherData.year_started}
-                onChange={handleEditChange}
-              />
-            </label>
-            <label>
-              Role:
-              <select
-                name="role_name"
-                value={editTeacherData.role_name}
-                onChange={handleEditChange}
-                required
-              >
-                <option value="">Select Role</option>
-                {roles.map((role) => (
-                  <option 
-                    key={role.role_id} 
-                    value={role.role_name}
-                  >
-                    {formatRoleName(role.role_name)}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <div className="section-button-group">
+            <div className="teacher-mgmt-form-grid">
+              <div className="teacher-mgmt-form-group">
+                <label>Last Name: <span style={{ color: 'red' }}>*</span></label>
+                <input
+                  type="text"
+                  name="lastname"
+                  value={editTeacherData.lastname}
+                  onChange={handleEditChange}
+                  required
+                />
+              </div>
+              <div className="teacher-mgmt-form-group">
+                <label>First Name: <span style={{ color: 'red' }}>*</span></label>
+                <input
+                  type="text"
+                  name="firstname"
+                  value={editTeacherData.firstname}
+                  onChange={handleEditChange}
+                  required
+                />
+              </div>
+              <div className="teacher-mgmt-form-group">
+                <label>Middle Name:</label>
+                <input
+                  type="text"
+                  name="middlename"
+                  value={editTeacherData.middlename}
+                  onChange={handleEditChange}
+                />
+              </div>
+              <div className="teacher-mgmt-form-group">
+                <label>Contact Number:</label>
+                <input
+                  type="text"
+                  name="contact_number"
+                  value={editTeacherData.contact_number}
+                  onChange={handleEditChange}
+                />
+              </div>
+              <div className="teacher-mgmt-form-group">
+                <label>Address:</label>
+                <input
+                  type="text"
+                  name="address"
+                  value={editTeacherData.address}
+                  onChange={handleEditChange}
+                />
+              </div>
+              <div className="teacher-mgmt-form-group">
+                <label>Year Started: <span style={{ color: 'red' }}>*</span></label>
+                <input
+                  type="text"
+                  name="year_started"
+                  value={editTeacherData.year_started}
+                  onChange={handleEditChange}
+                  required
+                />
+              </div>
+              <div className="teacher-mgmt-form-group">
+                <label>Role: <span style={{ color: 'red' }}>*</span></label>
+                <select
+                  name="role_name"
+                  value={editTeacherData.role_name}
+                  onChange={handleEditChange}
+                  required
+                >
+                  <option value="">Select Role</option>
+                  {roles.map((role) => (
+                    <option 
+                      key={role.role_id} 
+                      value={role.role_name}
+                    >
+                      {formatRoleName(role.role_name)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div className="teacher-mgmt-details-actions">
               <button 
-                className="section-save-button" 
+                className="teacher-mgmt-btn teacher-mgmt-btn-view"
                 onClick={saveEditedTeacher}
               >
                 Save Changes
               </button>
               <button 
-                className="section-cancel-button" 
+                className="teacher-mgmt-btn teacher-mgmt-btn-archive"
                 onClick={() => setShowEditModal(false)}
               >
                 Cancel
