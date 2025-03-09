@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import '../RegistrarPagesCss/Registrar_SummaryReportonPromotionPage.css';
+import '../PrincipalPagesCss/SubjectsManagement.css';
+import '../RegistrarPagesCss/SummaryReportPromotion.css';
 
 function Registrar_SummaryReportonPromotionPage() {
   const navigate = useNavigate();
@@ -37,7 +38,8 @@ function Registrar_SummaryReportonPromotionPage() {
     setShowModal(true);
     setGrade("");
     setSection("");
-    setSelectedSchoolYear(""); // Reset school year selection
+    setSelectedSchoolYear("");
+    setStudentName("");
   };
 
   const closeModal = () => {
@@ -157,107 +159,133 @@ function Registrar_SummaryReportonPromotionPage() {
     setSuggestions([]);
   };
 
+  const handleGenerateSF1 = () => {
+    if (!selectedSchoolYear || !grade || !section) {
+      alert('Please fill in all the required fields before generating.');
+      return;
+    }
+    navigate('/sf1', { state: { schoolYear: selectedSchoolYear, grade, section } });
+  };
+
+  const handleGenerateSF2 = () => {
+    if (!selectedSchoolYear) {
+      alert('Please select a school year before generating.');
+      return;
+    }
+    navigate('/sf2', { state: { schoolYear: selectedSchoolYear } });
+  };
+
+  const handleGenerateSF4 = () => {
+    if (!selectedSchoolYear || !grade || !section) {
+      alert('Please fill in all the required fields before generating.');
+      return;
+    }
+    navigate('/sf4', { state: { schoolYear: selectedSchoolYear, grade, section } });
+  };
+
+  const handleGenerateSF5 = () => {
+    if (!selectedSchoolYear || !grade || !section) {
+      alert('Please fill in all the required fields before generating.');
+      return;
+    }
+    navigate('/sf5', { state: { schoolYear: selectedSchoolYear, grade, section } });
+  };
+
+  const handleGenerateSF6 = () => {
+    if (!selectedSchoolYear || !grade) {
+      alert('Please fill in all the required fields before generating.');
+      return;
+    }
+    navigate('/sf6', { state: { schoolYear: selectedSchoolYear, grade } });
+  };
+
   return (
-    <div className="report-container">
-      <h1 className="report-title">Summary Report on Promotion</h1>
-      
-      {/* Form 137 Section */}
-      <div className="form137-section">
-        <div>
-          <h2 className="form137-title">Form 137</h2>
-          <p className="report-description">Generate Form 137 for a specific student.</p>
-        </div>
-        <button className="report-button" onClick={() => openModal('form_137')}>
-          Generate Form 137
-        </button>
+    <div className="summary-report-container">
+      <div className="summary-report-header">
+        <h1 className="summary-report-title">Summary Report on Promotion</h1>
       </div>
 
-      {/* Form 138 Section */}
-      <div className="form137-section">
-        <div>
-          <h2 className="form137-title">Form 138</h2>
-          <p className="report-description">Generate Form 138 for a specific student.</p>
+      <div className="summary-report-grid">
+        {/* Form 137 Card */}
+        <div className="summary-report-card">
+          <h3>Form 137</h3>
+          <p className="summary-report-description">Generate Form 137 for a specific student.</p>
+          <button className="summary-report-btn" onClick={() => openModal('form_137')}>
+            Generate Form 137
+          </button>
         </div>
-        <button className="report-button" onClick={() => openModal('form_138')}>
-          Generate Form 138
-        </button>
-      </div>
 
-      {/* Good Moral Section */}
-      <div className="good-moral-section">
-        <div>
-          <h2 className="good-moral-title">Good Moral Certificate</h2>
-          <p className="report-description">Generate Good Moral Certificate for a specific student.</p>
+        {/* Form 138 Card */}
+        <div className="summary-report-card">
+          <h3>Form 138</h3>
+          <p className="summary-report-description">Generate Form 138 for a specific student.</p>
+          <button className="summary-report-btn" onClick={() => openModal('form_138')}>
+            Generate Form 138
+          </button>
         </div>
-        <button className="report-button" onClick={() => openModal('good_moral')}>
-          Generate Good Moral Certificate
-        </button>
-      </div>
 
-      {/* Late Enrollees Section */}
-      <div className="late-enrollees-section">
-        <div>
-          <h2 className="late-enrollees-title">Late Enrollees</h2>
-          <p className="report-description">Generate a report for late enrollees.</p>
+        {/* Good Moral Certificate Card */}
+        <div className="summary-report-card">
+          <h3>Good Moral Certificate</h3>
+          <p className="summary-report-description">Generate Good Moral Certificate for a specific student.</p>
+          <button className="summary-report-btn" onClick={() => openModal('good_moral')}>
+            Generate Good Moral Certificate
+          </button>
         </div>
-        <button className="report-button" onClick={() => openModal('late_enrollee')}>
-          Generate Late Enrollees Report
-        </button>
-      </div>
 
-      {/* SF1 Section */}
-      <div className="form137-section">
-        <div>
-          <h2 className="form137-title">SF1 - School Register</h2>
-          <p className="report-description">Generate School Register report with complete student information.</p>
+        {/* Late Enrollees Card */}
+        <div className="summary-report-card">
+          <h3>Late Enrollees</h3>
+          <p className="summary-report-description">Generate a report for late enrollees.</p>
+          <button className="summary-report-btn" onClick={() => openModal('late_enrollee')}>
+            Generate Late Enrollees Report
+          </button>
         </div>
-        <button className="report-button" onClick={() => navigate('/sf1')}>
-          Generate SF1
-        </button>
-      </div>
 
-      {/* SF2 Section */}
-      <div className="form137-section">
-        <div>
-          <h2 className="form137-title">SF2 - School Summary Report of Enrollment</h2>
-          <p className="report-description">Generate enrollment summary report by grade level.</p>
+        {/* SF1 Card */}
+        <div className="summary-report-card">
+          <h3>SF1 - School Register</h3>
+          <p className="summary-report-description">Generate School Register report with complete student information.</p>
+          <button className="summary-report-btn" onClick={() => openModal('sf1')}>
+            Generate SF1
+          </button>
         </div>
-        <button className="report-button" onClick={() => navigate('/sf2')}>
-          Generate SF2
-        </button>
-      </div>
 
-      {/* SF4 Section */}
-      <div className="form137-section">
-        <div>
-          <h2 className="form137-title">SF4 - Monthly Learner's Movement and Attendance</h2>
-          <p className="report-description">Generate monthly attendance and movement report.</p>
+        {/* SF2 Card */}
+        <div className="summary-report-card">
+          <h3>SF2 - School Summary Report of Enrollment</h3>
+          <p className="summary-report-description">Generate enrollment summary report by grade level.</p>
+          <button className="summary-report-btn" onClick={() => openModal('sf2')}>
+            Generate SF2
+          </button>
         </div>
-        <button className="report-button" onClick={() => navigate('/sf4')}>
-          Generate SF4
-        </button>
-      </div>
 
-      {/* SF5 Section */}
-      <div className="form137-section">
-        <div>
-          <h2 className="form137-title">SF5 - Report on Promotion and Learning Progress</h2>
-          <p className="report-description">Generate detailed promotion and learning progress report.</p>
+        {/* SF4 Card */}
+        <div className="summary-report-card">
+          <h3>SF4 - Monthly Learner's Movement and Attendance</h3>
+          <p className="summary-report-description">Generate monthly attendance and movement report.</p>
+          <button className="summary-report-btn" onClick={() => openModal('sf4')}>
+            Generate SF4
+          </button>
         </div>
-        <button className="report-button" onClick={() => navigate('/sf5')}>
-          Generate SF5
-        </button>
-      </div>
 
-      {/* SF6 Section */}
-      <div className="form137-section">
-        <div>
-          <h2 className="form137-title">SF6 - Summarized Report on Promotion</h2>
-          <p className="report-description">Generate summarized promotion and learning progress report.</p>
+        {/* SF5 Card */}
+        <div className="summary-report-card">
+          <h3>SF5 - Report on Promotion and Learning Progress</h3>
+          <p className="summary-report-description">Generate detailed promotion and learning progress report.</p>
+          <button className="summary-report-btn" onClick={() => openModal('sf5')}>
+            Generate SF5
+          </button>
         </div>
-        <button className="report-button" onClick={() => navigate('/sf6')}>
-          Generate SF6
-        </button>
+
+        {/* SF6 Card */}
+        <div className="summary-report-card">
+          <h3>SF6 - Summarized Report on Promotion</h3>
+          <p className="summary-report-description">Generate summarized promotion and learning progress report.</p>
+          <button className="summary-report-btn" onClick={() => openModal('sf6')}>
+            Generate SF6
+          </button>
+        </div>
       </div>
 
       {showModal && (
@@ -408,7 +436,7 @@ function Registrar_SummaryReportonPromotionPage() {
               <div>
                 <h3>Generate Late Enrollees Report</h3>
                 <form onSubmit={(e) => e.preventDefault()}>
-                <label>School Year:</label>
+                  <label>School Year:</label>
                   <select value={selectedSchoolYear} onChange={(e) => setSelectedSchoolYear(e.target.value)} required>
                     <option value="">--Select One--</option>
                     {schoolYears.map((year, index) => (
@@ -433,6 +461,140 @@ function Registrar_SummaryReportonPromotionPage() {
                     ))}
                   </select>
                   <button type="button" onClick={handleLateEnrolleesReport}>Generate Report</button>
+                </form>
+              </div>
+            )}
+            {modalContent === 'sf1' && (
+              <div>
+                <h3>Generate SF1 - School Register</h3>
+                <form onSubmit={(e) => e.preventDefault()}>
+                  <label>School Year:</label>
+                  <select value={selectedSchoolYear} onChange={(e) => setSelectedSchoolYear(e.target.value)} required>
+                    <option value="">--Select One--</option>
+                    {schoolYears.map((year, index) => (
+                      <option key={index} value={year}>{year}</option>
+                    ))}
+                  </select>
+                  <label>Grade:</label>
+                  <select value={grade} onChange={handleGradeChange} required>
+                    <option value="">--Select One--</option>
+                    <option value="7">Grade 7</option>
+                    <option value="8">Grade 8</option>
+                    <option value="9">Grade 9</option>
+                    <option value="10">Grade 10</option>
+                  </select>
+                  <label>Section:</label>
+                  <select value={section} onChange={(e) => setSection(e.target.value)} required>
+                    <option value="">--Select One--</option>
+                    {sections.map((sec) => (
+                      <option key={sec.section_name} value={sec.section_name}>
+                        {sec.section_name}
+                      </option>
+                    ))}
+                  </select>
+                  <button type="button" onClick={handleGenerateSF1}>Generate Report</button>
+                </form>
+              </div>
+            )}
+            {modalContent === 'sf2' && (
+              <div>
+                <h3>Generate SF2 - School Summary Report of Enrollment</h3>
+                <form onSubmit={(e) => e.preventDefault()}>
+                  <label>School Year:</label>
+                  <select value={selectedSchoolYear} onChange={(e) => setSelectedSchoolYear(e.target.value)} required>
+                    <option value="">--Select One--</option>
+                    {schoolYears.map((year, index) => (
+                      <option key={index} value={year}>{year}</option>
+                    ))}
+                  </select>
+                  <button type="button" onClick={handleGenerateSF2}>Generate Report</button>
+                </form>
+              </div>
+            )}
+            {modalContent === 'sf4' && (
+              <div>
+                <h3>Generate SF4 - Monthly Learner's Movement and Attendance</h3>
+                <form onSubmit={(e) => e.preventDefault()}>
+                  <label>School Year:</label>
+                  <select value={selectedSchoolYear} onChange={(e) => setSelectedSchoolYear(e.target.value)} required>
+                    <option value="">--Select One--</option>
+                    {schoolYears.map((year, index) => (
+                      <option key={index} value={year}>{year}</option>
+                    ))}
+                  </select>
+                  <label>Grade:</label>
+                  <select value={grade} onChange={handleGradeChange} required>
+                    <option value="">--Select One--</option>
+                    <option value="7">Grade 7</option>
+                    <option value="8">Grade 8</option>
+                    <option value="9">Grade 9</option>
+                    <option value="10">Grade 10</option>
+                  </select>
+                  <label>Section:</label>
+                  <select value={section} onChange={(e) => setSection(e.target.value)} required>
+                    <option value="">--Select One--</option>
+                    {sections.map((sec) => (
+                      <option key={sec.section_name} value={sec.section_name}>
+                        {sec.section_name}
+                      </option>
+                    ))}
+                  </select>
+                  <button type="button" onClick={handleGenerateSF4}>Generate Report</button>
+                </form>
+              </div>
+            )}
+            {modalContent === 'sf5' && (
+              <div>
+                <h3>Generate SF5 - Report on Promotion and Learning Progress</h3>
+                <form onSubmit={(e) => e.preventDefault()}>
+                  <label>School Year:</label>
+                  <select value={selectedSchoolYear} onChange={(e) => setSelectedSchoolYear(e.target.value)} required>
+                    <option value="">--Select One--</option>
+                    {schoolYears.map((year, index) => (
+                      <option key={index} value={year}>{year}</option>
+                    ))}
+                  </select>
+                  <label>Grade:</label>
+                  <select value={grade} onChange={handleGradeChange} required>
+                    <option value="">--Select One--</option>
+                    <option value="7">Grade 7</option>
+                    <option value="8">Grade 8</option>
+                    <option value="9">Grade 9</option>
+                    <option value="10">Grade 10</option>
+                  </select>
+                  <label>Section:</label>
+                  <select value={section} onChange={(e) => setSection(e.target.value)} required>
+                    <option value="">--Select One--</option>
+                    {sections.map((sec) => (
+                      <option key={sec.section_name} value={sec.section_name}>
+                        {sec.section_name}
+                      </option>
+                    ))}
+                  </select>
+                  <button type="button" onClick={handleGenerateSF5}>Generate Report</button>
+                </form>
+              </div>
+            )}
+            {modalContent === 'sf6' && (
+              <div>
+                <h3>Generate SF6 - Summarized Report on Promotion</h3>
+                <form onSubmit={(e) => e.preventDefault()}>
+                  <label>School Year:</label>
+                  <select value={selectedSchoolYear} onChange={(e) => setSelectedSchoolYear(e.target.value)} required>
+                    <option value="">--Select One--</option>
+                    {schoolYears.map((year, index) => (
+                      <option key={index} value={year}>{year}</option>
+                    ))}
+                  </select>
+                  <label>Grade:</label>
+                  <select value={grade} onChange={handleGradeChange} required>
+                    <option value="">--Select One--</option>
+                    <option value="7">Grade 7</option>
+                    <option value="8">Grade 8</option>
+                    <option value="9">Grade 9</option>
+                    <option value="10">Grade 10</option>
+                  </select>
+                  <button type="button" onClick={handleGenerateSF6}>Generate Report</button>
                 </form>
               </div>
             )}
