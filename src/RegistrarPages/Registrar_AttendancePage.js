@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import SearchFilter from '../RoleSearchFilters/SearchFilter';
 import axios from 'axios';
 import Pagination from '../Utilities/pagination';
-import '../CssPage/Principal_AttendancePage.css';
+import '../RegistrarPagesCss/AttendanceManagement.css';
 
 function Registrar_AttendancePage() {
   const [students, setStudents] = useState([]);
@@ -16,7 +16,7 @@ function Registrar_AttendancePage() {
     school_year: '',
   });
   const [currentPage, setCurrentPage] = useState(1);
-  const studentsPerPage = 5; // Number of rows per page
+  const studentsPerPage = 5;
 
   useEffect(() => {
     fetchStudents();
@@ -46,7 +46,6 @@ function Registrar_AttendancePage() {
       }));
     } catch (error) {
       console.error('There was an error fetching the attendance data!', error);
-      // Set default values when no attendance data is found
       setAttendanceData((prevData) => ({
         ...prevData,
         [studentId]: {
@@ -69,7 +68,6 @@ function Registrar_AttendancePage() {
     setSelectedStudentId(selectedStudentId === studentId ? null : studentId);
   };
 
-  // Auto-apply search filter
   useEffect(() => {
     if (filters.searchTerm !== '') {
       applyFilters({ ...filters, searchTerm: filters.searchTerm });
@@ -102,7 +100,7 @@ function Registrar_AttendancePage() {
     }
 
     setFilteredStudents(filtered);
-    setCurrentPage(1); // Reset to the first page when filters are applied
+    setCurrentPage(1);
   };
 
   const handleApplyFilters = () => {
@@ -116,7 +114,6 @@ function Registrar_AttendancePage() {
     }));
   };
 
-  // Pagination logic
   const indexOfLastStudent = currentPage * studentsPerPage;
   const indexOfFirstStudent = indexOfLastStudent - studentsPerPage;
   const currentStudents = filteredStudents.slice(indexOfFirstStudent, indexOfLastStudent);
@@ -124,125 +121,139 @@ function Registrar_AttendancePage() {
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   return (
-    <div className="attendance-container">
-      <h1 className="attendance-title">Attendance</h1>
-      <div className="attendance-search-filter-container">
-        <SearchFilter
-          handleSearch={handleSearch}
-          handleFilter={(type, value) =>
-            setFilters((prevFilters) => ({
-              ...prevFilters,
-              [type]: value,
-            }))
-          }
-          handleApplyFilters={handleApplyFilters}
-        />
+    <div className="attendance-mgmt-container">
+      <div className="attendance-mgmt-header">
+        <h1 className="attendance-mgmt-title">Attendance</h1>
       </div>
 
-      <div className="attendance-header" style={{ 
-        backgroundColor: '#4CAF50', 
-        color: 'white', 
-        padding: '10px', 
-        marginBottom: '10px',
-        fontWeight: 'bold',
-        textAlign: 'center'
-      }}>
-        GRADE LEVEL: {filters.grade ? filters.grade : '-'} SCHOOL YEAR: {filters.school_year ? filters.school_year : '-'}
+      <div className="attendance-mgmt-filters">
+        <div className="attendance-mgmt-search">
+          <input
+            type="text"
+            placeholder="Search by student name..."
+            onChange={(e) => handleSearch(e.target.value)}
+          />
+        </div>
+        <div className="attendance-mgmt-filters-group">
+          <select
+            value={filters.school_year}
+            onChange={(e) => setFilters(prev => ({ ...prev, school_year: e.target.value }))}
+          >
+            <option value="">Select School Year</option>
+            <option value="2023-2024">2023-2024</option>
+          </select>
+          <select
+            value={filters.grade}
+            onChange={(e) => setFilters(prev => ({ ...prev, grade: e.target.value }))}
+          >
+            <option value="">Select Grade Level</option>
+            {[7, 8, 9, 10].map((grade) => (
+              <option key={grade} value={grade}>Grade {grade}</option>
+            ))}
+          </select>
+          <select
+            value={filters.section}
+            onChange={(e) => setFilters(prev => ({ ...prev, section: e.target.value }))}
+          >
+            <option value="">Select Section</option>
+            <option value="A">Section A</option>
+            <option value="B">Section B</option>
+          </select>
+        </div>
+        <button onClick={handleApplyFilters}>Filter</button>
       </div>
 
-      <table className="attendance-table">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Name</th>
-            <th>Grade</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {currentStudents.map((student, index) => (
-            <React.Fragment key={student.student_id}>
-              <tr>
-                <td>{indexOfFirstStudent + index + 1}</td>
-                <td>
-                  {student.firstname} {student.middlename} {student.lastname}
-                </td>
-                <td>Grade {student.current_yr_lvl}</td>
-                <td>{student.active_status}</td>
-                <td>
-                  <button
-                    className="attendance-view-button"
-                    onClick={() => handleStudentClick(student.student_id)}
-                  >
-                    View
-                  </button>
-                </td>
-              </tr>
-              {selectedStudentId === student.student_id && (
+      <div className="attendance-mgmt-table-container">
+        <table className="attendance-mgmt-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Name</th>
+              <th>Grade</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {currentStudents.map((student, index) => (
+              <React.Fragment key={student.student_id}>
+                <tr>
+                  <td>{indexOfFirstStudent + index + 1}</td>
+                  <td>
+                    {student.firstname} {student.middlename} {student.lastname}
+                  </td>
+                  <td>Grade {student.current_yr_lvl}</td>
+                  <td>{student.active_status}</td>
+                  <td>
+                    <button
+                      className="attendance-mgmt-btn attendance-mgmt-btn-view"
+                      onClick={() => handleStudentClick(student.student_id)}
+                    >
+                      View
+                    </button>
+                  </td>
+                </tr>
+                {selectedStudentId === student.student_id && (
                   <tr>
                     <td colSpan="5">
-                      <table className="attendance-details-table">
-                        <thead>
-                          <tr>
-                            <th colSpan="2">
-                              <div className="attendance-details-header">
-                                <span>
-                                  Grade Level:{' '}
-                                  {attendanceData[student.student_id]?.grade_level || '-'}
-                                </span>
-                                <span>
-                                  School Year:{' '}
-                                  {attendanceData[student.student_id]?.school_year || '-'}
-                                </span>
-                              </div>
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          <tr>
-                            <th>Total School Days</th>
-                            <td>{attendanceData[student.student_id]?.total_school_days || 0}</td>
-                          </tr>
-                          <tr>
-                            <th>Total Days Present</th>
-                            <td>{attendanceData[student.student_id]?.days_present || 0}</td>
-                          </tr>
-                          <tr>
-                            <th>Total Days Absent</th>
-                            <td>{attendanceData[student.student_id]?.days_absent || 0}</td>
-                          </tr>
-                          <tr>
-                            <th>Total Days Late</th>
-                            <td>{attendanceData[student.student_id]?.days_late || 0}</td>
-                          </tr>
-                          <tr>
-                            <th>Brigada Attendance</th>
-                            <td>{attendanceData[student.student_id]?.brigada_attendance || 0}</td>
-                          </tr>
-                        </tbody>
-                      </table>
+                      <div className="attendance-details-container">
+                        <div className="attendance-details-header">
+                          <span>
+                            Grade Level: {attendanceData[student.student_id]?.grade_level || '-'}
+                          </span>
+                          <span>
+                            School Year: {attendanceData[student.student_id]?.school_year || '-'}
+                          </span>
+                        </div>
+                        <table className="attendance-details-table">
+                          <tbody>
+                            <tr>
+                              <th>Total School Days</th>
+                              <td>{attendanceData[student.student_id]?.total_school_days || 0}</td>
+                            </tr>
+                            <tr>
+                              <th>Total Days Present</th>
+                              <td>{attendanceData[student.student_id]?.days_present || 0}</td>
+                            </tr>
+                            <tr>
+                              <th>Total Days Absent</th>
+                              <td>{attendanceData[student.student_id]?.days_absent || 0}</td>
+                            </tr>
+                            <tr>
+                              <th>Total Days Late</th>
+                              <td>{attendanceData[student.student_id]?.days_late || 0}</td>
+                            </tr>
+                            <tr>
+                              <th>Brigada Attendance</th>
+                              <td>{attendanceData[student.student_id]?.brigada_attendance || 0}</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
                     </td>
                   </tr>
                 )}
-            </React.Fragment>
-          ))}
-          {currentStudents.length === 0 && (
-            <tr>
-              <td colSpan="5" style={{ textAlign: 'center' }}>
-                No students found.
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+              </React.Fragment>
+            ))}
+            {currentStudents.length === 0 && (
+              <tr>
+                <td colSpan="5" style={{ textAlign: 'center' }}>
+                  No students found.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
 
-      <Pagination
-        totalItems={filteredStudents.length}
-        itemsPerPage={studentsPerPage}
-        currentPage={currentPage}
-        onPageChange={paginate}
-      />
+      <div className="attendance-mgmt-pagination">
+        <Pagination
+          totalItems={filteredStudents.length}
+          itemsPerPage={studentsPerPage}
+          currentPage={currentPage}
+          onPageChange={paginate}
+        />
+      </div>
     </div>
   );
 }
