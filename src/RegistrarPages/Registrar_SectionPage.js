@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import SectionSearchFilter from '../RoleSearchFilters/SectionSearchFilter'; 
-import '../RegistrarPagesCss/Registrar_SectionPage.css';
+import '../RegistrarPagesCss/SectionManagement.css';
 
 function Registrar_SectionPage() {
   const [roleName, setRoleName] = useState('');
@@ -110,8 +110,15 @@ function Registrar_SectionPage() {
     applyFilters(filters);
   };
 
+  const handleFilterChange = (type, value) => {
+    setFilters(prevFilters => ({
+      ...prevFilters,
+      [type]: value
+    }));
+  };
+
   const handleSearch = (searchTerm) => {
-    setFilters((prevFilters) => ({ ...prevFilters, searchTerm }));
+    setFilters(prevFilters => ({ ...prevFilters, searchTerm }));
     applyFilters({ ...filters, searchTerm });
   };
 
@@ -223,8 +230,8 @@ function Registrar_SectionPage() {
   };
 
   const capitalizeStatus = (status) => {
-    if (!status) return '';
-    return status.charAt(0).toUpperCase() + status.slice(1);
+    if (!status) return 'Active';
+    return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
   };
 
   useEffect(() => {
@@ -261,207 +268,260 @@ function Registrar_SectionPage() {
 
 
   return (
-    <div className="section-container">
-      <h1 className="section-title">Section Management</h1>
-      <div className="section-search-filter-container">
-        <SectionSearchFilter
-          handleSearch={handleSearch}
-          handleApplyFilters={handleApplyFilters}
-          grades={getUniqueGrades(sections)}
-          sections={sections}
-        />
+    <div className="section-mgmt-container">
+      <div className="section-mgmt-header">
+        <h1 className="section-mgmt-title">Section Management</h1>
+        {(roleName !== 'academic_coordinator') && (
+          <button className="section-mgmt-add-btn" onClick={startAdding}>
+            Add New Section
+          </button>
+        )}
       </div>
-      <div className="section-add-section-button-container">
-      {(roleName != 'academic_coordinator') && (
-        <button className="section-add-section-button" onClick={startAdding}>Add New Section</button>
-      )}
+
+      <div className="section-mgmt-filters">
+        <div className="section-mgmt-search">
+          <input
+            type="text"
+            placeholder="Search by section name..."
+            onChange={(e) => handleSearch(e.target.value)}
+          />
+        </div>
+        <div className="section-mgmt-filters-group">
+          <select
+            className="section-mgmt-select"
+            value={filters.grade}
+            onChange={(e) => handleFilterChange('grade', e.target.value)}
+          >
+            <option value="">Select Grade Level</option>
+            {[7, 8, 9, 10].map((grade) => (
+              <option key={grade} value={grade}>Grade {grade}</option>
+            ))}
+          </select>
+          <select
+            className="section-mgmt-select"
+            value={filters.showArchive}
+            onChange={(e) => handleFilterChange('showArchive', e.target.value)}
+          >
+            <option value="unarchive">Active</option>
+            <option value="archive">Archived</option>
+          </select>
+        </div>
+        <button onClick={() => applyFilters(filters)}>
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+          </svg>
+          Filter
+        </button>
       </div>
-      <table className="attendance-table">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Section Name</th>
-            <th>Grade Level</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredSections.map((section, index) => (
-            <React.Fragment key={section.section_id}>
-              <tr>
-                <td>{index + 1}</td>
-                <td>Section {section.section_name}</td>
-                <td>Grade {section.grade_level}</td>
-                <td>{capitalizeStatus(section.status)}</td>
-                <td>
-                  <button className="section-view-button" onClick={() => handleViewClick(section.section_id)}>View</button>
-                  {(roleName != 'academic_coordinator') && (
-                  <button className="section-edit-button" onClick={() => startEditing(section.section_id)}>Edit</button>
-                  )}
-                  <button
-                    className="section-archive-button"
-                    onClick={() => toggleArchiveStatus(section.section_id, section.status)}
-                  >
-                    {section.status === 'inactive' ? 'Unarchive' : 'Archive'}
-                  </button>
-                </td>
-              </tr>
-              {selectedSectionId === section.section_id && (
+
+      <div className="section-mgmt-table-container">
+        <table className="section-mgmt-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Section Name</th>
+              <th>Grade Level</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredSections.map((section, index) => (
+              <React.Fragment key={section.section_id}>
                 <tr>
-                  <td colSpan="5">
-                    <div className="section-details">
-                      <table>
-                        <tbody>
-                          <tr>
-                            <th>Section ID:</th>
-                            <td>
-                              {isEditing ? (
-                                <input
-                                  type="text"
-                                  name="section_id"
-                                  value={editFormData.section_id}
-                                  onChange={handleEditChange}
-                                  readOnly
-                                />
-                              ) : (
-                                sectionDetails.section_id
-                              )}
-                            </td>
-                          </tr>
-                          <tr>
-                            <th>Section Name:</th>
-                            <td>
-                              {isEditing ? (
-                                <input
-                                  type="text"
-                                  name="section_name"
-                                  value={editFormData.section_name}
-                                  onChange={handleEditChange}
-                                />
-                              ) : (
-                                sectionDetails.section_name
-                              )}
-                            </td>
-                          </tr>
-                          <tr>
-                            <th>Grade Level:</th>
-                            <td>
-                              {isEditing ? (
-                                <select
-                                  name="grade_level"
-                                  value={editFormData.grade_level}
-                                  onChange={handleEditChange}
-                                >
-                                  <option value="7">7</option>
-                                  <option value="8">8</option>
-                                  <option value="9">9</option>
-                                  <option value="10">10</option>
-                                </select>
-                              ) : (
-                                sectionDetails.grade_level
-                              )}
-                            </td>
-                          </tr>
-                          <tr>
-                            <th>Status:</th>
-                            <td>
-                              {isEditing ? (
-                                <select
-                                  name="status"
-                                  value={editFormData.status}
-                                  onChange={handleEditChange}
-                                >
-                                  <option value="active">Active</option>
-                                  <option value="inactive">Inactive</option>
-                                </select>
-                              ) : (
-                                capitalizeStatus(sectionDetails.status)
-                              )}
-                            </td>
-                          </tr>
-                          <tr>
-                            <th>Max Capacity:</th>
-                            <td>
-                              {isEditing ? (
-                                <input
-                                  type="text"
-                                  name="max_capacity"
-                                  value={editFormData.max_capacity}
-                                  onChange={handleEditChange}
-                                />
-                              ) : (
-                                sectionDetails.max_capacity
-                              )}
-                            </td>
-                          </tr>
-                          <tr>
-                            <th>School Year:</th>
-                            <td>
-                              {isEditing ? (
-                                <select
-                                  name="school_year_id"
-                                  value={editFormData.school_year_id}
-                                  onChange={handleEditChange}
-                                >
-                                  {schoolYears.map((year) => (
-                                    <option key={year.school_year_id} value={year.school_year_id}>
-                                      {year.school_year}
-                                    </option>
-                                  ))}
-                                </select>
-                              ) : (
-                                sectionDetails.school_year
-                              )}
-                            </td>
-                          </tr>
-                          <tr>
-                            <th>Room Number:</th>
-                            <td>
-                              {isEditing ? (
-                                <input
-                                  type="text"
-                                  name="room_number"
-                                  value={editFormData.room_number || ''}
-                                  onChange={handleEditChange}
-                                />
-                              ) : (
-                                sectionDetails.room_number
-                              )}
-                            </td>
-                          </tr>
-                        </tbody>
-                      </table>
-                      {isEditing && (
-                        <div className="section-edit-buttons">
-                          <button className="section-save-button" onClick={saveChanges}>Save</button>
-                          <button className="section-cancel-button" onClick={cancelEditing}>Cancel</button>
-                        </div>
-                      )}
-                    </div>
+                  <td>{index + 1}</td>
+                  <td>Section {section.section_name}</td>
+                  <td>Grade {section.grade_level}</td>
+                  <td>
+                    <span className={`status-${section.status ? section.status.toLowerCase() : 'active'}`}>
+                      {capitalizeStatus(section.status || 'active')}
+                    </span>
+                  </td>
+                  <td>
+                    <button 
+                      className="section-mgmt-btn section-mgmt-btn-view"
+                      onClick={() => handleViewClick(section.section_id)}
+                    >
+                      View
+                    </button>
+                    {(roleName !== 'academic_coordinator') && (
+                      <button 
+                        className="section-mgmt-btn section-mgmt-btn-edit"
+                        onClick={() => startEditing(section.section_id)}
+                      >
+                        Edit
+                      </button>
+                    )}
+                    <button
+                      className="section-mgmt-btn section-mgmt-btn-archive"
+                      onClick={() => toggleArchiveStatus(section.section_id, section.status)}
+                    >
+                      {section.status === 'inactive' ? 'Unarchive' : 'Archive'}
+                    </button>
                   </td>
                 </tr>
-              )}
-            </React.Fragment>
-          ))}
-        </tbody>
-      </table>
+                {selectedSectionId === section.section_id && (
+                  <tr>
+                    <td colSpan="5">
+                      <div className="section-mgmt-details">
+                        <table>
+                          <tbody>
+                            <tr>
+                              <th>Section ID:</th>
+                              <td>
+                                {isEditing ? (
+                                  <input
+                                    type="text"
+                                    name="section_id"
+                                    value={editFormData.section_id}
+                                    onChange={handleEditChange}
+                                    readOnly
+                                  />
+                                ) : (
+                                  sectionDetails.section_id
+                                )}
+                              </td>
+                            </tr>
+                            <tr>
+                              <th>Section Name:</th>
+                              <td>
+                                {isEditing ? (
+                                  <input
+                                    type="text"
+                                    name="section_name"
+                                    value={editFormData.section_name}
+                                    onChange={handleEditChange}
+                                  />
+                                ) : (
+                                  sectionDetails.section_name
+                                )}
+                              </td>
+                            </tr>
+                            <tr>
+                              <th>Grade Level:</th>
+                              <td>
+                                {isEditing ? (
+                                  <select
+                                    name="grade_level"
+                                    value={editFormData.grade_level}
+                                    onChange={handleEditChange}
+                                  >
+                                    <option value="7">7</option>
+                                    <option value="8">8</option>
+                                    <option value="9">9</option>
+                                    <option value="10">10</option>
+                                  </select>
+                                ) : (
+                                  sectionDetails.grade_level
+                                )}
+                              </td>
+                            </tr>
+                            <tr>
+                              <th>Status:</th>
+                              <td>
+                                {isEditing ? (
+                                  <select
+                                    name="status"
+                                    value={editFormData.status || 'active'}
+                                    onChange={handleEditChange}
+                                  >
+                                    <option value="active">Active</option>
+                                    <option value="inactive">Inactive</option>
+                                  </select>
+                                ) : (
+                                  <span className={`status-${sectionDetails.status ? sectionDetails.status.toLowerCase() : 'active'}`}>
+                                    {capitalizeStatus(sectionDetails.status || 'active')}
+                                  </span>
+                                )}
+                              </td>
+                            </tr>
+                            <tr>
+                              <th>Max Capacity:</th>
+                              <td>
+                                {isEditing ? (
+                                  <input
+                                    type="text"
+                                    name="max_capacity"
+                                    value={editFormData.max_capacity}
+                                    onChange={handleEditChange}
+                                  />
+                                ) : (
+                                  sectionDetails.max_capacity
+                                )}
+                              </td>
+                            </tr>
+                            <tr>
+                              <th>School Year:</th>
+                              <td>
+                                {isEditing ? (
+                                  <select
+                                    name="school_year_id"
+                                    value={editFormData.school_year_id}
+                                    onChange={handleEditChange}
+                                  >
+                                    {schoolYears.map((year) => (
+                                      <option key={year.school_year_id} value={year.school_year_id}>
+                                        {year.school_year}
+                                      </option>
+                                    ))}
+                                  </select>
+                                ) : (
+                                  sectionDetails.school_year
+                                )}
+                              </td>
+                            </tr>
+                            <tr>
+                              <th>Room Number:</th>
+                              <td>
+                                {isEditing ? (
+                                  <input
+                                    type="text"
+                                    name="room_number"
+                                    value={editFormData.room_number || ''}
+                                    onChange={handleEditChange}
+                                  />
+                                ) : (
+                                  sectionDetails.room_number
+                                )}
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                        {isEditing && (
+                          <div className="section-mgmt-modal-actions">
+                            <button className="section-mgmt-btn section-mgmt-btn-edit" onClick={saveChanges}>
+                              Save
+                            </button>
+                            <button className="section-mgmt-btn section-mgmt-btn-archive" onClick={cancelEditing}>
+                              Cancel
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </React.Fragment>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
       {showModal && (
-        <div className="section-modal">
-          <div className="section-modal-content">
+        <div className="section-mgmt-modal">
+          <div className="section-mgmt-modal-content">
             <h2>Add New Section</h2>
-            <label>
-              Section Name:
+            <div className="section-mgmt-form-group">
+              <label>Section Name:</label>
               <input
                 type="text"
                 name="section_name"
                 value={newSectionData.section_name}
                 onChange={handleAddChange}
               />
-            </label>
-            <label>
-              Grade Level:
+            </div>
+            <div className="section-mgmt-form-group">
+              <label>Grade Level:</label>
               <select
                 name="grade_level"
                 value={newSectionData.grade_level}
@@ -472,9 +532,9 @@ function Registrar_SectionPage() {
                 <option value="9">9</option>
                 <option value="10">10</option>
               </select>
-            </label>
-            <label>
-              Status:
+            </div>
+            <div className="section-mgmt-form-group">
+              <label>Status:</label>
               <select
                 name="status"
                 value={newSectionData.status}
@@ -483,18 +543,18 @@ function Registrar_SectionPage() {
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>
               </select>
-            </label>
-            <label>
-              Max Capacity:
+            </div>
+            <div className="section-mgmt-form-group">
+              <label>Max Capacity:</label>
               <input
                 type="text"
                 name="max_capacity"
                 value={newSectionData.max_capacity}
                 onChange={handleAddChange}
               />
-            </label>
-            <label>
-              School Year:
+            </div>
+            <div className="section-mgmt-form-group">
+              <label>School Year:</label>
               <select
                 name="school_year_id"
                 value={newSectionData.school_year_id}
@@ -506,19 +566,23 @@ function Registrar_SectionPage() {
                   </option>
                 ))}
               </select>
-            </label>
-            <label>
-              Room Number:
+            </div>
+            <div className="section-mgmt-form-group">
+              <label>Room Number:</label>
               <input
                 type="text"
                 name="room_number"
                 value={newSectionData.room_number}
                 onChange={handleAddChange}
               />
-            </label>
-            <div className="section-button-group">
-              <button className="section-save-button" onClick={saveNewSection}>Save</button>
-              <button className="section-cancel-button" onClick={cancelAdding}>Cancel</button>
+            </div>
+            <div className="section-mgmt-modal-actions">
+              <button className="section-mgmt-btn section-mgmt-btn-edit" onClick={saveNewSection}>
+                Save
+              </button>
+              <button className="section-mgmt-btn section-mgmt-btn-archive" onClick={cancelAdding}>
+                Cancel
+              </button>
             </div>
           </div>
         </div>
