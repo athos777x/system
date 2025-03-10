@@ -60,9 +60,10 @@ function EmployeeSearchFilter({ handleSearch, handleApplyFilters }) {
             onChange={handleFilterChange}
           >
             <option value="">Position: All</option>
-            <option value="teacher">Teacher</option>
+            <option value="subject_teacher">Teacher</option>
             <option value="registrar">Registrar</option>
             <option value="principal">Principal</option>
+            
           </select>
         </div>
       </div>

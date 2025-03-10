@@ -1037,6 +1037,67 @@ const handleStudentNameClick = (student) => {
           </div>
 
           <div className="teacher-grades-summary">
+          <div className="grade-columns">
+              {/* Written Works */}
+              <GradeDetail
+                title="Written Works"
+                percentage={percentages.WW}
+                data={writtenWorks}
+                onAddActivity={() => handleAddActivity('WW')}
+                onEditActivity={handleEditActivity}
+                onDeleteActivity={handleDeleteActivity}
+                onPercentageChange={(newPercentage) => handlePercentageChange('WW', newPercentage)}
+                otherPercentages={percentages}
+                isLocked={!isEditing && existingGrades[`${selectedStudent?.student_id}-${selectedSubject?.subject_name}-${
+                  {
+                    '1st Grading': 1,
+                    '2nd Grading': 2,
+                    '3rd Grading': 3,
+                    '4th Grading': 4
+                  }[selectedGradingPeriod]
+                }`]}
+              />
+
+              {/* Performance Task */}
+              <GradeDetail
+                title="Performance Task"
+                percentage={percentages.PT}
+                data={performanceTasks}
+                onAddActivity={() => handleAddActivity('PT')}
+                onEditActivity={handleEditActivity}
+                onDeleteActivity={handleDeleteActivity}
+                onPercentageChange={(newPercentage) => handlePercentageChange('PT', newPercentage)}
+                otherPercentages={percentages}
+                isLocked={!isEditing && existingGrades[`${selectedStudent?.student_id}-${selectedSubject?.subject_name}-${
+                  {
+                    '1st Grading': 1,
+                    '2nd Grading': 2,
+                    '3rd Grading': 3,
+                    '4th Grading': 4
+                  }[selectedGradingPeriod]
+                }`]}
+              />
+
+              {/* Quarterly Assessment */}
+              <GradeDetail
+                title="Quarterly Assessment"
+                percentage={percentages.QA}
+                data={quarterlyAssessments}
+                onAddActivity={() => handleAddActivity('QA')}
+                onEditActivity={handleEditActivity}
+                onDeleteActivity={handleDeleteActivity}
+                onPercentageChange={(newPercentage) => handlePercentageChange('QA', newPercentage)}
+                otherPercentages={percentages}
+                isLocked={!isEditing && existingGrades[`${selectedStudent?.student_id}-${selectedSubject?.subject_name}-${
+                  {
+                    '1st Grading': 1,
+                    '2nd Grading': 2,
+                    '3rd Grading': 3,
+                    '4th Grading': 4
+                  }[selectedGradingPeriod]
+                }`]}
+              />
+            </div>
             <div className="teacher-grades-detail-card">
               <h4>Grade Summary</h4>
               <table className="teacher-grades-data-table">

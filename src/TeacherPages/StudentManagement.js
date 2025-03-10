@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import SearchFilter from '../RoleSearchFilters/SearchFilter';
 import Pagination from '../Utilities/pagination';
 import axios from 'axios';
 import '../TeacherPagesCss/StudentManagement.css';
@@ -150,7 +149,7 @@ const applyFilters = () => {
       filtered = filtered.filter(student => String(student.current_yr_lvl) === String(filters.grade));
     }
     if (filters.section) {
-      filtered = filtered.filter(student => String(student.section_id) === String(filters.section));
+      filtered = filtered.filter(student => String(student.section_name) === filters.section);
     }
     if (filters.searchTerm) {
         filtered = filtered.filter(student => {
@@ -701,7 +700,7 @@ const handleArchive = () => {
           >
             <option value="">Select Section</option>
             {filteredSections.map((section) => (
-              <option key={section.section_id} value={section.section_id}>
+              <option key={section.section_id} value={section.section_name}>
                 {section.section_name}
               </option>
             ))}
