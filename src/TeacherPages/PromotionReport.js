@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import '../TeacherPagesCss/SummaryReportPromotion.css';
+import '../TeacherPagesCss/PromotionReport.css';
 
 function PromotionReport() {
   const navigate = useNavigate();
