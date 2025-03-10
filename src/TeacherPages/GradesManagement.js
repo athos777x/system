@@ -766,11 +766,16 @@ const handleStudentNameClick = (student) => {
       {!showSubjectGrades && !showGradesTable && (
         <div className="teacher-grades-detailed-view">
           <button onClick={handleBackClick} className="teacher-grades-back-btn">
-            ← Back
+            Back
           </button>
           <div className="teacher-grades-section-header">
             <h3>{selectedSection.section_name}</h3>
-            <p>Class Advisor: {selectedSection.adviser_name?.toUpperCase() || 'NOT ASSIGNED'}</p>
+            <p>
+              Class Advisor: {selectedSection.adviser_name ? 
+                selectedSection.adviser_name.toUpperCase() : 
+                <span className="not-assigned">NOT ASSIGNED</span>
+              }
+            </p>
           </div>
           <div className="teacher-grades-period-selector">
             <label htmlFor="grading-period">Grading Period:</label>
@@ -787,37 +792,48 @@ const handleStudentNameClick = (student) => {
             </select>
           </div>
           <div className="teacher-grades-table-container">
-            <table className="teacher-grades-data-table">
-              <thead>
-                <tr>
-                  <th>Student ID</th>
-                  <th>Name</th>
-                  {subjects.map((subject, index) => (
-                    <th key={index}>{subject.subject_name}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {students.map((student, index) => (
-                  <tr key={index}>
-                    <td>{student.student_id}</td>
-                    <td className="teacher-grades-student-name">{student.name}</td>
-                    {subjects.map((subject, subIndex) => {
-                      const key = `${student.student_id}-${subject.subject_name}`;
-                      const gradeData = studentGrades[key] || [];
-                      const periodGrade = gradeData.find(g => 
-                        g.period === parseInt(selectedGradingPeriod)
-                      )?.grade || '-';
-                      return (
-                        <td key={subIndex}>
-                          {periodGrade}
-                        </td>
-                      );
-                    })}
+            {students.length > 0 ? (
+              <table className="teacher-grades-data-table">
+                <thead>
+                  <tr>
+                    <th>Student ID</th>
+                    <th>Name</th>
+                    {subjects.map((subject, index) => (
+                      <th key={index}>{subject.subject_name}</th>
+                    ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {students.map((student, index) => (
+                    <tr key={index} className="clickable" onClick={() => handleStudentNameClick(student)}>
+                      <td>{student.student_id}</td>
+                      <td 
+                        className="teacher-grades-student-name"
+                      >
+                        {student.name}
+                      </td>
+                      {subjects.map((subject, subIndex) => {
+                        const key = `${student.student_id}-${subject.subject_name}`;
+                        const gradeData = studentGrades[key] || [];
+                        const periodGrade = gradeData.find(g => 
+                          g.period === parseInt(selectedGradingPeriod)
+                        )?.grade || '-';
+                        return (
+                          <td key={subIndex}>
+                            {periodGrade}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <div className="teacher-grades-empty-state">
+                <p>No students found in this section.</p>
+                <p>Students will appear here once they are enrolled in this section.</p>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -832,6 +848,7 @@ const handleStudentNameClick = (student) => {
                   key={grade}
                   onClick={() => handleGradeClick(grade)}
                   className={`teacher-grades-btn ${selectedGrade === grade ? 'active' : ''}`}
+                  data-tooltip="Click to select grade level"
                 >
                   Grade {grade}
                 </button>
@@ -849,6 +866,7 @@ const handleStudentNameClick = (student) => {
                       key={index}
                       onClick={() => handleSectionClick(section)}
                       className={`teacher-grades-btn ${selectedSection?.section_name === section.section_name ? 'active' : ''}`}
+                      data-tooltip="Click to view section"
                     >
                       {section.section_name}
                     </button>
@@ -868,6 +886,7 @@ const handleStudentNameClick = (student) => {
               <div 
                 className="teacher-grades-section-info"
                 onClick={handleSectionInfoClick}
+                data-tooltip="Click to view section details"
               >
                 <span><strong>{selectedSection.section_name}</strong></span>
                 <span>{selectedSection.adviser_name?.toUpperCase() || 'NOT ASSIGNED'}</span>
@@ -885,6 +904,7 @@ const handleStudentNameClick = (student) => {
                         type: subject.type,
                         id: subject.id
                       })}
+                      data-tooltip="Click to view subject grades"
                     >
                       {subject.subject_name}
                       {subject.type === 'elective' ? ' (Elective)' : ''}
@@ -904,8 +924,17 @@ const handleStudentNameClick = (student) => {
       {showSubjectGrades && !showStudentDetails && (
         <div className="teacher-grades-subject-view">
           <button onClick={handleBackToGrades} className="teacher-grades-back-btn">
-            ← Back to Grades
+            Back
           </button>
+          
+          <div className="teacher-grades-breadcrumb">
+            <span className="breadcrumb-item">Grade {selectedGrade}</span>
+            <span className="breadcrumb-separator">›</span>
+            <span className="breadcrumb-item">{selectedSection.section_name}</span>
+            <span className="breadcrumb-separator">›</span>
+            <span className="breadcrumb-item active">{selectedSubject.subject_name}</span>
+          </div>
+          
           <div className="teacher-grades-subject-header">
             <h3>
               {selectedSubject.subject_name}
@@ -951,11 +980,11 @@ const handleStudentNameClick = (student) => {
                   );
 
                   return (
-                    <tr key={index}>
+                    <tr key={index} className="clickable" onClick={() => handleStudentNameClick(student)}>
                       <td>{student.student_id}</td>
                       <td 
-                        onClick={() => handleStudentNameClick(student)}
                         className="teacher-grades-student-name"
+                        data-tooltip="Click to view student details"
                       >
                         {student.name}
                       </td>
@@ -1016,9 +1045,12 @@ const handleStudentNameClick = (student) => {
       {showStudentDetails && (
         <div className="teacher-grades-details-view">
           <button onClick={handleBackToSubjectGrades} className="teacher-grades-back-btn">
-            ← Back to Subject Grades
+            Back
           </button>
           <div className="teacher-grades-student-header">
+            <div className="teacher-grades-student-name-card">
+              <h4>{selectedStudent.name}</h4>
+            </div>
             <h3>
               {selectedSubject.subject_name} 
               {selectedSubject.type === 'elective' ? ' (Elective)' : ''} - 
@@ -1026,9 +1058,25 @@ const handleStudentNameClick = (student) => {
               {selectedSection.section_name}
             </h3>
             <div className="teacher-grades-student-info">
-              <h4>{selectedStudent.name}</h4>
-              <p>Student ID: {selectedStudent.student_id}</p>
-              <p>Grading Period: {selectedStudent.gradingPeriod}</p>
+              <div className="teacher-grades-student-info-card">
+                <div className="info-label">ID</div>
+                <div className="info-value">{selectedStudent.student_id}</div>
+              </div>
+              
+              <div className="teacher-grades-student-info-card">
+                <div className="info-label">Period</div>
+                <div className="info-value">{selectedStudent.gradingPeriod}</div>
+              </div>
+              
+              <div className="teacher-grades-student-info-card">
+                <div className="info-label">Section</div>
+                <div className="info-value">{selectedSection.section_name}</div>
+              </div>
+              
+              <div className="teacher-grades-student-info-card">
+                <div className="info-label">Grade</div>
+                <div className="info-value">{selectedGrade}</div>
+              </div>
             </div>
           </div>
 
@@ -1180,30 +1228,33 @@ const handleStudentNameClick = (student) => {
             </div>
             <form onSubmit={handleUpdateActivity}>
               <div className="teacher-grades-form-group">
-                <label>Name:</label>
+                <label>Activity Name</label>
                 <input
                   type="text"
                   name="remarks"
                   defaultValue={selectedItem?.remarks || ''}
+                  placeholder="Enter activity name"
                   required
                 />
               </div>
               <div className="teacher-grades-form-group">
-                <label>Score:</label>
+                <label>Score</label>
                 <input
                   type="number"
                   name="scores"
                   defaultValue={selectedItem?.scores || ''}
+                  placeholder="Enter score"
                   min="0"
                   required
                 />
               </div>
               <div className="teacher-grades-form-group">
-                <label>Total Items:</label>
+                <label>Total Items</label>
                 <input
                   type="number"
                   name="total_items"
                   defaultValue={selectedItem?.total_items || ''}
+                  placeholder="Enter total items"
                   min="1"
                   required
                 />
@@ -1213,7 +1264,7 @@ const handleStudentNameClick = (student) => {
                   Cancel
                 </button>
                 <button type="submit" className="teacher-grades-submit-btn">
-                  Save
+                  {selectedItem ? 'Update' : 'Save'}
                 </button>
               </div>
             </form>

@@ -44,7 +44,6 @@ const GradesDetail = ({
 
   const [roleName, setRoleName] = useState('');
   
-
   const fetchUserRole = async (userId) => {
     try {
       console.log(`Fetching role for user ID: ${userId}`); // Debugging log
@@ -77,77 +76,123 @@ const GradesDetail = ({
     }
   }, []);
 
-  return (
-    <div className="grade-column">
-      <h4>
-        {title} ({percentage}%)
-      </h4>
-      <select
-        value={percentage}
-        onChange={(e) => {
-          const newValue = parseFloat(e.target.value);
-          const maxAllowed = calculateMaxPercentage() + percentage;
-          if (newValue <= maxAllowed) {
-            onPercentageChange(newValue);
-          } else {
-            alert(`Total percentage cannot exceed 100%. Maximum allowed for ${title} is ${maxAllowed}%`);
-          }
-        }}
-        disabled={roleName === 'principal' || roleName === 'grade_level_coordinator'} // Prevent selection
-      >
-        {generatePercentageOptions().map((option) => (
-          <option key={option} value={option}>
-            {option}%
-          </option>
-        ))}
-      </select>
-
+  // Calculate total scores
+  const calculateTotalScores = () => {
+    if (!data || data.length === 0) return { totalPS: 0, totalWS: 0 };
     
-      <table>
-        <thead>
-          <tr>
-            <th>Label</th>
-            <th>Score</th>
-            <th>Total</th>
-            <th>PS</th>
-            <th>WS</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
+    let totalPS = 0;
+    let totalWS = 0;
+    
+    data.forEach(item => {
+      const ps = parseFloat(calculatePercentageScore(item.scores, item.total_items));
+      const ws = parseFloat(calculateWeightedScore(ps, percentage));
+      totalPS += ps;
+      totalWS += ws;
+    });
+    
+    // Average the PS if there are items
+    if (data.length > 0) {
+      totalPS = (totalPS / data.length).toFixed(2);
+    }
+    
+    return { totalPS, totalWS: totalWS.toFixed(2) };
+  };
+  
+  const { totalPS, totalWS } = calculateTotalScores();
+
+  return (
+    <div className="teacher-grades-detail-card">
+      <h4>
+        {title}
+        <span>{percentage}%</span>
+      </h4>
+      
+      {!isLocked && (roleName !== 'principal' && roleName !== 'grade_level_coordinator') && (
+        <div className="grade-component-header">
+          <div className="grade-component-percentage">
+            <label htmlFor={`${title}-percentage`}>Percentage:</label>
+            <select
+              id={`${title}-percentage`}
+              value={percentage}
+              onChange={(e) => {
+                const newValue = parseFloat(e.target.value);
+                const maxAllowed = calculateMaxPercentage() + percentage;
+                if (newValue <= maxAllowed) {
+                  onPercentageChange(newValue);
+                } else {
+                  alert(`Total percentage cannot exceed 100%. Maximum allowed for ${title} is ${maxAllowed}%`);
+                }
+              }}
+              disabled={roleName === 'principal' || roleName === 'grade_level_coordinator' || isLocked}
+              className="percentage-select"
+            >
+              {generatePercentageOptions().map((option) => (
+                <option key={option} value={option}>
+                  {option}%
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+      )}
+
+      {data.length > 0 ? (
+        <div className="activity-list">
           {data.map((item, index) => {
             const ps = calculatePercentageScore(item.scores, item.total_items);
             const ws = calculateWeightedScore(ps, percentage);
             return (
-              <tr key={index}>
-                <td>{item.remarks}</td>
-                <td>{item.scores}</td>
-                <td>{item.total_items}</td>
-                <td>{ps}</td>
-                <td>{ws}</td>
-                {!isLocked && (
-                  <td>
-                     {(roleName !== 'principal' && roleName !== 'grade_level_coordinator') && (
-                        <>
-                          <button onClick={() => onEditActivity(item, index, title)}>Edit</button>
-                          <button onClick={() => onDeleteActivity(item, index, title)}>Delete</button>
-                        </>
-                      )}
-                  </td>
+              <div key={index} className="activity-item">
+                <div className="activity-info">
+                  <div className="activity-name">{item.remarks}</div>
+                  <div className="activity-details">
+                    Score: {item.scores}/{item.total_items} (PS: {ps}%, WS: {ws})
+                  </div>
+                </div>
+                {!isLocked && (roleName !== 'principal' && roleName !== 'grade_level_coordinator') && (
+                  <div className="activity-actions">
+                    <button 
+                      onClick={() => onEditActivity(item, index, title)}
+                      className="teacher-grades-btn teacher-grades-edit-btn"
+                      title="Edit activity"
+                    >
+                      Edit
+                    </button>
+                    <button 
+                      onClick={() => onDeleteActivity(item, index, title)}
+                      className="teacher-grades-btn teacher-grades-delete-btn"
+                      title="Delete activity"
+                    >
+                      Delete
+                    </button>
+                  </div>
                 )}
-              </tr>
+              </div>
             );
           })}
-        </tbody>
-      </table>
+          
+          <div className="grade-component-summary">
+            <div className="grade-summary-item">
+              <span>Average PS:</span>
+              <span className="grade-summary-value">{totalPS}%</span>
+            </div>
+            <div className="grade-summary-item">
+              <span>Total WS:</span>
+              <span className="grade-summary-value">{totalWS}</span>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="no-activities">
+          <p>No {title.toLowerCase()} recorded yet.</p>
+        </div>
+      )}
     
       {!isLocked && roleName !== 'principal' && roleName !== 'grade_level_coordinator' && (
         <button className="add-activity-btn" onClick={onAddActivity}>
           + Add {title}
         </button>
       )}
-
-
     </div>
   );
 };
