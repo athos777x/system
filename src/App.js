@@ -40,6 +40,7 @@ import SF2 from './reports/sf2';
 import SF4 from './reports/sf4';
 import SF5 from './reports/sf5';
 import SF6 from './reports/sf6';
+import Teacher_SchedulePage from './TeacherPages/Teacher_SchedulePage';
 
 
 
@@ -90,6 +91,7 @@ function App() {
             <Route path="/subjects" element={<SubjectsManagement />} />
             <Route path="/test-subjects" element={<TestSubjectsManagement />} />
             <Route path="/schedule" element={<ScheduleManagement />} />
+            <Route path="/teacher-schedule" element={<Teacher_SchedulePage />} />
 
             <Route path="/student" element={<StudentManagement />} />
             <Route path="/employees" element={<TeacherManagement />} />

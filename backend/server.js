@@ -2493,6 +2493,31 @@ app.get('/user/:userId/schedule', (req, res) => {
   });
 });
 
+// TEACHER SCHEDULE PAGE
+app.get('/teacher/:userId/schedule', (req, res) => {
+  const userId = req.params.userId;
+  const query = `
+    SELECT s.subject_name, sc.day, 
+    TIME_FORMAT(sc.time_start, '%H:%i:%s') as time_start, 
+    TIME_FORMAT(sc.time_end, '%h:%i %p') as time_end,
+    sec.section_name, sec.grade_level
+    FROM schedule sc
+    JOIN subject s ON sc.subject_id = s.subject_id
+    JOIN section sec ON sc.section_id = sec.section_id
+    JOIN teacher t ON sc.teacher_id = t.teacher_id
+    WHERE t.user_id = ? AND sc.schedule_status = 'Approved'
+    ORDER BY FIELD(sc.day, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'), sc.time_start;
+  `;
+  db.query(query, [userId], (err, results) => {
+    if (err) {
+      console.error('Error fetching teacher schedule:', err);
+      res.status(500).send('Error fetching teacher schedule');
+    } else {
+      res.json(results);
+    }
+  });
+});
+
 //ENDPOINTS USED:
 // REGISTRAR ACCOUNT PAGE
 // STUDENT ACCOUNT PAGE

@@ -13,7 +13,8 @@ import {
   FiBarChart2,
   FiFileText,
   FiCheckSquare,
-  FiLogOut
+  FiLogOut,
+  FiClock
 } from 'react-icons/fi';
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -137,7 +138,13 @@ function PrincipalSideBar({ showSidebar, toggleSidebar, handleLogout }) {
           onClick={() => handleNavigate('/employees')}
           className={location.pathname === '/employees' ? 'active' : ''}
         >
-          <FiUser className="icon" /> Employee
+          <FiUsers className="icon" /> Employees
+        </button>
+        <button 
+          onClick={() => handleNavigate('/teacher-schedule')}
+          className={location.pathname === '/teacher-schedule' ? 'active' : ''}
+        >
+          <FiClock className="icon" /> My Schedule
         </button>
         <div className={`menu-with-submenu ${showEnrollmentSubMenu || isEnrollmentPath ? 'active' : ''}`}>
           <button onClick={toggleEnrollmentSubMenu}>

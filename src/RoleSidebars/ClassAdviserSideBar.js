@@ -12,7 +12,8 @@ import {
   FiFileText,
   FiBook,
   FiClipboard,
-  FiLogOut
+  FiLogOut,
+  FiClock
 } from 'react-icons/fi';
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -92,6 +93,12 @@ function ClassAdviserSideBar({ showSidebar, toggleSidebar, handleLogout }) {
           className={location.pathname === '/student' ? 'active' : ''}
         >
           <FiUsers className="icon" /> Students
+        </button>
+        <button 
+          onClick={() => handleNavigate('/teacher-schedule')}
+          className={location.pathname === '/teacher-schedule' ? 'active' : ''}
+        >
+          <FiClock className="icon" /> My Schedule
         </button>
         <button 
           onClick={() => handleNavigate('/section')}

@@ -14,7 +14,8 @@ import {
   FiFileText,
   FiCheckSquare,
   FiSettings,
-  FiLogOut
+  FiLogOut,
+  FiClock
 } from 'react-icons/fi';
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -109,6 +110,14 @@ function SubjectTeacherSideBar({ showSidebar, toggleSidebar, handleLogout }) {
         >
           <FiUsers className="icon" /> Students
         </button>
+
+        <button 
+          onClick={() => handleNavigate('/teacher-schedule')}
+          className={location.pathname === '/teacher-schedule' ? 'active' : ''}
+        >
+          <FiClock className="icon" /> My Schedule
+        </button>
+        
         <div className={`menu-with-submenu ${showRecordsSubMenu || isRecordsPath ? 'active' : ''}`}>
           <button onClick={toggleRecordsSubMenu}>
             <FiClipboard className="icon" /> Student Academic Records
