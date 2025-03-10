@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
-import '../TeacherPagesCss/SectionListManagement.css';
+import '../TeacherPagesCss/SectionList.css';
 
 function SectionList() {
   const [sections, setSections] = useState([]);

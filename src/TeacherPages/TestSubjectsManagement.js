@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
-import '../TeacherPagesCss/TestSubjects.css';
+import '../TeacherPagesCss/TestSubjectsManagement.css';
 
 function TestSubjectsManagement() {
   const [subjects, setSubjects] = useState([]);

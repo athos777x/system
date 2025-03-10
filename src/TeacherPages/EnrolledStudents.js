@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Pagination from '../Utilities/pagination';
-import '../TeacherPagesCss/EnrolledStudentsManagement.css';
+import '../TeacherPagesCss/EnrolledStudents.css';
 
 function EnrolledStudents() {
   const [students, setStudents] = useState([]);

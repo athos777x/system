@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import SearchFilter from '../RoleSearchFilters/SearchFilter';
-import '../TeacherPagesCss/TestGrades.css';
+import '../TeacherPagesCss/TestGradesManagement.css';
 import Pagination from '../Utilities/pagination';
 import { useNavigate } from 'react-router-dom';
 
