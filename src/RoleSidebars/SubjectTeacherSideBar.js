@@ -6,7 +6,6 @@ import {
   FiUsers,
   FiClipboard,
   FiBook,
-  FiLogOut,
   FiChevronLeft,
   FiMenu,
   FiUser,
@@ -14,10 +13,11 @@ import {
   FiBarChart2,
   FiFileText,
   FiCheckSquare,
-  FiSettings
+  FiSettings,
+  FiLogOut,
+  FiClock
 } from 'react-icons/fi';
 import { useNavigate, useLocation } from 'react-router-dom';
-import LogoutButton from '../Buttons/LogoutButton';
 
 function SubjectTeacherSideBar({ showSidebar, toggleSidebar, handleLogout }) {
   const [showRecordsSubMenu, setShowRecordsSubMenu] = useState(false);
@@ -86,6 +86,11 @@ function SubjectTeacherSideBar({ showSidebar, toggleSidebar, handleLogout }) {
     navigate(path);
   };
 
+  const handleLogoutClick = () => {
+    handleLogout();
+    navigate('/');
+  };
+
   return (
     <div className={`sidebar ${showSidebar ? 'show' : 'hide'}`} style={{ zIndex: 1100 }}>
       <button className="toggle-btn" onClick={toggleSidebar}>
@@ -105,6 +110,14 @@ function SubjectTeacherSideBar({ showSidebar, toggleSidebar, handleLogout }) {
         >
           <FiUsers className="icon" /> Students
         </button>
+
+        <button 
+          onClick={() => handleNavigate('/teacher-schedule')}
+          className={location.pathname === '/teacher-schedule' ? 'active' : ''}
+        >
+          <FiClock className="icon" /> My Schedule
+        </button>
+        
         <div className={`menu-with-submenu ${showRecordsSubMenu || isRecordsPath ? 'active' : ''}`}>
           <button onClick={toggleRecordsSubMenu}>
             <FiClipboard className="icon" /> Student Academic Records
@@ -168,9 +181,9 @@ function SubjectTeacherSideBar({ showSidebar, toggleSidebar, handleLogout }) {
           {/* <button onClick={() => handleNavigate('/account')}>
             <FiSettings className="icon" /> Account
           </button>  */}
-        <LogoutButton onClick={handleLogout}>
+        <button onClick={handleLogoutClick} className="logout-btn">
           <FiLogOut className="icon" /> Logout
-        </LogoutButton>
+        </button>
       </div>
     </div>
   );

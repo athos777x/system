@@ -15,31 +15,26 @@ import {
   FiUser
 } from 'react-icons/fi';
 import { useNavigate, useLocation } from 'react-router-dom';
-import LogoutButton from '../Buttons/LogoutButton';
 
 function RegistrarSideBar({ showSidebar, toggleSidebar, handleLogout }) {
   const [showRecordsSubMenu, setShowRecordsSubMenu] = useState(false);
   const [showEnrollmentSubMenu, setShowEnrollmentSubMenu] = useState(false);
-  const [showReportsSubMenu, setShowReportsSubMenu] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
   // Check if current path is under a specific submenu
   const isRecordsPath = ['/grades', '/new-grades', '/attendance', '/brigada-eskwela'].includes(location.pathname);
   const isEnrollmentPath = ['/pending-enrollment', '/school-year', '/section-list', '/enrolled-students'].includes(location.pathname);
-  const isReportsPath = ['/summary-report-promotion'].includes(location.pathname);
 
   // Update useEffect to handle initial submenu state based on path
   React.useEffect(() => {
     setShowRecordsSubMenu(isRecordsPath);
     setShowEnrollmentSubMenu(isEnrollmentPath);
-    setShowReportsSubMenu(isReportsPath);
   }, [location.pathname]);
 
   const toggleRecordsSubMenu = () => {
     setShowRecordsSubMenu(!showRecordsSubMenu);
     setShowEnrollmentSubMenu(false);
-    setShowReportsSubMenu(false);
     if (!showRecordsSubMenu) {
       navigate('/grades');
     }
@@ -48,18 +43,8 @@ function RegistrarSideBar({ showSidebar, toggleSidebar, handleLogout }) {
   const toggleEnrollmentSubMenu = () => {
     setShowEnrollmentSubMenu(!showEnrollmentSubMenu);
     setShowRecordsSubMenu(false);
-    setShowReportsSubMenu(false);
     if (!showEnrollmentSubMenu) {
       navigate('/pending-enrollment');
-    }
-  };
-
-  const toggleReportsSubMenu = () => {
-    setShowReportsSubMenu(!showReportsSubMenu);
-    setShowRecordsSubMenu(false);
-    setShowEnrollmentSubMenu(false);
-    if (!showReportsSubMenu) {
-      navigate('/summary-report-promotion');
     }
   };
 
@@ -67,8 +52,12 @@ function RegistrarSideBar({ showSidebar, toggleSidebar, handleLogout }) {
     // Close all submenus when navigating
     setShowRecordsSubMenu(false);
     setShowEnrollmentSubMenu(false);
-    setShowReportsSubMenu(false);
     navigate(path);
+  };
+
+  const handleLogoutClick = () => {
+    handleLogout();
+    navigate('/');
   };
 
   return (
@@ -168,30 +157,21 @@ function RegistrarSideBar({ showSidebar, toggleSidebar, handleLogout }) {
         >
           <FiBook className="icon" /> Subjects
         </button>
-        <div className={`menu-with-submenu ${showReportsSubMenu || isReportsPath ? 'active' : ''}`}>
-          <button onClick={toggleReportsSubMenu}>
-            <FiBarChart2 className="icon" /> Generate Reports
-          </button>
-          {showReportsSubMenu && (
-            <div className="submenu">
-              <button 
-                onClick={() => handleNavigate('/summary-report-promotion')}
-                className={location.pathname === '/summary-report-promotion' ? 'active' : ''}
-              >
-                <FiFileText className="icon" /> Report
-              </button>
-            </div>
-          )}
-        </div>
+        <button 
+          onClick={() => handleNavigate('/summary-report-promotion')}
+          className={location.pathname === '/summary-report-promotion' ? 'active' : ''}
+        >
+          <FiFileText className="icon" /> Generate Report
+        </button>
         {/* <button 
           onClick={() => handleNavigate('/profile')}
           className={location.pathname === '/profile' ? 'active' : ''}
         >
           <FiUser className="icon" /> Profile
         </button> */}
-        <LogoutButton onClick={handleLogout}>
+        <button onClick={handleLogoutClick} className="logout-btn">
           <FiLogOut className="icon" /> Logout
-        </LogoutButton>
+        </button>
       </div>
     </div>
   );

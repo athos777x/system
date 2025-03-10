@@ -6,7 +6,6 @@ import {
   FiUsers,
   FiClipboard,
   FiBook,
-  FiLogOut,
   FiChevronLeft,
   FiMenu,
   FiUser,
@@ -14,16 +13,14 @@ import {
   FiBarChart2,
   FiFileText,
   FiCheckSquare,
-  FiSettings
+  FiSettings,
+  FiLogOut
 } from 'react-icons/fi';
 import { useNavigate, useLocation } from 'react-router-dom';
-import LogoutButton from '../Buttons/LogoutButton';
 
 function GradeLevelCoordinatorSideBar({ showSidebar, toggleSidebar, handleLogout }) {
   const [showRecordsSubMenu, setShowRecordsSubMenu] = useState(false);
   const [showEnrollmentSubMenu, setShowEnrollmentSubMenu] = useState(false);
-  const [showReportsSubMenu, setShowReportsSubMenu] = useState(false);
-  const [showClassesSubMenu, setShowClassesSubMenu] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -40,8 +37,6 @@ function GradeLevelCoordinatorSideBar({ showSidebar, toggleSidebar, handleLogout
   const toggleRecordsSubMenu = () => {
     setShowRecordsSubMenu(!showRecordsSubMenu);
     setShowEnrollmentSubMenu(false);
-    setShowReportsSubMenu(false);
-    setShowClassesSubMenu(false);
     if (!showRecordsSubMenu) {
       navigate('/grades');
     }
@@ -50,8 +45,6 @@ function GradeLevelCoordinatorSideBar({ showSidebar, toggleSidebar, handleLogout
   const toggleEnrollmentSubMenu = () => {
     setShowEnrollmentSubMenu(!showEnrollmentSubMenu);
     setShowRecordsSubMenu(false);
-    setShowReportsSubMenu(false);
-    setShowClassesSubMenu(false);
     if (!showEnrollmentSubMenu) {
       navigate('/school-year');
     }
@@ -61,9 +54,12 @@ function GradeLevelCoordinatorSideBar({ showSidebar, toggleSidebar, handleLogout
     // Close all submenus when navigating
     setShowRecordsSubMenu(false);
     setShowEnrollmentSubMenu(false);
-    setShowReportsSubMenu(false);
-    setShowClassesSubMenu(false);
     navigate(path);
+  };
+
+  const handleLogoutClick = () => {
+    handleLogout();
+    navigate('/');
   };
 
   return (
@@ -148,9 +144,9 @@ function GradeLevelCoordinatorSideBar({ showSidebar, toggleSidebar, handleLogout
         >
           <FiUser className="icon" /> Profile
         </button> */}
-        <LogoutButton onClick={handleLogout}>
+        <button onClick={handleLogoutClick} className="logout-btn">
           <FiLogOut className="icon" /> Logout
-        </LogoutButton>
+        </button>
       </div>
     </div>
   );

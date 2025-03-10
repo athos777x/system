@@ -1,0 +1,390 @@
+/* Teacher_SchedulePage.css */
+
+.teacher-schedule-container {
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.teacher-schedule-title {
+  color: #2e7d32;
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #4CAF50;
+  text-align: center;
+}
+
+.teacher-name-header {
+  text-align: center;
+  margin-bottom: 2rem;
+  color: #1e293b;
+  font-size: 1.2rem;
+  font-weight: 400;
+}
+
+/* Loading styles */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(46, 125, 50, 0.1);
+  margin-top: 2rem;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(46, 125, 50, 0.1);
+  border-radius: 50%;
+  border-top-color: #2e7d32;
+  animation: spin 1s ease-in-out infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-container p {
+  color: #64748b;
+  font-size: 1rem;
+}
+
+/* Error overlay styles */
+.error-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  background-color: rgba(255, 255, 255, 0.95);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  padding: 0.75rem;
+  border-bottom: 1px solid #ffcdd2;
+}
+
+.error-message {
+  color: #d32f2f;
+  font-size: 0.875rem;
+  margin: 0 1rem 0 0;
+  text-align: center;
+  font-weight: 500;
+}
+
+.retry-button {
+  padding: 0.5rem 1rem;
+  background-color: #2e7d32;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  white-space: nowrap;
+}
+
+.retry-button:hover {
+  background-color: #246b27;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+/* Error container - keeping for reference but not using */
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(46, 125, 50, 0.1);
+  margin-top: 2rem;
+}
+
+/* Empty schedule notice */
+.empty-schedule-notice {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgba(255, 255, 255, 0.9);
+  padding: 1rem 2rem;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(46, 125, 50, 0.1);
+  z-index: 10;
+  text-align: center;
+}
+
+.empty-schedule-notice p {
+  color: #64748b;
+  font-size: 1rem;
+  margin: 0;
+}
+
+/* No schedule message - keeping for reference but not using */
+.no-schedule-message {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 3rem;
+  background: white;
+  text-align: center;
+}
+
+.no-schedule-message p {
+  color: #64748b;
+  font-size: 1rem;
+}
+
+.teacher-schedule-table-container {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(46, 125, 50, 0.1);
+  overflow: hidden; /* Keep the border-radius clean */
+  margin-bottom: 2rem;
+  position: relative; /* For absolute positioning of empty notice */
+}
+
+.schedule-table {
+  width: 100%;
+  table-layout: fixed; /* This ensures equal column widths */
+  border-collapse: separate;
+  border-spacing: 0;
+  background-color: white;
+  min-width: 800px;
+}
+
+.schedule-table th,
+.schedule-table td {
+  border: none;
+  padding: 0.75rem;
+  text-align: center;
+  vertical-align: middle;
+  font-size: 0.875rem;
+  width: calc(100% / 6); /* Divide by number of columns (time + 5 days) */
+}
+
+/* Add subtle borders between cells */
+.schedule-table td {
+  border-top: 1px solid #e0e0e0;
+}
+
+.schedule-table th {
+  background-color: #f8f9fa;
+  color: #1e293b;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.5px;
+  padding: 1rem 0.75rem;
+}
+
+/* Remove the fixed width for first column */
+.schedule-table th:first-child,
+.schedule-table td:first-child {
+  width: calc(100% / 6); /* Same width as other columns */
+}
+
+.schedule-table td:first-child {
+  background-color: #f8f9fa;
+  color: #64748b;
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap; /* Prevent time from wrapping */
+}
+
+/* Time column styling */
+.schedule-table td:first-child {
+  position: relative;
+}
+
+.schedule-table td:first-child::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: #e0e0e0;
+}
+
+.schedule-subject-cell {
+  background-color: #e8f5e9 !important; /* Light green background to match theme */
+  transition: all 0.2s ease;
+  padding: 0.75rem !important;
+  border-radius: 6px;
+  border: 1px solid #c8e6c9 !important; /* Light green border */
+}
+
+.schedule-subject-cell:hover {
+  background-color: #c8e6c9 !important; /* Slightly darker green on hover */
+  transform: scale(1.02);
+  box-shadow: 0 2px 8px rgba(46, 125, 50, 0.1);
+}
+
+.subject-name {
+  font-weight: 600;
+  color: #2e7d32; /* Dark green text to match theme */
+  margin-bottom: 2px;
+  font-size: 0.875rem;
+}
+
+.section-info {
+  font-size: 0.75rem;
+  color: #4b7b4d; /* Muted green text */
+}
+
+/* Empty cell styling */
+.schedule-table td:empty {
+  background-color: white;
+}
+
+/* Add zebra striping for better readability */
+.schedule-table tbody tr:nth-child(even) td:not(.schedule-subject-cell) {
+  background-color: #fafbfc;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .teacher-schedule-container {
+    padding: 1rem;
+  }
+  
+  .teacher-schedule-title {
+    font-size: 1.5rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .teacher-name-header {
+    font-size: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .schedule-table th,
+  .schedule-table td {
+    padding: 0.5rem;
+  }
+}
+
+/* Add a subtle gradient background to the page */
+body {
+  background: #f8f9fa;
+  min-height: 100vh;
+}
+
+/* Add smooth scrolling for the table container */
+.teacher-schedule-table-container {
+  scrollbar-width: thin;
+  scrollbar-color: #c8e6c9 #f8f9fa;
+}
+
+.teacher-schedule-table-container::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.teacher-schedule-table-container::-webkit-scrollbar-track {
+  background: #f8f9fa;
+}
+
+.teacher-schedule-table-container::-webkit-scrollbar-thumb {
+  background-color: #c8e6c9;
+  border-radius: 3px;
+}
+
+/* Add subtle transitions */
+.schedule-table th,
+.schedule-table td {
+  transition: background-color 0.2s ease;
+}
+
+/* Print button styling */
+.print-button-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.print-button {
+  padding: 0.75rem 2rem;
+  background-color: #2e7d32;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.print-button:hover:not(:disabled) {
+  background-color: #246b27;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.print-button:disabled {
+  background-color: #a5d6a7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Print media styles */
+@media print {
+  body {
+    background: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .teacher-schedule-container {
+    padding: 0;
+    max-width: none;
+  }
+
+  .teacher-schedule-table-container {
+    box-shadow: none;
+    border-radius: 0;
+  }
+
+  .schedule-subject-cell {
+    box-shadow: none !important;
+    transform: none !important;
+  }
+
+  .print-button-container {
+    display: none;
+  }
+
+  /* Ensure table fits on the page */
+  .schedule-table {
+    width: 100%;
+    min-width: 0;
+    font-size: 11pt;
+  }
+
+  /* Force background colors and borders to print */
+  .schedule-subject-cell {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Improve table borders for print */
+  .schedule-table th,
+  .schedule-table td {
+    border: 1px solid #ddd;
+  }
+} 

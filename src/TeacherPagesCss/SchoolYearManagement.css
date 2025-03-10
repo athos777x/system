@@ -1,0 +1,412 @@
+/* Container styles */
+.school-year-container {
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.school-year-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.school-year-title {
+  font-size: 2rem;
+  color: #2e7d32;
+  margin: 0;
+}
+
+.school-year-add-btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  min-width: 80px;
+  background: #4CAF50;
+  color: white;
+}
+
+.school-year-add-btn:hover {
+  background: #388e3c;
+}
+
+.school-year-add-btn.disabled {
+  background: #e0e0e0;
+  cursor: not-allowed;
+}
+
+/* Filter section */
+.school-year-filters {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: #fff;
+  padding: 0.75rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(46, 125, 50, 0.1);
+  margin-bottom: 1.5rem;
+  justify-content: flex-end;
+}
+
+.school-year-select {
+  padding: 0.5rem 2rem 0.5rem 0.75rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  color: #1e293b;
+  background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2390a4ae'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E") no-repeat right 0.5rem center;
+  background-size: 14px;
+  appearance: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 140px;
+}
+
+.school-year-select:hover {
+  border-color: #81c784;
+}
+
+.school-year-select:focus {
+  outline: none;
+  border-color: #4CAF50;
+  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+}
+
+.school-year-filters button {
+  padding: 0.5rem 1rem;
+  background: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  white-space: nowrap;
+}
+
+.school-year-filters button::before {
+  content: "";
+  width: 14px;
+  height: 14px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='white'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z'%3E%3C/path%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+}
+
+.school-year-filters button:hover {
+  background: #388e3c;
+}
+
+/* Table styles */
+.school-year-table-container {
+  overflow-x: auto !important;
+  background: #fff !important;
+  border-radius: 12px !important;
+  box-shadow: 0 2px 8px rgba(46, 125, 50, 0.1) !important;
+  margin-bottom: 1.5rem !important;
+  width: 100% !important;
+}
+
+.school-year-table {
+  width: 100% !important;
+  min-width: 800px !important;
+  border-collapse: collapse !important;
+  background: #fff !important;
+  border-spacing: 0 !important;
+  table-layout: fixed !important;
+}
+
+/* Column widths */
+.school-year-table > thead > tr > th:nth-child(1) {
+  width: 5% !important;
+  min-width: 40px !important;
+}
+
+.school-year-table > thead > tr > th:nth-child(2) {
+  width: 45% !important;
+  min-width: 200px !important;
+}
+
+.school-year-table > thead > tr > th:nth-child(3) {
+  width: 25% !important;
+  min-width: 120px !important;
+}
+
+.school-year-table > thead > tr > th:nth-child(4) {
+  width: 25% !important;
+  min-width: 150px !important;
+}
+
+.school-year-table thead {
+  background: #e8f5e9 !important;
+  display: table-header-group !important;
+  width: 100% !important;
+}
+
+.school-year-table > thead > tr {
+  display: table-row !important;
+  width: 100% !important;
+  background: #e8f5e9 !important;
+}
+
+.school-year-table > thead > tr > th {
+  background: #e8f5e9 !important;
+  padding: 1rem !important;
+  text-align: center !important;
+  font-weight: 600 !important;
+  color: #2e7d32 !important;
+  border: none !important;
+  border-bottom: 2px solid #81c784 !important;
+  white-space: normal !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 10 !important;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+  height: auto !important;
+  min-height: 3.5rem !important;
+  vertical-align: middle !important;
+  font-size: 0.9rem !important;
+}
+
+.school-year-table td {
+  padding: 1rem;
+  text-align: center;
+  border-bottom: 1px solid #c8e6c9;
+  color: #1e293b;
+}
+
+.school-year-table tbody tr:hover {
+  background-color: #f1f8e9;
+}
+
+/* Status indicators */
+.status-active,
+.status-inactive {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-weight: 500;
+  font-size: 0.875rem;
+}
+
+.status-active {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+
+.status-inactive {
+  background-color: #ffebee;
+  color: #c62828;
+}
+
+/* Action buttons */
+.school-year-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.school-year-btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  min-width: 80px;
+}
+
+.school-year-btn-view {
+  background: #4CAF50;
+  color: white;
+}
+
+.school-year-btn-view:hover {
+  background: #388e3c;
+}
+
+.school-year-btn-edit {
+  background: #4CAF50;
+  color: white;
+}
+
+.school-year-btn-edit:hover {
+  background: #388e3c;
+}
+
+.school-year-btn-cancel {
+  background: #ef5350 !important;
+  color: white !important;
+}
+
+.school-year-btn-cancel:hover {
+  background: #e53935 !important;
+}
+
+/* Details section */
+.school-year-details {
+  padding: 1.5rem;
+  background: #fff;
+  border-top: 1px solid #c8e6c9;
+}
+
+.school-year-details table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1rem;
+}
+
+.school-year-details th {
+  width: 30%;
+  padding: 0.75rem;
+  text-align: left;
+  color: #2e7d32;
+  background: #e8f5e9;
+  font-weight: 600;
+  border: 1px solid #c8e6c9;
+}
+
+.school-year-details td {
+  width: 70%;
+  padding: 0.75rem;
+  border: 1px solid #c8e6c9;
+}
+
+.school-year-details input,
+.school-year-details select {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #81c784;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.school-year-details input:focus,
+.school-year-details select:focus {
+  outline: none;
+  border-color: #4CAF50;
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.1);
+}
+
+.school-year-edit-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #c8e6c9;
+}
+
+/* Modal styles */
+.school-year-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 2rem;
+  z-index: 1000;
+  overflow-y: auto;
+}
+
+.school-year-modal-content {
+  background: #fff;
+  padding: 2rem;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 600px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.school-year-modal-content h2 {
+  color: #2e7d32;
+  margin: 0 0 1.5rem 0;
+}
+
+.school-year-modal-content label {
+  display: block;
+  margin-bottom: 1rem;
+  color: #1e293b;
+  font-weight: 500;
+}
+
+.school-year-modal-content input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  margin-top: 0.25rem;
+  font-size: 0.95rem;
+}
+
+.school-year-modal-content input:focus {
+  outline: none;
+  border-color: #4CAF50;
+  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+}
+
+.school-year-button-group {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e0e0e0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  .school-year-filters {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .school-year-select {
+    width: 140px;
+  }
+}
+
+@media (max-width: 768px) {
+  .school-year-container {
+    padding: 1rem;
+  }
+  
+  .school-year-table-container {
+    margin: 0 -1rem;
+    border-radius: 0;
+  }
+  
+  .school-year-modal {
+    padding: 1rem;
+  }
+  
+  .school-year-modal-content {
+    padding: 1.5rem;
+  }
+} 

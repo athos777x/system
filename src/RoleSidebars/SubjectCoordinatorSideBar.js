@@ -5,14 +5,13 @@ import {
   FiHome,
   FiUsers,
   FiBook,
-  FiLogOut,
   FiChevronLeft,
   FiMenu,
   FiUser,
-  FiSettings
+  FiSettings,
+  FiLogOut
 } from 'react-icons/fi';
 import { useNavigate, useLocation } from 'react-router-dom';
-import LogoutButton from '../Buttons/LogoutButton';
 
 function SubjectCoordinatorSideBar({ showSidebar, toggleSidebar, handleLogout }) {
   const navigate = useNavigate();
@@ -20,6 +19,11 @@ function SubjectCoordinatorSideBar({ showSidebar, toggleSidebar, handleLogout })
 
   const handleNavigate = (path) => {
     navigate(path);
+  };
+
+  const handleLogoutClick = () => {
+    handleLogout();
+    navigate('/');
   };
 
   return (
@@ -33,7 +37,7 @@ function SubjectCoordinatorSideBar({ showSidebar, toggleSidebar, handleLogout })
           className={location.pathname === '/home' ? 'active' : ''}
         >
           <FiHome className="icon" /> Home
-        
+        </button>
         <button 
           onClick={() => handleNavigate('/student')}
           className={location.pathname === '/student' ? 'active' : ''}
@@ -46,7 +50,6 @@ function SubjectCoordinatorSideBar({ showSidebar, toggleSidebar, handleLogout })
         >
           <FiBook className="icon" /> Subjects
         </button>
-        </button>
         {/* <button 
           onClick={() => handleNavigate('/profile')}
           className={location.pathname === '/profile' ? 'active' : ''}
@@ -56,9 +59,9 @@ function SubjectCoordinatorSideBar({ showSidebar, toggleSidebar, handleLogout })
         {/* <button onClick={() => handleNavigate('/account')}>
           <FiSettings className="icon" /> Account
         </button> */}
-        <LogoutButton onClick={handleLogout}>
+        <button onClick={handleLogoutClick} className="logout-btn">
           <FiLogOut className="icon" /> Logout
-        </LogoutButton>
+        </button>
       </div>
     </div>
   );

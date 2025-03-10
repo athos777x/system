@@ -5,15 +5,14 @@ import {
   FiHome,
   FiClipboard,
   FiBook,
-  FiLogOut,
   FiChevronLeft,
   FiMenu,
   FiCalendar,
   FiSettings,
   FiUser,
+  FiLogOut,
 } from 'react-icons/fi';
 import { useNavigate, useLocation } from 'react-router-dom';
-import LogoutButton from '../Buttons/LogoutButton';
 
 function AcademicCoordinatorSideBar({ showSidebar, toggleSidebar, handleLogout }) {
   const [showClassesSubMenu, setShowClassesSubMenu] = useState(false);
@@ -39,6 +38,11 @@ function AcademicCoordinatorSideBar({ showSidebar, toggleSidebar, handleLogout }
     // Close all submenus when navigating
     setShowClassesSubMenu(false);
     navigate(path);
+  };
+
+  const handleLogoutClick = () => {
+    handleLogout();
+    navigate('/');
   };
 
   return (
@@ -90,9 +94,9 @@ function AcademicCoordinatorSideBar({ showSidebar, toggleSidebar, handleLogout }
         {/* <button onClick={() => handleNavigate('/account')}>
         <FiSettings className="icon" /> Account
         </button> */}
-        <LogoutButton onClick={handleLogout}>
+        <button onClick={handleLogoutClick} className="logout-btn">
           <FiLogOut className="icon" /> Logout
-        </LogoutButton>
+        </button>
       </div>
     </div>
   );

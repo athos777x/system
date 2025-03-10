@@ -6,22 +6,21 @@ import {
   FiUsers,
   FiClipboard,
   FiBook,
-  FiLogOut,
   FiChevronLeft,
   FiMenu,
   FiUser,
   FiCalendar,
   FiBarChart2,
   FiFileText,
-  FiCheckSquare
+  FiCheckSquare,
+  FiLogOut,
+  FiClock
 } from 'react-icons/fi';
 import { useNavigate, useLocation } from 'react-router-dom';
-import LogoutButton from '../Buttons/LogoutButton';
 
 function PrincipalSideBar({ showSidebar, toggleSidebar, handleLogout }) {
   const [showRecordsSubMenu, setShowRecordsSubMenu] = useState(false);
   const [showEnrollmentSubMenu, setShowEnrollmentSubMenu] = useState(false);
-  const [showReportsSubMenu, setShowReportsSubMenu] = useState(false);
   const [showClassesSubMenu, setShowClassesSubMenu] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -30,20 +29,17 @@ function PrincipalSideBar({ showSidebar, toggleSidebar, handleLogout }) {
   const isRecordsPath = ['/grades', '/attendance'].includes(location.pathname);
   const isEnrollmentPath = ['/school-year', '/section-list', '/enrolled-students'].includes(location.pathname);
   const isClassesPath = ['/section', '/schedule'].includes(location.pathname);
-  const isReportsPath = ['/summary-report-promotion'].includes(location.pathname);
 
   // Update useEffect to handle initial submenu state based on path
   React.useEffect(() => {
     setShowRecordsSubMenu(isRecordsPath);
     setShowEnrollmentSubMenu(isEnrollmentPath);
     setShowClassesSubMenu(isClassesPath);
-    setShowReportsSubMenu(isReportsPath);
   }, [location.pathname]);
 
   const toggleRecordsSubMenu = () => {
     setShowRecordsSubMenu(!showRecordsSubMenu);
     setShowEnrollmentSubMenu(false);
-    setShowReportsSubMenu(false);
     setShowClassesSubMenu(false);
     if (!showRecordsSubMenu) {
       navigate('/grades');
@@ -53,20 +49,9 @@ function PrincipalSideBar({ showSidebar, toggleSidebar, handleLogout }) {
   const toggleEnrollmentSubMenu = () => {
     setShowEnrollmentSubMenu(!showEnrollmentSubMenu);
     setShowRecordsSubMenu(false);
-    setShowReportsSubMenu(false);
     setShowClassesSubMenu(false);
     if (!showEnrollmentSubMenu) {
       navigate('/school-year');
-    }
-  };
-
-  const toggleReportsSubMenu = () => {
-    setShowReportsSubMenu(!showReportsSubMenu);
-    setShowRecordsSubMenu(false);
-    setShowEnrollmentSubMenu(false);
-    setShowClassesSubMenu(false);
-    if (!showReportsSubMenu) {
-      navigate('/summary-report-promotion');
     }
   };
 
@@ -74,7 +59,6 @@ function PrincipalSideBar({ showSidebar, toggleSidebar, handleLogout }) {
     setShowClassesSubMenu(!showClassesSubMenu);
     setShowRecordsSubMenu(false);
     setShowEnrollmentSubMenu(false);
-    setShowReportsSubMenu(false);
     if (!showClassesSubMenu) {
       navigate('/section');
     }
@@ -84,9 +68,13 @@ function PrincipalSideBar({ showSidebar, toggleSidebar, handleLogout }) {
     // Close all submenus when navigating
     setShowRecordsSubMenu(false);
     setShowEnrollmentSubMenu(false);
-    setShowReportsSubMenu(false);
     setShowClassesSubMenu(false);
     navigate(path);
+  };
+
+  const handleLogoutClick = () => {
+    handleLogout();
+    navigate('/');
   };
 
   return (
@@ -133,7 +121,13 @@ function PrincipalSideBar({ showSidebar, toggleSidebar, handleLogout }) {
           onClick={() => handleNavigate('/employees')}
           className={location.pathname === '/employees' ? 'active' : ''}
         >
-          <FiUser className="icon" /> Employee
+          <FiUsers className="icon" /> Employees
+        </button>
+        <button 
+          onClick={() => handleNavigate('/teacher-schedule')}
+          className={location.pathname === '/teacher-schedule' ? 'active' : ''}
+        >
+          <FiClock className="icon" /> My Schedule
         </button>
         <div className={`menu-with-submenu ${showEnrollmentSubMenu || isEnrollmentPath ? 'active' : ''}`}>
           <button onClick={toggleEnrollmentSubMenu}>
@@ -195,30 +189,21 @@ function PrincipalSideBar({ showSidebar, toggleSidebar, handleLogout }) {
         >
           <FiBook className="icon" /> Test Subjects
         </button>
-        <div className={`menu-with-submenu ${showReportsSubMenu || isReportsPath ? 'active' : ''}`}>
-          <button onClick={toggleReportsSubMenu}>
-            <FiBarChart2 className="icon" /> Generate Reports
-          </button>
-          {showReportsSubMenu && (
-            <div className="submenu">
-              <button 
-                onClick={() => handleNavigate('/summary-report-promotion')}
-                className={location.pathname === '/summary-report-promotion' ? 'active' : ''}
-              >
-                <FiFileText className="icon" /> Report
-              </button>
-            </div>
-          )}
-        </div>
+        <button 
+          onClick={() => handleNavigate('/summary-report-promotion')}
+          className={location.pathname === '/summary-report-promotion' ? 'active' : ''}
+        >
+          <FiFileText className="icon" /> Generate Report
+        </button>
         {/* <button 
           onClick={() => handleNavigate('/profile')}
           className={location.pathname === '/profile' ? 'active' : ''}
         >
           <FiUser className="icon" /> Profile
         </button> */}
-        <LogoutButton onClick={handleLogout}>
+        <button onClick={handleLogoutClick} className="logout-btn">
           <FiLogOut className="icon" /> Logout
-        </LogoutButton>
+        </button>
       </div>
     </div>
   );

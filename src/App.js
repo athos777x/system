@@ -4,42 +4,43 @@ import './App.css';
 import './CssFiles/LoginForm.css'; 
 import LoginForm from './Utilities/LoginForm';
 import Layout from './Utilities/Layout';
-import HomePage from './Pages/HomePage';
-import Principal_SubjectsPage from './PrincipalPages/Principal_SubjectsPage';
-import Principal_SchedulePage from './PrincipalPages/Principal_SchedulePage'; 
-import TestSubjectsPage from './PrincipalPages/test_subjectsPage';
+import HomePage from './TeacherPages/HomePage';
 import Student_ProfilePage from './StudentPages/Student_ProfilePage';
-import Student_EnrollmentPage from './StudentPages/Student_EnrollmentPage';
-import Student_SchedulePage from './StudentPages/Student_SchedulePage'; 
 import Student_GradesPage from './StudentPages/Student_GradesPage';
 import Student_AttendancePage from './StudentPages/Student_AttendancePage';
+import Student_SchedulePage from './StudentPages/Student_SchedulePage';
 import Student_AccountPage from './StudentPages/Student_AccountPage';
-import Registrar_AccountPage from './RegistrarPages/Registrar_AccountPage';
-import Registrar_StudentsPage from './RegistrarPages/Registrar_StudentsPage';
-import Registrar_TeacherPage from './RegistrarPages/Registrar_TeacherPage';
-import Registrar_AttendancePage from './RegistrarPages/Registrar_AttendancePage';
-import Registrar_EarlyEnrollmentReportPage from './RegistrarPages/Registrar_EarlyEnrollmentReportPage';
-import Registrar_EnrolledStudentsPage from './RegistrarPages/Registrar_EnrolledStudentsPage';
-import Registrar_GradesPage from './RegistrarPages/Registrar_GradesPage';
-import Registrar_ListofStudentEnrolleesPage from './RegistrarPages/Registrar_ListofStudentEnrolleesPage';
-import Registrar_SchoolYearPage from './RegistrarPages/Registrar_SchoolYearPage';
-import Registrar_SectionListPage from './RegistrarPages/Registrar_SectionListPage';
-import Registrar_SectionPage from './RegistrarPages/Registrar_SectionPage';
-import Registrar_SummaryReportonPromotionPage from './RegistrarPages/Registrar_SummaryReportonPromotionPage';
-import Registrar_BrigadaEskwela from './RegistrarPages/Registrar_BrigadaEskwela';
+import SubjectsManagement from './TeacherPages/SubjectsManagement';
+import ScheduleManagement from './TeacherPages/ScheduleManagement';
+import TestSubjectsManagement from './TeacherPages/TestSubjectsManagement';
+import Student_EnrollmentPage from './StudentPages/Student_EnrollmentPage';
+import AccountManagement from './TeacherPages/AccountManagement';
+import StudentManagement from './TeacherPages/StudentManagement';
+import TeacherManagement from './TeacherPages/TeacherManagement';
+import AttendanceManagement from './TeacherPages/AttendanceManagement';
+import EarlyEnrollmentReport from './TeacherPages/EarlyEnrollmentReport';
+import EnrolledStudents from './TeacherPages/EnrolledStudents';
+import GradesManagement from './TeacherPages/GradesManagement';
+import StudentEnrollees from './TeacherPages/StudentEnrollees';
+import SchoolYearManagement from './TeacherPages/SchoolYearManagement';
+import SectionList from './TeacherPages/SectionList';
+import SectionManagement from './TeacherPages/SectionManagement';
+import PromotionReport from './TeacherPages/PromotionReport';
+import BrigadaEskwela from './TeacherPages/BrigadaEskwela';
 import ProfilePage from './Utilities/ProfilePage';
 import Form137 from './reports/form_137';
 import GoodMoral from './reports/good_moral';
 import LateEnrollees from './Utilities/late_enrollee';
-import StudentGrades from './Pages/selected_grade';
-import Registrar_PendingEnrollmentPage from './RegistrarPages/Registrar_PendingEnrollment';
+import StudentGrades from './TeacherPages/selected_grade';
+import EnrollmentRequests from './TeacherPages/EnrollmentRequests';
 import Form138 from './reports/form_138';
-import Grades_page from './RegistrarPages/grades_page';
+import TestGradesManagement from './TeacherPages/TestGradesManagement';
 import SF1 from './reports/sf1';
 import SF2 from './reports/sf2';
 import SF4 from './reports/sf4';
 import SF5 from './reports/sf5';
 import SF6 from './reports/sf6';
+import Teacher_SchedulePage from './TeacherPages/Teacher_SchedulePage';
 
 
 
@@ -87,25 +88,26 @@ function App() {
             <Route path="/enrollment/:studentId" element={<Student_EnrollmentPage />} />
             <Route path="/account" element={<Student_AccountPage />} />
 
-            <Route path="/subjects" element={<Principal_SubjectsPage />} />
-            <Route path="/test-subjects" element={<TestSubjectsPage />} />
-            <Route path="/schedule" element={<Principal_SchedulePage />} />
+            <Route path="/subjects" element={<SubjectsManagement />} />
+            <Route path="/test-subjects" element={<TestSubjectsManagement />} />
+            <Route path="/schedule" element={<ScheduleManagement />} />
+            <Route path="/teacher-schedule" element={<Teacher_SchedulePage />} />
 
-            <Route path="/student" element={<Registrar_StudentsPage />} />
-            <Route path="/employees" element={<Registrar_TeacherPage />} />
-            <Route path="/attendance" element={<Registrar_AttendancePage />} />
-            <Route path="/early-enrollment-report" element={<Registrar_EarlyEnrollmentReportPage />} />
-            <Route path="/enrolled-students" element={<Registrar_EnrolledStudentsPage />} />
-            <Route path="/account" element={<Registrar_AccountPage />} />
-            <Route path="/grades" element={<Registrar_GradesPage />} />
-            <Route path="/list-of-student-enrollees" element={<Registrar_ListofStudentEnrolleesPage />} />
-            <Route path="/school-year" element={<Registrar_SchoolYearPage />} />
-            <Route path="/section-list" element={<Registrar_SectionListPage />} />
-            <Route path="/section" element={<Registrar_SectionPage />} />
-            <Route path="/summary-report-promotion" element={<Registrar_SummaryReportonPromotionPage />} />
-            <Route path="/brigada-eskwela" element={<Registrar_BrigadaEskwela />} />
-            <Route path="/pending-enrollment" element={<Registrar_PendingEnrollmentPage />} />
-            <Route path="/new-grades" element={<Grades_page/>} />
+            <Route path="/student" element={<StudentManagement />} />
+            <Route path="/employees" element={<TeacherManagement />} />
+            <Route path="/attendance" element={<AttendanceManagement />} />
+            <Route path="/early-enrollment-report" element={<EarlyEnrollmentReport />} />
+            <Route path="/enrolled-students" element={<EnrolledStudents />} />
+            <Route path="/account" element={<AccountManagement />} />
+            <Route path="/grades" element={<GradesManagement />} />
+            <Route path="/list-of-student-enrollees" element={<StudentEnrollees />} />
+            <Route path="/school-year" element={<SchoolYearManagement />} />
+            <Route path="/section-list" element={<SectionList />} />
+            <Route path="/section" element={<SectionManagement />} />
+            <Route path="/summary-report-promotion" element={<PromotionReport />} />
+            <Route path="/brigada-eskwela" element={<BrigadaEskwela />} />
+            <Route path="/pending-enrollment" element={<EnrollmentRequests />} />
+            <Route path="/new-grades" element={<TestGradesManagement />} />
 
             <Route path="/form-137" element={<Form137 />} />
             <Route path="/form-138" element={<Form138 />} />

@@ -4,7 +4,6 @@ import '../CssFiles/sidebar.css';
 import {
   FiHome,
   FiUsers,
-  FiLogOut,
   FiChevronLeft,
   FiMenu,
   FiUser,
@@ -12,14 +11,14 @@ import {
   FiBarChart2,
   FiFileText,
   FiBook,
-  FiClipboard
+  FiClipboard,
+  FiLogOut,
+  FiClock
 } from 'react-icons/fi';
 import { useNavigate, useLocation } from 'react-router-dom';
-import LogoutButton from '../Buttons/LogoutButton';
 
 function ClassAdviserSideBar({ showSidebar, toggleSidebar, handleLogout }) {
   const [showEnrollmentSubMenu, setShowEnrollmentSubMenu] = useState(false);
-  const [showReportsSubMenu, setShowReportsSubMenu] = useState(false);
   const [showClassesSubMenu, setShowClassesSubMenu] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -27,37 +26,24 @@ function ClassAdviserSideBar({ showSidebar, toggleSidebar, handleLogout }) {
   // Check if current path is under a specific submenu
   const isEnrollmentPath = ['/school-year', '/section-list', '/enrolled-students'].includes(location.pathname);
   const isClassesPath = ['/section'].includes(location.pathname);
-  const isReportsPath = ['/summary-report-promotion'].includes(location.pathname);
 
   // Update useEffect to handle initial submenu state based on path
   React.useEffect(() => {
     setShowEnrollmentSubMenu(isEnrollmentPath);
     setShowClassesSubMenu(isClassesPath);
-    setShowReportsSubMenu(isReportsPath);
   }, [location.pathname]);
 
   const toggleEnrollmentSubMenu = () => {
     setShowEnrollmentSubMenu(!showEnrollmentSubMenu);
-    setShowReportsSubMenu(false);
     setShowClassesSubMenu(false);
     if (!showEnrollmentSubMenu) {
       navigate('/school-year');
     }
   };
 
-  const toggleReportsSubMenu = () => {
-    setShowReportsSubMenu(!showReportsSubMenu);
-    setShowEnrollmentSubMenu(false);
-    setShowClassesSubMenu(false);
-    if (!showReportsSubMenu) {
-      navigate('/summary-report-promotion');
-    }
-  };
-
   const toggleClassesSubMenu = () => {
     setShowClassesSubMenu(!showClassesSubMenu);
     setShowEnrollmentSubMenu(false);
-    setShowReportsSubMenu(false);
     if (!showClassesSubMenu) {
       navigate('/section');
     }
@@ -66,9 +52,13 @@ function ClassAdviserSideBar({ showSidebar, toggleSidebar, handleLogout }) {
   const handleNavigate = (path) => {
     // Close all submenus when navigating
     setShowEnrollmentSubMenu(false);
-    setShowReportsSubMenu(false);
     setShowClassesSubMenu(false);
     navigate(path);
+  };
+
+  const handleLogoutClick = () => {
+    handleLogout();
+    navigate('/');
   };
 
   return (
@@ -88,6 +78,12 @@ function ClassAdviserSideBar({ showSidebar, toggleSidebar, handleLogout }) {
           className={location.pathname === '/student' ? 'active' : ''}
         >
           <FiUsers className="icon" /> Students
+        </button>
+        <button 
+          onClick={() => handleNavigate('/teacher-schedule')}
+          className={location.pathname === '/teacher-schedule' ? 'active' : ''}
+        >
+          <FiClock className="icon" /> My Schedule
         </button>
         <button 
           onClick={() => handleNavigate('/section')}
@@ -137,30 +133,21 @@ function ClassAdviserSideBar({ showSidebar, toggleSidebar, handleLogout }) {
             </div>
           )}
         </div>
-        <div className={`menu-with-submenu ${showReportsSubMenu || isReportsPath ? 'active' : ''}`}>
-          <button onClick={toggleReportsSubMenu}>
-            <FiBarChart2 className="icon" /> Generate Reports
-          </button>
-          {showReportsSubMenu && (
-            <div className="submenu">
-              <button 
-                onClick={() => handleNavigate('/summary-report-promotion')}
-                className={location.pathname === '/summary-report-promotion' ? 'active' : ''}
-              >
-                <FiFileText className="icon" /> Report
-              </button>
-            </div>
-          )}
-        </div>
+        <button 
+          onClick={() => handleNavigate('/summary-report-promotion')}
+          className={location.pathname === '/summary-report-promotion' ? 'active' : ''}
+        >
+          <FiFileText className="icon" /> Generate Report
+        </button>
         {/* <button 
           onClick={() => handleNavigate('/profile')}
           className={location.pathname === '/profile' ? 'active' : ''}
         >
           <FiUser className="icon" /> Profile
         </button> */}
-        <LogoutButton onClick={handleLogout}>
+        <button onClick={handleLogoutClick} className="logout-btn">
           <FiLogOut className="icon" /> Logout
-        </LogoutButton>
+        </button>
       </div>
     </div>
   );
