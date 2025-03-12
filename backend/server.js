@@ -3165,19 +3165,51 @@ app.put('/api/user-info/:userId', (req, res) => {
 
 // ENDPOINT FOR BRIGADA_ESKWELA
 app.get('/brigada-eskwela', (req, res) => {
-  const query = `
+  const { searchTerm, grade, section, school_year } = req.query; // Extract query parameters
+
+  let query = `
     SELECT 
       CONCAT(a.lastname, ', ', a.firstname, ' ', IFNULL(a.middlename, '')) AS stud_name, 
       a.current_yr_lvl AS grade_lvl, 
       b.section_name as section_name, 
       b.section_id as section_id,
-      IF(a.brigada_eskwela = 1, 'Present', 'Absent') AS brigada_attendance 
+      IF(a.brigada_eskwela = 1, 'Present', 'Absent') AS brigada_attendance,
+      s.school_year
     FROM student a 
     LEFT JOIN section b ON a.section_id = b.section_id 
+    LEFT JOIN student_school_year c ON a.student_id=c.student_id
+    LEFT JOIN school_year s ON c.school_year_id = s.school_year_id
     WHERE a.section_id != ''
   `;
 
-  db.query(query, (err, results) => {
+  const queryParams = [];
+  const conditions = [];
+
+  if (searchTerm) {
+    conditions.push(`(a.firstname LIKE ? OR a.lastname LIKE ?)`); // Use correct table alias
+    queryParams.push(`%${searchTerm}%`, `%${searchTerm}%`);
+  }
+
+  if (grade) {
+    conditions.push(`a.current_yr_lvl = ?`);
+    queryParams.push(grade);
+  }
+
+  if (section) {
+    conditions.push(`b.section_name = ?`);
+    queryParams.push(section);
+  }
+
+  if (school_year) {
+    conditions.push(`s.school_year = ?`); // Ensure `school_year` exists in `student` table
+    queryParams.push(school_year);
+  }
+
+  if (conditions.length > 0) {
+    query += ' AND ' + conditions.join(' AND ');
+  }
+
+  db.query(query, queryParams, (err, results) => { // Pass queryParams
     if (err) {
       console.error('Error fetching brigada eskwela data:', err);
       return res.status(500).json({ error: 'Internal server error' });
@@ -3185,6 +3217,7 @@ app.get('/brigada-eskwela', (req, res) => {
     res.json(results);
   });
 });
+
 
 app.get('/get-students', async (req, res) => {
   const { grade, section } = req.query;

@@ -14,6 +14,9 @@ function EnrollmentRequests() {
   const [isEditing, setIsEditing] = useState(false);
   const [editStudentData, setEditStudentData] = useState(null);
   const [showCancelModal, setShowCancelModal] = useState(false);
+  const [schoolYears, setSchoolYears] = useState([]);
+  const [sections, setSections] = useState([]);
+  const [filteredSections, setFilteredSections] = useState([]);
 
   const [filters, setFilters] = useState({
     searchTerm: '',
@@ -25,7 +28,19 @@ function EnrollmentRequests() {
 
   useEffect(() => {
     fetchStudents();
+    fetchSchoolYears();
+    fetchSections();
   }, []);
+
+  useEffect(() => {
+    if (filters.grade) {
+      // Filter sections based on the selected grade level
+      const sectionsForGrade = sections.filter(section => String(section.grade_level) === String(filters.grade));
+      setFilteredSections(sectionsForGrade);
+    } else {
+      setFilteredSections(sections);
+    }
+  }, [filters.grade, sections]);
 
   const fetchStudents = async (appliedFilters = {}) => {
     try {
@@ -62,6 +77,25 @@ function EnrollmentRequests() {
       } else {
         console.error('Error setting up request:', error.message);
       }
+    }
+  };
+
+  const fetchSchoolYears = async () => {
+    try {
+      const response = await axios.get('http://localhost:3001/api/school_years');
+      setSchoolYears(response.data);
+    } catch (error) {
+      console.error('Error fetching school years:', error);
+    }
+  };
+
+  const fetchSections = async () => {
+    try {
+      const response = await axios.get('http://localhost:3001/sections');
+      setSections(response.data);
+      setFilteredSections(response.data);
+    } catch (error) {
+      console.error('Error fetching sections:', error);
     }
   };
   
@@ -361,7 +395,11 @@ const approveElective = async (studentElectiveId) => {
             onChange={(e) => handleFilterChange('school_year', e.target.value)}
           >
             <option value="">Select School Year</option>
-            {/* Add school year options */}
+            {schoolYears.map((year) => (
+              <option key={year.school_year_id} value={year.school_year}>
+                {year.school_year}
+              </option>
+            ))}
           </select>
           <select
             className="pending-enrollment-select"
@@ -369,7 +407,9 @@ const approveElective = async (studentElectiveId) => {
             onChange={(e) => handleFilterChange('grade', e.target.value)}
           >
             <option value="">Select Grade</option>
-            {/* Add grade options */}
+            {[7, 8, 9, 10].map((grade) => (
+              <option key={grade} value={grade}>Grade {grade}</option>
+            ))}
           </select>
           <select
             className="pending-enrollment-select"
@@ -377,7 +417,11 @@ const approveElective = async (studentElectiveId) => {
             onChange={(e) => handleFilterChange('section', e.target.value)}
           >
             <option value="">Select Section</option>
-            {/* Add section options */}
+            {filteredSections.map((section) => (
+              <option key={section.section_id} value={section.section_name}>
+                {section.section_name}
+              </option>
+            ))}
           </select>
           <button onClick={handleApplyFilters}>Filter</button>
         </div>

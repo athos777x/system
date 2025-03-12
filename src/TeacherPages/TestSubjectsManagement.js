@@ -6,6 +6,7 @@ function TestSubjectsManagement() {
   const [subjects, setSubjects] = useState([]);
   const [filteredSubjects, setFilteredSubjects] = useState([]);
   const [selectedSubject, setSelectedSubject] = useState(null);
+  const [schoolYears, setSchoolYears] = useState([]);
   const [filters, setFilters] = useState({
     searchTerm: '',
     school_year: '',
@@ -23,6 +24,7 @@ function TestSubjectsManagement() {
     archive_status: 'unarchive',
   });
   const [showDetails, setShowDetails] = useState(false);
+  const [pendingFilters, setPendingFilters] = useState({ ...filters });
 
   const fetchSubjects = useCallback(async () => {
     try {
@@ -34,9 +36,19 @@ function TestSubjectsManagement() {
       console.error('Error fetching subjects:', error);
     }
   }, [filters]);
+
+  const fetchSchoolYears = async () => {
+    try {
+      const response = await axios.get('http://localhost:3001/api/school_years');
+      setSchoolYears(response.data);
+    } catch (error) {
+      console.error('Error fetching school years:', error);
+    }
+  };
   
   useEffect(() => {
     fetchSubjects();
+    fetchSchoolYears();
   }, [filters]);
 
   const handleSearch = (searchTerm) => {
@@ -127,8 +139,8 @@ function TestSubjectsManagement() {
         </div>
         <div className="subjects-mgmt-filters-group">
           <select
-            value={filters.grade}
-            onChange={(e) => applyFilters({ ...filters, grade: e.target.value })}
+            value={pendingFilters.grade}
+            onChange={(e) => setPendingFilters((prev) => ({ ...prev, grade: e.target.value }))}
           >
             <option value="">All Grades</option>
             {grades.map(grade => (
@@ -136,21 +148,24 @@ function TestSubjectsManagement() {
             ))}
           </select>
           <select
-            value={filters.school_year}
-            onChange={(e) => applyFilters({ ...filters, school_year: e.target.value })}
+            value={pendingFilters.school_year}
+            onChange={(e) => setPendingFilters((prev) => ({ ...prev, school_year: e.target.value }))}
           >
             <option value="">All School Years</option>
-            <option value="2023-2024">2023-2024</option>
-            <option value="2024-2025">2024-2025</option>
+            {schoolYears.map((year) => (
+              <option key={year.school_year_id} value={year.school_year}>
+                {year.school_year}
+              </option>
+            ))}
           </select>
           <select
-            value={filters.archive_status}
-            onChange={(e) => applyFilters({ ...filters, archive_status: e.target.value })}
+            value={pendingFilters.archive_status}
+            onChange={(e) => setPendingFilters((prev) => ({ ...prev, archive_status: e.target.value }))}
           >
             <option value="unarchive">Active</option>
             <option value="archive">Archived</option>
           </select>
-          <button onClick={() => applyFilters(filters)}>
+          <button onClick={() => applyFilters(pendingFilters)}>
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
             </svg>

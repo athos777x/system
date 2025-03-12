@@ -584,14 +584,6 @@ const handleArchive = () => {
     }
 };
 
-  
-  
-  
-  
-  
-  
-  
-  
 
   // Cancel edit with confirmation modal
   const cancelEdit = () => {

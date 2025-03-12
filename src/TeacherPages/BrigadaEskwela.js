@@ -9,6 +9,9 @@ function BrigadaEskwela() {
   const [filteredStudents, setFilteredStudents] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [studentsPerPage] = useState(20);
+  const [schoolYears, setSchoolYears] = useState([]);
+  const [sections, setSections] = useState([]);
+  const [filteredSections, setFilteredSections] = useState([]);
   const [filters, setFilters] = useState({
     searchTerm: '',
     grade: '',
@@ -17,7 +20,19 @@ function BrigadaEskwela() {
 
   useEffect(() => {
     fetchStudents();
+    fetchSchoolYears();
+    fetchSections();
   }, []);
+
+  useEffect(() => {
+    if (filters.grade) {
+      // Filter sections based on the selected grade level
+      const sectionsForGrade = sections.filter(section => String(section.grade_level) === String(filters.grade));
+      setFilteredSections(sectionsForGrade);
+    } else {
+      setFilteredSections(sections);
+    }
+  }, [filters.grade, sections]);
 
   const fetchStudents = async (appliedFilters = {}) => {
     try {
@@ -34,50 +49,64 @@ function BrigadaEskwela() {
     }
   };
 
+  const fetchSchoolYears = async () => {
+    try {
+      const response = await axios.get('http://localhost:3001/api/school_years');
+      setSchoolYears(response.data);
+    } catch (error) {
+      console.error('Error fetching school years:', error);
+    }
+  };
+
+  const fetchSections = async () => {
+    try {
+      const response = await axios.get('http://localhost:3001/sections');
+      setSections(response.data);
+      setFilteredSections(response.data);
+    } catch (error) {
+      console.error('Error fetching sections:', error);
+    }
+  };
+
   const handleSearch = (searchTerm) => {
-    setFilters((prev) => {
-      const updatedFilters = { ...prev, searchTerm };
-      applyFilters(updatedFilters);
-      return updatedFilters;
-    });
+    setFilters((prevFilters) => ({ ...prevFilters, searchTerm }));
+    applyFilters({ ...filters, searchTerm });
   };
-
+  
   const handleFilterChange = (type, value) => {
-    setFilters((prev) => {
-      const updatedFilters = { ...prev, [type]: value };
-      applyFilters(updatedFilters);
-      return updatedFilters;
-    });
+    setFilters(prevFilters => ({
+      ...prevFilters,
+      [type]: value
+    }));
   };
-
-  const applyFilters = (updatedFilters) => {
+  
+  const applyFilters = () => {
     let filtered = students;
-
-    if (updatedFilters.grade) {
-      filtered = filtered.filter(
-        (student) => student.grade_lvl === updatedFilters.grade
+  
+    if (filters.school_year) {
+      filtered = filtered.filter(student => String(student.school_year) === filters.school_year);
+    }
+    if (filters.grade) {
+      filtered = filtered.filter(student => String(student.grade_lvl) === String(filters.grade));
+    }
+    if (filters.section) {
+      filtered = filtered.filter(student => String(student.section_name) === String(filters.section));
+    }
+    if (filters.searchTerm) {
+      filtered = filtered.filter(student =>
+        student.stud_name.toLowerCase().includes(filters.searchTerm.toLowerCase())
       );
     }
-
-    if (updatedFilters.section) {
-      filtered = filtered.filter(
-        (student) => String(student.section_id) === updatedFilters.section
-      );
-    }
-
-    if (updatedFilters.searchTerm) {
-      filtered = filtered.filter((student) =>
-        student.stud_name.toLowerCase().includes(updatedFilters.searchTerm.toLowerCase())
-      );
-    }
-
+  
     setFilteredStudents(filtered);
     setCurrentPage(1);
   };
-
+  
   const handleApplyFilters = () => {
-    fetchStudents(filters);
+    console.log('Applying filters:', filters);
+    applyFilters();
   };
+  
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
   const indexOfLastStudent = currentPage * studentsPerPage;
@@ -100,6 +129,17 @@ function BrigadaEskwela() {
         </div>
         <div className="brigada-filters-group">
           <select
+            value={filters.school_year}
+            onChange={(e) => handleFilterChange('school_year', e.target.value)}
+          >
+            <option value="">Select School Year</option>
+            {schoolYears.map((year) => (
+              <option key={year.school_year_id} value={year.school_year}>
+                {year.school_year}
+              </option>
+            ))}
+          </select>
+          <select
             value={filters.grade}
             onChange={(e) => handleFilterChange('grade', e.target.value)}
           >
@@ -113,7 +153,11 @@ function BrigadaEskwela() {
             onChange={(e) => handleFilterChange('section', e.target.value)}
           >
             <option value="">Select Section</option>
-            {/* Section options will be populated from your data */}
+            {filteredSections.map((section) => (
+              <option key={section.section_id} value={section.section_name}>
+                {section.section_name}
+              </option>
+            ))}
           </select>
         </div>
         <button onClick={handleApplyFilters}>Filter</button>
