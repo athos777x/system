@@ -184,8 +184,8 @@ function AttendanceManagement() {
                   </td>
                   <td>Grade {student.current_yr_lvl}</td>
                   <td>
-                    <span className={`status-${student.active_status.toLowerCase()}`}>
-                      {student.active_status.charAt(0).toUpperCase() + student.active_status.slice(1)}
+                    <span className={`status-${student.active_status ? student.active_status.toLowerCase() : 'unknown'}`}>
+                      {student.active_status ? (student.active_status.charAt(0).toUpperCase() + student.active_status.slice(1)) : 'Unknown'}
                     </span>
                   </td>
                   <td>
