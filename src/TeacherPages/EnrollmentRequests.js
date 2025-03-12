@@ -9,7 +9,7 @@ function EnrollmentRequests() {
   const [students, setStudents] = useState([]);
   const [filteredStudents, setFilteredStudents] = useState([]);
   const [selectedStudentId, setSelectedStudentId] = useState(null);
-  const [studentsPerPage] = useState(5);
+  const [studentsPerPage] = useState(20);
   const [currentPage, setCurrentPage] = useState(1);
   const [isEditing, setIsEditing] = useState(false);
   const [editStudentData, setEditStudentData] = useState(null);

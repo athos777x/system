@@ -9,7 +9,7 @@ function TeacherManagement() {
   const [teachers, setTeachers] = useState([]);
   const [filteredTeachers, setFilteredTeachers] = useState([]);
   const [selectedTeacherId, setSelectedTeacherId] = useState(null);
-  const [studentsPerPage] = useState(5); // Adjust this number to set how many students per page
+  const [studentsPerPage] = useState(20); // Adjust this number to set how many students per page
   const [currentPage, setCurrentPage] = useState(1);
   const [filters, setFilters] = useState({
     searchTerm: '',

@@ -10,7 +10,7 @@ function TestGradesManagement() {
   const [filteredStudents, setFilteredStudents] = useState([]);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [studentsPerPage] = useState(5);
+  const [studentsPerPage] = useState(20);
   const [students, setStudents] = useState([]);
   const [subjects, setSubjects] = useState([]);
   const [editingStudent, setEditingStudent] = useState(null);

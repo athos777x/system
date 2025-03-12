@@ -8,7 +8,7 @@ function BrigadaEskwela() {
   const [students, setStudents] = useState([]);
   const [filteredStudents, setFilteredStudents] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [studentsPerPage] = useState(5);
+  const [studentsPerPage] = useState(20);
   const [filters, setFilters] = useState({
     searchTerm: '',
     grade: '',
