@@ -15,6 +15,9 @@ function TestGradesManagement() {
   const [subjects, setSubjects] = useState([]);
   const [editingStudent, setEditingStudent] = useState(null);
   const [gradesFetched, setGradesFetched] = useState(false);
+  const [schoolYears, setSchoolYears] = useState([]);
+  const [sections, setSections] = useState([]);
+  const [filteredSections, setFilteredSections] = useState([]);
   const [filters, setFilters] = useState({
     searchTerm: '',
     school_year: '',
@@ -25,7 +28,19 @@ function TestGradesManagement() {
 
   useEffect(() => {
     fetchStudents();
+    fetchSchoolYears();
+    fetchSections();
   }, []);
+
+  useEffect(() => {
+    if (filters.grade) {
+      // Filter sections based on the selected grade level
+      const sectionsForGrade = sections.filter(section => String(section.grade_level) === String(filters.grade));
+      setFilteredSections(sectionsForGrade);
+    } else {
+      setFilteredSections(sections);
+    }
+  }, [filters.grade, sections]);
 
   const fetchStudents = async (appliedFilters = {}) => {
     try {
@@ -37,6 +52,25 @@ function TestGradesManagement() {
       setFilteredStudents(sortedStudents);
     } catch (error) {
       console.error('Error fetching students:', error);
+    }
+  };
+
+  const fetchSchoolYears = async () => {
+    try {
+      const response = await axios.get('http://localhost:3001/api/school_years');
+      setSchoolYears(response.data);
+    } catch (error) {
+      console.error('Error fetching school years:', error);
+    }
+  };
+
+  const fetchSections = async () => {
+    try {
+      const response = await axios.get('http://localhost:3001/sections');
+      setSections(response.data);
+      setFilteredSections(response.data);
+    } catch (error) {
+      console.error('Error fetching sections:', error);
     }
   };
 
@@ -236,7 +270,11 @@ function TestGradesManagement() {
             onChange={(e) => handleFilterChange('school_year', e.target.value)}
           >
             <option value="">Select School Year</option>
-            {/* School year options will be populated from your data */}
+            {schoolYears.map((year) => (
+              <option key={year.school_year_id} value={year.school_year}>
+                {year.school_year}
+              </option>
+            ))}
           </select>
           <select
             value={filters.grade}
@@ -252,7 +290,11 @@ function TestGradesManagement() {
             onChange={(e) => handleFilterChange('section', e.target.value)}
           >
             <option value="">Select Section</option>
-            {/* Section options will be populated from your data */}
+            {filteredSections.map((section) => (
+              <option key={section.section_id} value={section.section_name}>
+                {section.section_name}
+              </option>
+            ))}
           </select>
         </div>
         <button onClick={handleApplyFilters}>Filter</button>
