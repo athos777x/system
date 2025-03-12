@@ -50,6 +50,12 @@ function SubjectCoordinatorSideBar({ showSidebar, toggleSidebar, handleLogout })
         >
           <FiBook className="icon" /> Subjects
         </button>
+        <button 
+          onClick={() => handleNavigate('/test-subjects')}
+          className={location.pathname === '/test-subjects' ? 'active' : ''}
+        >
+          <FiBook className="icon" /> Test Subjects
+        </button>
         {/* <button 
           onClick={() => handleNavigate('/profile')}
           className={location.pathname === '/profile' ? 'active' : ''}

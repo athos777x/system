@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import '../TeacherPagesCss/PromotionReport.css';
 
@@ -13,6 +14,7 @@ function PromotionReport() {
   const [suggestions, setSuggestions] = useState([]);
   const [schoolYears, setSchoolYears] = useState([]); // Store fetched school years
   const [selectedSchoolYear, setSelectedSchoolYear] = useState(""); // Selected school year
+  const [roleName, setRoleName] = useState('');
 
   useEffect(() => {
     // Fetch school years from the backend
@@ -31,6 +33,38 @@ function PromotionReport() {
     
     fetchSchoolYears();
   }, []);
+
+  useEffect(() => {
+    const userId = localStorage.getItem('userId'); // Retrieve userId from localStorage
+    if (userId) {
+      console.log(`Retrieved userId from localStorage: ${userId}`); // Debugging log
+      fetchUserRole(userId);
+    } else {
+      console.error('No userId found in localStorage');
+    }
+  }, []);
+
+  const fetchUserRole = async (userId) => {
+    try {
+      console.log(`Fetching role for user ID: ${userId}`); // Debugging log
+      const response = await axios.get(`http://localhost:3001/user-role/${userId}`);
+      if (response.status === 200) {
+        console.log('Response received:', response.data); // Debugging log
+        setRoleName(response.data.role_name);
+        console.log('Role name set to:', response.data.role_name); // Debugging log
+      } else {
+        console.error('Failed to fetch role name. Response status:', response.status);
+      }
+    } catch (error) {
+      if (error.response) {
+        console.error('Error response from server:', error.response.data);
+      } else if (error.request) {
+        console.error('No response received from server. Request:', error.request);
+      } else {
+        console.error('Error setting up request:', error.message);
+      }
+    }
+  };
 
   const openModal = (type) => {
     setModalContent(type);
@@ -206,6 +240,7 @@ function PromotionReport() {
 
       <div className="summary-report-grid">
         {/* Form 137 Card */}
+        {(roleName !== 'principal' && roleName !=='class_adviser') && (
         <div className="summary-report-card">
           <h3>Form 137</h3>
           <p className="summary-report-description">Generate Form 137 for a specific student.</p>
@@ -213,8 +248,10 @@ function PromotionReport() {
             Generate Form 137
           </button>
         </div>
+        )}
 
         {/* Form 138 Card */}
+        {(roleName !== 'principal' && roleName !== 'registrar' && roleName !=='class_adviser') && (
         <div className="summary-report-card">
           <h3>Form 138</h3>
           <p className="summary-report-description">Generate Form 138 for a specific student.</p>
@@ -222,8 +259,10 @@ function PromotionReport() {
             Generate Form 138
           </button>
         </div>
+        )}
 
         {/* Good Moral Certificate Card */}
+        {(roleName !== 'principal' && roleName !=='class_adviser') && (
         <div className="summary-report-card">
           <h3>Good Moral Certificate</h3>
           <p className="summary-report-description">Generate Good Moral Certificate for a specific student.</p>
@@ -231,8 +270,10 @@ function PromotionReport() {
             Generate Good Moral Certificate
           </button>
         </div>
+        )}
 
         {/* Late Enrollees Card */}
+        {(roleName !== 'registrar' && roleName !=='class_adviser') && (
         <div className="summary-report-card">
           <h3>Late Enrollees</h3>
           <p className="summary-report-description">Generate a report for late enrollees.</p>
@@ -240,8 +281,10 @@ function PromotionReport() {
             Generate Late Enrollees Report
           </button>
         </div>
+        )}
 
         {/* SF1 Card */}
+        {(roleName !== 'principal' && roleName !== 'registrar' ) && (
         <div className="summary-report-card">
           <h3>SF1 - School Register</h3>
           <p className="summary-report-description">Generate School Register report with complete student information.</p>
@@ -249,8 +292,10 @@ function PromotionReport() {
             Generate SF1
           </button>
         </div>
+        )}
 
         {/* SF2 Card */}
+        {(roleName !== 'principal' && roleName !== 'registrar') && (
         <div className="summary-report-card">
           <h3>SF2 - School Summary Report of Enrollment</h3>
           <p className="summary-report-description">Generate enrollment summary report by grade level.</p>
@@ -258,8 +303,10 @@ function PromotionReport() {
             Generate SF2
           </button>
         </div>
+        )}
 
         {/* SF4 Card */}
+        {(roleName !== 'principal' && roleName !== 'registrar') && (
         <div className="summary-report-card">
           <h3>SF4 - Monthly Learner's Movement and Attendance</h3>
           <p className="summary-report-description">Generate monthly attendance and movement report.</p>
@@ -267,8 +314,10 @@ function PromotionReport() {
             Generate SF4
           </button>
         </div>
+        )}
 
         {/* SF5 Card */}
+        {(roleName !== 'principal' && roleName !== 'registrar') && (
         <div className="summary-report-card">
           <h3>SF5 - Report on Promotion and Learning Progress</h3>
           <p className="summary-report-description">Generate detailed promotion and learning progress report.</p>
@@ -276,8 +325,10 @@ function PromotionReport() {
             Generate SF5
           </button>
         </div>
+        )}
 
         {/* SF6 Card */}
+        {(roleName !== 'registrar') && (
         <div className="summary-report-card">
           <h3>SF6 - Summarized Report on Promotion</h3>
           <p className="summary-report-description">Generate summarized promotion and learning progress report.</p>
@@ -285,6 +336,7 @@ function PromotionReport() {
             Generate SF6
           </button>
         </div>
+        )}
       </div>
 
       {showModal && (

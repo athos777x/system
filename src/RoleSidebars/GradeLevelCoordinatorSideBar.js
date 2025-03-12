@@ -25,8 +25,8 @@ function GradeLevelCoordinatorSideBar({ showSidebar, toggleSidebar, handleLogout
   const location = useLocation();
 
   // Check if current path is under a specific submenu
-  const isRecordsPath = ['/grades', '/attendance'].includes(location.pathname);
-  const isEnrollmentPath = ['/school-year', '/section-list', '/enrolled-students'].includes(location.pathname);
+  const isRecordsPath = ['/grades', '/new-grades', '/attendance'].includes(location.pathname);
+  const isEnrollmentPath = ['/pending-enrollment', '/school-year', '/section-list', '/enrolled-students'].includes(location.pathname);
 
   // Update useEffect to handle initial submenu state based on path
   useEffect(() => {
@@ -100,6 +100,12 @@ function GradeLevelCoordinatorSideBar({ showSidebar, toggleSidebar, handleLogout
                 <FiFileText className="icon" /> Grades
               </button>
               <button 
+                onClick={() => handleNavigate('/new-grades')}
+                className={location.pathname === '/new-grades' ? 'active' : ''}
+              >
+                <FiFileText className="icon" /> New Grades
+              </button>
+              <button 
                 onClick={() => handleNavigate('/attendance')}
                 className={location.pathname === '/attendance' ? 'active' : ''}
               >
@@ -117,6 +123,12 @@ function GradeLevelCoordinatorSideBar({ showSidebar, toggleSidebar, handleLogout
           </button>
           {showEnrollmentSubMenu && (
             <div className="submenu">
+              <button 
+                onClick={() => handleNavigate('/pending-enrollment')}
+                className={location.pathname === '/pending-enrollment' ? 'active' : ''}
+              >
+                <FiUsers className="icon" /> Pending Enrollment
+              </button>
               <button 
                 onClick={() => handleNavigate('/school-year')}
                 className={location.pathname === '/school-year' ? 'active' : ''}

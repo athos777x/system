@@ -26,7 +26,7 @@ function PrincipalSideBar({ showSidebar, toggleSidebar, handleLogout }) {
   const location = useLocation();
 
   // Check if current path is under a specific submenu
-  const isRecordsPath = ['/grades', '/attendance'].includes(location.pathname);
+  const isRecordsPath = ['/grades', '/new-grades', '/attendance'].includes(location.pathname);
   const isEnrollmentPath = ['/school-year', '/section-list', '/enrolled-students'].includes(location.pathname);
   const isClassesPath = ['/section', '/schedule'].includes(location.pathname);
 
@@ -107,6 +107,12 @@ function PrincipalSideBar({ showSidebar, toggleSidebar, handleLogout }) {
                 className={location.pathname === '/grades' ? 'active' : ''}
               >
                 <FiFileText className="icon" /> Grades
+              </button>
+              <button 
+                onClick={() => handleNavigate('/new-grades')}
+                className={location.pathname === '/new-grades' ? 'active' : ''}
+              >
+                <FiFileText className="icon" /> New Grades
               </button>
               <button 
                 onClick={() => handleNavigate('/attendance')}
