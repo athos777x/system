@@ -63,7 +63,10 @@ function EmployeeSearchFilter({ handleSearch, handleApplyFilters }) {
             <option value="subject_teacher">Teacher</option>
             <option value="registrar">Registrar</option>
             <option value="principal">Principal</option>
-            
+            <option value="academic_coordinator">Academic Coordinator</option>
+            <option value="subject_coordinator">Subject Coordinator</option>
+            <option value="grade_level_coordinator">Grade Level Coordinator</option>
+            <option value="class_adviser">Class Adviser</option>
           </select>
         </div>
       </div>

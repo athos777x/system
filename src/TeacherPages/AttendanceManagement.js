@@ -9,6 +9,9 @@ function AttendanceManagement() {
   const [filteredStudents, setFilteredStudents] = useState([]);
   const [selectedStudentId, setSelectedStudentId] = useState(null);
   const [attendanceData, setAttendanceData] = useState({});
+  const [schoolYears, setSchoolYears] = useState([]);
+  const [sections, setSections] = useState([]);
+  const [filteredSections, setFilteredSections] = useState([]);
   const [filters, setFilters] = useState({
     searchTerm: '',
     grade: '',
@@ -20,6 +23,8 @@ function AttendanceManagement() {
 
   useEffect(() => {
     fetchStudents();
+    fetchSchoolYears();
+    fetchSections();
   }, []);
 
   const fetchStudents = async (appliedFilters = {}) => {
@@ -34,6 +39,25 @@ function AttendanceManagement() {
       setFilteredStudents(sortedStudents);
     } catch (error) {
       console.error('There was an error fetching the students!', error);
+    }
+  };
+
+  const fetchSchoolYears = async () => {
+    try {
+      const response = await axios.get('http://localhost:3001/api/school_years');
+      setSchoolYears(response.data);
+    } catch (error) {
+      console.error('Error fetching school years:', error);
+    }
+  };
+
+  const fetchSections = async () => {
+    try {
+      const response = await axios.get('http://localhost:3001/sections');
+      setSections(response.data);
+      setFilteredSections(response.data);
+    } catch (error) {
+      console.error('Error fetching sections:', error);
     }
   };
 
@@ -67,6 +91,16 @@ function AttendanceManagement() {
     }
     setSelectedStudentId(selectedStudentId === studentId ? null : studentId);
   };
+
+  useEffect(() => {
+    if (filters.grade) {
+      // Filter sections based on the selected grade level
+      const sectionsForGrade = sections.filter(section => String(section.grade_level) === String(filters.grade));
+      setFilteredSections(sectionsForGrade);
+    } else {
+      setFilteredSections(sections);
+    }
+  }, [filters.grade, sections]);
 
   useEffect(() => {
     if (filters.searchTerm !== '') {
@@ -140,7 +174,11 @@ function AttendanceManagement() {
             onChange={(e) => setFilters(prev => ({ ...prev, school_year: e.target.value }))}
           >
             <option value="">Select School Year</option>
-            <option value="2023-2024">2023-2024</option>
+            {schoolYears.map((year) => (
+              <option key={year.school_year_id} value={year.school_year}>
+                {year.school_year}
+              </option>
+            ))}
           </select>
           <select
             value={filters.grade}
@@ -156,8 +194,11 @@ function AttendanceManagement() {
             onChange={(e) => setFilters(prev => ({ ...prev, section: e.target.value }))}
           >
             <option value="">Select Section</option>
-            <option value="A">Section A</option>
-            <option value="B">Section B</option>
+            {filteredSections.map((section) => (
+              <option key={section.section_id} value={section.section_name}>
+                {section.section_name}
+              </option>
+            ))}
           </select>
         </div>
         <button onClick={handleApplyFilters}>Filter</button>

@@ -86,6 +86,21 @@ function Principal_SchedulePage() {
     setFilteredSections(filtered);
   };
 
+  const handleGradeChange = (event) => {
+    const grade = event.target.value;
+    setFilters(prev => ({ ...prev, grade }));
+  };
+
+  const handleSectionChange = (event) => {
+    const section = event.target.value;
+    setFilters(prev => ({ ...prev, section }));
+  };
+
+  const handleSchoolYearChange = (event) => {
+    const schoolYear = event.target.value;
+    setFilters(prev => ({ ...prev, schoolYear }));
+  };
+
   const handleApplyFilters = (filters) => {
     applyFilters(filters);
   };
@@ -422,7 +437,7 @@ function Principal_SchedulePage() {
         <div className="schedule-mgmt-filters-group">
           <select
             value={filters.grade}
-            onChange={(e) => applyFilters({ ...filters, grade: e.target.value })}
+            onChange={handleGradeChange}
           >
             <option value="">All Grades</option>
             {['7', '8', '9', '10'].map(grade => (
@@ -431,7 +446,7 @@ function Principal_SchedulePage() {
           </select>
           <select
             value={filters.section}
-            onChange={(e) => applyFilters({ ...filters, section: e.target.value })}
+            onChange={handleSectionChange}
           >
             <option value="">All Sections</option>
             {sections.map(section => (
@@ -442,7 +457,7 @@ function Principal_SchedulePage() {
           </select>
           <select
             value={filters.schoolYear}
-            onChange={(e) => applyFilters({ ...filters, schoolYear: e.target.value })}
+            onChange={handleSchoolYearChange}
           >
             <option value="">All School Years</option>
             {schoolYears.map(year => (
