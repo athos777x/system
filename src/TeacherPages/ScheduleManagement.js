@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
-import ScheduleSearchFilter from '../RoleSearchFilters/ScheduleSearchFilter';
 import '../TeacherPagesCss/ScheduleManagement.css';
 
 function Principal_SchedulePage() {

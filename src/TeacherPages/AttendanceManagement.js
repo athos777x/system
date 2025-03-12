@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import SearchFilter from '../RoleSearchFilters/SearchFilter';
 import axios from 'axios';
 import Pagination from '../Utilities/pagination';
 import '../TeacherPagesCss/AttendanceManagement.css';

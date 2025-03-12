@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import SearchFilter from '../RoleSearchFilters/SearchFilter';
 import Pagination from '../Utilities/pagination';
 import axios from 'axios';
 import '../TeacherPagesCss/EnrollmentRequests.css';

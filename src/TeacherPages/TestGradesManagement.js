@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import SearchFilter from '../RoleSearchFilters/SearchFilter';
 import '../TeacherPagesCss/TestGradesManagement.css';
 import Pagination from '../Utilities/pagination';
 import { useNavigate } from 'react-router-dom';
