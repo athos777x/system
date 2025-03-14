@@ -280,6 +280,24 @@ function Principal_SchedulePage() {
     }
   };
 
+  const handleDeleteClick = async (scheduleId) => {
+    try {
+      if (window.confirm('Are you sure you want to delete this schedule?')) {
+        // Update the endpoint to match the format used in other schedule API calls
+        await axios.delete(`http://localhost:3001/schedules/${scheduleId}`);
+        
+        // Immediately update the UI by removing the deleted schedule from state
+        setSectionSchedules(prevSchedules => 
+          prevSchedules.filter(schedule => schedule.schedule_id !== scheduleId)
+        );
+      }
+    } catch (error) {
+      console.error('There was an error deleting the schedule!', error);
+      // Show an error message to the user
+      alert(`Failed to delete schedule: ${error.response?.data?.message || error.message}`);
+    }
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     
@@ -617,6 +635,12 @@ function Principal_SchedulePage() {
                                                   Approve
                                                 </button>
                                               )}
+                                              <button 
+                                                className="schedule-mgmt-btn schedule-mgmt-btn-delete" 
+                                                onClick={() => handleDeleteClick(schedule.schedule_id)}
+                                              >
+                                                Delete
+                                              </button>
                                             </div>
                                           )}
                                         </td>

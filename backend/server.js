@@ -2285,21 +2285,55 @@ app.put('/schedules/:scheduleId', (req, res) => {
 // SCHEDULE PAGE
 app.put('/schedules/:scheduleId/approve', (req, res) => {
   const { scheduleId } = req.params;
-  const query = 'UPDATE schedule SET schedule_status = "Approved" WHERE schedule_id = ?';
-  db.query(query, [scheduleId], (err, results) => {
+  const { schedule_status } = req.body;
+  
+  const query = 'UPDATE schedule SET schedule_status = ? WHERE schedule_id = ?';
+  db.query(query, [schedule_status, scheduleId], (err, result) => {
     if (err) {
       console.error('Error approving schedule:', err);
-      res.status(500).json({ error: 'Internal server error' });
-      return;
+      return res.status(500).json({ error: 'Failed to approve schedule' });
     }
-    if (results.affectedRows > 0) {
-      res.json({ message: 'Schedule approved successfully' });
-    } else {
-      res.status(404).json({ error: 'Schedule not found' });
-    }
+    res.json({ message: 'Schedule approved successfully' });
   });
 });
 
+// Delete a schedule
+app.delete('/schedules/:scheduleId', (req, res) => {
+  const { scheduleId } = req.params;
+  
+  // First check if the schedule exists and is in 'Pending Approval' status
+  const checkQuery = 'SELECT * FROM schedule WHERE schedule_id = ?';
+  db.query(checkQuery, [scheduleId], (err, results) => {
+    if (err) {
+      console.error('Error checking schedule:', err);
+      return res.status(500).json({ error: 'Failed to check schedule' });
+    }
+    
+    if (results.length === 0) {
+      return res.status(404).json({ error: 'Schedule not found' });
+    }
+    
+    const schedule = results[0];
+    if (schedule.schedule_status !== 'Pending Approval') {
+      return res.status(403).json({ error: 'Only pending schedules can be deleted' });
+    }
+    
+    // If schedule exists and is pending, delete it
+    const deleteQuery = 'DELETE FROM schedule WHERE schedule_id = ?';
+    db.query(deleteQuery, [scheduleId], (err, result) => {
+      if (err) {
+        console.error('Error deleting schedule:', err);
+        return res.status(500).json({ error: 'Failed to delete schedule' });
+      }
+      
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ error: 'Schedule not found' });
+      }
+      
+      res.json({ message: 'Schedule deleted successfully' });
+    });
+  });
+});
 
 // ENDPOINT USED:
 // SUBJECT PAGE
