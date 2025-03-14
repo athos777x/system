@@ -11,6 +11,40 @@ function Student_ProfilePage() {
       try {
         const response = await axios.get(`http://localhost:3001/student/profile/${userId}`);
         setStudentData(response.data);
+        
+        // Check if we have a cached profile picture URL in localStorage
+        const cachedProfilePicture = localStorage.getItem('profilePictureUrl');
+        if (cachedProfilePicture && response.data) {
+          // Add a cache-busting parameter
+          const timestamp = new Date().getTime();
+          const imageUrlWithCacheBuster = `${cachedProfilePicture}?t=${timestamp}`;
+          setStudentData(prev => ({
+            ...prev,
+            profile_picture: imageUrlWithCacheBuster
+          }));
+        } else if (response.data && !response.data.profile_picture) {
+          // If no profile picture is set, try to fetch it
+          try {
+            const profilePicResponse = await axios.get(`http://localhost:3001/api/profile-picture/${userId}`);
+            if (profilePicResponse.data && profilePicResponse.data.imageUrl) {
+              const imageUrl = profilePicResponse.data.imageUrl;
+              // Add a cache-busting parameter
+              const timestamp = new Date().getTime();
+              const imageUrlWithCacheBuster = `${imageUrl}?t=${timestamp}`;
+              
+              // Update the student data with the profile picture
+              setStudentData(prev => ({
+                ...prev,
+                profile_picture: imageUrlWithCacheBuster
+              }));
+              
+              // Cache the URL in localStorage
+              localStorage.setItem('profilePictureUrl', imageUrl);
+            }
+          } catch (err) {
+            console.log('Profile picture not available or error fetching it:', err.message);
+          }
+        }
       } catch (error) {
         console.error('Error fetching student data:', error);
       }

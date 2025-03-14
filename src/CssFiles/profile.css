@@ -116,6 +116,15 @@
     min-width: fit-content;
 }
 
+.change-picture-btn {
+    padding: 0.5rem 1rem;
+    width: 140px;
+    margin-top: 10px;
+    position: static;
+    bottom: auto;
+    right: auto;
+}
+
 .change-picture-btn,
 .edit-profile-btn,
 .save-profile-btn {
@@ -235,10 +244,4 @@
         align-items: center;
         gap: 15px;
     }
-}
-
-.change-picture-btn {
-    padding: 0.5rem 1rem;
-    width: 140px;
-    margin-top: 10px;
 }
