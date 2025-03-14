@@ -17,6 +17,7 @@ function TestGradesManagement() {
   const [schoolYears, setSchoolYears] = useState([]);
   const [sections, setSections] = useState([]);
   const [filteredSections, setFilteredSections] = useState([]);
+  const [roleName, setRoleName] = useState('');
   const [filters, setFilters] = useState({
     searchTerm: '',
     school_year: '',
@@ -40,6 +41,38 @@ function TestGradesManagement() {
       setFilteredSections(sections);
     }
   }, [filters.grade, sections]);
+
+  useEffect(() => {
+    const userId = localStorage.getItem('userId'); // Retrieve userId from localStorage
+    if (userId) {
+      console.log(`Retrieved userId from localStorage: ${userId}`); // Debugging log
+      fetchUserRole(userId);
+    } else {
+      console.error('No userId found in localStorage');
+    }
+  }, []);
+
+  const fetchUserRole = async (userId) => {
+    try {
+      console.log(`Fetching role for user ID: ${userId}`); // Debugging log
+      const response = await axios.get(`http://localhost:3001/user-role/${userId}`);
+      if (response.status === 200) {
+        console.log('Response received:', response.data); // Debugging log
+        setRoleName(response.data.role_name);
+        console.log('Role name set to:', response.data.role_name); // Debugging log
+      } else {
+        console.error('Failed to fetch role name. Response status:', response.status);
+      }
+    } catch (error) {
+      if (error.response) {
+        console.error('Error response from server:', error.response.data);
+      } else if (error.request) {
+        console.error('No response received from server. Request:', error.request);
+      } else {
+        console.error('Error setting up request:', error.message);
+      }
+    }
+  };
 
   const fetchStudents = async (appliedFilters = {}) => {
     try {
@@ -328,6 +361,8 @@ function TestGradesManagement() {
                       >
                         View
                       </button>
+                      {(roleName !== 'principal' && roleName !== 'registrar' && roleName !== 'grade_level_coordinator') && (
+                        <>
                       <button 
                         className={`grades-mgmt-btn grades-mgmt-btn-edit ${editingStudent && editingStudent.student_id === student.student_id ? 'cancel' : ''}`}
                         onClick={() => handleEditClick(student)}
@@ -341,6 +376,8 @@ function TestGradesManagement() {
                         >
                           Save
                         </button>
+                      )}
+                      </>
                       )}
                     </div>
                   </td>

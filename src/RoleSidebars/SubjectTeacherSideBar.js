@@ -28,7 +28,7 @@ function SubjectTeacherSideBar({ showSidebar, toggleSidebar, handleLogout }) {
   const location = useLocation();
 
   // Check if current path is under a specific submenu
-  const isRecordsPath = ['/grades', '/attendance'].includes(location.pathname);
+  const isRecordsPath = ['/grades', '/new-grades', '/attendance', '/brigada-eskwela'].includes(location.pathname);
   const isEnrollmentPath = ['/school-year', '/section-list', '/enrolled-students'].includes(location.pathname);
 
   // Update useEffect to handle initial submenu state based on path
@@ -131,11 +131,23 @@ function SubjectTeacherSideBar({ showSidebar, toggleSidebar, handleLogout }) {
                 <FiFileText className="icon" /> Grades
               </button>
               <button 
+                onClick={() => handleNavigate('/new-grades')}
+                className={location.pathname === '/new-grades' ? 'active' : ''}
+              >
+                <FiFileText className="icon" /> New Grades
+              </button>
+              <button 
                 onClick={() => handleNavigate('/attendance')}
                 className={location.pathname === '/attendance' ? 'active' : ''}
               >
                 <FiCheckSquare className="icon" /> Attendance
               </button>
+              <button 
+                onClick={() => handleNavigate('/brigada-eskwela')}
+                className={location.pathname === '/brigada-eskwela' ? 'active' : ''}
+              >
+                <FiCheckSquare className="icon" /> Brigada Eskwela
+              </button> 
             </div>
           )}
         </div>
