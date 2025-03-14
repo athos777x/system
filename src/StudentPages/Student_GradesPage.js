@@ -118,34 +118,83 @@ function Student_GradesPage() {
     return count > 0 ? Math.round(total / count) : '-';
   };
 
-  const getGradeClass = (grade) => {
+  const getGradeClass = (grade, isIncomplete = false) => {
     if (grade === '-') return '';
+    if (isIncomplete) return 'grade-indicator incomplete';
+    
     const numGrade = parseFloat(grade);
     if (numGrade >= 90) return 'grade-indicator high';
     if (numGrade >= 75) return 'grade-indicator medium';
     return 'grade-indicator low';
   };
 
+  const calculateFinalGrade = (subject) => {
+    const q1 = parseFloat(subject.q1) || 0;
+    const q2 = parseFloat(subject.q2) || 0;
+    const q3 = parseFloat(subject.q3) || 0;
+    const q4 = parseFloat(subject.q4) || 0;
+    
+    // Count how many quarters have grades
+    const gradesCount = [q1, q2, q3, q4].filter(grade => grade > 0).length;
+    
+    // Only calculate if at least one quarter has a grade
+    if (gradesCount === 0) return '-';
+    
+    const finalGrade = (q1 + q2 + q3 + q4) / gradesCount;
+    return finalGrade.toFixed(2);
+  };
+
+  const getRemarks = (finalGrade, subject) => {
+    if (finalGrade === '-') return '-';
+    
+    // Check if all quarters have grades
+    const hasAllQuarters = 
+      subject.q1 !== '-' && 
+      subject.q2 !== '-' && 
+      subject.q3 !== '-' && 
+      subject.q4 !== '-';
+    
+    // If not all quarters have grades and the current average is below passing
+    if (!hasAllQuarters && parseFloat(finalGrade) < 75) {
+      return 'Incomplete';
+    }
+    
+    return parseFloat(finalGrade) >= 75 ? 'Passed' : 'Failed';
+  };
+
+  const getRemarksClass = (finalGrade, remarks) => {
+    if (finalGrade === '-') return '';
+    if (remarks === 'Incomplete') return 'remarks-incomplete';
+    return parseFloat(finalGrade) >= 75 ? 'remarks-passed' : 'remarks-failed';
+  };
+
   if (loading) {
     return (
-      <div className="student-grades-loading-message">
-        Loading grades...
+      <div className="page-container">
+        <div className="student-grades-loading-message">
+          <div className="loading-spinner"></div>
+          Loading grades...
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="student-grades-error-message">
-        {error}
+      <div className="page-container">
+        <div className="student-grades-error-message">
+          {error}
+        </div>
       </div>
     );
   }
 
   if (subjects.length === 0) {
     return (
-      <div className="student-grades-no-grades-message">
-        No grades available at this time.
+      <div className="page-container">
+        <div className="student-grades-no-grades-message">
+          No grades available at this time.
+        </div>
       </div>
     );
   }
@@ -162,17 +211,17 @@ function Student_GradesPage() {
         <div className="student-info-header">
           <div className="student-info-row">
             <div className="student-info-item">
-              <span className="student-info-label">Grade Level:</span>
+              <span className="student-info-label">Grade Level</span>
               <span className="student-info-value">Grade {gradeLevel}</span>
             </div>
             <div className="student-info-divider" />
             <div className="student-info-item">
-              <span className="student-info-label">Section:</span>
+              <span className="student-info-label">Section</span>
               <span className="student-info-value">{studentInfo.section}</span>
             </div>
             <div className="student-info-divider" />
             <div className="student-info-item">
-              <span className="student-info-label">School Year:</span>
+              <span className="student-info-label">School Year</span>
               <span className="student-info-value">{studentInfo.schoolYear}</span>
             </div>
           </div>
@@ -183,28 +232,79 @@ function Student_GradesPage() {
             <thead>
               <tr>
                 <th>Subject</th>
-                <th>1st</th>
-                <th>2nd</th>
-                <th>3rd</th>
-                <th>4th</th>
+                <th>1st Quarter</th>
+                <th>2nd Quarter</th>
+                <th>3rd Quarter</th>
+                <th>4th Quarter</th>
+                <th>Final Grade</th>
+                <th>Remarks</th>
               </tr>
             </thead>
             <tbody>
-              {subjects.map((subject, index) => (
-                <tr key={index}>
-                  <td>{subject.subject_name}</td>
-                  <td><span className={getGradeClass(subject.q1)}>{subject.q1}</span></td>
-                  <td><span className={getGradeClass(subject.q2)}>{subject.q2}</span></td>
-                  <td><span className={getGradeClass(subject.q3)}>{subject.q3}</span></td>
-                  <td><span className={getGradeClass(subject.q4)}>{subject.q4}</span></td>
-                </tr>
-              ))}
+              {subjects.map((subject, index) => {
+                const finalGrade = calculateFinalGrade(subject);
+                const remarks = getRemarks(finalGrade, subject);
+                const remarksClass = getRemarksClass(finalGrade, remarks);
+                
+                return (
+                  <tr key={index}>
+                    <td>{subject.subject_name}</td>
+                    <td><span className={getGradeClass(subject.q1)}>{subject.q1}</span></td>
+                    <td><span className={getGradeClass(subject.q2)}>{subject.q2}</span></td>
+                    <td><span className={getGradeClass(subject.q3)}>{subject.q3}</span></td>
+                    <td><span className={getGradeClass(subject.q4)}>{subject.q4}</span></td>
+                    <td><span className={getGradeClass(finalGrade)}>{finalGrade}</span></td>
+                    <td><span className={remarksClass}>{remarks}</span></td>
+                  </tr>
+                );
+              })}
               <tr>
                 <td><strong>General Average</strong></td>
                 <td><span className={getGradeClass(q1Average)}>{q1Average}</span></td>
                 <td><span className={getGradeClass(q2Average)}>{q2Average}</span></td>
                 <td><span className={getGradeClass(q3Average)}>{q3Average}</span></td>
                 <td><span className={getGradeClass(q4Average)}>{q4Average}</span></td>
+                <td colSpan="2">
+                  {(() => {
+                    const finalAverage = [q1Average, q2Average, q3Average, q4Average]
+                      .filter(grade => grade !== '-')
+                      .map(grade => parseFloat(grade));
+                    
+                    const avgValue = finalAverage.length > 0 
+                      ? (finalAverage.reduce((sum, grade) => sum + grade, 0) / finalAverage.length).toFixed(2)
+                      : '-';
+                    
+                    // Check if all quarters have grades for the general average
+                    const hasAllQuarterAverages = 
+                      q1Average !== '-' && 
+                      q2Average !== '-' && 
+                      q3Average !== '-' && 
+                      q4Average !== '-';
+                    
+                    let finalStatus = '';
+                    let isIncomplete = false;
+                    
+                    if (avgValue !== '-') {
+                      if (!hasAllQuarterAverages && parseFloat(avgValue) < 75) {
+                        finalStatus = ' (Incomplete)';
+                        isIncomplete = true;
+                      } else {
+                        finalStatus = parseFloat(avgValue) >= 75 ? ' (Passed)' : ' (Failed)';
+                      }
+                    }
+                    
+                    return (
+                      <span className={getGradeClass(avgValue, isIncomplete)}>
+                        <strong>{avgValue}</strong>
+                        {avgValue !== '-' && (
+                          <span className={isIncomplete ? "final-remarks incomplete" : "final-remarks"}>
+                            {finalStatus}
+                          </span>
+                        )}
+                      </span>
+                    );
+                  })()}
+                </td>
               </tr>
             </tbody>
           </table>

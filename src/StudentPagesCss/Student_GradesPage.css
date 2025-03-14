@@ -1,203 +1,348 @@
 /* Student_GradesPage.css */
 
+/* Root Variables for consistent theming */
+:root {
+  --primary-color: #4CAF50;
+  --primary-light: #E8F5E9;
+  --primary-dark: #388E3C;
+  --secondary-color: #81C784;
+  --success-color: #2E7D32;
+  --warning-color: #FFC107;
+  --danger-color: #F44336;
+  --neutral-100: #F8FAFC;
+  --neutral-200: #E2E8F0;
+  --neutral-300: #CBD5E1;
+  --neutral-400: #94A3B8;
+  --neutral-500: #64748B;
+  --neutral-600: #475569;
+  --neutral-700: #334155;
+  --neutral-800: #1E293B;
+  --neutral-900: #0F172A;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* Base Container Styles */
 .page-container {
-  max-width: 1100px;
+  padding: 2rem;
+  max-width: 1400px;
   margin: 0 auto;
-  padding: 24px;
+  font-family: var(--font-sans);
+  color: var(--neutral-800);
+  background-color: #f9fafb;
   min-height: calc(100vh - 64px);
-  background-color: #fbfbfc;
-  display: flex;
-  flex-direction: column;
 }
 
 .grades-card {
-  flex: 1;
-  background: white;
-  padding: 24px;
-  border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  background: #fff !important;
+  border-radius: 12px !important;
+  box-shadow: 0 2px 8px rgba(46, 125, 50, 0.1) !important;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
   position: relative;
-  margin: 16px;
+  margin-bottom: 1.5rem;
 }
 
-h2 {
+.grades-card h2 {
+  font-size: 1.75rem;
+  color: var(--success-color);
+  margin-bottom: 1.5rem;
   text-align: center;
-  margin: 0 0 24px 0;
-  color: #2c3e50;
-  font-size: 24px;
   font-weight: 600;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--primary-color);
 }
 
-/* Student info header styling */
+/* Student Info Header Styles */
 .student-info-header {
-  background: #f8f9fa;
-  padding: 20px;
-  margin-bottom: 24px;
-  border-radius: 8px;
-  border: 1px solid #e0e0e0;
+  background-color: var(--primary-light);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid rgba(46, 125, 50, 0.1);
 }
 
 .student-info-row {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 24px;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  gap: 1rem;
 }
 
 .student-info-item {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 0.25rem;
+  padding: 0.5rem 1rem;
 }
 
 .student-info-label {
-  color: #666;
-  font-size: 14px;
+  color: var(--neutral-600);
+  font-size: 0.75rem;
   font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .student-info-value {
-  color: #2c3e50;
-  font-size: 15px;
+  color: var(--success-color);
+  font-size: 1rem;
   font-weight: 600;
 }
 
 .student-info-divider {
   width: 1px;
-  height: 20px;
-  background-color: rgba(0, 0, 0, 0.1);
+  height: 2.5rem;
+  background-color: rgba(46, 125, 50, 0.2);
 }
 
-/* Table container */
+/* Table Styles */
 .grades-detailed-table {
-  background: rgba(255, 255, 255, 0.5);
-  border-radius: 8px;
-  padding: 20px;
-  margin-top: 16px;
+  overflow-x: auto !important;
+  background: #fff !important;
+  border-radius: 12px !important;
+  box-shadow: 0 2px 8px rgba(46, 125, 50, 0.1) !important;
+  margin-bottom: 1.5rem !important;
+  width: 100% !important;
 }
 
-/* Table styles */
 .students-table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
+  width: 100% !important;
+  min-width: 800px !important;
+  border-collapse: collapse !important;
+  background: #fff !important;
+  border-spacing: 0 !important;
+  table-layout: fixed !important;
 }
 
-.students-table th,
-.students-table td {
-  padding: 16px;
-  text-align: center;
-  font-size: 14px;
-  border: none;
+.students-table > thead {
+  background: var(--primary-light) !important;
+  display: table-header-group !important;
+  width: 100% !important;
 }
 
-.students-table th {
-  color: #2c3e50;
-  font-weight: 600;
-  text-transform: uppercase;
-  font-size: 12px;
-  letter-spacing: 0.5px;
-  background: transparent;
+.students-table > thead > tr {
+  display: table-row !important;
+  width: 100% !important;
+  background: var(--primary-light) !important;
 }
 
-.students-table td {
-  border-top: 1px solid rgba(0, 0, 0, 0.05);
+.students-table > thead > tr > th {
+  background: var(--primary-light) !important;
+  padding: 1rem !important;
+  text-align: center !important;
+  font-weight: 600 !important;
+  color: var(--success-color) !important;
+  border: none !important;
+  border-bottom: 2px solid var(--secondary-color) !important;
+  white-space: normal !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 10 !important;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+  height: auto !important;
+  min-height: 3.5rem !important;
+}
+
+.students-table > tbody > tr > td {
+  padding: 1rem !important;
+  border-bottom: 1px solid var(--neutral-200) !important;
+  color: var(--neutral-700) !important;
+  font-size: 0.875rem !important;
+  vertical-align: middle !important;
+  text-align: center !important;
+}
+
+.students-table > tbody > tr {
+  transition: background-color 0.2s ease !important;
+}
+
+.students-table > tbody > tr:hover {
+  background-color: rgba(76, 175, 80, 0.05) !important;
+}
+
+.students-table > tbody > tr:hover td {
+  color: var(--neutral-800) !important;
+}
+
+.students-table > tbody > tr:last-child > td {
+  border-bottom: none !important;
+  font-weight: 600 !important;
+  color: var(--neutral-800) !important;
+  background-color: rgba(76, 175, 80, 0.05) !important;
 }
 
 /* Subject column alignment */
 .students-table th:first-child,
 .students-table td:first-child {
-  text-align: left;
-  width: 40%;
-  color: #2c3e50;
-  font-weight: 500;
-  padding-left: 24px;
+  text-align: left !important;
+  padding-left: 1.5rem !important;
 }
 
-/* Grade columns alignment and width */
-.students-table th:not(:first-child),
-.students-table td:not(:first-child) {
-  width: 15%;
-  text-align: center;
-}
-
-/* General Average row */
-.students-table tr:last-child {
-  background: transparent;
-}
-
-.students-table tr:last-child td {
+/* Grade Indicator Styles */
+.grade-indicator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.5rem;
+  height: 2rem;
+  border-radius: 4px;
   font-weight: 600;
-  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  font-size: 0.875rem;
 }
 
-/* Status indicator */
-.status-indicator {
-  position: absolute;
-  top: 24px;
-  right: 24px;
-  padding: 8px 16px;
-  border-radius: 50px;
-  background-color: rgba(255, 255, 255, 0.9);
-  font-size: 14px;
-  color: #2c3e50;
+.grade-indicator.high {
+  background-color: rgba(46, 125, 50, 0.1);
+  color: var(--success-color);
+  border: 1px solid rgba(46, 125, 50, 0.2);
 }
 
-/* Loading and error states */
+.grade-indicator.medium {
+  background-color: rgba(255, 193, 7, 0.1);
+  color: var(--warning-color);
+  border: 1px solid rgba(255, 193, 7, 0.2);
+}
+
+.grade-indicator.low {
+  background-color: rgba(244, 67, 54, 0.1);
+  color: var(--danger-color);
+  border: 1px solid rgba(244, 67, 54, 0.2);
+}
+
+.grade-indicator.incomplete {
+  background-color: rgba(255, 193, 7, 0.1);
+  color: var(--warning-color);
+  border: 1px solid rgba(255, 193, 7, 0.2);
+}
+
+.final-remarks {
+  font-size: 0.75rem;
+  font-weight: 500;
+  margin-left: 0.25rem;
+}
+
+.final-remarks.incomplete {
+  color: var(--warning-color);
+}
+
+/* Loading and Error States */
 .student-grades-loading-message,
 .student-grades-error-message,
 .student-grades-no-grades-message {
+  padding: 2rem;
   text-align: center;
-  padding: 48px;
-  background: rgba(255, 255, 255, 0.5);
-  border-radius: 8px;
-  margin: 24px auto;
+  border-radius: var(--radius-lg);
+  margin: 2rem auto;
   max-width: 600px;
+  font-size: 1rem;
+}
+
+.student-grades-loading-message {
+  color: var(--neutral-600);
+  background-color: var(--neutral-100);
+  border: 1px solid var(--neutral-200);
 }
 
 .student-grades-error-message {
-  color: #c62828;
-  background-color: rgba(255, 235, 238, 0.9);
+  color: var(--danger-color);
+  background-color: rgba(244, 67, 54, 0.05);
+  border: 1px solid rgba(244, 67, 54, 0.1);
 }
 
 .student-grades-no-grades-message {
-  color: #666;
+  color: var(--neutral-600);
+  background-color: var(--neutral-100);
+  border: 1px solid var(--neutral-200);
 }
 
-/* Responsive Design */
+/* Loading Spinner */
+.loading-spinner {
+  display: inline-block;
+  width: 2rem;
+  height: 2rem;
+  margin-bottom: 1rem;
+  border: 3px solid rgba(76, 175, 80, 0.2);
+  border-radius: 50%;
+  border-top-color: var(--primary-color);
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.student-grades-loading-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--neutral-600);
+  background-color: var(--neutral-100);
+  border: 1px solid var(--neutral-200);
+  padding: 2rem;
+  text-align: center;
+  border-radius: var(--radius-lg);
+  margin: 2rem auto;
+  max-width: 600px;
+  font-size: 1rem;
+}
+
+/* Responsive Styles */
+@media (max-width: 1024px) {
+  .page-container {
+    padding: 1.5rem;
+  }
+}
+
 @media (max-width: 768px) {
   .page-container {
-    padding: 16px;
+    padding: 1rem;
   }
-
-  .student-info-header,
-  .grades-detailed-table {
-    padding: 16px;
+  
+  .grades-card {
+    padding: 1rem;
   }
-
+  
   .student-info-row {
     flex-direction: column;
-    gap: 12px;
+    gap: 0.75rem;
   }
-
+  
   .student-info-divider {
     display: none;
   }
-
-  .students-table {
-    display: block;
-    overflow-x: auto;
-    white-space: nowrap;
+  
+  .student-info-item {
+    width: 100%;
+    flex-direction: row;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--neutral-200);
   }
-
-  .students-table th,
-  .students-table td {
-    padding: 12px;
+  
+  .student-info-item:last-child {
+    border-bottom: none;
   }
-
-  .students-table th:first-child,
-  .students-table td:first-child {
-    padding-left: 16px;
+  
+  .grades-card h2 {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+  }
+  
+  .grade-indicator {
+    min-width: 2rem;
+    height: 1.75rem;
   }
 }
 
@@ -210,7 +355,61 @@ h2 {
 
   .student-info-header,
   .grades-detailed-table {
-    background: white;
+    box-shadow: none !important;
+    border: 1px solid var(--neutral-300);
   }
+  
+  .grades-card {
+    box-shadow: none !important;
+  }
+}
+
+/* Remarks Styles */
+.remarks-passed {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 4rem;
+  height: 2rem;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  background-color: rgba(46, 125, 50, 0.1);
+  color: var(--success-color);
+  border: 1px solid rgba(46, 125, 50, 0.2);
+}
+
+.remarks-failed {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 4rem;
+  height: 2rem;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  background-color: rgba(244, 67, 54, 0.1);
+  color: var(--danger-color);
+  border: 1px solid rgba(244, 67, 54, 0.2);
+}
+
+.remarks-incomplete {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 4rem;
+  height: 2rem;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  background-color: rgba(255, 193, 7, 0.1);
+  color: var(--warning-color);
+  border: 1px solid rgba(255, 193, 7, 0.2);
+}
+
+.final-remarks {
+  font-size: 0.75rem;
+  font-weight: 500;
+  margin-left: 0.25rem;
 }
 
