@@ -8,7 +8,7 @@ function EnrolledStudents() {
   const [filteredStudents, setFilteredStudents] = useState([]);
   const [totalEnrolledStudents, setTotalEnrolledStudents] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
-  const [studentsPerPage] = useState(5);
+  const [studentsPerPage] = useState(20);
   const [filters, setFilters] = useState({
     searchTerm: '',
     grade: ''

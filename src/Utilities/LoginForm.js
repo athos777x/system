@@ -18,7 +18,7 @@ function LoginForm({ onLogin }) {
         console.log(`Login successful. User ID: ${response.data.userId}`);
         localStorage.setItem('userId', response.data.userId); // Store userId in localStorage
         localStorage.setItem('role', response.data.role);
-        onLogin(username, password, navigate, response.data.role);
+        onLogin(username, password, navigate, response.data.role, response.data.userId);
       } else {
         alert('Incorrect username or password');
       }

@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
-//import SubjectsSearchFilter from '../RoleSearchFilters/SubjectsSearchFilter';
 import '../TeacherPagesCss/SubjectsManagement.css';
 import { FiPlus, FiEdit2, FiArchive } from 'react-icons/fi';
 

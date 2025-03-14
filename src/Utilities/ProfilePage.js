@@ -1,26 +1,29 @@
 import React, { useState, useEffect } from 'react';
-import profilePic from '../assets/user_pp.jpg'; // Default profile picture
-import '../CssFiles/profile.css'; // CSS for styling
+import { FiEye, FiEyeOff } from 'react-icons/fi';
+import '../CssFiles/profile.css';
 import axios from 'axios'; // For API calls
 import { useNavigate } from 'react-router-dom'; // For navigation
 
-function ProfilePage() {
+const ProfilePage = () => {
   const navigate = useNavigate();
-
-  const [profilePicture, setProfilePicture] = useState(profilePic); // Profile picture state
+  const [profilePicture, setProfilePicture] = useState('https://via.placeholder.com/150');
   const [userInfo, setUserInfo] = useState({
     firstname: '',
     middle_name: '',
     lastname: '',
+    email: '',
     username: '',
-    password: '', // Password added
-  }); // State to store user information
-  const [isEditing, setIsEditing] = useState(false); // State to toggle editing
-  const [loading, setLoading] = useState(true); // Loading state
-  const [error, setError] = useState(null); // Error state
-  const [showPassword, setShowPassword] = useState(false); // State to toggle password visibility
+    password: '',
+  });
+  const [originalPassword, setOriginalPassword] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
+    // Fetch user information from API
     const fetchUserInfo = async () => {
       const userId = localStorage.getItem('userId'); // Retrieve userId from localStorage
       if (!userId) {
@@ -29,13 +32,68 @@ function ProfilePage() {
         return;
       }
 
+      // Check if we have a cached profile picture URL in localStorage
+      const cachedProfilePicture = localStorage.getItem('profilePictureUrl');
+      if (cachedProfilePicture) {
+        // Add a cache-busting parameter
+        const timestamp = new Date().getTime();
+        setProfilePicture(`${cachedProfilePicture}?t=${timestamp}`);
+      }
+
       try {
-        const response = await axios.get(`http://localhost:3001/api/user-info/${userId}`); // API URL
-        setUserInfo(response.data);
+        setLoading(true);
+        // Get basic user info
+        const response = await axios.get(`http://localhost:3001/api/user-info/${userId}`);
+        const userData = response.data;
+        
+        // Get role-specific info including email
+        const roleId = userData.role_id;
+        let emailAddress = '';
+        
+        // Fetch email based on role
+        if (roleId === 2) { // Student
+          const studentResponse = await axios.get(`http://localhost:3001/student/profile/${userId}`);
+          emailAddress = studentResponse.data.email_address || '';
+        } else {
+          // For employees, we might need another endpoint
+          // This is a placeholder - you'll need to implement the actual endpoint
+          try {
+            const employeeResponse = await axios.get(`http://localhost:3001/employee/profile/${userId}`);
+            emailAddress = employeeResponse.data.email_address || '';
+          } catch (err) {
+            console.log('Employee email not available');
+          }
+        }
+        
+        // Combine the data
+        setUserInfo({
+          ...userData,
+          email: emailAddress
+        });
+        setOriginalPassword(userData.password);
+        
+        // Fetch profile picture if available and we don't have a cached one
+        if (!cachedProfilePicture) {
+          try {
+            const profilePicResponse = await axios.get(`http://localhost:3001/api/profile-picture/${userId}`);
+            if (profilePicResponse.data && profilePicResponse.data.imageUrl) {
+              const imageUrl = profilePicResponse.data.imageUrl;
+              // Add a cache-busting parameter
+              const timestamp = new Date().getTime();
+              setProfilePicture(`${imageUrl}?t=${timestamp}`);
+              // Cache the URL in localStorage
+              localStorage.setItem('profilePictureUrl', imageUrl);
+            }
+          } catch (err) {
+            console.log('Profile picture not available or error fetching it:', err.message);
+            // Keep the default profile picture
+          }
+        }
+        
+        setLoading(false);
       } catch (err) {
         console.error('Error fetching user info:', err.message);
         setError(err.response ? err.response.data.error : 'Failed to fetch user information');
-      } finally {
         setLoading(false);
       }
     };
@@ -43,23 +101,95 @@ function ProfilePage() {
     fetchUserInfo();
   }, []);
 
-  const handleProfilePictureChange = (e) => {
+  const handleProfilePictureChange = async (e) => {
     const file = e.target.files[0];
     if (file) {
+      // Show local preview immediately
       const reader = new FileReader();
-      reader.onload = () => {
-        setProfilePicture(reader.result); // Set profile picture preview
+      reader.onloadend = () => {
+        setProfilePicture(reader.result);
       };
       reader.readAsDataURL(file);
+      
+      // Upload to server
+      await uploadProfilePicture(file);
+    }
+  };
+  
+  const uploadProfilePicture = async (file) => {
+    const userId = localStorage.getItem('userId');
+    if (!userId) {
+      console.error('User ID not found. Please log in again.');
+      return;
+    }
+    
+    try {
+      setUploadingImage(true);
+      
+      // Create form data for file upload
+      const formData = new FormData();
+      formData.append('profilePicture', file);
+      formData.append('userId', userId);
+      
+      // Upload the image
+      const response = await axios.post(
+        'http://localhost:3001/api/upload-profile-picture',
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        }
+      );
+      
+      // Update the profile picture with the URL returned from the server
+      if (response.data && response.data.imageUrl) {
+        // Add a timestamp as a cache-busting query parameter
+        const timestamp = new Date().getTime();
+        const imageUrlWithCacheBuster = `${response.data.imageUrl}?t=${timestamp}`;
+        setProfilePicture(imageUrlWithCacheBuster);
+        
+        // Also update the image in localStorage to persist across page refreshes
+        localStorage.setItem('profilePictureUrl', response.data.imageUrl);
+        
+        // Dispatch a storage event to notify other components of the change
+        // This is needed because localStorage events don't trigger in the same window
+        window.dispatchEvent(new Event('storage'));
+        
+        // Dispatch a custom event for same-window updates
+        window.dispatchEvent(new Event('storage-local'));
+        
+        console.log('Profile picture uploaded successfully');
+      }
+      
+      setUploadingImage(false);
+    } catch (error) {
+      console.error('Error uploading profile picture:', error.response?.data || error.message);
+      setUploadingImage(false);
+      // Show error message to user
+      alert('Failed to upload profile picture. Please try again.');
     }
   };
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setUserInfo((prev) => ({ ...prev, [name]: value }));
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
   };
 
-  const handleSave = async () => {
+  const handleEditClick = () => {
+    setIsEditing(true);
+  };
+
+  const handleCancelClick = () => {
+    // Reset password to original value
+    setUserInfo(prev => ({
+      ...prev,
+      password: originalPassword
+    }));
+    setIsEditing(false);
+    setShowPassword(false);
+  };
+
+  const handleSaveClick = async () => {
     const userId = localStorage.getItem('userId'); // Retrieve userId from localStorage
 
     if (!userId) {
@@ -75,145 +205,165 @@ function ProfilePage() {
       password: userInfo.password,
     };
 
-    console.log('Saving user info with payload:', payload);
-
     try {
       const response = await axios.put(`http://localhost:3001/api/user-info/${userId}`, payload);
       console.log('User info saved successfully:', response.data);
-      setIsEditing(false); // Exit editing mode after successful save
+      setOriginalPassword(userInfo.password);
+      setIsEditing(false);
+      setShowPassword(false);
     } catch (error) {
       console.error('Error saving user info:', error.response?.data || error.message);
     }
   };
 
+  // Add this function to get the profile picture URL with a cache buster
+  const getProfilePictureWithCacheBuster = (url) => {
+    if (!url) return 'https://via.placeholder.com/150';
+    
+    // Add a timestamp as a cache-busting query parameter if it's not already there
+    if (url.includes('?t=')) return url;
+    
+    const timestamp = new Date().getTime();
+    return `${url}?t=${timestamp}`;
+  };
+
   if (loading) {
-    return (
-      <div className="profile-page">
-        <div className="loading-state">Loading profile information...</div>
-      </div>
-    );
+    return <div className="loading-state">Loading user information...</div>;
   }
 
   if (error) {
-    return (
-      <div className="profile-page">
-        <div className="error-state">Error: {error}</div>
-      </div>
-    );
+    return <div className="error-state">{error}</div>;
   }
 
   return (
-    <div className="profile-page">
-      <h1>My Profile</h1>
-      <div className="profile-card">
-        <div className="profile-pic-container">
-          <img src={profilePicture} alt="Profile" className="profile-pic-large" />
-          <input
-            type="file"
-            accept="image/*"
-            id="profile-pic-input"
-            onChange={handleProfilePictureChange}
-            style={{ display: 'none' }}
-          />
-          <label htmlFor="profile-pic-input" className="upload-button">
-            Change Profile Picture
+    <div className="profile-wrapper">
+      <h1 className="profile-heading">Profile</h1>
+      
+      <div className="profile-content-vertical">
+        {/* Profile picture section */}
+        <div className="profile-picture-section">
+          <div className="profile-image-container">
+            <img 
+              src={getProfilePictureWithCacheBuster(profilePicture)} 
+              alt="Profile" 
+              className="profile-image"
+              key={profilePicture} // Add a key to force re-render when the URL changes
+            />
+            {uploadingImage && (
+              <div className="image-upload-overlay">
+                <div className="spinner"></div>
+                <p>Uploading...</p>
+              </div>
+            )}
+          </div>
+          <label className="change-picture-btn" disabled={uploadingImage}>
+            {uploadingImage ? 'Uploading...' : 'Change Picture'}
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleProfilePictureChange}
+              style={{ display: 'none' }}
+              disabled={uploadingImage}
+            />
           </label>
         </div>
-
-        <div className="profile-info">
-          {isEditing ? (
-            <>
-              <p>
-                <strong>First Name</strong>
-                <input
-                  type="text"
-                  name="firstname"
-                  value={userInfo.firstname}
-                  onChange={handleInputChange}
-                  placeholder="Enter first name"
-                />
-              </p>
-              <p>
-                <strong>Middle Name</strong>
-                <input
-                  type="text"
-                  name="middle_name"
-                  value={userInfo.middle_name || ''}
-                  onChange={handleInputChange}
-                  placeholder="Enter middle name"
-                />
-              </p>
-              <p>
-                <strong>Last Name</strong>
-                <input
-                  type="text"
-                  name="lastname"
-                  value={userInfo.lastname}
-                  onChange={handleInputChange}
-                  placeholder="Enter last name"
-                />
-              </p>
-              <p>
-                <strong>Username</strong>
-                <input
-                  type="text"
-                  name="username"
-                  value={userInfo.username}
-                  onChange={handleInputChange}
-                  placeholder="Enter username"
-                />
-              </p>
-              <p>
-                <strong>Password</strong>
-                <div style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    name="password"
-                    value={userInfo.password}
-                    onChange={handleInputChange}
-                    placeholder="Enter password"
-                    style={{ flex: 1 }}
-                  />
-                  <button 
-                    type="button" 
-                    onClick={() => setShowPassword(prev => !prev)} 
-                    className="password-toggle-button"
-                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+        
+        {/* User information section */}
+        <div className="profile-info-section">
+          <div className="profile-form">
+            <div className="form-row">
+              <div className="form-group">
+                <label>First Name</label>
+                <div className="info-value">{userInfo.firstname}</div>
+              </div>
+              <div className="form-group">
+                <label>Middle Name</label>
+                <div className="info-value">{userInfo.middle_name || '-'}</div>
+              </div>
+            </div>
+            
+            <div className="form-row">
+              <div className="form-group">
+                <label>Last Name</label>
+                <div className="info-value">{userInfo.lastname}</div>
+              </div>
+              <div className="form-group">
+                <label>Email</label>
+                <div className="info-value">{userInfo.email || '-'}</div>
+              </div>
+            </div>
+            
+            <div className="form-row">
+              <div className="form-group">
+                <label>Username</label>
+                <div className="info-value">{userInfo.username}</div>
+              </div>
+              <div className="form-group">
+                <label>Password</label>
+                {isEditing ? (
+                  <div className="password-field" style={{ position: 'relative' }}>
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      className="form-control"
+                      value={userInfo.password}
+                      onChange={(e) => setUserInfo({...userInfo, password: e.target.value})}
+                      style={{ paddingRight: '40px' }}
+                    />
+                    <button
+                      type="button"
+                      onClick={togglePasswordVisibility}
+                      style={{
+                        position: 'absolute',
+                        right: '10px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {showPassword ? <FiEyeOff /> : <FiEye />}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="info-value">••••••••</div>
+                )}
+              </div>
+            </div>
+            
+            <div className="form-actions">
+              {!isEditing ? (
+                <button
+                  type="button"
+                  className="edit-profile-btn"
+                  onClick={handleEditClick}
+                >
+                  Change Password
+                </button>
+              ) : (
+                <div className="edit-buttons">
+                  <button
+                    type="button"
+                    className="save-profile-btn"
+                    onClick={handleSaveClick}
                   >
-                    {showPassword ? (
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
-                        <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zM1.173 8a13.133 13.133 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.133 13.133 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5c-2.12 0-3.879-1.168-5.168-2.457A13.134 13.134 0 0 1 1.172 8z"/>
-                        <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0z"/>
-                      </svg>
-                    ) : (
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
-                        <path d="M13.359 11.238C15.06 9.72 16 8 16 8s-3-5.5-8-5.5a7.028 7.028 0 0 0-2.79.588l.77.771A5.944 5.944 0 0 1 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.134 13.134 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755-.165.165-.337.328-.517.486l.708.709z"/>
-                        <path d="M11.297 9.176a3.5 3.5 0 0 0-4.474-4.474l.823.823a2.5 2.5 0 0 1 2.829 2.829l.822.822zm-2.943 1.299.822.822a3.5 3.5 0 0 1-4.474-4.474l.823.823a2.5 2.5 0 0 0 2.829 2.829z"/>
-                        <path d="M3.35 5.47c-.18.16-.353.322-.518.487A13.134 13.134 0 0 0 1.172 8l.195.288c.335.48.83 1.12 1.465 1.755C4.121 11.332 5.881 12.5 8 12.5c.716 0 1.39-.133 2.02-.36l.77.772A7.029 7.029 0 0 1 8 13.5C3 13.5 0 8 0 8s.939-1.721 2.641-3.238l.708.709zm10.296 8.884-12-12 .708-.708 12 12-.708.708z"/>
-                      </svg>
-                    )}
+                    Save
+                  </button>
+                  <button
+                    type="button"
+                    className="cancel-profile-btn"
+                    onClick={handleCancelClick}
+                  >
+                    Cancel
                   </button>
                 </div>
-              </p>
-              <div className="button-group">
-                <button className="save-button" onClick={handleSave}>Save Changes</button>
-                <button className="cancel-button" onClick={() => setIsEditing(false)}>Cancel</button>
-              </div>
-            </>
-          ) : (
-            <>
-              <p><strong>First Name</strong> {userInfo.firstname}</p>
-              <p><strong>Middle Name</strong> {userInfo.middle_name || 'N/A'}</p>
-              <p><strong>Last Name</strong> {userInfo.lastname}</p>
-              <p><strong>Username</strong> {userInfo.username}</p>
-              <p><strong>Password</strong> ******</p>
-              <button className="edit-button" onClick={() => setIsEditing(true)}>Edit Profile</button>
-            </>
-          )}
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>
   );
-}
+};
 
 export default ProfilePage;

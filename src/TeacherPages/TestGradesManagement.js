@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import SearchFilter from '../RoleSearchFilters/SearchFilter';
 import '../TeacherPagesCss/TestGradesManagement.css';
 import Pagination from '../Utilities/pagination';
 import { useNavigate } from 'react-router-dom';
@@ -10,7 +9,7 @@ function TestGradesManagement() {
   const [filteredStudents, setFilteredStudents] = useState([]);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [studentsPerPage] = useState(5);
+  const [studentsPerPage] = useState(20);
   const [students, setStudents] = useState([]);
   const [subjects, setSubjects] = useState([]);
   const [editingStudent, setEditingStudent] = useState(null);

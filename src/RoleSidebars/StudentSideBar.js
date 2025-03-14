@@ -42,10 +42,8 @@ function StudentSideBar({ showSidebar, toggleSidebar, handleLogout }) {
   };
 
   return (
-    <div className={`sidebar ${showSidebar ? 'show' : 'hide'}`} style={{ zIndex: 1100 }}>
-      <button className="toggle-btn" onClick={toggleSidebar}>
-        {showSidebar ? <FiChevronLeft /> : <FiMenu />}
-      </button>
+    <div className={`sidebar ${showSidebar ? 'show' : 'hide'}`}>
+      
       <div className="buttons">
         <button 
           onClick={() => handleNavigate('/home')}

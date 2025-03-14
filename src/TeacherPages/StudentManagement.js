@@ -8,7 +8,7 @@ function StudentManagement() {
   const [students, setStudents] = useState([]);
   const [filteredStudents, setFilteredStudents] = useState([]);
   const [selectedStudentId, setSelectedStudentId] = useState(null);
-  const [studentsPerPage] = useState(5); // Adjust this number to set how many students per page
+  const [studentsPerPage] = useState(20); // Adjust this number to set how many students per page
   const [currentPage, setCurrentPage] = useState(1);
   const [isEditing, setIsEditing] = useState(false); // Tracks edit mode
   const [editStudentData, setEditStudentData] = useState(null); // Stores the editable student data
