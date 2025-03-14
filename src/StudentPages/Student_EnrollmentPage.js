@@ -64,6 +64,10 @@ function Student_EnrollmentPage() {
     setShowElectiveModal(true);
   };
 
+  const handleCloseModal = () => {
+    setShowElectiveModal(false);
+  };
+
   const handleElectiveSubmit = async () => {
     try {
       const response = await axios.post('http://localhost:3001/enroll-elective', {
@@ -73,7 +77,7 @@ function Student_EnrollmentPage() {
 
       if (response.data.message) {
         alert('Elective enrollment request submitted successfully.');
-        setShowElectiveModal(false);
+        handleCloseModal();
       } else {
         alert('Failed to add elective. Please try again.');
       }
@@ -86,8 +90,8 @@ function Student_EnrollmentPage() {
   if (loading) {
     return (
       <div className="student-enrollment-container">
-        <div className="enrollment-card">
-          <div className="loading-message">Loading enrollment information...</div>
+        <div className="student-enrollment-card">
+          <div className="student-enrollment-loading-message">Loading enrollment information...</div>
         </div>
       </div>
     );
@@ -96,8 +100,8 @@ function Student_EnrollmentPage() {
   if (error) {
     return (
       <div className="student-enrollment-container">
-        <div className="enrollment-card">
-          <div className="error-message">{error}</div>
+        <div className="student-enrollment-card">
+          <div className="student-enrollment-error-message">{error}</div>
         </div>
       </div>
     );
@@ -105,44 +109,46 @@ function Student_EnrollmentPage() {
 
   return (
     <div className="student-enrollment-container">
-      <div className="enrollment-card">
-        <div className="enrollment-status-container">
-          <span className="enrollment-status">Status: {enrollmentStatus}</span>
-        </div>
+      <div className="student-enrollment-card">
+        <span className={`student-enrollment-status student-enrollment-status-${enrollmentStatus.toLowerCase()}`}>
+          {enrollmentStatus}
+        </span>
         
         <h1 className="student-enrollment-title">SY - {activeSchoolYear}</h1>
         
         {enrollmentStatus === 'active' ? (
           <>
-            <table className="student-enrollment-table">
-              <thead>
-                <tr>
-                  <th>Subject</th>
-                  <th>Teacher</th>
-                  <th>Schedule</th>
-                </tr>
-              </thead>
-              <tbody>
-                {enrollmentData.length > 0 ? (
-                  enrollmentData.map((row, index) => (
-                    <tr key={index}>
-                      <td>{row.subject_name}</td>
-                      <td>{row.teacher_name}</td>
-                      <td>{row.schedule}</td>
-                    </tr>
-                  ))
-                ) : (
+            <div className="student-enrollment-table-container">
+              <table className="student-enrollment-table">
+                <thead>
                   <tr>
-                    <td colSpan="3">No enrollment data available</td>
+                    <th>Subject</th>
+                    <th>Teacher</th>
+                    <th>Schedule</th>
                   </tr>
-                )}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {enrollmentData.length > 0 ? (
+                    enrollmentData.map((row, index) => (
+                      <tr key={index}>
+                        <td>{row.subject_name}</td>
+                        <td>{row.teacher_name}</td>
+                        <td>{row.schedule}</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="3">No enrollment data available</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
 
             {electiveStatus !== 'approved' && (
               <button 
                 type="button" 
-                className="add-elective-button" 
+                className="student-enrollment-add-elective-button" 
                 onClick={handleAddElective}
               >
                 Add Elective
@@ -162,30 +168,41 @@ function Student_EnrollmentPage() {
         )}
 
         {showElectiveModal && (
-          <div className="elective-modal">
-            <div className="elective-modal-content">
-              <span className="elective-modal-close" onClick={() => setShowElectiveModal(false)}>&times;</span>
-              <h2>Select Elective</h2>
-              <form className="elective-form">
-                <label htmlFor="electiveChoice">Choose an Elective:</label>
-                <select
-                  id="electiveChoice"
-                  value={electiveChoice}
-                  onChange={(e) => setElectiveChoice(e.target.value)}
-                >
-                  <option value="">Select an elective</option>
-                  <option value="1">Elective 1</option>
-                  <option value="2">Elective 2</option>
-                </select>
-                <div className="button-container">
-                  <button type="button" className="confirm-button" onClick={handleElectiveSubmit}>
+          <div 
+            className="student-enrollment-modal"
+            onClick={(e) => {
+              if (e.target.className === 'student-enrollment-modal') {
+                handleCloseModal();
+              }
+            }}
+          >
+            <div className="student-enrollment-modal-content">
+              <div className="student-enrollment-modal-header">
+                <h2>Select Elective</h2>
+                <span className="student-enrollment-modal-close" onClick={handleCloseModal}>&times;</span>
+              </div>
+              <div className="student-enrollment-form">
+                <div className="student-enrollment-form-group">
+                  <label htmlFor="electiveChoice">Choose an Elective:</label>
+                  <select
+                    id="electiveChoice"
+                    value={electiveChoice}
+                    onChange={(e) => setElectiveChoice(e.target.value)}
+                  >
+                    <option value="">Select an elective</option>
+                    <option value="1">Elective 1</option>
+                    <option value="2">Elective 2</option>
+                  </select>
+                </div>
+                <div className="student-enrollment-button-container">
+                  <button type="button" className="student-enrollment-confirm-button" onClick={handleElectiveSubmit}>
                     Confirm
                   </button>
-                  <button type="button" className="cancel-button" onClick={() => setShowElectiveModal(false)}>
+                  <button type="button" className="student-enrollment-cancel-button" onClick={handleCloseModal}>
                     Cancel
                   </button>
                 </div>
-              </form>
+              </div>
             </div>
           </div>
         )}
