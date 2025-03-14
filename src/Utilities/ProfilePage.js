@@ -19,6 +19,7 @@ const ProfilePage = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -63,6 +64,17 @@ const ProfilePage = () => {
         });
         setOriginalPassword(userData.password);
         
+        // Fetch profile picture if available
+        try {
+          const profilePicResponse = await axios.get(`http://localhost:3001/api/profile-picture/${userId}`);
+          if (profilePicResponse.data && profilePicResponse.data.imageUrl) {
+            setProfilePicture(profilePicResponse.data.imageUrl);
+          }
+        } catch (err) {
+          console.log('Profile picture not available or error fetching it:', err.message);
+          // Keep the default profile picture
+        }
+        
         setLoading(false);
       } catch (err) {
         console.error('Error fetching user info:', err.message);
@@ -74,14 +86,59 @@ const ProfilePage = () => {
     fetchUserInfo();
   }, []);
 
-  const handleProfilePictureChange = (e) => {
+  const handleProfilePictureChange = async (e) => {
     const file = e.target.files[0];
     if (file) {
+      // Show local preview immediately
       const reader = new FileReader();
       reader.onloadend = () => {
         setProfilePicture(reader.result);
       };
       reader.readAsDataURL(file);
+      
+      // Upload to server
+      await uploadProfilePicture(file);
+    }
+  };
+  
+  const uploadProfilePicture = async (file) => {
+    const userId = localStorage.getItem('userId');
+    if (!userId) {
+      console.error('User ID not found. Please log in again.');
+      return;
+    }
+    
+    try {
+      setUploadingImage(true);
+      
+      // Create form data for file upload
+      const formData = new FormData();
+      formData.append('profilePicture', file);
+      formData.append('userId', userId);
+      
+      // Upload the image
+      const response = await axios.post(
+        'http://localhost:3001/api/upload-profile-picture',
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        }
+      );
+      
+      // Update the profile picture with the URL returned from the server
+      if (response.data && response.data.imageUrl) {
+        setProfilePicture(response.data.imageUrl);
+        console.log('Profile picture uploaded successfully');
+      }
+      
+      setUploadingImage(false);
+    } catch (error) {
+      console.error('Error uploading profile picture:', error.response?.data || error.message);
+      setUploadingImage(false);
+      // Show error message to user
+      alert('Failed to upload profile picture. Please try again.');
     }
   };
 
@@ -147,14 +204,21 @@ const ProfilePage = () => {
         <div className="profile-picture-section">
           <div className="profile-image-container">
             <img src={profilePicture} alt="Profile" className="profile-image" />
+            {uploadingImage && (
+              <div className="image-upload-overlay">
+                <div className="spinner"></div>
+                <p>Uploading...</p>
+              </div>
+            )}
           </div>
-          <label className="change-picture-btn">
-            Change Picture
+          <label className="change-picture-btn" disabled={uploadingImage}>
+            {uploadingImage ? 'Uploading...' : 'Change Picture'}
             <input
               type="file"
               accept="image/*"
               onChange={handleProfilePictureChange}
               style={{ display: 'none' }}
+              disabled={uploadingImage}
             />
           </label>
         </div>

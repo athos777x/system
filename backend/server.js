@@ -3,11 +3,48 @@ const mysql = require('mysql');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const bcrypt = require('bcrypt');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs-extra');
 
 const app = express();
 app.use(bodyParser.json());
 app.use(express.json());
 app.use(cors());
+
+// Serve static files from the uploads directory
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const dir = path.join(__dirname, 'uploads/profile-pictures');
+    fs.ensureDirSync(dir); // Make sure the directory exists
+    cb(null, dir);
+  },
+  filename: function (req, file, cb) {
+    // Use userId as filename to overwrite previous uploads for the same user
+    const userId = req.body.userId;
+    const fileExt = path.extname(file.originalname);
+    cb(null, `user_${userId}${fileExt}`);
+  }
+});
+
+const upload = multer({
+  storage: storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  fileFilter: function (req, file, cb) {
+    // Accept only image files
+    const filetypes = /jpeg|jpg|png|gif/;
+    const mimetype = filetypes.test(file.mimetype);
+    const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+    
+    if (mimetype && extname) {
+      return cb(null, true);
+    }
+    cb(new Error('Only image files are allowed!'));
+  }
+});
 
 const db = mysql.createConnection({
   host: 'localhost',
@@ -3565,4 +3602,79 @@ app.post("/api/save-grade", (req, res) => {
 
 app.listen(3001, () => {
   console.log('Server running on port 3001');
+});
+
+// Profile Picture Upload Endpoint
+app.post('/api/upload-profile-picture', upload.single('profilePicture'), (req, res) => {
+  try {
+    const userId = req.body.userId;
+    
+    if (!userId) {
+      return res.status(400).json({ error: 'User ID is required' });
+    }
+    
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+    
+    // Create the URL for the uploaded file
+    const fileUrl = `${req.protocol}://${req.get('host')}/uploads/profile-pictures/${req.file.filename}`;
+    
+    // Update the user's profile picture URL in the database
+    const updateQuery = `
+      UPDATE users
+      SET profile_picture_url = ?
+      WHERE user_id = ?
+    `;
+    
+    db.query(updateQuery, [fileUrl, userId], (err, results) => {
+      if (err) {
+        console.error('Error updating profile picture URL:', err);
+        return res.status(500).json({ error: 'Database error while updating profile picture URL' });
+      }
+      
+      console.log(`Profile picture updated for user ${userId}`);
+      res.status(200).json({ 
+        message: 'Profile picture uploaded successfully',
+        imageUrl: fileUrl
+      });
+    });
+  } catch (error) {
+    console.error('Error in profile picture upload:', error);
+    res.status(500).json({ error: 'Server error during file upload' });
+  }
+});
+
+// Profile Picture Retrieval Endpoint
+app.get('/api/profile-picture/:userId', (req, res) => {
+  const userId = req.params.userId;
+  
+  if (!userId) {
+    return res.status(400).json({ error: 'User ID is required' });
+  }
+  
+  const query = `
+    SELECT profile_picture_url
+    FROM users
+    WHERE user_id = ?
+  `;
+  
+  db.query(query, [userId], (err, results) => {
+    if (err) {
+      console.error('Error fetching profile picture URL:', err);
+      return res.status(500).json({ error: 'Database error while fetching profile picture URL' });
+    }
+    
+    if (results.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    const profilePictureUrl = results[0].profile_picture_url;
+    
+    if (!profilePictureUrl) {
+      return res.status(404).json({ error: 'Profile picture not found' });
+    }
+    
+    res.status(200).json({ imageUrl: profilePictureUrl });
+  });
 });
