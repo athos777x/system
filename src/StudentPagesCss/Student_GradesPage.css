@@ -44,7 +44,6 @@
   border-radius: 12px !important;
   box-shadow: 0 2px 8px rgba(46, 125, 50, 0.1) !important;
   padding: 1.5rem;
-  transition: all 0.3s ease;
   position: relative;
   margin-bottom: 1.5rem;
 }
@@ -163,7 +162,7 @@
 }
 
 .students-table > tbody > tr {
-  transition: background-color 0.2s ease !important;
+  /* transition: background-color 0.2s ease !important; */
 }
 
 .students-table > tbody > tr:hover {
