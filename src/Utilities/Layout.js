@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, Navigate } from 'react-router-dom';
 import HeaderBar from './HeadBar';
 import StudentSideBar from '../RoleSidebars/StudentSideBar';
@@ -10,27 +10,47 @@ import AcademicCoordinatorSideBar from '../RoleSidebars/AcademicCoordinatorSideB
 import GradeLevelCoordinatorSideBar from '../RoleSidebars/GradeLevelCoordinatorSideBar';
 import SubjectCoordinatorSideBar from '../RoleSidebars/SubjectCoordinatorSideBar';
 
-function Layout({ role }) {
+function Layout({ role, handleLogout }) {
   const [showSidebar, setShowSidebar] = useState(true);
+  const [profileUpdated, setProfileUpdated] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState(localStorage.getItem('userId'));
 
   const toggleSidebar = () => {
     setShowSidebar(!showSidebar);
   };
 
+  // Listen for changes to localStorage to detect profile picture updates and user changes
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === 'profilePictureUrl') {
+        // Force a re-render when the profile picture is updated
+        setProfileUpdated(prev => !prev);
+      }
+      
+      if (e.key === 'userId') {
+        // Update the current user ID when it changes
+        setCurrentUserId(localStorage.getItem('userId'));
+        // Also force a re-render for the profile picture
+        setProfileUpdated(prev => !prev);
+      }
+    };
+
+    // Add event listener for storage changes
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('storage-local', handleStorageChange);
+
+    // Clean up the event listener when the component unmounts
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('storage-local', handleStorageChange);
+    };
+  }, []);
+
   const user = {
     fullName: localStorage.getItem('fullName') || 'Full Name',
     name: localStorage.getItem('username') || 'User',
-    role: localStorage.getItem('role') || 'Role'
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('fullName');
-    localStorage.removeItem('username');
-    localStorage.removeItem('role');
-    localStorage.removeItem('isAuthenticated');
-    sessionStorage.clear();
-    window.location.href = '/'; // Redirect to the login page
+    role: localStorage.getItem('role') || 'Role',
+    userId: localStorage.getItem('userId')
   };
 
   if (!localStorage.getItem('isAuthenticated')) {
@@ -44,6 +64,7 @@ function Layout({ role }) {
         toggleSidebar={toggleSidebar}
         user={user}
         onLogout={handleLogout}
+        key={`${profileUpdated}-${currentUserId}`} // Force re-render when profile is updated or user changes
       />
       {role === 'student' && (
         <StudentSideBar showSidebar={showSidebar} toggleSidebar={toggleSidebar} handleLogout={handleLogout} />

@@ -32,6 +32,14 @@ const ProfilePage = () => {
         return;
       }
 
+      // Check if we have a cached profile picture URL in localStorage
+      const cachedProfilePicture = localStorage.getItem('profilePictureUrl');
+      if (cachedProfilePicture) {
+        // Add a cache-busting parameter
+        const timestamp = new Date().getTime();
+        setProfilePicture(`${cachedProfilePicture}?t=${timestamp}`);
+      }
+
       try {
         setLoading(true);
         // Get basic user info
@@ -64,15 +72,22 @@ const ProfilePage = () => {
         });
         setOriginalPassword(userData.password);
         
-        // Fetch profile picture if available
-        try {
-          const profilePicResponse = await axios.get(`http://localhost:3001/api/profile-picture/${userId}`);
-          if (profilePicResponse.data && profilePicResponse.data.imageUrl) {
-            setProfilePicture(profilePicResponse.data.imageUrl);
+        // Fetch profile picture if available and we don't have a cached one
+        if (!cachedProfilePicture) {
+          try {
+            const profilePicResponse = await axios.get(`http://localhost:3001/api/profile-picture/${userId}`);
+            if (profilePicResponse.data && profilePicResponse.data.imageUrl) {
+              const imageUrl = profilePicResponse.data.imageUrl;
+              // Add a cache-busting parameter
+              const timestamp = new Date().getTime();
+              setProfilePicture(`${imageUrl}?t=${timestamp}`);
+              // Cache the URL in localStorage
+              localStorage.setItem('profilePictureUrl', imageUrl);
+            }
+          } catch (err) {
+            console.log('Profile picture not available or error fetching it:', err.message);
+            // Keep the default profile picture
           }
-        } catch (err) {
-          console.log('Profile picture not available or error fetching it:', err.message);
-          // Keep the default profile picture
         }
         
         setLoading(false);
@@ -129,7 +144,21 @@ const ProfilePage = () => {
       
       // Update the profile picture with the URL returned from the server
       if (response.data && response.data.imageUrl) {
-        setProfilePicture(response.data.imageUrl);
+        // Add a timestamp as a cache-busting query parameter
+        const timestamp = new Date().getTime();
+        const imageUrlWithCacheBuster = `${response.data.imageUrl}?t=${timestamp}`;
+        setProfilePicture(imageUrlWithCacheBuster);
+        
+        // Also update the image in localStorage to persist across page refreshes
+        localStorage.setItem('profilePictureUrl', response.data.imageUrl);
+        
+        // Dispatch a storage event to notify other components of the change
+        // This is needed because localStorage events don't trigger in the same window
+        window.dispatchEvent(new Event('storage'));
+        
+        // Dispatch a custom event for same-window updates
+        window.dispatchEvent(new Event('storage-local'));
+        
         console.log('Profile picture uploaded successfully');
       }
       
@@ -187,6 +216,17 @@ const ProfilePage = () => {
     }
   };
 
+  // Add this function to get the profile picture URL with a cache buster
+  const getProfilePictureWithCacheBuster = (url) => {
+    if (!url) return 'https://via.placeholder.com/150';
+    
+    // Add a timestamp as a cache-busting query parameter if it's not already there
+    if (url.includes('?t=')) return url;
+    
+    const timestamp = new Date().getTime();
+    return `${url}?t=${timestamp}`;
+  };
+
   if (loading) {
     return <div className="loading-state">Loading user information...</div>;
   }
@@ -203,7 +243,12 @@ const ProfilePage = () => {
         {/* Profile picture section */}
         <div className="profile-picture-section">
           <div className="profile-image-container">
-            <img src={profilePicture} alt="Profile" className="profile-image" />
+            <img 
+              src={getProfilePictureWithCacheBuster(profilePicture)} 
+              alt="Profile" 
+              className="profile-image"
+              key={profilePicture} // Add a key to force re-render when the URL changes
+            />
             {uploadingImage && (
               <div className="image-upload-overlay">
                 <div className="spinner"></div>

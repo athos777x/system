@@ -23,10 +23,12 @@ const storage = multer.diskStorage({
     cb(null, dir);
   },
   filename: function (req, file, cb) {
-    // Use userId as filename to overwrite previous uploads for the same user
-    const userId = req.body.userId;
+    // The userId is not available in req.body at this point
+    // We'll use a temporary name and rename it after processing the request
+    const timestamp = Date.now();
+    const randomString = Math.random().toString(36).substring(2, 15);
     const fileExt = path.extname(file.originalname);
-    cb(null, `user_${userId}${fileExt}`);
+    cb(null, `temp_${timestamp}_${randomString}${fileExt}`);
   }
 });
 
@@ -3617,8 +3619,22 @@ app.post('/api/upload-profile-picture', upload.single('profilePicture'), (req, r
       return res.status(400).json({ error: 'No file uploaded' });
     }
     
+    // Rename the file to include the userId
+    const fileExt = path.extname(req.file.originalname);
+    const oldPath = req.file.path;
+    const fileName = `user_${userId}${fileExt}`;
+    const newPath = path.join(path.dirname(oldPath), fileName);
+    
+    // Remove existing file with the same name if it exists
+    if (fs.existsSync(newPath)) {
+      fs.unlinkSync(newPath);
+    }
+    
+    // Rename the file
+    fs.renameSync(oldPath, newPath);
+    
     // Create the URL for the uploaded file
-    const fileUrl = `${req.protocol}://${req.get('host')}/uploads/profile-pictures/${req.file.filename}`;
+    const fileUrl = `${req.protocol}://${req.get('host')}/uploads/profile-pictures/${fileName}`;
     
     // Update the user's profile picture URL in the database
     const updateQuery = `

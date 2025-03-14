@@ -1,16 +1,18 @@
 /* dashboard.css */
 .sidebar {
-  width: 280px;
-  background-color: #fff;
-  color: #000; /* Changed to black */
+  width: 280px; /* Increased from 260px to prevent text wrapping */
+  background-color: #ffffff;
+  color: #333333;
   transition: all 0.3s ease;
   padding: 0;
   height: 100vh;
   position: fixed;
   top: 0;
   left: 0;
-  z-index: 1100;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.05); /* Softer shadow */
+  z-index: 900;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.05); /* Softer shadow */
+  display: flex;
+  flex-direction: column;
 }
 
 .sidebar.show {
@@ -24,152 +26,170 @@
 .sidebar .buttons {
   display: flex;
   flex-direction: column;
-  margin-top: 60px;
-  padding: 0 15px; /* Add padding to the button container */
+  margin-top: 64px; /* Match header height */
+  padding: 16px 12px; /* Increased padding for better spacing */
+  overflow-y: auto;
+  flex-grow: 1;
 }
 
 .sidebar .buttons button {
-  background-color: transparent; /* Remove background */
-  color: #000; /* Changed to black */
+  background-color: transparent;
+  color: #333333; /* Darker text color (changed from #555555) */
   border: none;
-  padding: 12px 16px; /* Slightly reduced padding */
+  padding: 12px 16px;
   width: 100%;
   text-align: left;
   cursor: pointer;
-  font-size: 15px; /* Slightly smaller font */
+  font-size: 14px; /* Smaller font for modern look */
+  font-weight: 400; /* Regular weight */
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
-  margin-bottom: 5px; /* Reduced spacing */
-  border-radius: 8px; /* Smaller border radius */
+  margin-bottom: 4px;
+  border-radius: 8px;
+  letter-spacing: 0.2px; /* Slight letter spacing */
+  white-space: nowrap; /* Prevent text wrapping */
+  overflow: hidden;
+  text-overflow: ellipsis; /* Add ellipsis for very long text */
 }
 
 .sidebar .buttons button.active {
-  background-color: #e8f5e8;
-  color: #1a7431; /* Darker green for better contrast */
+  background-color: #e8f5e9; /* Lighter green background */
+  color: #2e7d32; /* Darker green text */
+  font-weight: 500; /* Medium weight for active item */
 }
 
 .sidebar .buttons button.active .icon {
-  color: #1a7431; /* Darker green for better contrast */
+  color: #2e7d32;
 }
 
 .sidebar .buttons button:hover {
-  background-color: #f8f9fa; /* Very light gray on hover */
-  color: #000; /* Keep black on hover */
+  background-color: #f5f5f5;
+  color: #333333;
 }
 
 .sidebar .buttons button.active:hover {
-  background-color: #e8f5e8; /* Keep the same background on hover */
-  color: #1a7431;
+  background-color: #e8f5e9;
+  color: #2e7d32;
 }
 
 .sidebar .buttons .submenu {
   display: flex;
   flex-direction: column;
-  padding-left: 36px; /* Increased indent for submenu */
-  margin-top: -2px; /* Tighten up spacing */
+  padding-left: 36px;
+  margin-top: 0;
+  margin-bottom: 4px;
 }
 
 .sidebar .buttons .submenu button {
   padding: 10px 16px;
-  font-size: 14px;
+  font-size: 13px; /* Even smaller font for submenu */
   opacity: 1;
-  color: #000;
+  color: #333333; /* Darker text color (changed from #555555) */
+  margin-bottom: 2px;
 }
 
 .sidebar .buttons .submenu button:not(.active):hover {
-  background-color: #f8f9fa;
-  color: #000;
+  background-color: #f5f5f5;
+  color: #333333;
 }
 
 .sidebar .buttons .submenu button.active {
-  background-color: #e8f5e8;
-  color: #1a7431;
+  background-color: #e8f5e9;
+  color: #2e7d32;
+  font-weight: 500;
 }
 
 .sidebar .buttons .submenu button.active:hover {
-  background-color: #e8f5e8;
-  color: #1a7431;
+  background-color: #e8f5e9;
+  color: #2e7d32;
 }
 
 .sidebar .buttons button .icon {
   margin-right: 12px;
-  font-size: 18px; /* Slightly smaller icons */
-  color: #000; /* Changed to black */
+  font-size: 18px;
+  color: #444444; /* Darker icon color (changed from #757575) */
+  min-width: 18px; /* Ensure consistent width */
 }
 
 .content {
   transition: margin-left 0.3s ease;
   margin-left: 0;
-  padding-top: 60px;
+  padding-top: 64px; /* Match header height */
+  min-height: 100vh;
+  background-color: #fafafa; /* Light gray background for content area */
 }
 
 .content-shift {
-  margin-left: 280px;
+  margin-left: 280px; /* Match sidebar width */
 }
 
 .logout-btn {
   background-color: transparent;
-  color: #000; /* Changed to black */
+  color: #333333; /* Darker text color (changed from #555555) */
   border: none;
   padding: 12px 16px;
   width: 100%;
   text-align: left;
   cursor: pointer;
-  font-size: 15px;
+  font-size: 14px;
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
-  margin-bottom: 5px;
+  margin-bottom: 4px;
   border-radius: 8px;
+  letter-spacing: 0.2px;
 }
 
 .logout-btn:hover {
-  background-color: #fff1f0; /* Very light red background */
-  color: #dc3545; /* Red text */
+  background-color: #ffebee; /* Very light red background */
+  color: #d32f2f; /* Red text */
 }
 
 .logout-btn .icon {
   margin-right: 12px;
   font-size: 18px;
-  color: #000; /* Changed to black */
+  color: #444444; /* Darker icon color (changed from #757575) */
+  min-width: 18px;
 }
 
 .logout-btn:hover .icon {
-  color: #dc3545; /* Red icon on hover */
+  color: #d32f2f; /* Red icon on hover */
 }
 
 .sidebar .buttons .menu-with-submenu button {
   background-color: transparent;
-  color: #000;
+  color: #333333; /* Darker text color (changed from #555555) */
   border: none;
   padding: 12px 16px;
   width: 100%;
   text-align: left;
   cursor: pointer;
-  font-size: 15px;
+  font-size: 14px;
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
-  margin-bottom: 5px;
+  margin-bottom: 4px;
   border-radius: 8px;
+  letter-spacing: 0.2px;
 }
 
 .sidebar .buttons .menu-with-submenu.active > button {
-  background-color: #e8f5e8;
-  color: #1a7431;
+  background-color: #e8f5e9;
+  color: #2e7d32;
+  font-weight: 500;
 }
 
 .sidebar .buttons .menu-with-submenu.active > button .icon {
-  color: #1a7431;
+  color: #2e7d32;
 }
 
 .sidebar .buttons .menu-with-submenu button:hover {
-  background-color: #f8f9fa;
-  color: #000;
+  background-color: #f5f5f5;
+  color: #333333;
 }
 
 .sidebar .buttons .menu-with-submenu.active > button:hover {
-  background-color: #e8f5e8;
-  color: #1a7431;
+  background-color: #e8f5e9;
+  color: #2e7d32;
 }

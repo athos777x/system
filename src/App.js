@@ -56,11 +56,21 @@ function App() {
     setRole(localStorage.getItem('role') || '');
   }, []);
 
-  const handleLogin = (username, password, navigate, userRole) => {
+  const handleLogin = (username, password, navigate, userRole, userId) => {
+    // Clear any previous user's data
+    localStorage.removeItem('profilePictureUrl');
+    
+    // Set new user's data
     setIsAuthenticated(true);
     setRole(userRole);
     localStorage.setItem('isAuthenticated', 'true');
     localStorage.setItem('role', userRole);
+    localStorage.setItem('userId', userId); // Make sure userId is stored
+    
+    // Dispatch an event to notify components that the user has changed
+    window.dispatchEvent(new Event('storage'));
+    window.dispatchEvent(new Event('storage-local'));
+    
     navigate('/home');
   };
 
@@ -69,6 +79,8 @@ function App() {
     setRole('');
     localStorage.removeItem('isAuthenticated');
     localStorage.removeItem('role');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('profilePictureUrl');
   };
 
   return (
