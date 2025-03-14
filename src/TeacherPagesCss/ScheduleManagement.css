@@ -287,6 +287,17 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
+.schedule-mgmt-btn-delete {
+  background-color: #f44336;
+  color: white;
+}
+
+.schedule-mgmt-btn-delete:hover {
+  background-color: #d32f2f;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
 .schedule-mgmt-btn-cancel {
   background: #ef5350;
   color: white;
