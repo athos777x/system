@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import '../TeacherPagesCss/SubjectsManagement.css';
-import { FiPlus, FiEdit2, FiArchive } from 'react-icons/fi';
 
 function SubjectsManagement() {
   const [subjects, setSubjects] = useState([]);
   const [filteredSubjects, setFilteredSubjects] = useState([]);
   const [selectedSubject, setSelectedSubject] = useState(null);
+  const [schoolYears, setSchoolYears] = useState([]);
   const [filters, setFilters] = useState({
     searchTerm: '',
     school_year: '',
@@ -23,45 +23,46 @@ function SubjectsManagement() {
     description: '',
     archive_status: 'unarchive',
   });
-  const [selectedGrade, setSelectedGrade] = useState(null);
+  const [showDetails, setShowDetails] = useState(false);
+  const [pendingFilters, setPendingFilters] = useState({ ...filters });
 
   const fetchSubjects = useCallback(async () => {
     try {
-      // Ensure subjects are updated if the school year is inactive
       await axios.put('http://localhost:3001/update-subjects-status');
-  
-      // Fetch subjects after updating
       const response = await axios.get('http://localhost:3001/subjects', { params: filters });
       setSubjects(response.data);
-  
-      if (selectedGrade) {
-        setFilteredSubjects(
-          response.data.filter((subject) => String(subject.grade_level) === String(selectedGrade))
-        );
-      } else {
-        setFilteredSubjects([]);
-      }
+      setFilteredSubjects(response.data);
     } catch (error) {
       console.error('Error fetching subjects:', error);
     }
-  }, [filters, selectedGrade]);
+  }, [filters]);
+
+  const fetchSchoolYears = async () => {
+    try {
+      const response = await axios.get('http://localhost:3001/api/school_years');
+      setSchoolYears(response.data);
+    } catch (error) {
+      console.error('Error fetching school years:', error);
+    }
+  };
   
   useEffect(() => {
     fetchSubjects();
-  }, [fetchSubjects]);
-
-  const handleGradeClick = (grade) => {
-    setSelectedGrade(grade);
-    setFilteredSubjects(subjects.filter((subject) => String(subject.grade_level) === String(grade)));
-    setSelectedSubject(null);
-  };
-
-  const handleSubjectClick = (subject) => {
-    setSelectedSubject(subject);
-  };
+    fetchSchoolYears();
+  }, [filters]);
 
   const handleSearch = (searchTerm) => {
     setFilters((prevFilters) => ({ ...prevFilters, searchTerm }));
+  };
+
+  const applyFilters = (newFilters) => {
+    setFilters(newFilters);
+    fetchSubjects();
+  };
+
+  const handleViewClick = (subject) => {
+    setSelectedSubject(selectedSubject?.subject_id === subject.subject_id ? null : subject);
+    setShowDetails(!showDetails);
   };
 
   const startAdding = () => {
@@ -87,161 +88,192 @@ function SubjectsManagement() {
   const saveNewSubject = async () => {
     try {
       if (isEditing) {
-        // Update existing subject
         await axios.put(`http://localhost:3001/subjects/${selectedSubject.subject_id}`, newSubjectData);
       } else {
-        // Add new subject
         await axios.post('http://localhost:3001/subjects', newSubjectData);
       }
       fetchSubjects();
       setShowModal(false);
       setSelectedSubject(null);
+      setShowDetails(false);
     } catch (error) {
       console.error(`Error ${isEditing ? 'updating' : 'adding'} subject:`, error);
     }
   };
 
-  const cancelAdding = () => {
-    setShowModal(false);
-  };
-
-  const handleEdit = () => {
+  const handleEdit = (subject) => {
+    setSelectedSubject(subject);
     setShowModal(true);
     setIsEditing(true);
-    setNewSubjectData(selectedSubject);
+    setNewSubjectData(subject);
   };
 
-  const handleDelete = async () => {
+  const handleDelete = async (subject) => {
     try {
-      await axios.put(`http://localhost:3001/subjects/${selectedSubject.subject_id}/archive`);
+      await axios.put(`http://localhost:3001/subjects/${subject.subject_id}/archive`);
       fetchSubjects();
-      setSelectedSubject(null); // Clear details after deletion
+      setSelectedSubject(null);
+      setShowDetails(false);
     } catch (error) {
-      console.error('Error deleting subject:', error);
+      console.error('Error archiving subject:', error);
     }
   };
 
   return (
-    <div className="subject-mgmt-container">
-      <h2 className="subject-mgmt-title">Subjects Management</h2>
-      {/* <div className="subjects-add-subject-button-container">
-        <SubjectsSearchFilter handleSearch={handleSearch} />
-      </div> */}
-      <div className="subject-mgmt-add-btn-container">
-        <button className="subject-mgmt-add-btn" onClick={startAdding}>
-          <FiPlus /> Add New Subject
+    <div className="subjects-management-container">
+      <div className="subjects-management-header">
+        <h1 className="subjects-management-title">Subject Management</h1>
+        <button className="subjects-management-btn-add" onClick={startAdding}>
+          Add Subject
         </button>
       </div>
-      <div className="subject-mgmt-grid">
-        <div className="subject-mgmt-column">
-          <h3>Grade Levels</h3>
-          <div className="subject-mgmt-grade-buttons">
-            {grades.map((grade) => (
-              <button
-                key={grade}
-                className={`subject-mgmt-grade-btn ${selectedGrade === grade ? 'active' : ''}`}
-                onClick={() => handleGradeClick(grade)}
-              >
-                Grade {grade}
-              </button>
+
+      <div className="subjects-management-filters">
+        <div className="subjects-management-search">
+          <input
+            type="text"
+            placeholder="Search subjects..."
+            value={filters.searchTerm}
+            onChange={(e) => handleSearch(e.target.value)}
+          />
+        </div>
+        <div className="subjects-management-filters-group">
+          <select
+            value={pendingFilters.grade}
+            onChange={(e) => setPendingFilters((prev) => ({ ...prev, grade: e.target.value }))}
+          >
+            <option value="">All Grades</option>
+            {grades.map(grade => (
+              <option key={grade} value={grade}>Grade {grade}</option>
             ))}
-          </div>
-        </div>
-        <div className="subject-mgmt-column">
-          <h3>Subjects</h3>
-          {selectedGrade ? (
-            filteredSubjects.length > 0 ? (
-              <ul className="subject-mgmt-list">
-                {filteredSubjects.map((subject) => (
-                  <li
-                    key={subject.subject_id}
-                    className={`subject-mgmt-item ${selectedSubject?.subject_id === subject.subject_id ? 'active' : ''}`}
-                    onClick={() => handleSubjectClick(subject)}
-                  >
-                    <div className="subject-mgmt-item-name">{subject.subject_name}</div>
-                    <span className={`subject-mgmt-status ${subject.status}`}>
-                      {subject.status.charAt(0).toUpperCase() + subject.status.slice(1)}
-                    </span>
-                  </li>
-                ))}
-              </ul> 
-            ) : (
-              <div className="subject-mgmt-empty-message">
-                No subjects available for Grade {selectedGrade}.
-              </div>
-            )
-          ) : (
-            <div className="subject-mgmt-empty-message">
-              Please select a grade level to view its subjects.
-            </div>
-          )}
-        </div>
-        <div className="subject-mgmt-column">
-          <h3>Subject Details</h3>
-          {selectedSubject ? (
-            <div className="subject-mgmt-details">
-              <table>
-                <tbody>
-                  <tr>
-                    <td>Name</td>
-                    <td>{selectedSubject.subject_name}</td>
-                  </tr>
-                  <tr>
-                    <td>Grade Level</td>
-                    <td>Grade {selectedSubject.grade_level}</td>
-                  </tr>
-                  <tr>
-                    <td>Status</td>
-                    <td>
-                      <span className={`subject-mgmt-status ${selectedSubject.status}`}>
-                        {selectedSubject.status.charAt(0).toUpperCase() + selectedSubject.status.slice(1)}
-                      </span>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>Description</td>
-                    <td>{selectedSubject.description || 'No description provided'}</td>
-                  </tr>
-                </tbody>
-              </table>
-              
-              <div className="subject-mgmt-actions">
-                <button className="subject-mgmt-edit-btn" onClick={handleEdit}>
-                  <FiEdit2 /> Edit
-                </button>
-                <button 
-                  className="subject-mgmt-archive-btn" 
-                  onClick={handleDelete}
-                  disabled={selectedSubject?.sy_status === 'active'}
-                >
-                  <FiArchive /> Archive
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="subject-mgmt-empty-message">
-              Please select a subject to view its details.
-            </div>
-          )}
+          </select>
+          <select
+            value={pendingFilters.school_year}
+            onChange={(e) => setPendingFilters((prev) => ({ ...prev, school_year: e.target.value }))}
+          >
+            <option value="">All School Years</option>
+            {schoolYears.map((year) => (
+              <option key={year.school_year_id} value={year.school_year}>
+                {year.school_year}
+              </option>
+            ))}
+          </select>
+          <select
+            value={pendingFilters.archive_status}
+            onChange={(e) => setPendingFilters((prev) => ({ ...prev, archive_status: e.target.value }))}
+          >
+            <option value="unarchive">Active</option>
+            <option value="archive">Archived</option>
+          </select>
+          <button onClick={() => applyFilters(pendingFilters)}>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+            </svg>
+            Filter
+          </button>
         </div>
       </div>
+
+      <div className="subjects-management-table-container">
+        <table className="subjects-management-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Subject Name</th>
+              <th>Grade Level</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredSubjects.length > 0 ? (
+              filteredSubjects.map((subject, index) => (
+                <React.Fragment key={subject.subject_id}>
+                  <tr>
+                    <td>{index + 1}</td>
+                    <td>{subject.subject_name}</td>
+                    <td>Grade {subject.grade_level}</td>
+                    <td>
+                      <span className={`status-${subject.status.toLowerCase()}`}>
+                        {subject.status.charAt(0).toUpperCase() + subject.status.slice(1)}
+                      </span>
+                    </td>
+                    <td>
+                      <div className="subjects-management-actions">
+                        <button 
+                          className="subjects-management-btn subjects-management-btn-view" 
+                          onClick={() => handleViewClick(subject)}
+                        >
+                          View
+                        </button>
+                        <button 
+                          className="subjects-management-btn subjects-management-btn-edit" 
+                          onClick={() => handleEdit(subject)}
+                        >
+                          Edit
+                        </button>
+                        <button 
+                          className="subjects-management-btn subjects-management-btn-archive" 
+                          onClick={() => handleDelete(subject)}
+                          disabled={subject?.sy_status === 'active'}
+                        >
+                          Archive
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                  {selectedSubject && selectedSubject.subject_id === subject.subject_id && showDetails && (
+                    <tr>
+                      <td colSpan="5">
+                        <div className="subjects-management-details">
+                          <table>
+                            <tbody>
+                              <tr>
+                                <th>Subject ID:</th>
+                                <td>{selectedSubject.subject_id}</td>
+                              </tr>
+                              <tr>
+                                <th>Subject Name:</th>
+                                <td>{selectedSubject.subject_name}</td>
+                              </tr>
+                              <tr>
+                                <th>Grade Level:</th>
+                                <td>Grade {selectedSubject.grade_level}</td>
+                              </tr>
+                              <tr>
+                                <th>Status:</th>
+                                <td>{selectedSubject.status}</td>
+                              </tr>
+                              <tr>
+                                <th>Description:</th>
+                                <td>{selectedSubject.description || 'No description provided'}</td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </React.Fragment>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="5" style={{ textAlign: 'center' }}>No subjects available.</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
       {showModal && (
-        <div className="subject-mgmt-modal-overlay">
-          <div className="subject-mgmt-modal">
-            <div className="subject-mgmt-modal-header">
-              <h3 className="subject-mgmt-modal-title">
-                {isEditing ? 'Edit Subject' : 'Add New Subject'}
-              </h3>
-              <button className="subject-mgmt-modal-close" onClick={() => setShowModal(false)}>
-                &times;
-              </button>
-            </div>
-            
+        <div className="subjects-management-modal">
+          <div className="subjects-management-modal-content">
+            <h2>{isEditing ? 'Edit Subject' : 'Add New Subject'}</h2>
             <form onSubmit={(e) => {
               e.preventDefault();
               saveNewSubject();
             }}>
-              <div className="subject-mgmt-form-group">
+              <div className="subjects-management-form-group">
                 <label>Subject Name</label>
                 <input
                   type="text"
@@ -252,7 +284,7 @@ function SubjectsManagement() {
                 />
               </div>
 
-              <div className="subject-mgmt-form-group">
+              <div className="subjects-management-form-group">
                 <label>Grade Level</label>
                 <select
                   name="grade_level"
@@ -267,7 +299,7 @@ function SubjectsManagement() {
                 </select>
               </div>
 
-              <div className="subject-mgmt-form-group">
+              <div className="subjects-management-form-group">
                 <label>Status</label>
                 <select
                   name="status"
@@ -279,27 +311,26 @@ function SubjectsManagement() {
                 </select>
               </div>
 
-              <div className="subject-mgmt-form-group">
+              <div className="subjects-management-form-group">
                 <label>Description</label>
                 <textarea
                   name="description"
                   value={newSubjectData.description}
                   onChange={handleAddChange}
-                  placeholder="Enter subject description..."
                 />
               </div>
 
-              <div className="subject-mgmt-modal-buttons">
+              <div className="subjects-management-modal-actions">
                 <button 
-                  type="button" 
-                  className="subject-mgmt-modal-btn subject-mgmt-modal-cancel"
+                  type="button"
+                  className="subjects-management-btn subjects-management-btn-archive" 
                   onClick={() => setShowModal(false)}
                 >
                   Cancel
                 </button>
                 <button 
                   type="submit"
-                  className="subject-mgmt-modal-btn subject-mgmt-modal-submit"
+                  className="subjects-management-btn subjects-management-btn-edit"
                 >
                   {isEditing ? 'Update' : 'Save'}
                 </button>

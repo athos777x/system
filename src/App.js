@@ -10,9 +10,8 @@ import Student_GradesPage from './StudentPages/Student_GradesPage';
 import Student_AttendancePage from './StudentPages/Student_AttendancePage';
 import Student_SchedulePage from './StudentPages/Student_SchedulePage';
 import Student_AccountPage from './StudentPages/Student_AccountPage';
-import SubjectsManagement from './TeacherPages/SubjectsManagement';
 import ScheduleManagement from './TeacherPages/ScheduleManagement';
-import TestSubjectsManagement from './TeacherPages/TestSubjectsManagement';
+import SubjectsManagement from './TeacherPages/SubjectsManagement';
 import Student_EnrollmentPage from './StudentPages/Student_EnrollmentPage';
 import AccountManagement from './TeacherPages/AccountManagement';
 import StudentManagement from './TeacherPages/StudentManagement';
@@ -20,7 +19,6 @@ import TeacherManagement from './TeacherPages/TeacherManagement';
 import AttendanceManagement from './TeacherPages/AttendanceManagement';
 import EarlyEnrollmentReport from './TeacherPages/EarlyEnrollmentReport';
 import EnrolledStudents from './TeacherPages/EnrolledStudents';
-import GradesManagement from './TeacherPages/GradesManagement';
 import StudentEnrollees from './TeacherPages/StudentEnrollees';
 import SchoolYearManagement from './TeacherPages/SchoolYearManagement';
 import SectionList from './TeacherPages/SectionList';
@@ -34,13 +32,15 @@ import LateEnrollees from './Utilities/late_enrollee';
 import StudentGrades from './TeacherPages/selected_grade';
 import EnrollmentRequests from './TeacherPages/EnrollmentRequests';
 import Form138 from './reports/form_138';
-import TestGradesManagement from './TeacherPages/TestGradesManagement';
+import GradesManagement from './TeacherPages/GradesManagement';
 import SF1 from './reports/sf1';
 import SF2 from './reports/sf2';
 import SF4 from './reports/sf4';
 import SF5 from './reports/sf5';
 import SF6 from './reports/sf6';
 import Teacher_SchedulePage from './TeacherPages/Teacher_SchedulePage';
+import ExperimentalSubjects from './TeacherPages/ExperimentalSubjects';
+import ExperimentalGrades from './TeacherPages/ExperimentalGrades';
 
 
 
@@ -100,8 +100,8 @@ function App() {
             <Route path="/enrollment/:studentId" element={<Student_EnrollmentPage />} />
             <Route path="/account" element={<Student_AccountPage />} />
 
-            <Route path="/subjects" element={<SubjectsManagement />} />
-            <Route path="/test-subjects" element={<TestSubjectsManagement />} />
+            <Route path="/subjects" element={<ExperimentalSubjects />} />
+            <Route path="/test-subjects" element={<SubjectsManagement />} />
             <Route path="/schedule" element={<ScheduleManagement />} />
             <Route path="/teacher-schedule" element={<Teacher_SchedulePage />} />
 
@@ -111,7 +111,7 @@ function App() {
             <Route path="/early-enrollment-report" element={<EarlyEnrollmentReport />} />
             <Route path="/enrolled-students" element={<EnrolledStudents />} />
             <Route path="/account" element={<AccountManagement />} />
-            <Route path="/grades" element={<GradesManagement />} />
+            <Route path="/grades" element={<ExperimentalGrades />} />
             <Route path="/list-of-student-enrollees" element={<StudentEnrollees />} />
             <Route path="/school-year" element={<SchoolYearManagement />} />
             <Route path="/section-list" element={<SectionList />} />
@@ -119,7 +119,7 @@ function App() {
             <Route path="/summary-report-promotion" element={<PromotionReport />} />
             <Route path="/brigada-eskwela" element={<BrigadaEskwela />} />
             <Route path="/pending-enrollment" element={<EnrollmentRequests />} />
-            <Route path="/new-grades" element={<TestGradesManagement />} />
+            <Route path="/new-grades" element={<GradesManagement />} />
 
             <Route path="/form-137" element={<Form137 />} />
             <Route path="/form-138" element={<Form138 />} />
