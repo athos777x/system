@@ -1,5 +1,5 @@
 // PrincipalSideBar.js
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import '../CssFiles/sidebar.css';
 import {
   FiHome,
@@ -13,40 +13,54 @@ import {
   FiBarChart2,
   FiFileText,
   FiCheckSquare,
-  FiSettings,
-  FiLogOut
+  FiLogOut,
+  FiLayers
 } from 'react-icons/fi';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 function GradeLevelCoordinatorSideBar({ showSidebar, toggleSidebar, handleLogout }) {
   const [showRecordsSubMenu, setShowRecordsSubMenu] = useState(false);
   const [showEnrollmentSubMenu, setShowEnrollmentSubMenu] = useState(false);
+  const [showExperimentalsSubMenu, setShowExperimentalsSubMenu] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
   // Check if current path is under a specific submenu
-  const isRecordsPath = ['/grades', '/new-grades', '/attendance'].includes(location.pathname);
+  const isRecordsPath = ['/attendance', '/new-grades'].includes(location.pathname);
   const isEnrollmentPath = ['/pending-enrollment', '/school-year', '/section-list', '/enrolled-students'].includes(location.pathname);
+  const isExperimentalsPath = ['/grades'].includes(location.pathname);
 
   // Update useEffect to handle initial submenu state based on path
-  useEffect(() => {
+  React.useEffect(() => {
     setShowRecordsSubMenu(isRecordsPath);
     setShowEnrollmentSubMenu(isEnrollmentPath);
+    setShowExperimentalsSubMenu(isExperimentalsPath);
   }, [location.pathname]);
 
   const toggleRecordsSubMenu = () => {
     setShowRecordsSubMenu(!showRecordsSubMenu);
     setShowEnrollmentSubMenu(false);
+    setShowExperimentalsSubMenu(false);
     if (!showRecordsSubMenu) {
-      navigate('/grades');
+      navigate('/new-grades');
     }
   };
 
   const toggleEnrollmentSubMenu = () => {
     setShowEnrollmentSubMenu(!showEnrollmentSubMenu);
     setShowRecordsSubMenu(false);
+    setShowExperimentalsSubMenu(false);
     if (!showEnrollmentSubMenu) {
-      navigate('/school-year');
+      navigate('/pending-enrollment');
+    }
+  };
+
+  const toggleExperimentalsSubMenu = () => {
+    setShowExperimentalsSubMenu(!showExperimentalsSubMenu);
+    setShowRecordsSubMenu(false);
+    setShowEnrollmentSubMenu(false);
+    if (!showExperimentalsSubMenu) {
+      navigate('/grades');
     }
   };
 
@@ -54,6 +68,7 @@ function GradeLevelCoordinatorSideBar({ showSidebar, toggleSidebar, handleLogout
     // Close all submenus when navigating
     setShowRecordsSubMenu(false);
     setShowEnrollmentSubMenu(false);
+    setShowExperimentalsSubMenu(false);
     navigate(path);
   };
 
@@ -79,24 +94,12 @@ function GradeLevelCoordinatorSideBar({ showSidebar, toggleSidebar, handleLogout
         >
           <FiUsers className="icon" /> Students
         </button>
-        <button 
-          onClick={() => handleNavigate('/section')}
-          className={location.pathname === '/section' ? 'active' : ''}
-        >
-          <FiBook className="icon" /> Section
-        </button>
         <div className={`menu-with-submenu ${showRecordsSubMenu || isRecordsPath ? 'active' : ''}`}>
           <button onClick={toggleRecordsSubMenu}>
             <FiClipboard className="icon" /> Student Academic Records
           </button>
           {showRecordsSubMenu && (
             <div className="submenu">
-              <button 
-                onClick={() => handleNavigate('/grades')}
-                className={location.pathname === '/grades' ? 'active' : ''}
-              >
-                <FiFileText className="icon" /> Grades
-              </button>
               <button 
                 onClick={() => handleNavigate('/new-grades')}
                 className={location.pathname === '/new-grades' ? 'active' : ''}
@@ -111,9 +114,6 @@ function GradeLevelCoordinatorSideBar({ showSidebar, toggleSidebar, handleLogout
               </button>
             </div>
           )}
-          {/* <button onClick={() => handleNavigate('/account')}>
-          <FiSettings className="icon" /> Account
-          </button> */}
         </div>
         <div className={`menu-with-submenu ${showEnrollmentSubMenu || isEnrollmentPath ? 'active' : ''}`}>
           <button onClick={toggleEnrollmentSubMenu}>
@@ -148,12 +148,33 @@ function GradeLevelCoordinatorSideBar({ showSidebar, toggleSidebar, handleLogout
             </div>
           )}
         </div>
+        <button 
+          onClick={() => handleNavigate('/summary-report-promotion')}
+          className={location.pathname === '/summary-report-promotion' ? 'active' : ''}
+        >
+          <FiFileText className="icon" /> Generate Report
+        </button>
         {/* <button 
           onClick={() => handleNavigate('/profile')}
           className={location.pathname === '/profile' ? 'active' : ''}
         >
           <FiUser className="icon" /> Profile
         </button> */}
+        <div className={`menu-with-submenu ${showExperimentalsSubMenu || isExperimentalsPath ? 'active' : ''}`}>
+          <button onClick={toggleExperimentalsSubMenu}>
+            <FiLayers className="icon" /> Experimentals
+          </button>
+          {showExperimentalsSubMenu && (
+            <div className="submenu">
+              <button 
+                onClick={() => handleNavigate('/grades')}
+                className={location.pathname === '/grades' ? 'active' : ''}
+              >
+                <FiFileText className="icon" /> Grades
+              </button>
+            </div>
+          )}
+        </div>
         <button onClick={handleLogoutClick} className="logout-btn">
           <FiLogOut className="icon" /> Logout
         </button>

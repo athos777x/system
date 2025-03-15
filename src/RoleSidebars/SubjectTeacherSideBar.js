@@ -15,7 +15,8 @@ import {
   FiCheckSquare,
   FiSettings,
   FiLogOut,
-  FiClock
+  FiClock,
+  FiLayers
 } from 'react-icons/fi';
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -24,17 +25,20 @@ function SubjectTeacherSideBar({ showSidebar, toggleSidebar, handleLogout }) {
   const [showEnrollmentSubMenu, setShowEnrollmentSubMenu] = useState(false);
   const [showReportsSubMenu, setShowReportsSubMenu] = useState(false);
   const [showClassesSubMenu, setShowClassesSubMenu] = useState(false);
+  const [showExperimentalsSubMenu, setShowExperimentalsSubMenu] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
   // Check if current path is under a specific submenu
-  const isRecordsPath = ['/grades', '/new-grades', '/attendance', '/brigada-eskwela'].includes(location.pathname);
+  const isRecordsPath = ['/attendance', '/brigada-eskwela', '/new-grades'].includes(location.pathname);
   const isEnrollmentPath = ['/school-year', '/section-list', '/enrolled-students'].includes(location.pathname);
+  const isExperimentalsPath = ['/grades'].includes(location.pathname);
 
   // Update useEffect to handle initial submenu state based on path
   React.useEffect(() => {
     setShowRecordsSubMenu(isRecordsPath);
     setShowEnrollmentSubMenu(isEnrollmentPath);
+    setShowExperimentalsSubMenu(isExperimentalsPath);
   }, [location.pathname]);
 
   const toggleRecordsSubMenu = () => {
@@ -42,8 +46,9 @@ function SubjectTeacherSideBar({ showSidebar, toggleSidebar, handleLogout }) {
     setShowEnrollmentSubMenu(false);
     setShowReportsSubMenu(false);
     setShowClassesSubMenu(false);
+    setShowExperimentalsSubMenu(false);
     if (!showRecordsSubMenu) {
-      navigate('/grades');
+      navigate('/new-grades');
     }
   };
 
@@ -52,6 +57,7 @@ function SubjectTeacherSideBar({ showSidebar, toggleSidebar, handleLogout }) {
     setShowRecordsSubMenu(false);
     setShowReportsSubMenu(false);
     setShowClassesSubMenu(false);
+    setShowExperimentalsSubMenu(false);
     if (!showEnrollmentSubMenu) {
       navigate('/school-year');
     }
@@ -62,6 +68,7 @@ function SubjectTeacherSideBar({ showSidebar, toggleSidebar, handleLogout }) {
     setShowRecordsSubMenu(false);
     setShowEnrollmentSubMenu(false);
     setShowClassesSubMenu(false);
+    setShowExperimentalsSubMenu(false);
     if (!showReportsSubMenu) {
       navigate('/summary-report-promotion');
     }
@@ -72,8 +79,20 @@ function SubjectTeacherSideBar({ showSidebar, toggleSidebar, handleLogout }) {
     setShowRecordsSubMenu(false);
     setShowEnrollmentSubMenu(false);
     setShowReportsSubMenu(false);
+    setShowExperimentalsSubMenu(false);
     if (!showClassesSubMenu) {
       navigate('/section');
+    }
+  };
+
+  const toggleExperimentalsSubMenu = () => {
+    setShowExperimentalsSubMenu(!showExperimentalsSubMenu);
+    setShowRecordsSubMenu(false);
+    setShowEnrollmentSubMenu(false);
+    setShowReportsSubMenu(false);
+    setShowClassesSubMenu(false);
+    if (!showExperimentalsSubMenu) {
+      navigate('/grades');
     }
   };
 
@@ -83,6 +102,7 @@ function SubjectTeacherSideBar({ showSidebar, toggleSidebar, handleLogout }) {
     setShowEnrollmentSubMenu(false);
     setShowReportsSubMenu(false);
     setShowClassesSubMenu(false);
+    setShowExperimentalsSubMenu(false);
     navigate(path);
   };
 
@@ -123,12 +143,6 @@ function SubjectTeacherSideBar({ showSidebar, toggleSidebar, handleLogout }) {
           {showRecordsSubMenu && (
             <div className="submenu">
               <button 
-                onClick={() => handleNavigate('/grades')}
-                className={location.pathname === '/grades' ? 'active' : ''}
-              >
-                <FiFileText className="icon" /> Grades
-              </button>
-              <button 
                 onClick={() => handleNavigate('/new-grades')}
                 className={location.pathname === '/new-grades' ? 'active' : ''}
               >
@@ -145,7 +159,7 @@ function SubjectTeacherSideBar({ showSidebar, toggleSidebar, handleLogout }) {
                 className={location.pathname === '/brigada-eskwela' ? 'active' : ''}
               >
                 <FiCheckSquare className="icon" /> Brigada Eskwela
-              </button> 
+              </button>
             </div>
           )}
         </div>
@@ -178,6 +192,21 @@ function SubjectTeacherSideBar({ showSidebar, toggleSidebar, handleLogout }) {
                 className={location.pathname === '/enrolled-students' ? 'active' : ''}
               >
                 <FiUsers className="icon" /> Enrolled Students
+              </button>
+            </div>
+          )}
+        </div>
+        <div className={`menu-with-submenu ${showExperimentalsSubMenu || isExperimentalsPath ? 'active' : ''}`}>
+          <button onClick={toggleExperimentalsSubMenu}>
+            <FiLayers className="icon" /> Experimentals
+          </button>
+          {showExperimentalsSubMenu && (
+            <div className="submenu">
+              <button 
+                onClick={() => handleNavigate('/grades')}
+                className={location.pathname === '/grades' ? 'active' : ''}
+              >
+                <FiFileText className="icon" /> Grades
               </button>
             </div>
           )}
