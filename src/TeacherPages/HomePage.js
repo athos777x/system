@@ -151,7 +151,7 @@ function HomePage() {
         {/* Testing and Assessment */}
         <div className="feature-card">
           <div className="feature-icon"><MdAssignment /></div>
-          <h3 className="feature-title">Test Subjects Management</h3>
+          <h3 className="feature-title">Subjects Management</h3>
           <p className="feature-description">
             Organize and manage subjects for testing and assessment purposes.
           </p>
