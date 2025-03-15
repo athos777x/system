@@ -67,9 +67,9 @@ function HomePage() {
 
         <div className="feature-card">
           <div className="feature-icon"><MdGrade /></div>
-          <h3 className="feature-title">Grades Management</h3>
+          <h3 className="feature-title">Academic Assessment</h3>
           <p className="feature-description">
-            Record, calculate, and analyze student grades with an intuitive grading system.
+            Record, calculate, and analyze student grades and test scores with an intuitive assessment system.
           </p>
         </div>
 
@@ -86,7 +86,7 @@ function HomePage() {
           <div className="feature-icon"><FaBook /></div>
           <h3 className="feature-title">Subject Management</h3>
           <p className="feature-description">
-            Organize academic subjects, assign teachers, and manage curriculum details.
+            Organize academic subjects, assign teachers, and manage curriculum and assessment details.
           </p>
         </div>
 
@@ -117,68 +117,27 @@ function HomePage() {
         {/* Enrollment and Registration Features */}
         <div className="feature-card">
           <div className="feature-icon"><FaUserPlus /></div>
-          <h3 className="feature-title">Enrollment Requests</h3>
+          <h3 className="feature-title">Enrollment Management</h3>
           <p className="feature-description">
-            Process and manage student enrollment requests and applications.
+            Process enrollment requests and manage lists of currently enrolled students across all sections.
           </p>
         </div>
 
-        <div className="feature-card">
-          <div className="feature-icon"><FaUsers /></div>
-          <h3 className="feature-title">Enrolled Students</h3>
-          <p className="feature-description">
-            View and manage lists of currently enrolled students across all sections.
-          </p>
-        </div>
-
-        {/* Reporting Features - Generalized */}
+        {/* Reporting Features */}
         <div className="feature-card">
           <div className="feature-icon"><MdAssessment /></div>
-          <h3 className="feature-title">Comprehensive Reports</h3>
+          <h3 className="feature-title">Reports & Analytics</h3>
           <p className="feature-description">
-            Generate and analyze various reports including promotion, enrollment, attendance, and performance metrics.
-          </p>
-        </div>
-
-        <div className="feature-card">
-          <div className="feature-icon"><FaFilePdf /></div>
-          <h3 className="feature-title">Data Analytics</h3>
-          <p className="feature-description">
-            Access data visualization and analytics tools to track trends and make informed decisions.
-          </p>
-        </div>
-
-        {/* Testing and Assessment */}
-        <div className="feature-card">
-          <div className="feature-icon"><MdAssignment /></div>
-          <h3 className="feature-title">Subjects Management</h3>
-          <p className="feature-description">
-            Organize and manage subjects for testing and assessment purposes.
-          </p>
-        </div>
-
-        <div className="feature-card">
-          <div className="feature-icon"><FaClipboardCheck /></div>
-          <h3 className="feature-title">Test Grades Management</h3>
-          <p className="feature-description">
-            Record and analyze test scores and assessment results.
+            Generate comprehensive reports and visualize data to track trends and make informed decisions.
           </p>
         </div>
 
         {/* Student Portal Features */}
         <div className="feature-card">
-          <div className="feature-icon"><FaIdCard /></div>
-          <h3 className="feature-title">Student Profile</h3>
-          <p className="feature-description">
-            Students can view and manage their personal information and academic profiles.
-          </p>
-        </div>
-
-        <div className="feature-card">
           <div className="feature-icon"><MdDashboard /></div>
-          <h3 className="feature-title">Student Dashboard</h3>
+          <h3 className="feature-title">Student Portal</h3>
           <p className="feature-description">
-            Personalized dashboard for students to access grades, schedules, and attendance.
+            Personalized dashboard for students to access their profiles, grades, schedules, and attendance.
           </p>
         </div>
 
