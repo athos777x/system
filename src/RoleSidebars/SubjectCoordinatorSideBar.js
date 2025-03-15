@@ -65,7 +65,7 @@ function SubjectCoordinatorSideBar({ showSidebar, toggleSidebar, handleLogout })
           onClick={() => handleNavigate('/test-subjects')}
           className={location.pathname === '/test-subjects' ? 'active' : ''}
         >
-          <FiBook className="icon" /> Test Subjects
+          <FiBook className="icon" /> Subjects
         </button>
 
         <div className={`menu-with-submenu ${showExperimentalsSubMenu || isExperimentalsPath ? 'active' : ''}`}>
@@ -78,7 +78,7 @@ function SubjectCoordinatorSideBar({ showSidebar, toggleSidebar, handleLogout })
                 onClick={() => handleNavigate('/subjects')}
                 className={location.pathname === '/subjects' ? 'active' : ''}
               >
-                <FiBook className="icon" /> Subjects
+                <FiBook className="icon" /> Test Subjects
               </button>
             </div>
           )}

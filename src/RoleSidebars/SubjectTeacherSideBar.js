@@ -146,7 +146,7 @@ function SubjectTeacherSideBar({ showSidebar, toggleSidebar, handleLogout }) {
                 onClick={() => handleNavigate('/new-grades')}
                 className={location.pathname === '/new-grades' ? 'active' : ''}
               >
-                <FiFileText className="icon" /> New Grades
+                <FiFileText className="icon" /> Grades
               </button>
               <button 
                 onClick={() => handleNavigate('/attendance')}
@@ -206,7 +206,7 @@ function SubjectTeacherSideBar({ showSidebar, toggleSidebar, handleLogout }) {
                 onClick={() => handleNavigate('/grades')}
                 className={location.pathname === '/grades' ? 'active' : ''}
               >
-                <FiFileText className="icon" /> Grades
+                <FiFileText className="icon" /> Test Grades
               </button>
             </div>
           )}

@@ -101,7 +101,7 @@ function AcademicCoordinatorSideBar({ showSidebar, toggleSidebar, handleLogout }
                 onClick={() => handleNavigate('/subjects')}
                 className={location.pathname === '/subjects' ? 'active' : ''}
               >
-                <FiBook className="icon" /> Subjects
+                <FiBook className="icon" /> Test Subjects
               </button>
             </div>
           )}

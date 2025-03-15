@@ -1,132 +1,57 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import '../TeacherPagesCss/GradesManagement.css';
-import GradeDetail from '../Utilities/grades-detail'
-import { useNavigate } from "react-router-dom";
+import Pagination from '../Utilities/pagination';
+import { useNavigate } from 'react-router-dom';
 
 function GradesManagement() {
-  // State variables
-  const [selectedGrade, setSelectedGrade] = useState(null);
-  const [selectedSection, setSelectedSection] = useState(null);
-  const [sections, setSections] = useState([]);
-  const [subjects, setSubjects] = useState([]);
-  const [showGradesTable, setShowGradesTable] = useState(true);
-  const [students, setStudents] = useState([]);
-  const [selectedSubject, setSelectedSubject] = useState(null);
-  const [showSubjectGrades, setShowSubjectGrades] = useState(false);
-  const [selectedStudent, setSelectedStudent] = useState(null);
-  const [showStudentDetails, setShowStudentDetails] = useState(false);
-  const [showAddActivityModal, setShowAddActivityModal] = useState(false);
-  const [activityType, setActivityType] = useState(''); // 'WW', 'PT', or 'QA'
-  const [writtenWorks, setWrittenWorks] = useState([]);
-  const [performanceTasks, setPerformanceTasks] = useState([]);
-  const [quarterlyAssessments, setQuarterlyAssessments] = useState([]);
-  const [selectedGradingPeriod, setSelectedGradingPeriod] = useState(null);
-  const [selectedItem, setSelectedItem] = useState(null);  // Store selected item for editing
-  const [studentGrades, setStudentGrades] = useState({});
-  const [existingGrades, setExistingGrades] = useState({});
-  const [isEditing, setIsEditing] = useState(false);
   const navigate = useNavigate();
+  const [filteredStudents, setFilteredStudents] = useState([]);
+  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [studentsPerPage] = useState(20);
+  const [students, setStudents] = useState([]);
+  const [subjects, setSubjects] = useState([]);
+  const [editingStudent, setEditingStudent] = useState(null);
+  const [gradesFetched, setGradesFetched] = useState(false);
+  const [schoolYears, setSchoolYears] = useState([]);
+  const [sections, setSections] = useState([]);
+  const [filteredSections, setFilteredSections] = useState([]);
   const [roleName, setRoleName] = useState('');
-  const [showDetailedView, setShowDetailedView] = useState(false); // New state to show the detailed view
-  const [percentages, setPercentages] = useState({
-    WW: 30,
-    PT: 50,
-    QA: 20,
+  const [filters, setFilters] = useState({
+    searchTerm: '',
+    school_year: '',
+    grade: '',
+    section: '',
+    status: ''
   });
 
-  // State to store grades detail
-  const [gradesDetailData, setGradesDetailData] = useState({});
+  useEffect(() => {
+    fetchStudents();
+    fetchSchoolYears();
+    fetchSections();
+  }, []);
 
-   // Handle opening the modal with data from the clicked item
-  const handleEditActivity = (item, index, type) => {
-    console.log('Editing item:', item); // Log the original item
-
-    // Normalize type to the abbreviation (if it's the full name)
-    const normalizedType = type === 'Written Works' ? 'WW' :
-                           type === 'Performance Task' ? 'PT' :
-                           type === 'Quarterly Assessment' ? 'QA' : type;
-
-    // Dynamically set the component_id based on the type, fallback to item.component_id if present
-    const componentId = normalizedType === 'WW' ? 1 :
-                        normalizedType === 'PT' ? 2 :
-                        normalizedType === 'QA' ? 3 : item.component_id;
-
-    // Create updated item by ensuring the id and component_id are included
-    const updatedItem = {
-      ...item,
-      component_id: componentId,  // Use the correct component_id based on type or item
-      id: item.id, // Ensure the id is included
-    };
-
-    console.log('Updated item:', updatedItem); // Log the updated item with the correct component_id and id
-
-    // Store the updated item in state
-    setSelectedItem({ ...updatedItem, index, type });
-
-    // Set the activity type based on the current type ('WW', 'PT', or 'QA')
-    setActivityType(normalizedType);  // Store the normalized type
-
-    // Open the modal to edit the activity
-    setShowAddActivityModal(true); // Open the modal
-};
-
-  
-  // Function to handle deleting the activity
-  const handleDeleteActivity = (item, index, type) => {
-    // Show confirmation dialog
-    const isConfirmed = window.confirm('Are you sure you want to delete this activity?');
-  
-    if (!isConfirmed) {
-      console.log('Deletion canceled');
-      return; // Exit if the user cancels the deletion
+  useEffect(() => {
+    if (filters.grade) {
+      // Filter sections based on the selected grade level
+      const sectionsForGrade = sections.filter(section => String(section.grade_level) === String(filters.grade));
+      setFilteredSections(sectionsForGrade);
+    } else {
+      setFilteredSections(sections);
     }
-  
-    console.log('Deleting item:', item); // Log the original item
-  
-    // Normalize type to the abbreviation (if it's the full name)
-    const normalizedType = type === 'Written Works' ? 'WW' :
-                           type === 'Performance Task' ? 'PT' :
-                           type === 'Quarterly Assessment' ? 'QA' : type;
-  
-    // Dynamically set the component_id based on the type, fallback to item.component_id if present
-    const componentId = normalizedType === 'WW' ? 1 :
-                        normalizedType === 'PT' ? 2 :
-                        normalizedType === 'QA' ? 3 : item.component_id;
-  
-    // Create the payload for deletion
-    const itemToDelete = {
-      id: item.id,                // Ensure the id is included
-      component_id: componentId,  // Use the correct component_id based on type or item
-    };
-  
-    console.log('Item to delete:', itemToDelete); // Log the item for deletion
-  
-    // Call the delete endpoint using axios
-    axios.delete('http://localhost:3001/delete-component', {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      data: itemToDelete, // Send id and component_id in the request body
-    })
-      .then(response => {
-        if (response.data.success) {
-          console.log(`Activity deleted successfully:`, itemToDelete);
-  
-          // Optional: Update state/UI after successful deletion
-          setSelectedItem(null); // Clear selected item
-  
-          // Fetch the updated components list after deletion
-          fetchComponentData(type); // Call the function that fetches components (pass the current type)
-        } else {
-          console.error('Failed to delete activity:', response.data.message);
-        }
-      })
-      .catch(error => {
-        console.error('Error deleting activity:', error);
-      });
-  };
-  
+  }, [filters.grade, sections]);
+
+  useEffect(() => {
+    const userId = localStorage.getItem('userId'); // Retrieve userId from localStorage
+    if (userId) {
+      console.log(`Retrieved userId from localStorage: ${userId}`); // Debugging log
+      fetchUserRole(userId);
+    } else {
+      console.error('No userId found in localStorage');
+    }
+  }, []);
+
   const fetchUserRole = async (userId) => {
     try {
       console.log(`Fetching role for user ID: ${userId}`); // Debugging log
@@ -149,1081 +74,432 @@ function GradesManagement() {
     }
   };
 
-  useEffect(() => {
-    const userId = localStorage.getItem('userId'); // Retrieve userId from localStorage
-    if (userId) {
-      console.log(`Retrieved userId from localStorage: ${userId}`); // Debugging log
-      fetchUserRole(userId);
-    } else {
-      console.error('No userId found in localStorage');
-    }
-  }, []);
-  
-  
-  // Handle updating the item in the data state
-  const handleUpdateActivity = async (e) => {
-    e.preventDefault();
-  
-    console.log('Selected Grading Period:', selectedGradingPeriod); // Log the value before using it
-  
-    const newActivity = {
-      id: selectedItem?.id || selectedItem?.item_id,
-      component_id: selectedItem?.component_id || (activityType === 'WW' ? 1 : activityType === 'PT' ? 2 : 3),
-      scores: parseFloat(e.target.scores.value),
-      total_items: parseInt(e.target.total_items.value, 10),
-      remarks: e.target.remarks.value,
-      student_id: selectedStudent?.student_id,
-      subject_name: selectedSubject?.subject_name,
-      period: selectedGradingPeriod,
-    };
-  
-    console.log('Saving new activity:', newActivity);
-  
+  const fetchStudents = async (appliedFilters = {}) => {
     try {
-      const response = await axios.post('http://localhost:3001/insert-component', newActivity, {
-        headers: { 'Content-Type': 'application/json' },
+      const response = await axios.get('http://localhost:3001/students', {
+        params: appliedFilters
       });
-  
-      if (response.data.success) {
-        const updatedActivity = response.data.updatedComponent || newActivity;
-  
-        // Update the relevant state based on the activity type
-        if (activityType === 'WW') {
-          setWrittenWorks((prev) =>
-            prev.map((item) => (item.id === updatedActivity.id ? updatedActivity : item))
-          );
-        } else if (activityType === 'PT') {
-          setPerformanceTasks((prev) =>
-            prev.map((item) => (item.id === updatedActivity.id ? updatedActivity : item))
-          );
-        } else if (activityType === 'QA') {
-          setQuarterlyAssessments((prev) =>
-            prev.map((item) => (item.id === updatedActivity.id ? updatedActivity : item))
-          );
-        }
-  
-        // Re-fetch the updated data from the server to ensure sync with backend
-        fetchComponentData(activityType);
-  
-        alert('Component updated successfully!');
-      } else {
-        alert(`Error: ${response.data.message}`);
-      }
-    } catch (error) {
-      console.error('Error saving activity:', error);
-      alert('Failed to save activity. Please try again.');
-    }
-  
-    setShowAddActivityModal(false); // Close the modal
-  };
-  
-  
-  
-  
-  
-
-  const calculateWeightedScore = (data, weight) => {
-    if (!data.length) {
-      console.log('No data found for this component');
-      return 0;
-    }
-
-    console.log('Raw data:', data);
-    
-    const totalPS = data.reduce((sum, item) => {
-      // Calculate percentage score (PS) for each item
-      const ps = Math.min(((item.scores / item.total_items) * 100), 100);
-      console.log(`Item scores: ${item.scores}, total_items: ${item.total_items}, PS: ${ps}`);
-      return sum + ps;
-    }, 0);
-
-    console.log('Total PS:', totalPS);
-    
-    // Calculate average PS
-    const averagePS = totalPS / data.length;
-    console.log('Average PS:', averagePS);
-    
-    // Calculate weighted score
-    const weightedScore = (averagePS * (weight / 100));
-    console.log(`Weight: ${weight}, Weighted Score: ${weightedScore}`);
-    
-    // Ensure weighted score doesn't exceed the component's weight
-    const finalScore = Math.min(weightedScore, weight);
-    console.log('Final Score:', finalScore);
-    
-    return finalScore;
-  };
-  
-  const calculateFinalGrade = () => {
-    // Calculate individual component scores
-    const wwScore = calculateWeightedScore(writtenWorks, percentages.WW);
-    const ptScore = calculateWeightedScore(performanceTasks, percentages.PT);
-    const qaScore = calculateWeightedScore(quarterlyAssessments, percentages.QA);
-
-    // Sum up all components
-    const finalGrade = wwScore + ptScore + qaScore;
-
-    // Ensure final grade doesn't exceed 100
-    const cappedFinalGrade = Math.min(finalGrade, 100);
-
-    // Return final grade formatted to 2 decimal places
-    return isNaN(cappedFinalGrade) ? 0 : cappedFinalGrade.toFixed(2);
-  };
-  
-  // Grade levels array
-  const gradeLevels = [7, 8, 9, 10];
-
-  // Handle grade level selection
-  const handleGradeClick = async (grade) => {
-    setSelectedGrade(grade);
-    setSelectedSection(null); // Reset section selection
-    setSubjects([]); // Reset subjects
-
-    try {
-      // Updated endpoint for fetching sections
-      const response = await axios.get(`http://localhost:3001/sections-for-assignment/${grade}`);
-      console.log('Fetched sections:', response.data); // Debug log
-      setSections(response.data);
-    } catch (error) {
-      console.error('Error fetching sections:', error);
-      setSections([]);
-    }
-  };
-
-  // Handle section selection
-  const handleSectionClick = async (section) => {
-    setSelectedSection(section);
-
-    try {
-      const response = await axios.get(`http://localhost:3001/subjects-for-assignment/${selectedGrade}`);
-      console.log('Fetched subjects:', response.data);
-      setSubjects(response.data);
-    } catch (error) {
-      console.error('Error fetching subjects:', error);
-      setSubjects([]);
-    }
-  };
-
-  // Add this new handler
-  const handleSectionInfoClick = () => {
-    setShowGradesTable(false);
-    fetchSectionStudents();
-  };
-
-  // Add this handler to go back
-  const handleBackClick = () => {
-    setShowGradesTable(true);
-  };
-
-  // Add this function to fetch students
-  const fetchSectionStudents = async () => {
-    try {
-      let url;
-  
-      if (selectedSubject?.id) {
-        url = `http://localhost:3001/section-students/${selectedSection?.section_id || 0}/${selectedGrade}/${selectedSubject.id}/${selectedSubject.type === 'elective' ? 'elective' : 'subject'}`;
-      } else if (selectedSection?.section_id) {
-        url = `http://localhost:3001/section-students/${selectedSection.section_id}/${selectedGrade}`;
-      } else {
-        console.error("No section or student specified for fetching students.");
-        return;
-      }
-  
-      console.log('Fetching students with URL:', url);
-      const response = await axios.get(url);
-      console.log('Fetched students:', response.data);
-      setStudents(response.data);
+      const sortedStudents = response.data.sort((a, b) => b.current_yr_lvl - a.current_yr_lvl);
+      setStudents(sortedStudents);
+      setFilteredStudents(sortedStudents);
     } catch (error) {
       console.error('Error fetching students:', error);
-      setStudents([]);
     }
   };
-  
-  
 
-  // Add handler for subject click
-  const handleSubjectClick = (subject) => {
-    console.log('Selected subject:', subject); // Debug log
-    setSelectedSubject({
-      subject_name: subject.subject_name,
-      type: subject.type,
-      id: subject.id
+  const fetchSchoolYears = async () => {
+    try {
+      const response = await axios.get('http://localhost:3001/api/school_years');
+      setSchoolYears(response.data);
+    } catch (error) {
+      console.error('Error fetching school years:', error);
+    }
+  };
+
+  const fetchSections = async () => {
+    try {
+      const response = await axios.get('http://localhost:3001/sections');
+      setSections(response.data);
+      setFilteredSections(response.data);
+    } catch (error) {
+      console.error('Error fetching sections:', error);
+    }
+  };
+
+  const handleStudentClick = async (student) => {
+    if (selectedStudent && selectedStudent.student_id === student.student_id) {
+      setSelectedStudent(null);
+      setSubjects([]);
+      setGradesFetched(false);
+      return;
+    }
+
+    setSelectedStudent(student);
+    setEditingStudent(null);
+    const gradeLevel = student.current_yr_lvl;
+    const fetchedSubjects = await fetchSubjects(student.student_id, gradeLevel);
+    await fetchGrades(student.student_id, gradeLevel, fetchedSubjects);
+  };
+
+  const fetchSubjects = async (studentId, gradeLevel) => {
+    if (!studentId || !gradeLevel) return [];
+
+    try {
+      const response = await axios.get('http://localhost:3001/api/subjects-card', {
+        params: { studentId, gradeLevel },
+      });
+      const subjectsData = response.data || [];
+      setSubjects(subjectsData);
+      return subjectsData;
+    } catch (error) {
+      console.error('Error fetching subjects:', error);
+      return [];
+    }
+  };
+
+  const handleGradeChange = (index, period, value) => {
+    setSubjects((prevSubjects) => {
+      const updatedSubjects = [...prevSubjects];
+      updatedSubjects[index] = { ...updatedSubjects[index], [period]: value };
+
+      const q1 = parseFloat(updatedSubjects[index].q1) || 0;
+      const q2 = parseFloat(updatedSubjects[index].q2) || 0;
+      const q3 = parseFloat(updatedSubjects[index].q3) || 0;
+      const q4 = parseFloat(updatedSubjects[index].q4) || 0;
+
+      const finalGrade = (q1 + q2 + q3 + q4) / 4;
+      updatedSubjects[index].final = isNaN(finalGrade) ? "" : finalGrade.toFixed(2);
+      updatedSubjects[index].remarks = finalGrade >= 75 ? "Passed" : "Failed";
+
+      return updatedSubjects;
     });
-    setShowSubjectGrades(true);
   };
 
-  // Add handler to go back to grades table
-  const handleBackToGrades = () => {
-    setShowSubjectGrades(false);
-    setSelectedSubject(null);
-  };
-
- // Add handler for student name click
-const handleStudentNameClick = (student) => {
-  setSelectedStudent({
-    ...student,
-    gradingPeriod: selectedGradingPeriod, // Include the selected grading period
-  });
-  fetchGradesDetail(student.student_id);
-  setShowStudentDetails(true);
-};
-
-
-  // Add handler to go back to subject grades table
-  const handleBackToSubjectGrades = () => {
-    setShowStudentDetails(false);
-    setSelectedStudent(null);
-  };
-
-  // Add handler for add button click
-  const handleAddActivity = (type) => {
-    if (selectedGradingPeriod === null) {
-        alert('Please select a grading period before adding an activity.');
+  const handleSaveChanges = async () => {
+    try {
+      if (!selectedStudent || subjects.length === 0) {
+        alert("No student or subjects selected.");
         return;
-    }
-    setActivityType(type); // 'WW', 'PT', or 'QA'
-    setSelectedItem(null); // Clear the selected item for adding new data
-    setShowAddActivityModal(true); // Open the modal
-};
+      }
 
+      const formattedSubjects = subjects.map(subject => ({
+        subject_name: subject.subject_name,
+        q1: subject.q1 || null,
+        q2: subject.q2 || null,
+        q3: subject.q3 || null,
+        q4: subject.q4 || null,
+      }));
 
-  // Add handler for modal close
-  const handleCloseModal = () => {
-    setShowAddActivityModal(false);
-    setActivityType('');
-  };
-
-  const handleSubmitGrades = async () => {
-    if (!selectedStudent || !selectedSubject || !selectedGradingPeriod) {
-      alert('Incomplete data. Please ensure all fields are selected.');
-      return;
-    }
-  
-    const periodValue = selectedGradingPeriod;
-  
-    if (![1, 2, 3, 4].includes(periodValue)) {
-      alert('Invalid grading period selected');
-      return;
-    }
-  
-    const finalGrade = calculateFinalGrade();
-    const wwScore = calculateWeightedScore(writtenWorks, percentages.WW);
-    const ptScore = calculateWeightedScore(performanceTasks, percentages.PT);
-    const qaScore = calculateWeightedScore(quarterlyAssessments, percentages.QA);
-  
-    const gradeData = {
-      grade_level: selectedGrade,
-      subject_name: selectedSubject.subject_name,
-      grade: finalGrade,
-      period: periodValue,
-      student_id: selectedStudent.student_id,
-      student_name: selectedStudent.name,
-      school_year_id: 1,
-      written_works: wwScore,
-      performance_task: ptScore,
-      quarterly_assessment: qaScore,
-    };
-  
-    console.log('Submitting grade data:', gradeData);
-  
-    try {
-      const response = await axios.post('http://localhost:3001/submit-grade', gradeData, {
-        headers: { 'Content-Type': 'application/json' },
+      const response = await axios.post("http://localhost:3001/api/save-grade", {
+        student_id: selectedStudent.student_id,
+        student_name: `${selectedStudent.firstname} ${selectedStudent.lastname}`,
+        grade_level: selectedStudent.current_yr_lvl,
+        school_year_id: selectedStudent.school_year_id,
+        subjects: formattedSubjects
       });
-  
+
       if (response.data.success) {
-        alert(isEditing ? 'Grades updated successfully!' : 'Grades submitted successfully!');
-        setIsEditing(false);
-        checkExistingGrade(
-          selectedStudent.student_id,
-          selectedSubject.subject_name,
-          periodValue
-        );
+        alert("Grades updated successfully!");
+        setEditingStudent(null);
+        setSelectedStudent(null);
+        setSubjects([]);
+        setGradesFetched(false);
       } else {
-        alert(`Error: ${response.data.message}`);
+        alert("Failed to save grades.");
       }
     } catch (error) {
-      console.error('Error submitting grades:', error);
-      alert('Failed to submit grades. Please try again.');
+      console.error("Error saving grades:", error.response?.data || error.message);
+      alert("Failed to save grades.");
     }
   };
-  
 
-  
-  const handleEditMode = () => {
-    setIsEditing(true);
-  };
-  
-  const handleCancelEdit = () => {
-    setIsEditing(false);
+  const handleEditClick = async (student) => {
+    if (editingStudent && editingStudent.student_id === student.student_id) {
+      setEditingStudent(null);
+      setSelectedStudent(null);
+      setSubjects([]);
+      setGradesFetched(false);
+      return;
+    }
+
+    setSelectedStudent(student);
+    setEditingStudent(student);
+    const gradeLevel = student.current_yr_lvl;
+    const fetchedSubjects = await fetchSubjects(student.student_id, gradeLevel);
+    await fetchGrades(student.student_id, gradeLevel, fetchedSubjects);
   };
 
-  const fetchComponentData = async (componentType) => {
-    const componentId = componentType === 'WW' ? 1 : componentType === 'PT' ? 2 : 3;
-  
+  const fetchGrades = async (studentId, gradeLevel, existingSubjects) => {
+    if (!studentId || !gradeLevel || gradesFetched) return;
+
     try {
-      const response = await axios.get('http://localhost:3001/get-components', {
-        params: {
-          student_id: selectedStudent?.student_id,
-          subject_name: selectedSubject?.subject_name,
-          component_id: componentId,
-          period: selectedGradingPeriod, 
-        },
+      const response = await axios.get('http://localhost:3001/api/grades', {
+        params: { studentId, gradeLevel },
       });
 
-      console.log(`Fetched ${componentType} data for ${selectedGradingPeriod}:`, response.data);
+      if (response.data.success) {
+        const fetchedGrades = response.data.grades;
+        const updatedSubjects = (existingSubjects || []).map(subject => {
+          const subjectGrades = fetchedGrades.find(grade => grade.subject_name === subject.subject_name) || {};
+          return { ...subject, ...subjectGrades };
+        });
 
-      // Update the state based on the component type
-      if (componentType === 'WW') {
-        setWrittenWorks(response.data);
-      } else if (componentType === 'PT') {
-        setPerformanceTasks(response.data);
-      } else if (componentType === 'QA') {
-        setQuarterlyAssessments(response.data);
+        setSubjects(updatedSubjects);
+        setGradesFetched(true);
       }
-
     } catch (error) {
-      console.error(`Error fetching ${componentType} data:`, error);
+      console.error('Error fetching grades:', error);
     }
   };
-  
-  
 
-  
+  const handleSearch = (searchTerm) => {
+    setFilters((prevFilters) => ({ ...prevFilters, searchTerm }));
+    applyFilters({ ...filters, searchTerm });
+  };
 
-  useEffect(() => {
-    if (selectedStudent && selectedSubject) {
-      fetchComponentData('WW');
-      fetchComponentData('PT');
-      fetchComponentData('QA');
+  const handleFilterChange = (type, value) => {
+    setFilters(prevFilters => ({
+      ...prevFilters,
+      [type]: value
+    }));
+  };
+
+  const applyFilters = () => {
+    let filtered = students;
+
+    if (filters.school_year) {
+      filtered = filtered.filter(student => String(student.school_year) === filters.school_year);
     }
-  }, [selectedStudent, selectedSubject, selectedGradingPeriod]);
-  
-  
-
-  // Update useEffect to fetch students when subject is selected
-  useEffect(() => {
-    if (selectedSubject && selectedSection) {
-      fetchSectionStudents();
+    if (filters.grade) {
+      filtered = filtered.filter(student => student.current_yr_lvl === filters.grade);
     }
-  }, [selectedSubject, selectedSection]);
-
-  // Add this new function to fetch grades detail
-  const fetchGradesDetail = async (studentId) => {
-    try {
-      const response = await axios.get('http://localhost:3001/grades-detail', {
-        params: { student_id: studentId },
+    if (filters.section) {
+      filtered = filtered.filter(student => String(student.section_name) === filters.section);
+    }
+    if (filters.status) {
+      filtered = filtered.filter(student => student.student_status === filters.status);
+    }
+    if (filters.searchTerm) {
+      filtered = filtered.filter(student => {
+        const firstName = student.firstname ? student.firstname.toLowerCase() : "";
+        const lastName = student.lastname ? student.lastname.toLowerCase() : "";
+        return firstName.includes(filters.searchTerm.toLowerCase()) || 
+          lastName.includes(filters.searchTerm.toLowerCase());
       });
-  
-      console.log('Fetched grades detail:', response.data);
-  
-      if (Array.isArray(response.data)) {
-        setGradesDetailData((prev) => ({
-          ...prev,
-          [studentId]: response.data,
-        }));
-      } else {
-        console.warn('Grades detail response is not an array.');
-        setGradesDetailData((prev) => ({
-          ...prev,
-          [studentId]: [],
-        }));
-      }
-    } catch (error) {
-      console.error('Error fetching grades detail:', error);
-      setGradesDetailData((prev) => ({
-        ...prev,
-        [studentId]: [],
-      }));
     }
-  };
-  
 
-  // Fetch grades detail when the component mounts
-  useEffect(() => {
-    fetchGradesDetail();
-  }, []); // Empty dependency array ensures it runs only once
-
-  // Update useEffect to fetch grades detail when students are fetched
-  useEffect(() => {
-    const fetchGrades = async () => {
-      if (!subjects.length || !students.length) return;
-
-      const grades = {};
-      
-      // Fetch grades for each student and each subject
-      for (const student of students) {
-        for (const subject of subjects) {
-          try {
-            const response = await axios.get('http://localhost:3001/student-grades', {
-              params: {
-                grade_level: selectedGrade,
-                subject_name: subject.subject_name,
-                student_id: student.student_id
-              }
-            });
-            
-            const key = `${student.student_id}-${subject.subject_name}`;
-            grades[key] = response.data;
-          } catch (error) {
-            console.error('Error fetching grades:', error);
-            const key = `${student.student_id}-${subject.subject_name}`;
-            grades[key] = [];
-          }
-        }
-      }
-      
-
-
-      setStudentGrades(grades);
-    };
-
-    fetchGrades();
-  }, [subjects, students, selectedGrade, gradesDetailData]); // Add gradesDetailData to dependencies
-
-  // Add validation when changing percentages
-  const handlePercentageChange = (component, newValue) => {
-    const updatedPercentages = {
-      ...percentages,
-      [component]: newValue
-    };
-    
-    // Calculate total of all percentages
-    const total = Object.values(updatedPercentages).reduce((sum, value) => sum + value, 0);
-    
-    if (total <= 100) {
-      setPercentages(updatedPercentages);
-    } else {
-      alert('Total percentage cannot exceed 100%');
-    }
+    setFilteredStudents(filtered);
+    setCurrentPage(1);
   };
 
-  const transmutedGrade = (initialGrade) => {
-    const transmutationTable = {
-      100: 100,
-      98.40: 99,
-      96.80: 98,
-      95.20: 97,
-      93.60: 96,
-      92.00: 95,
-      90.40: 94,
-      88.80: 93,
-      87.20: 92,
-      85.60: 91,
-      84.00: 90,
-      82.40: 89,
-      80.80: 88,
-      79.20: 87,
-      77.60: 86,
-      76.00: 85,
-      74.40: 84,
-      72.80: 83,
-      71.20: 82,
-      69.60: 81,
-      68.00: 80,
-      66.40: 79,
-      64.80: 78,
-      63.20: 77,
-      61.60: 76,
-      60.00: 75,  // Passing grade
-      0: 74       // Failed
-    };
-
-    // Find the appropriate transmuted grade
-    const score = parseFloat(initialGrade);
-    let transmuted = 74; // Default to failing grade
-
-    for (const [key, value] of Object.entries(transmutationTable)) {
-      if (score >= parseFloat(key)) {
-        transmuted = value;
-        break;
-      }
-    }
-
-    return transmuted;
+  const handleApplyFilters = () => {
+    console.log('Applying filters:', filters);
+    fetchStudents(filters);
   };
 
-  // Add this new function to check existing grades
-  const checkExistingGrade = async (studentId, subjectName, period) => {
-    try {
-      const response = await axios.get('http://localhost:3001/check-grade', {
-        params: {
-          student_id: studentId,
-          subject_name: subjectName,
-          period: period
-        }
-      });
-      
-      // Update the existingGrades state with the result
-      setExistingGrades(prev => ({
-        ...prev,
-        [`${studentId}-${subjectName}-${period}`]: response.data.exists
-      }));
-    } catch (error) {
-      console.error('Error checking existing grade:', error);
-    }
-  };
-
-  // Add useEffect to check existing grade when student details are shown
-  useEffect(() => {
-    if (selectedStudent && selectedSubject && selectedGradingPeriod) {
-      const periodValue = {
-        '1st Grading': 1,
-        '2nd Grading': 2,
-        '3rd Grading': 3,
-        '4th Grading': 4,
-      }[selectedGradingPeriod];
-      
-      checkExistingGrade(
-        selectedStudent.student_id,
-        selectedSubject.subject_name,
-        periodValue
-      );
-    }
-  }, [selectedStudent, selectedSubject, selectedGradingPeriod]);
-
-  // Fetch all grades details for students
-  const fetchAllGradesDetails = async () => {
-    try {
-      const details = await Promise.all(
-        students.map(student => 
-          axios.get('http://localhost:3001/grades-detail', {
-            params: { student_id: student.student_id }
-          }).then(response => ({
-            studentId: student.student_id,
-            grades: response.data
-          }))
-        )
-      );
-
-      // Map the results to a more usable format
-      const gradesMap = {};
-      details.forEach(detail => {
-        gradesMap[detail.studentId] = detail.grades; // Store grades detail by student ID
-      });
-      setGradesDetailData(gradesMap); // Store the grades detail in state
-    } catch (error) {
-      console.error('Error fetching grades details:', error);
-      setGradesDetailData({}); // Reset to empty object on error
-    }
-  };
-
-  useEffect(() => {
-    fetchAllGradesDetails(); // Fetch grades details when students change
-  }, [students]);
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+  const indexOfLastStudent = currentPage * studentsPerPage;
+  const indexOfFirstStudent = indexOfLastStudent - studentsPerPage;
+  const currentStudents = filteredStudents.slice(indexOfFirstStudent, indexOfLastStudent);
 
   return (
-    <div className="teacher-grades-container">
-      <h2 className='teacher-grades-title'>Grades</h2>
-      
-      {!showSubjectGrades && !showGradesTable && (
-        <div className="teacher-grades-detailed-view">
-          <button onClick={handleBackClick} className="teacher-grades-back-btn">
-            Back
-          </button>
-          <div className="teacher-grades-section-header">
-            <h3>{selectedSection.section_name}</h3>
-            <p>
-              Class Advisor: {selectedSection.adviser_name ? 
-                selectedSection.adviser_name.toUpperCase() : 
-                <span className="not-assigned">NOT ASSIGNED</span>
-              }
-            </p>
-          </div>
-          <div className="teacher-grades-period-selector">
-            <label htmlFor="grading-period">Grading Period:</label>
-            <select
-              id="grading-period"
-              value={selectedGradingPeriod}
-              onChange={(e) => setSelectedGradingPeriod(parseInt(e.target.value, 10))}
-            >
-              <option value="">Select Grading Period</option>
-              <option value="1">1st Grading</option>
-              <option value="2">2nd Grading</option>
-              <option value="3">3rd Grading</option>
-              <option value="4">4th Grading</option>
-            </select>
-          </div>
-          <div className="teacher-grades-table-container">
-            {students.length > 0 ? (
-              <table className="teacher-grades-data-table">
-                <thead>
-                  <tr>
-                    <th>Student ID</th>
-                    <th>Name</th>
-                    {subjects.map((subject, index) => (
-                      <th key={index}>{subject.subject_name}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {students.map((student, index) => (
-                    <tr key={index} className="clickable" onClick={() => handleStudentNameClick(student)}>
-                      <td>{student.student_id}</td>
-                      <td 
-                        className="teacher-grades-student-name"
-                      >
-                        {student.name}
-                      </td>
-                      {subjects.map((subject, subIndex) => {
-                        const key = `${student.student_id}-${subject.subject_name}`;
-                        const gradeData = studentGrades[key] || [];
-                        const periodGrade = gradeData.find(g => 
-                          g.period === parseInt(selectedGradingPeriod)
-                        )?.grade || '-';
-                        return (
-                          <td key={subIndex}>
-                            {periodGrade}
-                          </td>
-                        );
-                      })}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            ) : (
-              <div className="teacher-grades-empty-state">
-                <p>No students found in this section.</p>
-                <p>Students will appear here once they are enrolled in this section.</p>
-              </div>
-            )}
-          </div>
+    <div className="grades-management-container">
+      <div className="grades-management-header">
+        <h1 className="grades-management-title">Grades</h1>
+      </div>
+
+      <div className="student-mgmt-filters">
+        <div className="student-mgmt-search">
+          <input
+            type="text"
+            placeholder="Search by student name..."
+            onChange={(e) => handleSearch(e.target.value)}
+          />
         </div>
-      )}
-
-      {!showSubjectGrades && showGradesTable && (
-        <div className="teacher-grades-table">
-          <div className="teacher-grades-column">
-            <h3>Grade Levels</h3>
-            <div className="teacher-grades-buttons">
-              {gradeLevels.map((grade) => (
-                <button
-                  key={grade}
-                  onClick={() => handleGradeClick(grade)}
-                  className={`teacher-grades-btn ${selectedGrade === grade ? 'active' : ''}`}
-                  data-tooltip="Click to select grade level"
-                >
-                  Grade {grade}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="teacher-grades-column">
-            <h3>Sections</h3>
-            {selectedGrade ? (
-              <div className="teacher-grades-section-list">
-                {sections.length > 0 ? (
-                  sections.map((section, index) => (
-                    <button
-                      key={index}
-                      onClick={() => handleSectionClick(section)}
-                      className={`teacher-grades-btn ${selectedSection?.section_name === section.section_name ? 'active' : ''}`}
-                      data-tooltip="Click to view section"
-                    >
-                      {section.section_name}
-                    </button>
-                  ))
-                ) : (
-                  <p>No sections found for Grade {selectedGrade}</p>
-                )}
-              </div>
-            ) : (
-              <p>Please select a grade level</p>
-            )}
-          </div>
-
-          <div className="teacher-grades-column">
-            <h3>Subjects</h3>
-            {selectedSection && (
-              <div 
-                className="teacher-grades-section-info"
-                onClick={handleSectionInfoClick}
-                data-tooltip="Click to view section details"
-              >
-                <span><strong>{selectedSection.section_name}</strong></span>
-                <span>{selectedSection.adviser_name?.toUpperCase() || 'NOT ASSIGNED'}</span>
-              </div>
-            )}
-            <div className="teacher-grades-subject-list">
-              {selectedSection ? (
-                subjects.length > 0 ? (
-                  subjects.map((subject, index) => (
-                    <button
-                      key={index}
-                      className={`teacher-grades-btn ${subject.type === 'elective' ? 'elective' : ''}`}
-                      onClick={() => handleSubjectClick({
-                        subject_name: subject.subject_name,
-                        type: subject.type,
-                        id: subject.id
-                      })}
-                      data-tooltip="Click to view subject grades"
-                    >
-                      {subject.subject_name}
-                      {subject.type === 'elective' ? ' (Elective)' : ''}
-                    </button>
-                  ))
-                ) : (
-                  <p>No subjects found for Grade {selectedGrade}</p>
-                )
-              ) : (
-                <p>Please select a section</p>
-              )}
-            </div>
-          </div>
+        <div className="student-mgmt-filters-group">
+          <select
+            value={filters.school_year}
+            onChange={(e) => handleFilterChange('school_year', e.target.value)}
+          >
+            <option value="">Select School Year</option>
+            {schoolYears.map((year) => (
+              <option key={year.school_year_id} value={year.school_year}>
+                {year.school_year}
+              </option>
+            ))}
+          </select>
+          <select
+            value={filters.grade}
+            onChange={(e) => handleFilterChange('grade', e.target.value)}
+          >
+            <option value="">Select Grade Level</option>
+            {[7, 8, 9, 10].map((grade) => (
+              <option key={grade} value={grade}>Grade {grade}</option>
+            ))}
+          </select>
+          <select
+            value={filters.section}
+            onChange={(e) => handleFilterChange('section', e.target.value)}
+          >
+            <option value="">Select Section</option>
+            {filteredSections.map((section) => (
+              <option key={section.section_id} value={section.section_name}>
+                {section.section_name}
+              </option>
+            ))}
+          </select>
         </div>
-      )}
+        <button onClick={handleApplyFilters}>Filter</button>
+      </div>
 
-      {showSubjectGrades && !showStudentDetails && (
-        <div className="teacher-grades-subject-view">
-          <button onClick={handleBackToGrades} className="teacher-grades-back-btn">
-            Back
-          </button>
-          
-          <div className="teacher-grades-breadcrumb">
-            <span className="breadcrumb-item">Grade {selectedGrade}</span>
-            <span className="breadcrumb-separator">›</span>
-            <span className="breadcrumb-item">{selectedSection.section_name}</span>
-            <span className="breadcrumb-separator">›</span>
-            <span className="breadcrumb-item active">{selectedSubject.subject_name}</span>
-          </div>
-          
-          <div className="teacher-grades-subject-header">
-            <h3>
-              {selectedSubject.subject_name}
-              {selectedSubject.type === 'elective' ? ' (Elective)' : ''} - 
-              Grade {selectedGrade} - 
-              {selectedSection.section_name}
-            </h3>
-            
-            <div className="teacher-grades-period-selector">
-              <label htmlFor="grading-period">Grading Period:</label>
-              <select
-                id="grading-period"
-                value={selectedGradingPeriod}
-                onChange={(e) => setSelectedGradingPeriod(parseInt(e.target.value, 10))}
-              >
-                <option value="">Select Grading Period</option>
-                <option value="1">1st Grading</option>
-                <option value="2">2nd Grading</option>
-                <option value="3">3rd Grading</option>
-                <option value="4">4th Grading</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="teacher-grades-table-container">
-            <table className="teacher-grades-data-table">
-              <thead>
+      <div className="grades-management-table-container">
+        <table className="grades-management-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Student Name</th>
+              <th>Grade Level</th>
+              <th>Section</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {currentStudents.map((student, index) => (
+              <React.Fragment key={student.student_id}>
                 <tr>
-                  <th>Student ID</th>
-                  <th>Name</th>
-                  <th>Written Works ({percentages.WW}%)</th>
-                  <th>Performance Task ({percentages.PT}%)</th>
-                  <th>Quarterly Assessment ({percentages.QA}%)</th>
-                  <th>Grade</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {students.map((student, index) => {
-                  const gradesDetail = gradesDetailData[student.student_id] || [];
-                  const gradesDetailForPeriod = gradesDetail.filter(
-                    (detail) => detail.period === selectedGradingPeriod
-                  );
-
-                  return (
-                    <tr key={index} className="clickable" onClick={() => handleStudentNameClick(student)}>
-                      <td>{student.student_id}</td>
-                      <td 
-                        className="teacher-grades-student-name"
-                        data-tooltip="Click to view student details"
+                  <td>{indexOfFirstStudent + index + 1}</td>
+                  <td>
+                    {student.firstname} {student.middlename && `${student.middlename[0]}.`} {student.lastname}
+                  </td>
+                  <td>Grade {student.current_yr_lvl}</td>
+                  <td>Section {student.section_name}</td>
+                  <td>
+                    <div className="grades-management-actions">
+                      <button 
+                        className="grades-management-btn grades-management-btn-view"
+                        onClick={() => handleStudentClick(student)}
                       >
-                        {student.name}
-                      </td>
-                      {gradesDetailForPeriod.length > 0 ? (
+                        View
+                      </button>
+                      {(roleName !== 'principal' && roleName !== 'registrar' && roleName !== 'grade_level_coordinator') && (
                         <>
-                          <td>{gradesDetailForPeriod[0].written_works || 0}</td>
-                          <td>{gradesDetailForPeriod[0].performance_task || 0}</td>
-                          <td>{gradesDetailForPeriod[0].quarterly_assessment || 0}</td>
-                          <td>
-                            {
-                              Math.round(
-                                (gradesDetailForPeriod[0].written_works || 0) +
-                                (gradesDetailForPeriod[0].performance_task || 0) +
-                                (gradesDetailForPeriod[0].quarterly_assessment || 0)
-                              )
-                            }
-                          </td>
-                          <td
-                            className={
-                              Math.round(
-                                (gradesDetailForPeriod[0].written_works || 0) +
-                                (gradesDetailForPeriod[0].performance_task || 0) +
-                                (gradesDetailForPeriod[0].quarterly_assessment || 0)
-                              ) >= 75
-                                ? 'teacher-grades-status-passed'
-                                : 'teacher-grades-status-failed'
-                            }
-                          >
-                            {
-                              Math.round(
-                                (gradesDetailForPeriod[0].written_works || 0) +
-                                (gradesDetailForPeriod[0].performance_task || 0) +
-                                (gradesDetailForPeriod[0].quarterly_assessment || 0)
-                              ) >= 75
-                                ? 'Passed'
-                                : 'Failed'
-                            }
-                          </td>
-                        </>
-                      ) : (
-                        <>
-                          <td>0</td>
-                          <td>0</td>
-                          <td>0</td>
-                          <td>0</td>
-                          <td></td>
-                        </>
+                      <button 
+                        className={`grades-management-btn grades-management-btn-edit ${editingStudent && editingStudent.student_id === student.student_id ? 'cancel' : ''}`}
+                        onClick={() => handleEditClick(student)}
+                      >
+                        {editingStudent && editingStudent.student_id === student.student_id ? "Cancel" : "Edit"}
+                      </button>
+                      {editingStudent && editingStudent.student_id === student.student_id && (
+                        <button 
+                          className="grades-management-btn grades-management-btn-save"
+                          onClick={handleSaveChanges}
+                        >
+                          Save
+                        </button>
                       )}
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {showStudentDetails && (
-        <div className="teacher-grades-details-view">
-          <button onClick={handleBackToSubjectGrades} className="teacher-grades-back-btn">
-            Back
-          </button>
-          <div className="teacher-grades-student-header">
-            <div className="teacher-grades-student-name-card">
-              <h4>{selectedStudent.name}</h4>
-            </div>
-            <h3>
-              {selectedSubject.subject_name} 
-              {selectedSubject.type === 'elective' ? ' (Elective)' : ''} - 
-              Grade {selectedGrade} - 
-              {selectedSection.section_name}
-            </h3>
-            <div className="teacher-grades-student-info">
-              <div className="teacher-grades-student-info-card">
-                <div className="info-label">ID</div>
-                <div className="info-value">{selectedStudent.student_id}</div>
-              </div>
-              
-              <div className="teacher-grades-student-info-card">
-                <div className="info-label">Period</div>
-                <div className="info-value">{selectedStudent.gradingPeriod}</div>
-              </div>
-              
-              <div className="teacher-grades-student-info-card">
-                <div className="info-label">Section</div>
-                <div className="info-value">{selectedSection.section_name}</div>
-              </div>
-              
-              <div className="teacher-grades-student-info-card">
-                <div className="info-label">Grade</div>
-                <div className="info-value">{selectedGrade}</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="teacher-grades-details">
-            {/* Grade components will be rendered here */}
-          </div>
-
-          <div className="teacher-grades-summary">
-          <div className="grade-columns">
-              {/* Written Works */}
-              <GradeDetail
-                title="Written Works"
-                percentage={percentages.WW}
-                data={writtenWorks}
-                onAddActivity={() => handleAddActivity('WW')}
-                onEditActivity={handleEditActivity}
-                onDeleteActivity={handleDeleteActivity}
-                onPercentageChange={(newPercentage) => handlePercentageChange('WW', newPercentage)}
-                otherPercentages={percentages}
-                isLocked={!isEditing && existingGrades[`${selectedStudent?.student_id}-${selectedSubject?.subject_name}-${
-                  {
-                    '1st Grading': 1,
-                    '2nd Grading': 2,
-                    '3rd Grading': 3,
-                    '4th Grading': 4
-                  }[selectedGradingPeriod]
-                }`]}
-              />
-
-              {/* Performance Task */}
-              <GradeDetail
-                title="Performance Task"
-                percentage={percentages.PT}
-                data={performanceTasks}
-                onAddActivity={() => handleAddActivity('PT')}
-                onEditActivity={handleEditActivity}
-                onDeleteActivity={handleDeleteActivity}
-                onPercentageChange={(newPercentage) => handlePercentageChange('PT', newPercentage)}
-                otherPercentages={percentages}
-                isLocked={!isEditing && existingGrades[`${selectedStudent?.student_id}-${selectedSubject?.subject_name}-${
-                  {
-                    '1st Grading': 1,
-                    '2nd Grading': 2,
-                    '3rd Grading': 3,
-                    '4th Grading': 4
-                  }[selectedGradingPeriod]
-                }`]}
-              />
-
-              {/* Quarterly Assessment */}
-              <GradeDetail
-                title="Quarterly Assessment"
-                percentage={percentages.QA}
-                data={quarterlyAssessments}
-                onAddActivity={() => handleAddActivity('QA')}
-                onEditActivity={handleEditActivity}
-                onDeleteActivity={handleDeleteActivity}
-                onPercentageChange={(newPercentage) => handlePercentageChange('QA', newPercentage)}
-                otherPercentages={percentages}
-                isLocked={!isEditing && existingGrades[`${selectedStudent?.student_id}-${selectedSubject?.subject_name}-${
-                  {
-                    '1st Grading': 1,
-                    '2nd Grading': 2,
-                    '3rd Grading': 3,
-                    '4th Grading': 4
-                  }[selectedGradingPeriod]
-                }`]}
-              />
-            </div>
-            <div className="teacher-grades-detail-card">
-              <h4>Grade Summary</h4>
-              <table className="teacher-grades-data-table">
-                <thead>
+                      </>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+                {selectedStudent && selectedStudent.student_id === student.student_id && (
                   <tr>
-                    <th>Component</th>
-                    <th>Score</th>
-                    <th>Weight</th>
+                    <td colSpan="5">
+                      <div className="grades-details-container">
+                        <h3 className="grades-details-title">Grades for {student.firstname} {student.lastname}</h3>
+                        <table className="grades-details-table">
+                          <thead>
+                            <tr>
+                              <th>Subjects</th>
+                              <th>1st Grading</th>
+                              <th>2nd Grading</th>
+                              <th>3rd Grading</th>
+                              <th>4th Grading</th>
+                              <th>Final Grade</th>
+                              <th>Remarks</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {subjects?.length > 0 ? (
+                              subjects.map((subject, index) => (
+                                <tr key={index}>
+                                  <td>{subject.subject_name}</td>
+                                  <td>
+                                    {editingStudent ? (
+                                      <input
+                                        type="text"
+                                        value={subject.q1 || ""}
+                                        onChange={(e) => handleGradeChange(index, "q1", e.target.value)}
+                                      />
+                                    ) : (
+                                      subject.q1 || "___"
+                                    )}
+                                  </td>
+                                  <td>
+                                    {editingStudent ? (
+                                      <input
+                                        type="text"
+                                        value={subject.q2 || ""}
+                                        onChange={(e) => handleGradeChange(index, "q2", e.target.value)}
+                                      />
+                                    ) : (
+                                      subject.q2 || "___"
+                                    )}
+                                  </td>
+                                  <td>
+                                    {editingStudent ? (
+                                      <input
+                                        type="text"
+                                        value={subject.q3 || ""}
+                                        onChange={(e) => handleGradeChange(index, "q3", e.target.value)}
+                                      />
+                                    ) : (
+                                      subject.q3 || "___"
+                                    )}
+                                  </td>
+                                  <td>
+                                    {editingStudent ? (
+                                      <input
+                                        type="text"
+                                        value={subject.q4 || ""}
+                                        onChange={(e) => handleGradeChange(index, "q4", e.target.value)}
+                                      />
+                                    ) : (
+                                      subject.q4 || "___"
+                                    )}
+                                  </td>
+                                  <td>
+                                    {(() => {
+                                      const q1 = parseFloat(subject.q1) || 0;
+                                      const q2 = parseFloat(subject.q2) || 0;
+                                      const q3 = parseFloat(subject.q3) || 0;
+                                      const q4 = parseFloat(subject.q4) || 0;
+                                      const finalGrade = (q1 + q2 + q3 + q4) / 4 || "___";
+                                      return isNaN(finalGrade) ? "___" : finalGrade.toFixed(2);
+                                    })()}
+                                  </td>
+                                  <td className={(() => {
+                                    const q1 = parseFloat(subject.q1) || 0;
+                                    const q2 = parseFloat(subject.q2) || 0;
+                                    const q3 = parseFloat(subject.q3) || 0;
+                                    const q4 = parseFloat(subject.q4) || 0;
+                                    const finalGrade = (q1 + q2 + q3 + q4) / 4;
+                                    return isNaN(finalGrade) ? "" : finalGrade >= 75 ? "passed" : "failed";
+                                  })()}>
+                                    {(() => {
+                                      const q1 = parseFloat(subject.q1) || 0;
+                                      const q2 = parseFloat(subject.q2) || 0;
+                                      const q3 = parseFloat(subject.q3) || 0;
+                                      const q4 = parseFloat(subject.q4) || 0;
+                                      const finalGrade = (q1 + q2 + q3 + q4) / 4;
+                                      return isNaN(finalGrade) ? "___" : finalGrade >= 75 ? "Passed" : "Failed";
+                                    })()}
+                                  </td>
+                                </tr>
+                              ))
+                            ) : (
+                              <tr>
+                                <td colSpan="7" style={{ textAlign: "center" }}>No academic records available.</td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>Written Works</td>
-                    <td>{calculateWeightedScore(writtenWorks, percentages.WW)}</td>
-                    <td>{percentages.WW}%</td>
-                  </tr>
-                  <tr>
-                    <td>Performance Task</td>
-                    <td>{calculateWeightedScore(performanceTasks, percentages.PT)}</td>
-                    <td>{percentages.PT}%</td>
-                  </tr>
-                  <tr>
-                    <td>Quarterly Assessment</td>
-                    <td>{calculateWeightedScore(quarterlyAssessments, percentages.QA)}</td>
-                    <td>{percentages.QA}%</td>
-                  </tr>
-                  <tr>
-                    <td colSpan="2">Final Grade</td>
-                    <td>{calculateFinalGrade()}</td>
-                  </tr>
-                </tbody>
-              </table>
+                )}
+              </React.Fragment>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
-              {existingGrades[`${selectedStudent?.student_id}-${selectedSubject?.subject_name}-${
-                {
-                  '1st Grading': 1,
-                  '2nd Grading': 2,
-                  '3rd Grading': 3,
-                  '4th Grading': 4
-                }[selectedGradingPeriod]
-              }`] ? (
-                isEditing ? (
-                  <div className="teacher-grades-button-group">
-                    <button className="teacher-grades-submit-btn" onClick={handleSubmitGrades}>
-                      Update Grades
-                    </button>
-                    <button className="teacher-grades-edit-btn" onClick={handleCancelEdit}>
-                      Cancel
-                    </button>
-                  </div>
-                ) : (
-                  <button className="teacher-grades-edit-btn" onClick={handleEditMode}>
-                    Edit Grades
-                  </button>
-                )
-              ) : (
-                roleName !== 'principal' && roleName !== 'grade_level_coordinator' && (
-                  <button className="teacher-grades-submit-btn" onClick={handleSubmitGrades}>
-                    Submit Grades
-                  </button>
-                )
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showAddActivityModal && (
-        <div className="teacher-grades-modal-overlay" onClick={handleCloseModal}>
-          <div className="teacher-grades-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="teacher-grades-modal-header">
-              <h3>
-                {selectedItem
-                  ? `Edit ${selectedItem.type === 'WW' ? 'Written Work' : selectedItem.type === 'PT' ? 'Performance Task' : 'Quarterly Assessment'}`
-                  : `Add ${activityType === 'WW' ? 'Written Work' : activityType === 'PT' ? 'Performance Task' : 'Quarterly Assessment'}`}
-              </h3>
-              <button className="teacher-grades-modal-close" onClick={handleCloseModal}>
-                &times;
-              </button>
-            </div>
-            <form onSubmit={handleUpdateActivity}>
-              <div className="teacher-grades-form-group">
-                <label>Activity Name</label>
-                <input
-                  type="text"
-                  name="remarks"
-                  defaultValue={selectedItem?.remarks || ''}
-                  placeholder="Enter activity name"
-                  required
-                />
-              </div>
-              <div className="teacher-grades-form-group">
-                <label>Score</label>
-                <input
-                  type="number"
-                  name="scores"
-                  defaultValue={selectedItem?.scores || ''}
-                  placeholder="Enter score"
-                  min="0"
-                  required
-                />
-              </div>
-              <div className="teacher-grades-form-group">
-                <label>Total Items</label>
-                <input
-                  type="number"
-                  name="total_items"
-                  defaultValue={selectedItem?.total_items || ''}
-                  placeholder="Enter total items"
-                  min="1"
-                  required
-                />
-              </div>
-              <div className="teacher-grades-button-group">
-                <button type="button" className="teacher-grades-btn" onClick={handleCloseModal}>
-                  Cancel
-                </button>
-                <button type="submit" className="teacher-grades-submit-btn">
-                  {selectedItem ? 'Update' : 'Save'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <Pagination
+        totalItems={filteredStudents.length}
+        itemsPerPage={studentsPerPage}
+        currentPage={currentPage}
+        onPageChange={paginate}
+      />
     </div>
   );
 }
