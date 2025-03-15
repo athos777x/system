@@ -469,26 +469,26 @@
 }
 
 .student-mgmt-modal-btn-confirm {
-  background: #ef5350;
+  background: #4CAF50;
   color: white;
 }
 
 .student-mgmt-modal-btn-confirm:hover {
-  background: #e53935;
+  background: #388e3c;
 }
 
 .student-mgmt-modal-btn-confirm:disabled {
-  background: #ffcdd2;
+  background: #a5d6a7;
   cursor: not-allowed;
 }
 
 .student-mgmt-modal-btn-cancel {
-  background: #e0e0e0;
-  color: #424242;
+  background: #f44336;
+  color: white;
 }
 
 .student-mgmt-modal-btn-cancel:hover {
-  background: #bdbdbd;
+  background: #d32f2f;
 }
 
 @media (max-width: 768px) {
@@ -517,14 +517,27 @@
 .student-mgmt-form-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 1.5rem;
-  margin-bottom: 2rem;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+@media (min-width: 768px) {
+  .student-mgmt-form-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .student-mgmt-form-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 
 .student-mgmt-form-group {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  margin-bottom: 0.75rem;
 }
 
 .student-mgmt-form-group label {
@@ -843,4 +856,141 @@
 .status-dropped {
   background-color: #fafafa;
   color: #616161;
+}
+
+.student-mgmt-modal-large {
+  width: 90%;
+  max-width: 900px;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.student-mgmt-tabs {
+  display: flex;
+  border-bottom: 1px solid #e0e0e0;
+  margin-bottom: 1.5rem;
+  gap: 0.5rem;
+}
+
+.student-mgmt-tab {
+  padding: 0.75rem 1.25rem;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: #64748b;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.student-mgmt-tab:hover {
+  color: #4CAF50;
+}
+
+.student-mgmt-tab.active {
+  color: #2e7d32;
+  border-bottom: 2px solid #2e7d32;
+}
+
+.student-mgmt-tab-content {
+  display: none;
+}
+
+.student-mgmt-tab-content.active {
+  display: block;
+}
+
+.student-mgmt-tab-navigation {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.student-mgmt-tab-navigation button {
+  background-color: #78909c;
+  color: white;
+}
+
+.student-mgmt-tab-navigation button:hover {
+  background-color: #546e7a;
+}
+
+.student-mgmt-form-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.student-mgmt-form-actions .student-mgmt-btn-edit {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.student-mgmt-form-actions .student-mgmt-btn-edit:hover {
+  background-color: #388e3c;
+}
+
+.student-mgmt-form-actions .student-mgmt-btn:not(.student-mgmt-btn-edit) {
+  background-color: #f44336;
+  color: white;
+}
+
+.student-mgmt-form-actions .student-mgmt-btn:not(.student-mgmt-btn-edit):hover {
+  background-color: #d32f2f;
+}
+
+.student-mgmt-modal-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e0e0e0;
+}
+
+@media (max-width: 768px) {
+  .student-mgmt-tabs {
+    flex-direction: column;
+    gap: 0.25rem;
+    border-bottom: none;
+  }
+  
+  .student-mgmt-tab {
+    text-align: left;
+    border-left: 2px solid transparent;
+    border-bottom: none;
+    padding: 0.5rem 0.75rem;
+  }
+  
+  .student-mgmt-tab.active {
+    border-left: 2px solid #2e7d32;
+    border-bottom: none;
+    background-color: #e8f5e9;
+  }
+  
+  .student-mgmt-modal-actions {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .student-mgmt-tab-navigation,
+  .student-mgmt-form-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
+.student-mgmt-form-group .read-only {
+  background-color: #f5f5f5;
+  cursor: not-allowed;
+  border-color: #e0e0e0;
+}
+
+.student-mgmt-form-group .read-only:focus {
+  box-shadow: none;
+  border-color: #e0e0e0;
+}
+
+.student-mgmt-form-group .auto-calculated {
+  font-size: 0.75rem;
+  color: #78909c;
+  font-weight: normal;
+  font-style: italic;
 } 
