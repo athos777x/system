@@ -161,10 +161,6 @@
   text-align: center !important;
 }
 
-.students-table > tbody > tr {
-  /* transition: background-color 0.2s ease !important; */
-}
-
 .students-table > tbody > tr:hover {
   background-color: rgba(76, 175, 80, 0.05) !important;
 }

@@ -1,12 +1,12 @@
 /* Profile Page Styles */
-.profile-wrapper {
+.user-profile-wrapper {
     max-width: 1000px;
     margin: 0 auto;
     padding: 20px;
     background-color: #f9f9f9;
 }
 
-.profile-heading {
+.user-profile-heading {
     color: #2e7d32;
     text-align: center;
     margin-bottom: 30px;
@@ -18,7 +18,7 @@
 }
 
 /* Vertical layout container */
-.profile-content-vertical {
+.user-profile-content-vertical {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -29,14 +29,14 @@
 }
 
 /* Profile picture section */
-.profile-picture-section {
+.user-profile-picture-section {
     display: flex;
     flex-direction: column;
     align-items: center;
     margin-bottom: 30px;
 }
 
-.profile-image-container {
+.user-profile-image-container {
     width: 150px;
     height: 150px;
     border-radius: 50%;
@@ -46,14 +46,14 @@
     position: relative;
 }
 
-.profile-image {
+.user-profile-image {
     width: 100%;
     height: 100%;
     object-fit: cover;
 }
 
 /* Image Upload Overlay and Spinner */
-.image-upload-overlay {
+.user-profile-image-upload-overlay {
     position: absolute;
     top: 0;
     left: 0;
@@ -68,38 +68,38 @@
     border-radius: 50%;
 }
 
-.image-upload-overlay p {
+.user-profile-image-upload-overlay p {
     margin-top: 10px;
     font-size: 14px;
 }
 
-.spinner {
+.user-profile-spinner {
     width: 30px;
     height: 30px;
     border: 3px solid rgba(255, 255, 255, 0.3);
     border-radius: 50%;
     border-top-color: #fff;
-    animation: spin 1s ease-in-out infinite;
+    animation: user-profile-spin 1s ease-in-out infinite;
 }
 
-@keyframes spin {
+@keyframes user-profile-spin {
     to {
         transform: rotate(360deg);
     }
 }
 
 /* Disabled button state */
-.change-picture-btn[disabled] {
+.user-profile-change-picture-btn[disabled] {
     background-color: #a5d6a7;
     cursor: not-allowed;
     opacity: 0.7;
 }
 
 /* Button styles - updated to match other pages */
-.change-picture-btn,
-.edit-profile-btn,
-.save-profile-btn,
-.cancel-profile-btn {
+.user-profile-change-picture-btn,
+.user-profile-edit-btn,
+.user-profile-save-btn,
+.user-profile-cancel-btn {
     padding: 0.5rem 1.25rem;
     border: none;
     border-radius: 6px;
@@ -116,7 +116,7 @@
     min-width: fit-content;
 }
 
-.change-picture-btn {
+.user-profile-change-picture-btn {
     padding: 0.5rem 1rem;
     width: 140px;
     margin-top: 10px;
@@ -125,66 +125,66 @@
     right: auto;
 }
 
-.change-picture-btn,
-.edit-profile-btn,
-.save-profile-btn {
+.user-profile-change-picture-btn,
+.user-profile-edit-btn,
+.user-profile-save-btn {
     background-color: #4CAF50;
     color: white;
 }
 
-.cancel-profile-btn {
+.user-profile-cancel-btn {
     background-color: #f44336;
     color: white;
 }
 
 /* Make Save and Cancel buttons the same size */
-.save-profile-btn,
-.cancel-profile-btn {
+.user-profile-save-btn,
+.user-profile-cancel-btn {
     width: 90px;
 }
 
-.change-picture-btn:hover,
-.edit-profile-btn:hover,
-.save-profile-btn:hover {
+.user-profile-change-picture-btn:hover,
+.user-profile-edit-btn:hover,
+.user-profile-save-btn:hover {
     background-color: #388e3c;
     transform: translateY(-2px);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.cancel-profile-btn:hover {
+.user-profile-cancel-btn:hover {
     background-color: #d32f2f;
     transform: translateY(-2px);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* User information section */
-.profile-info-section {
+.user-profile-info-section {
     width: 100%;
 }
 
-.profile-form {
+.user-profile-form {
     width: 100%;
 }
 
-.form-row {
+.user-profile-form-row {
     display: flex;
     margin-bottom: 20px;
     gap: 20px;
 }
 
-.form-group {
+.user-profile-form-group {
     flex: 1;
     display: flex;
     flex-direction: column;
 }
 
-.form-group label {
+.user-profile-form-group label {
     font-size: 0.9rem;
     color: #666;
     margin-bottom: 5px;
 }
 
-.form-control {
+.user-profile-form-control {
     padding: 10px;
     border: 1px solid #ddd;
     border-radius: 4px;
@@ -193,7 +193,7 @@
 }
 
 /* Info value styles for non-editable fields */
-.info-value {
+.user-profile-info-value {
     padding: 10px;
     font-size: 1rem;
     color: #333;
@@ -203,13 +203,13 @@
     border-left: 3px solid #4CAF50;
 }
 
-.form-actions {
+.user-profile-form-actions {
     display: flex;
     justify-content: center;
     margin-top: 30px;
 }
 
-.edit-buttons {
+.user-profile-edit-buttons {
     display: flex;
     gap: 20px;
     justify-content: center;
@@ -217,8 +217,8 @@
 }
 
 /* Loading and Error States */
-.loading-state,
-.error-state {
+.user-profile-loading-state,
+.user-profile-error-state {
     padding: 20px;
     text-align: center;
     background-color: white;
@@ -227,19 +227,19 @@
     margin-top: 20px;
 }
 
-.error-state {
+.user-profile-error-state {
     color: #c62828;
     border: 1px solid #ffcdd2;
 }
 
 /* Responsive Design */
 @media (max-width: 768px) {
-    .form-row {
+    .user-profile-form-row {
         flex-direction: column;
         gap: 15px;
     }
     
-    .edit-buttons {
+    .user-profile-edit-buttons {
         flex-direction: column;
         align-items: center;
         gap: 15px;

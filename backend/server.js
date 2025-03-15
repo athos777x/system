@@ -424,30 +424,52 @@ app.post('/students', (req, res) => {
     email_address, mother_name, father_name, parent_address, father_occupation,
     mother_occupation, annual_hshld_income, number_of_siblings, father_educ_lvl,
     mother_educ_lvl, father_contact_number, mother_contact_number, emergency_number,
-    status, active_status, brigada_eskwela // Make sure section_id is present
+    status, active_status, brigada_eskwela = '0', lrn // Make sure brigada_eskwela has a default value
   } = req.body;
   
+  // Ensure brigada_eskwela is never null
+  const brigada_eskwela_value = brigada_eskwela || '0';
+  
+  // Use a different approach with named parameters
   const query = `
-    INSERT INTO student (
-      lastname, firstname, middlename, current_yr_lvl, birthdate, gender, age,
-      home_address, barangay, city_municipality, province, contact_number,
-      email_address, mother_name, father_name, parent_address, father_occupation,
-      mother_occupation, annual_hshld_income, number_of_siblings, father_educ_lvl,
-      mother_educ_lvl, father_contact_number, mother_contact_number, emergency_number, 
-      status, active_status, brigada_eskwela, enroll_date
-    )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_DATE())
+    INSERT INTO student SET ?
   `;
 
-  const values = [
-    lastname, firstname, middlename, current_yr_lvl, birthdate, gender, age,
-    home_address, barangay, city_municipality, province, contact_number,
-    email_address, mother_name, father_name, parent_address, father_occupation,
-    mother_occupation, annual_hshld_income, number_of_siblings, father_educ_lvl,
-    mother_educ_lvl, father_contact_number, mother_contact_number, emergency_number, status, active_status, brigada_eskwela // Make sure this is passed here
-  ];
+  const studentData = {
+    lastname,
+    firstname,
+    middlename,
+    current_yr_lvl,
+    birthdate,
+    gender,
+    age,
+    home_address,
+    barangay,
+    city_municipality,
+    province,
+    contact_number,
+    email_address,
+    mother_name,
+    father_name,
+    parent_address,
+    father_occupation,
+    mother_occupation,
+    annual_hshld_income,
+    number_of_siblings,
+    father_educ_lvl,
+    mother_educ_lvl,
+    father_contact_number,
+    mother_contact_number,
+    emergency_number,
+    status,
+    active_status,
+    brigada_eskwela: brigada_eskwela_value,
+    lrn
+  };
 
-  db.query(query, values, (error, result) => {
+  console.log('Student data object:', studentData);
+  
+  db.query(query, studentData, (error, result) => {
     if (error) {
       console.error('Failed to add student:', error);
       return res.status(500).json({ error: 'Failed to add student' });
@@ -508,12 +530,12 @@ app.put('/students/:id/enroll', (req, res) => {
       // Step 3: Update the `student` table with the new `user_id`
       const updateStudentQuery = `
         UPDATE student
-        SET user_id = ?
+        SET user_id = ?, enroll_date = CURRENT_DATE()
         WHERE student_id = ?
       `;
       const updateStudentValues = [newUserId, studentId];
 
-      console.log('Updating student with user_id:', newUserId);
+      console.log('Updating student with user_id and setting enroll_date:', newUserId);
 
       db.query(updateStudentQuery, updateStudentValues, (updateStudentErr) => {
         if (updateStudentErr) {

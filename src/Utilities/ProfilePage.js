@@ -228,35 +228,35 @@ const ProfilePage = () => {
   };
 
   if (loading) {
-    return <div className="loading-state">Loading user information...</div>;
+    return <div className="user-profile-loading-state">Loading user information...</div>;
   }
 
   if (error) {
-    return <div className="error-state">{error}</div>;
+    return <div className="user-profile-error-state">{error}</div>;
   }
 
   return (
-    <div className="profile-wrapper">
-      <h1 className="profile-heading">Profile</h1>
+    <div className="user-profile-wrapper">
+      <h1 className="user-profile-heading">Profile</h1>
       
-      <div className="profile-content-vertical">
+      <div className="user-profile-content-vertical">
         {/* Profile picture section */}
-        <div className="profile-picture-section">
-          <div className="profile-image-container">
+        <div className="user-profile-picture-section">
+          <div className="user-profile-image-container">
             <img 
               src={getProfilePictureWithCacheBuster(profilePicture)} 
               alt="Profile" 
-              className="profile-image"
+              className="user-profile-image"
               key={profilePicture} // Add a key to force re-render when the URL changes
             />
             {uploadingImage && (
-              <div className="image-upload-overlay">
-                <div className="spinner"></div>
+              <div className="user-profile-image-upload-overlay">
+                <div className="user-profile-spinner"></div>
                 <p>Uploading...</p>
               </div>
             )}
           </div>
-          <label className="change-picture-btn" disabled={uploadingImage}>
+          <label className="user-profile-change-picture-btn" disabled={uploadingImage}>
             {uploadingImage ? 'Uploading...' : 'Change Picture'}
             <input
               type="file"
@@ -269,42 +269,42 @@ const ProfilePage = () => {
         </div>
         
         {/* User information section */}
-        <div className="profile-info-section">
-          <div className="profile-form">
-            <div className="form-row">
-              <div className="form-group">
+        <div className="user-profile-info-section">
+          <div className="user-profile-form">
+            <div className="user-profile-form-row">
+              <div className="user-profile-form-group">
                 <label>First Name</label>
-                <div className="info-value">{userInfo.firstname}</div>
+                <div className="user-profile-info-value">{userInfo.firstname}</div>
               </div>
-              <div className="form-group">
+              <div className="user-profile-form-group">
                 <label>Middle Name</label>
-                <div className="info-value">{userInfo.middle_name || '-'}</div>
+                <div className="user-profile-info-value">{userInfo.middle_name || '-'}</div>
               </div>
             </div>
             
-            <div className="form-row">
-              <div className="form-group">
+            <div className="user-profile-form-row">
+              <div className="user-profile-form-group">
                 <label>Last Name</label>
-                <div className="info-value">{userInfo.lastname}</div>
+                <div className="user-profile-info-value">{userInfo.lastname}</div>
               </div>
-              <div className="form-group">
+              <div className="user-profile-form-group">
                 <label>Email</label>
-                <div className="info-value">{userInfo.email || '-'}</div>
+                <div className="user-profile-info-value">{userInfo.email || '-'}</div>
               </div>
             </div>
             
-            <div className="form-row">
-              <div className="form-group">
+            <div className="user-profile-form-row">
+              <div className="user-profile-form-group">
                 <label>Username</label>
-                <div className="info-value">{userInfo.username}</div>
+                <div className="user-profile-info-value">{userInfo.username}</div>
               </div>
-              <div className="form-group">
+              <div className="user-profile-form-group">
                 <label>Password</label>
                 {isEditing ? (
-                  <div className="password-field" style={{ position: 'relative' }}>
+                  <div className="user-profile-password-field" style={{ position: 'relative' }}>
                     <input
                       type={showPassword ? 'text' : 'password'}
-                      className="form-control"
+                      className="user-profile-form-control"
                       value={userInfo.password}
                       onChange={(e) => setUserInfo({...userInfo, password: e.target.value})}
                       style={{ paddingRight: '40px' }}
@@ -326,32 +326,32 @@ const ProfilePage = () => {
                     </button>
                   </div>
                 ) : (
-                  <div className="info-value">••••••••</div>
+                  <div className="user-profile-info-value">••••••••</div>
                 )}
               </div>
             </div>
             
-            <div className="form-actions">
+            <div className="user-profile-form-actions">
               {!isEditing ? (
                 <button
                   type="button"
-                  className="edit-profile-btn"
+                  className="user-profile-edit-btn"
                   onClick={handleEditClick}
                 >
                   Change Password
                 </button>
               ) : (
-                <div className="edit-buttons">
+                <div className="user-profile-edit-buttons">
                   <button
                     type="button"
-                    className="save-profile-btn"
+                    className="user-profile-save-btn"
                     onClick={handleSaveClick}
                   >
                     Save
                   </button>
                   <button
                     type="button"
-                    className="cancel-profile-btn"
+                    className="user-profile-cancel-btn"
                     onClick={handleCancelClick}
                   >
                     Cancel

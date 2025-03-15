@@ -3,7 +3,6 @@ import axios from 'axios';
 import '../TeacherPagesCss/GradesManagement.css';
 import GradeDetail from '../Utilities/grades-detail'
 import { useNavigate } from "react-router-dom";
-import Student_Grades_Search from '../RoleSearchFilters/student_grades_search';
 
 function GradesManagement() {
   // State variables
@@ -28,8 +27,6 @@ function GradesManagement() {
   const [existingGrades, setExistingGrades] = useState({});
   const [isEditing, setIsEditing] = useState(false);
   const navigate = useNavigate();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [suggestions, setSuggestions] = useState([]);
   const [roleName, setRoleName] = useState('');
   const [showDetailedView, setShowDetailedView] = useState(false); // New state to show the detailed view
   const [percentages, setPercentages] = useState({
@@ -37,7 +34,6 @@ function GradesManagement() {
     PT: 50,
     QA: 20,
   });
-  const [filters, setFilters] = useState({ searchTerm: '' });
 
   // State to store grades detail
   const [gradesDetailData, setGradesDetailData] = useState({});
@@ -76,14 +72,6 @@ function GradesManagement() {
 };
 
   
-const handleSearch = (filters) => {
-  setFilters(filters);
-  setShowGradesTable(false); // Show the detailed grades view
-  fetchSectionStudents(true, filters.studentId); // Fetch the specific student's grades
-};
-
-
-      
   // Function to handle deleting the activity
   const handleDeleteActivity = (item, index, type) => {
     // Show confirmation dialog
@@ -328,14 +316,11 @@ const handleSearch = (filters) => {
   };
 
   // Add this function to fetch students
-  const fetchSectionStudents = async (searchMode = false, studentId = null) => {
+  const fetchSectionStudents = async () => {
     try {
       let url;
   
-      if (searchMode && studentId) {
-        // Fetch specific student without grade/section
-        url = `http://localhost:3001/student-grades/${studentId}`;
-      } else if (selectedSubject?.id) {
+      if (selectedSubject?.id) {
         url = `http://localhost:3001/section-students/${selectedSection?.section_id || 0}/${selectedGrade}/${selectedSubject.id}/${selectedSubject.type === 'elective' ? 'elective' : 'subject'}`;
       } else if (selectedSection?.section_id) {
         url = `http://localhost:3001/section-students/${selectedSection.section_id}/${selectedGrade}`;
@@ -727,42 +712,10 @@ const handleStudentNameClick = (student) => {
     fetchAllGradesDetails(); // Fetch grades details when students change
   }, [students]);
 
-  const fetchSuggestions = async (query) => {
-    if (!query) {
-        setSuggestions([]);
-        return;
-    }
-    try {
-        const response = await fetch(`/api/students/search?q=${query}`);
-        const data = await response.json();
-        setSuggestions(data);
-    } catch (error) {
-        console.error("Error fetching suggestions:", error);
-    }
-  };
-
-  // Handle search box input
-  const handleInputChange = (e) => {
-      const value = e.target.value;
-      setSearchQuery(value);
-      fetchSuggestions(value);
-  };
-
-  // Handle selecting a student from suggestions
-  const handleSelectStudent = (studentName) => {
-      setSearchQuery(studentName);
-      setSelectedStudent(studentName);
-      setSuggestions([]); // Hide suggestions after selection
-  };
-
-
   return (
     <div className="teacher-grades-container">
       <h2 className='teacher-grades-title'>Grades</h2>
-      <div className="teacher-grades-search-container">
-        <Student_Grades_Search handleSearch={handleSearch} />
-      </div>
-
+      
       {!showSubjectGrades && !showGradesTable && (
         <div className="teacher-grades-detailed-view">
           <button onClick={handleBackClick} className="teacher-grades-back-btn">

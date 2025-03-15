@@ -55,11 +55,11 @@ function StudentManagement() {
     mother_contact_number: '',
     emergency_number: '',
     status: 'active',
-    archive_status: 'unarchive', // Default value
-    section_id: '',
-    brigada_eskwela: ''
+    archive_status: 'unarchive'
   });
 
+  // Add this state for tab management
+  const [activeTab, setActiveTab] = useState('basic');
 
   const navigate = useNavigate();
 
@@ -191,7 +191,7 @@ const handleApplyFilters = () => {
       parent_address: '',
       father_occupation: '',
       mother_occupation: '',
-      annual_hshld_income: '',
+      annual_income: '',
       number_of_siblings: '',
       father_educ_lvl: '',
       mother_educ_lvl: '',
@@ -199,61 +199,189 @@ const handleApplyFilters = () => {
       mother_contact_number: '',
       emergency_number: '',
       status: 'active',
-      active_status: 'unarchive', // Default value
-      section_id: '',
-      user_id: '',
-      brigada_eskwela:'',
+      active_status: 'unarchive',
+      user_id: ''
     });
     setShowModal(true);
   };
 
+  // Add this function to calculate age from birthdate
+  const calculateAge = (birthdate) => {
+    if (!birthdate) return '';
+    
+    const today = new Date();
+    const birthDate = new Date(birthdate);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    
+    // If birthday hasn't occurred yet this year, subtract 1 from age
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    
+    return age.toString();
+  };
+
+  // Update the handleAddChange function to auto-calculate age when birthdate changes
   const handleAddChange = (e) => {
     const { name, value } = e.target;
-    setNewStudentData(prevData => ({ ...prevData, [name]: value }));
-
-    // Remove error message once the user starts typing
-    setErrors(prevErrors => ({ ...prevErrors, [name]: value ? "" : "This field is required" }));
-};
-  
-  
-  const saveNewSection = async () => {
-    try {
-      // Correct data structure with the required fields
-      const correctedStudentData = {
-        ...newStudentData, // Spread in existing data fields
-        status: newStudentData.status || 'active', // Default 'active' status
-        active_status: newStudentData.archive_status || 'unarchive', // Default 'unarchive' status
-        section_id: newStudentData.section_id, // Use user-provided section_id
-        user_id: newStudentData.user_id || '1'
-      };
-  
-      // Log the data before sending to the server for debugging
-      console.log('Student data to be sent:', correctedStudentData);
-  
-      // Send the POST request
-      const response = await axios.post('http://localhost:3001/students', correctedStudentData);
+    
+    // If birthdate is changed, automatically calculate and update age
+    if (name === 'birthdate' && value) {
+      const calculatedAge = calculateAge(value);
+      setNewStudentData(prevData => ({ 
+        ...prevData, 
+        [name]: value,
+        age: calculatedAge
+      }));
       
-      // If successful, reset the form and close modal
-      if (response.status === 201) {
-        console.log('Student added successfully:', response.data);
-        await fetchStudents(); // Refresh student list
-        setIsAdding(false);
-        setShowModal(false); // Close the modal
-      } else {
-        console.error('Failed to add student. Response:', response);
-        alert('Failed to add student. Please try again.');
+      // Remove error messages for both birthdate and age
+      setErrors(prevErrors => ({ 
+        ...prevErrors, 
+        [name]: value ? "" : "This field is required",
+        age: calculatedAge ? "" : "This field is required"
+      }));
+    } else {
+      setNewStudentData(prevData => ({ ...prevData, [name]: value }));
+      
+      // Remove error message once the user starts typing
+      setErrors(prevErrors => ({ ...prevErrors, [name]: value ? "" : "This field is required" }));
+    }
+  };
+
+  const formatCapitalization = (text) => {
+    if (!text) return text;
+    
+    // For names and places - capitalize first letter of each word
+    return text.split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');
+  };
+
+  const saveNewStudent = async () => {
+    try {
+      // Required fields based on the database schema
+      const requiredFields = [
+        "lastname", "firstname", "current_yr_lvl", "birthdate", "gender",
+        "age", "home_address", "barangay", "city_municipality", "province",
+        "contact_number", "email_address", "mother_name", "father_name",
+        "father_contact_number", "mother_contact_number", "emergency_number"
+      ];
+
+      // Check for missing required fields
+      let newErrors = {};
+      requiredFields.forEach(field => {
+        if (!newStudentData[field]) {
+          newErrors[field] = "This field is required";
+        }
+      });
+
+      // Validate phone number lengths
+      const phoneFields = ["contact_number", "father_contact_number", "mother_contact_number", "emergency_number"];
+      phoneFields.forEach(field => {
+        if (newStudentData[field] && newStudentData[field].length > 11) {
+          newErrors[field] = "Phone number should not exceed 11 digits";
+        }
+      });
+
+      // If there are validation errors, show them and prevent submission
+      if (Object.keys(newErrors).length > 0) {
+        setErrors(newErrors);
+        alert("Please fix the validation errors before submitting");
+        return;
+      }
+      
+      // Create a clean data object with only the fields needed by the backend
+      const cleanData = {
+        lastname: formatCapitalization(newStudentData.lastname),
+        firstname: formatCapitalization(newStudentData.firstname),
+        middlename: newStudentData.middlename ? formatCapitalization(newStudentData.middlename) : '',
+        current_yr_lvl: parseInt(newStudentData.current_yr_lvl, 10),
+        birthdate: new Date(newStudentData.birthdate).toISOString().split('T')[0],
+        gender: newStudentData.gender,
+        age: parseInt(newStudentData.age, 10),
+        home_address: formatCapitalization(newStudentData.home_address),
+        barangay: formatCapitalization(newStudentData.barangay),
+        city_municipality: formatCapitalization(newStudentData.city_municipality),
+        province: formatCapitalization(newStudentData.province),
+        contact_number: newStudentData.contact_number,
+        email_address: newStudentData.email_address,
+        mother_name: formatCapitalization(newStudentData.mother_name),
+        father_name: formatCapitalization(newStudentData.father_name),
+        parent_address: newStudentData.parent_address ? formatCapitalization(newStudentData.parent_address) : '',
+        father_occupation: newStudentData.father_occupation ? formatCapitalization(newStudentData.father_occupation) : '',
+        mother_occupation: newStudentData.mother_occupation ? formatCapitalization(newStudentData.mother_occupation) : '',
+        annual_hshld_income: newStudentData.annual_income || '',
+        number_of_siblings: newStudentData.number_of_siblings ? parseInt(newStudentData.number_of_siblings, 10) : 0,
+        father_educ_lvl: newStudentData.father_educ_lvl || '',
+        mother_educ_lvl: newStudentData.mother_educ_lvl || '',
+        father_contact_number: newStudentData.father_contact_number,
+        mother_contact_number: newStudentData.mother_contact_number,
+        emergency_number: newStudentData.emergency_number,
+        brigada_eskwela: '0', // Default value for brigada_eskwela
+        lrn: newStudentData.lrn || '',
+        status: 'active',
+        active_status: 'unarchive'
+      };
+
+      // Log the data before sending to the server for debugging
+      console.log('Clean student data to be sent:', cleanData);
+
+      // Send the POST request with detailed error handling
+      try {
+        // Use fetch instead of axios for more control
+        const response = await fetch('http://localhost:3001/students', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(cleanData),
+        });
+
+        // Get the response data
+        const responseText = await response.text();
+        console.log('Response status:', response.status);
+        console.log('Response text:', responseText);
+
+        let responseData;
+        try {
+          if (responseText) {
+            responseData = JSON.parse(responseText);
+          }
+        } catch (e) {
+          console.log('Response is not JSON:', responseText);
+        }
+
+        // Check if the response is successful
+        if (response.ok) {
+          console.log('Student added successfully:', responseData);
+          await fetchStudents(); // Refresh student list
+          setIsAdding(false);
+          setShowModal(false); // Close the modal
+          alert('Student added successfully!');
+        } else {
+          // Handle error response
+          console.error('Server error response:', responseText);
+          
+          // Try to extract more detailed error information
+          let errorMessage = 'Unknown error';
+          if (responseData && responseData.error) {
+            errorMessage = responseData.error;
+          } else if (responseData && responseData.message) {
+            errorMessage = responseData.message;
+          } else if (responseText) {
+            errorMessage = responseText;
+          }
+          
+          alert(`Error adding student: ${errorMessage}. Status: ${response.status}`);
+        }
+      } catch (fetchError) {
+        console.error('Fetch error details:', fetchError);
+        alert(`Error connecting to the server: ${fetchError.message}. Please try again later.`);
       }
     } catch (error) {
-      if (error.response) {
-        console.error('Error response:', error.response.data);
-        alert(`Error adding student: ${error.response.data.error || 'Unknown error'}. Please check the input fields and try again.`);
-      } else if (error.request) {
-        console.error('No response received:', error.request);
-        alert('No response from the server. Please check your connection and try again.');
-      } else {
-        console.error('Error in request setup:', error.message);
-        alert('There was an error setting up the request. Please try again.');
-      }
+      console.error('General error in saveNewStudent function:', error);
+      alert('An unexpected error occurred. Please try again or contact support.');
     }
   };
   
@@ -281,7 +409,7 @@ const cancelAdding = () => {
     parent_address: '',
     father_occupation: '',
     mother_occupation: '',
-    annual_hshld_income: '',
+    annual_income: '',
     number_of_siblings: '',
     father_educ_lvl: '',
     mother_educ_lvl: '',
@@ -290,9 +418,7 @@ const cancelAdding = () => {
     emergency_number: '',
     status: 'active',
     active_status: 'unarchive',
-    section_id: '',
-    user_id: '',
-    brigada_eskwela:'',
+    user_id: ''
   });
   setShowModal(false);  // Close the modal
 };
@@ -505,9 +631,21 @@ const handleArchive = () => {
 
 
   // Handle changes in editable fields
+  // Update the handleEditChange function to auto-calculate age when birthdate changes
   const handleEditChange = (e) => {
     const { name, value } = e.target;
-    setEditStudentData({ ...editStudentData, [name]: value });
+    
+    // If birthdate is changed, automatically calculate and update age
+    if (name === 'birthdate' && value) {
+      const calculatedAge = calculateAge(value);
+      setEditStudentData({ 
+        ...editStudentData, 
+        [name]: value,
+        age: calculatedAge
+      });
+    } else {
+      setEditStudentData({ ...editStudentData, [name]: value });
+    }
   };
 
   const handleSave = async () => {
@@ -521,7 +659,7 @@ const handleArchive = () => {
         "lastname", "firstname", "current_yr_lvl", "birthdate", "gender",
         "age", "home_address", "barangay", "city_municipality", "province",
         "contact_number", "email_address", "father_contact_number", 
-        "mother_contact_number", "emergency_number", "brigada_eskwela"
+        "mother_contact_number", "emergency_number"
     ];
 
     // Check for missing fields
@@ -538,11 +676,33 @@ const handleArchive = () => {
         return;
     }
 
+    // Apply proper capitalization to text fields
+    const formattedData = { ...editStudentData };
+    
+    // Fields that should be properly capitalized
+    const capitalizeFields = [
+      "lastname", "firstname", "middlename", "home_address", 
+      "barangay", "city_municipality", "province", "mother_name", 
+      "father_name", "parent_address", "father_occupation", "mother_occupation"
+    ];
+    
+    // Apply capitalization
+    capitalizeFields.forEach(field => {
+      if (formattedData[field]) {
+        formattedData[field] = formatCapitalization(formattedData[field]);
+      }
+    });
+
     // Format the birthdate before sending it to the backend
-    const formattedBirthdate = new Date(editStudentData.birthdate).toISOString().split('T')[0];
+    const formattedBirthdate = new Date(formattedData.birthdate).toISOString().split('T')[0];
 
     // Update the student data with the formatted birthdate
-    const updatedStudentData = { ...editStudentData, birthdate: formattedBirthdate };
+    const updatedStudentData = { 
+      ...formattedData, 
+      birthdate: formattedBirthdate,
+      annual_hshld_income: formattedData.annual_income || '',
+      brigada_eskwela: '0' // Default value for brigada_eskwela
+    };
 
     try {
         // Make the PUT request to the backend to update the student
@@ -571,7 +731,6 @@ const handleArchive = () => {
 
         // Reset the form only after saving is successful
         setEditStudentData(null);
-
 
         // Refresh the student list
         await fetchStudents();
@@ -1001,12 +1160,12 @@ const handleArchive = () => {
                             {isEditing ? (
                               <input
                                 type="text"
-                                        name="emergency_contact"
-                                        value={editStudentData ? editStudentData.emergency_contact || "" : ""}
+                                        name="emergency_number"
+                                        value={editStudentData ? editStudentData.emergency_number || "" : ""}
                                 onChange={handleEditChange}
                               />
                             ) : (
-                                      student.emergency_contact
+                                      student.emergency_number
                             )}
                           </td>
                         </tr>
@@ -1079,10 +1238,10 @@ const handleArchive = () => {
           <h2>Cancel Editing?</h2>
           <p>Are you sure you want to cancel? Unsaved changes will be lost.</p>
             <div className="student-mgmt-modal-actions">
-              <button className="student-mgmt-btn" onClick={() => confirmCancel(true)}>
+              <button className="student-mgmt-modal-btn student-mgmt-modal-btn-confirm" onClick={() => confirmCancel(true)}>
               Yes
             </button>
-              <button className="student-mgmt-btn" onClick={() => confirmCancel(false)}>
+              <button className="student-mgmt-modal-btn student-mgmt-modal-btn-cancel" onClick={() => confirmCancel(false)}>
               No
             </button>
           </div>
@@ -1131,180 +1290,375 @@ const handleArchive = () => {
 
       {showModal && (
         <div className="student-mgmt-modal">
-          <div className="student-mgmt-modal-content">
+          <div className="student-mgmt-modal-content student-mgmt-modal-large">
             <h2>Add New Student</h2>
-            <div className="student-mgmt-form-grid">
-              {/* Form groups for student information */}
-              <div className="student-mgmt-form-group">
-                <label>LRN:</label>
-                <input
-                  type="text"
-                  name="lrn"
-                  value={newStudentData.lrn}
-                  onChange={handleAddChange}
-                  className={errors.lrn ? "error" : ""}
-                />
-                {errors.lrn && <span className="student-mgmt-error">{errors.lrn}</span>}
-              </div>
-              <div className="student-mgmt-form-group">
-                <label>Lastname:</label>
-                <input
-                  type="text"
-                  name="lastname"
-                  value={newStudentData.lastname}
-                  onChange={handleAddChange}
-                  className={errors.lastname ? "error" : ""}
-                />
-                {errors.lastname && <span className="student-mgmt-error">{errors.lastname}</span>}
-              </div>
-              <div className="student-mgmt-form-group">
-                <label>Middlename:</label>
-                <input
-                  type="text"
-                  name="middlename"
-                  value={newStudentData.middlename}
-                  onChange={handleAddChange}
-                  className={errors.middlename ? "error" : ""}
-                />
-                {errors.middlename && <span className="student-mgmt-error">{errors.middlename}</span>}
-              </div>
-              <div className="student-mgmt-form-group">
-                <label>Firstname:</label>
-                <input
-                  type="text"
-                  name="firstname"
-                  value={newStudentData.firstname}
-                  onChange={handleAddChange}
-                  className={errors.firstname ? "error" : ""}
-                />
-                {errors.firstname && <span className="student-mgmt-error">{errors.firstname}</span>}
-              </div>
-              <div className="student-mgmt-form-group">
-                <label>Year Level:</label>
-                <select
-                  name="current_yr_lvl"
-                  value={newStudentData.current_yr_lvl}
-                  onChange={handleAddChange}
-                  className={errors.current_yr_lvl ? "error" : ""}
-                >
-                  <option value="">Select Year Level</option>
-                  <option value="7">7</option>
-                  <option value="8">8</option>
-                  <option value="9">9</option>
-                  <option value="10">10</option>
-                </select>
-                {errors.current_yr_lvl && <span className="student-mgmt-error">{errors.current_yr_lvl}</span>}
-              </div>
-              <div className="student-mgmt-form-group">
-                <label>Birthdate:</label>
-                <input
-                  type="date"
-                  name="birthdate"
-                  value={newStudentData.birthdate}
-                  onChange={handleAddChange}
-                  className={errors.birthdate ? "error" : ""}
-                />
-                {errors.birthdate && <span className="student-mgmt-error">{errors.birthdate}</span>}
-              </div>
-              <div className="student-mgmt-form-group">
-                <label>Gender:</label>
-                <select
-                  name="gender"
-                  value={newStudentData.gender}
-                  onChange={handleAddChange}
-                  className={errors.gender ? "error" : ""}
-                >
-                  <option value="">Select Gender</option>
-                  <option value="Male">Male</option>
-                  <option value="Female">Female</option>
-                </select>
-                {errors.gender && <span className="student-mgmt-error">{errors.gender}</span>}
-              </div>
-              <div className="student-mgmt-form-group">
-                <label>Age:</label>
-                <input
-                  type="number"
-                  name="age"
-                  value={newStudentData.age}
-                  onChange={handleAddChange}
-                  className={errors.age ? "error" : ""}
-                />
-                {errors.age && <span className="student-mgmt-error">{errors.age}</span>}
-              </div>
-              <div className="student-mgmt-form-group">
-                <label>Home Address:</label>
-                <input
-                  type="text"
-                  name="home_address"
-                  value={newStudentData.home_address}
-                  onChange={handleAddChange}
-                  className={errors.home_address ? "error" : ""}
-                />
-                {errors.home_address && <span className="student-mgmt-error">{errors.home_address}</span>}
-              </div>
-              <div className="student-mgmt-form-group">
-                <label>Barangay:</label>
-                <input
-                  type="text"
-                  name="barangay"
-                  value={newStudentData.barangay}
-                  onChange={handleAddChange}
-                  className={errors.barangay ? "error" : ""}
-                />
-                {errors.barangay && <span className="student-mgmt-error">{errors.barangay}</span>}
-              </div>
-              <div className="student-mgmt-form-group">
-                <label>City Municipality:</label>
-                <input
-                  type="text"
-                  name="city_municipality"
-                  value={newStudentData.city_municipality}
-                  onChange={handleAddChange}
-                  className={errors.city_municipality ? "error" : ""}
-                />
-                {errors.city_municipality && <span className="student-mgmt-error">{errors.city_municipality}</span>}
-              </div>
-              <div className="student-mgmt-form-group">
-                <label>Province:</label>
-                <input
-                  type="text"
-                  name="province"
-                  value={newStudentData.province}
-                  onChange={handleAddChange}
-                  className={errors.province ? "error" : ""}
-                />
-                {errors.province && <span className="student-mgmt-error">{errors.province}</span>}
-              </div>
-              <div className="student-mgmt-form-group">
-                <label>Contact Number:</label>
-                <input
-                  type="number"
-                  name="contact_number"
-                  value={newStudentData.contact_number}
-                  onChange={handleAddChange}
-                  className={errors.contact_number ? "error" : ""}
-                />
-                {errors.contact_number && <span className="student-mgmt-error">{errors.contact_number}</span>}
-              </div>
-              <div className="student-mgmt-form-group">
-                <label>Email Address:</label>
-                <input
-                  type="email"
-                  name="email_address"
-                  value={newStudentData.email_address}
-                  onChange={handleAddChange}
-                  className={errors.email_address ? "error" : ""}
-                />
-                {errors.email_address && <span className="student-mgmt-error">{errors.email_address}</span>}
+            
+            <div className="student-mgmt-tabs">
+              <button 
+                className={`student-mgmt-tab ${activeTab === 'basic' ? 'active' : ''}`}
+                onClick={() => setActiveTab('basic')}
+              >
+                Basic Information
+              </button>
+              <button 
+                className={`student-mgmt-tab ${activeTab === 'contact' ? 'active' : ''}`}
+                onClick={() => setActiveTab('contact')}
+              >
+                Contact Information
+              </button>
+              <button 
+                className={`student-mgmt-tab ${activeTab === 'family' ? 'active' : ''}`}
+                onClick={() => setActiveTab('family')}
+              >
+                Family Information
+              </button>
             </div>
+
+            {/* Basic Information Tab */}
+            <div className={`student-mgmt-tab-content ${activeTab === 'basic' ? 'active' : ''}`}>
+              <div className="student-mgmt-form-grid">
+                <div className="student-mgmt-form-group">
+                  <label>LRN:</label>
+                  <input
+                    type="text"
+                    name="lrn"
+                    value={newStudentData.lrn}
+                    onChange={handleAddChange}
+                    className={errors.lrn ? "error" : ""}
+                  />
+                  {errors.lrn && <span className="student-mgmt-error">{errors.lrn}</span>}
+                </div>
+                <div className="student-mgmt-form-group">
+                  <label>Lastname:</label>
+                  <input
+                    type="text"
+                    name="lastname"
+                    value={newStudentData.lastname}
+                    onChange={handleAddChange}
+                    className={errors.lastname ? "error" : ""}
+                  />
+                  {errors.lastname && <span className="student-mgmt-error">{errors.lastname}</span>}
+                </div>
+                <div className="student-mgmt-form-group">
+                  <label>Middlename:</label>
+                  <input
+                    type="text"
+                    name="middlename"
+                    value={newStudentData.middlename}
+                    onChange={handleAddChange}
+                    className={errors.middlename ? "error" : ""}
+                  />
+                  {errors.middlename && <span className="student-mgmt-error">{errors.middlename}</span>}
+                </div>
+                <div className="student-mgmt-form-group">
+                  <label>Firstname:</label>
+                  <input
+                    type="text"
+                    name="firstname"
+                    value={newStudentData.firstname}
+                    onChange={handleAddChange}
+                    className={errors.firstname ? "error" : ""}
+                  />
+                  {errors.firstname && <span className="student-mgmt-error">{errors.firstname}</span>}
+                </div>
+                <div className="student-mgmt-form-group">
+                  <label>Year Level:</label>
+                  <select
+                    name="current_yr_lvl"
+                    value={newStudentData.current_yr_lvl}
+                    onChange={handleAddChange}
+                    className={errors.current_yr_lvl ? "error" : ""}
+                  >
+                    <option value="">Select Year Level</option>
+                    <option value="7">7</option>
+                    <option value="8">8</option>
+                    <option value="9">9</option>
+                    <option value="10">10</option>
+                  </select>
+                  {errors.current_yr_lvl && <span className="student-mgmt-error">{errors.current_yr_lvl}</span>}
+                </div>
+                <div className="student-mgmt-form-group">
+                  <label>Birthdate:</label>
+                  <input
+                    type="date"
+                    name="birthdate"
+                    value={newStudentData.birthdate}
+                    onChange={handleAddChange}
+                    className={errors.birthdate ? "error" : ""}
+                  />
+                  {errors.birthdate && <span className="student-mgmt-error">{errors.birthdate}</span>}
+                </div>
+                <div className="student-mgmt-form-group">
+                  <label>Gender:</label>
+                  <select
+                    name="gender"
+                    value={newStudentData.gender}
+                    onChange={handleAddChange}
+                    className={errors.gender ? "error" : ""}
+                  >
+                    <option value="">Select Gender</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                  </select>
+                  {errors.gender && <span className="student-mgmt-error">{errors.gender}</span>}
+                </div>
+                <div className="student-mgmt-form-group">
+                  <label>Age: <span className="auto-calculated">(Auto-calculated)</span></label>
+                  <input
+                    type="text"
+                    name="age"
+                    value={newStudentData.age}
+                    readOnly
+                    className={errors.age ? "error read-only" : "read-only"}
+                  />
+                  {errors.age && <span className="student-mgmt-error">{errors.age}</span>}
+                </div>
+              </div>
             </div>
+
+            {/* Contact Information Tab */}
+            <div className={`student-mgmt-tab-content ${activeTab === 'contact' ? 'active' : ''}`}>
+              <div className="student-mgmt-form-grid">
+                <div className="student-mgmt-form-group">
+                  <label>Home Address:</label>
+                  <input
+                    type="text"
+                    name="home_address"
+                    value={newStudentData.home_address}
+                    onChange={handleAddChange}
+                    className={errors.home_address ? "error" : ""}
+                  />
+                  {errors.home_address && <span className="student-mgmt-error">{errors.home_address}</span>}
+                </div>
+                <div className="student-mgmt-form-group">
+                  <label>Barangay:</label>
+                  <input
+                    type="text"
+                    name="barangay"
+                    value={newStudentData.barangay}
+                    onChange={handleAddChange}
+                    className={errors.barangay ? "error" : ""}
+                  />
+                  {errors.barangay && <span className="student-mgmt-error">{errors.barangay}</span>}
+                </div>
+                <div className="student-mgmt-form-group">
+                  <label>City Municipality:</label>
+                  <input
+                    type="text"
+                    name="city_municipality"
+                    value={newStudentData.city_municipality}
+                    onChange={handleAddChange}
+                    className={errors.city_municipality ? "error" : ""}
+                  />
+                  {errors.city_municipality && <span className="student-mgmt-error">{errors.city_municipality}</span>}
+                </div>
+                <div className="student-mgmt-form-group">
+                  <label>Province:</label>
+                  <input
+                    type="text"
+                    name="province"
+                    value={newStudentData.province}
+                    onChange={handleAddChange}
+                    className={errors.province ? "error" : ""}
+                  />
+                  {errors.province && <span className="student-mgmt-error">{errors.province}</span>}
+                </div>
+                <div className="student-mgmt-form-group">
+                  <label>Contact Number:</label>
+                  <input
+                    type="text"
+                    name="contact_number"
+                    value={newStudentData.contact_number}
+                    onChange={handleAddChange}
+                    className={errors.contact_number ? "error" : ""}
+                    maxLength={11}
+                  />
+                  {errors.contact_number && <span className="student-mgmt-error">{errors.contact_number}</span>}
+                </div>
+                <div className="student-mgmt-form-group">
+                  <label>Email Address:</label>
+                  <input
+                    type="email"
+                    name="email_address"
+                    value={newStudentData.email_address}
+                    onChange={handleAddChange}
+                    className={errors.email_address ? "error" : ""}
+                  />
+                  {errors.email_address && <span className="student-mgmt-error">{errors.email_address}</span>}
+                </div>
+                <div className="student-mgmt-form-group">
+                  <label>Emergency Contact Number:</label>
+                  <input
+                    type="text"
+                    name="emergency_number"
+                    value={newStudentData.emergency_number}
+                    onChange={handleAddChange}
+                    className={errors.emergency_number ? "error" : ""}
+                    maxLength={11}
+                  />
+                  {errors.emergency_number && <span className="student-mgmt-error">{errors.emergency_number}</span>}
+                </div>
+              </div>
+            </div>
+
+            {/* Family Information Tab */}
+            <div className={`student-mgmt-tab-content ${activeTab === 'family' ? 'active' : ''}`}>
+              <div className="student-mgmt-form-grid">
+                <div className="student-mgmt-form-group">
+                  <label>Mother's Name:</label>
+                  <input
+                    type="text"
+                    name="mother_name"
+                    value={newStudentData.mother_name}
+                    onChange={handleAddChange}
+                    className={errors.mother_name ? "error" : ""}
+                  />
+                  {errors.mother_name && <span className="student-mgmt-error">{errors.mother_name}</span>}
+                </div>
+                <div className="student-mgmt-form-group">
+                  <label>Mother's Contact Number:</label>
+                  <input
+                    type="text"
+                    name="mother_contact_number"
+                    value={newStudentData.mother_contact_number}
+                    onChange={handleAddChange}
+                    className={errors.mother_contact_number ? "error" : ""}
+                    maxLength={11}
+                  />
+                  {errors.mother_contact_number && <span className="student-mgmt-error">{errors.mother_contact_number}</span>}
+                </div>
+                <div className="student-mgmt-form-group">
+                  <label>Mother's Occupation:</label>
+                  <input
+                    type="text"
+                    name="mother_occupation"
+                    value={newStudentData.mother_occupation}
+                    onChange={handleAddChange}
+                    className={errors.mother_occupation ? "error" : ""}
+                  />
+                  {errors.mother_occupation && <span className="student-mgmt-error">{errors.mother_occupation}</span>}
+                </div>
+                <div className="student-mgmt-form-group">
+                  <label>Mother's Education Level:</label>
+                  <input
+                    type="text"
+                    name="mother_educ_lvl"
+                    value={newStudentData.mother_educ_lvl}
+                    onChange={handleAddChange}
+                    className={errors.mother_educ_lvl ? "error" : ""}
+                  />
+                  {errors.mother_educ_lvl && <span className="student-mgmt-error">{errors.mother_educ_lvl}</span>}
+                </div>
+                <div className="student-mgmt-form-group">
+                  <label>Father's Name:</label>
+                  <input
+                    type="text"
+                    name="father_name"
+                    value={newStudentData.father_name}
+                    onChange={handleAddChange}
+                    className={errors.father_name ? "error" : ""}
+                  />
+                  {errors.father_name && <span className="student-mgmt-error">{errors.father_name}</span>}
+                </div>
+                <div className="student-mgmt-form-group">
+                  <label>Father's Contact Number:</label>
+                  <input
+                    type="text"
+                    name="father_contact_number"
+                    value={newStudentData.father_contact_number}
+                    onChange={handleAddChange}
+                    className={errors.father_contact_number ? "error" : ""}
+                    maxLength={11}
+                  />
+                  {errors.father_contact_number && <span className="student-mgmt-error">{errors.father_contact_number}</span>}
+                </div>
+                <div className="student-mgmt-form-group">
+                  <label>Father's Occupation:</label>
+                  <input
+                    type="text"
+                    name="father_occupation"
+                    value={newStudentData.father_occupation}
+                    onChange={handleAddChange}
+                    className={errors.father_occupation ? "error" : ""}
+                  />
+                  {errors.father_occupation && <span className="student-mgmt-error">{errors.father_occupation}</span>}
+                </div>
+                <div className="student-mgmt-form-group">
+                  <label>Father's Education Level:</label>
+                  <input
+                    type="text"
+                    name="father_educ_lvl"
+                    value={newStudentData.father_educ_lvl}
+                    onChange={handleAddChange}
+                    className={errors.father_educ_lvl ? "error" : ""}
+                  />
+                  {errors.father_educ_lvl && <span className="student-mgmt-error">{errors.father_educ_lvl}</span>}
+                </div>
+                <div className="student-mgmt-form-group">
+                  <label>Parent Address:</label>
+                  <input
+                    type="text"
+                    name="parent_address"
+                    value={newStudentData.parent_address}
+                    onChange={handleAddChange}
+                    className={errors.parent_address ? "error" : ""}
+                  />
+                  {errors.parent_address && <span className="student-mgmt-error">{errors.parent_address}</span>}
+                </div>
+                <div className="student-mgmt-form-group">
+                  <label>Annual Income:</label>
+                  <input
+                    type="text"
+                    name="annual_income"
+                    value={newStudentData.annual_income}
+                    onChange={handleAddChange}
+                    className={errors.annual_income ? "error" : ""}
+                  />
+                  {errors.annual_income && <span className="student-mgmt-error">{errors.annual_income}</span>}
+                </div>
+                <div className="student-mgmt-form-group">
+                  <label>Number of Siblings:</label>
+                  <input
+                    type="number"
+                    name="number_of_siblings"
+                    value={newStudentData.number_of_siblings}
+                    onChange={handleAddChange}
+                    className={errors.number_of_siblings ? "error" : ""}
+                  />
+                  {errors.number_of_siblings && <span className="student-mgmt-error">{errors.number_of_siblings}</span>}
+                </div>
+              </div>
+            </div>
+
             <div className="student-mgmt-modal-actions">
-              <button className="student-mgmt-btn student-mgmt-btn-edit" onClick={saveNewSection}>
-                Save
-              </button>
-              <button className="student-mgmt-btn" onClick={cancelAdding}>
-                Cancel
-              </button>
+              <div className="student-mgmt-tab-navigation">
+                {activeTab !== 'basic' && (
+                  <button 
+                    type="button" 
+                    className="student-mgmt-btn" 
+                    onClick={() => setActiveTab(activeTab === 'family' ? 'contact' : 'basic')}
+                  >
+                    Previous
+                  </button>
+                )}
+                {activeTab !== 'family' && (
+                  <button 
+                    type="button" 
+                    className="student-mgmt-btn" 
+                    onClick={() => setActiveTab(activeTab === 'basic' ? 'contact' : 'family')}
+                  >
+                    Next
+                  </button>
+                )}
+              </div>
+              <div className="student-mgmt-form-actions">
+                <button className="student-mgmt-btn student-mgmt-btn-edit" onClick={saveNewStudent}>
+                  Save
+                </button>
+                <button className="student-mgmt-btn" onClick={cancelAdding}>
+                  Cancel
+                </button>
+              </div>
             </div>
           </div>
         </div>
