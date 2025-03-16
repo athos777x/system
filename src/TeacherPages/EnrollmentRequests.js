@@ -58,6 +58,11 @@ function EnrollmentRequests() {
   
       // Log the sorted students before setting the state
       console.log('Sorted students:', sortedStudents);
+      
+      // Log each student's data to check the status field
+      sortedStudents.forEach(student => {
+        console.log(`Student ${student.student_id} status: ${student.enrollment_status}, type: ${typeof student.enrollment_status}`);
+      });
   
       // Update the students and filteredStudents state
       setStudents(sortedStudents);
@@ -71,7 +76,7 @@ function EnrollmentRequests() {
       if (error.response) {
         console.error('Error response from server:', error.response.data);
       } else if (error.request) {
-        console.error('No response received from server. Request was:', error.request);
+        console.error('No response from server. Request was:', error.request);
       } else {
         console.error('Error setting up request:', error.message);
       }
@@ -125,7 +130,7 @@ const applyFilters = () => {
         filtered = filtered.filter(student => String(student.section_id) === filters.section);
     }
     if (filters.status) {
-        filtered = filtered.filter(student => student.student_status === filters.status);
+        filtered = filtered.filter(student => student.enrollment_status === filters.status);
     }
     if (filters.searchTerm) {
         filtered = filtered.filter(student => {
@@ -270,6 +275,11 @@ const approveElective = async (studentElectiveId) => {
 
   useEffect(() => {
     const userId = localStorage.getItem('userId'); // Retrieve userId from localStorage
+    console.log('Current localStorage contents:', {
+      userId: localStorage.getItem('userId'),
+      role: localStorage.getItem('role'),
+      isAuthenticated: localStorage.getItem('isAuthenticated')
+    });
     if (userId) {
       console.log(`Retrieved userId from localStorage: ${userId}`); // Debugging log
       fetchUserRole(userId);
@@ -446,8 +456,8 @@ const approveElective = async (studentElectiveId) => {
                   <td>{student.current_yr_lvl}</td>
                   <td>{student.section_id}</td>
                   <td>
-                    <span className={`status-${student.student_status.toLowerCase()}`}>
-                      {student.student_status}
+                    <span className={`status-${student.enrollment_status ? student.enrollment_status.toLowerCase() : ''}`}>
+                      {student.enrollment_status}
                     </span>
                   </td>
                   <td>
@@ -460,7 +470,9 @@ const approveElective = async (studentElectiveId) => {
                       </button>
                       {(roleName === 'registrar' || roleName === 'principal') && (
                         <>
-                        {student.student_status === 'pending' && (
+                        {console.log('Role check passed:', roleName)}
+                        {console.log('Student status:', student.enrollment_status)}
+                        {(student.enrollment_status && student.enrollment_status.toLowerCase() === 'pending') && (
                           <button 
                             className="pending-enrollment-btn pending-enrollment-btn-approve" 
                             onClick={(e) => {
@@ -528,8 +540,8 @@ const approveElective = async (studentElectiveId) => {
               <tr>
                 <th>Status</th>
                 <td>
-                  <span className={`status-${editStudentData?.student_status.toLowerCase()}`}>
-                    {editStudentData?.student_status || ''}
+                  <span className={`status-${editStudentData?.enrollment_status ? editStudentData.enrollment_status.toLowerCase() : ''}`}>
+                    {editStudentData?.enrollment_status || ''}
                   </span>
                 </td>
               </tr>
