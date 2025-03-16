@@ -41,7 +41,7 @@ import SF6 from './reports/sf6';
 import Teacher_SchedulePage from './TeacherPages/Teacher_SchedulePage';
 import ExperimentalSubjects from './TeacherPages/ExperimentalSubjects';
 import ExperimentalGrades from './TeacherPages/ExperimentalGrades';
-
+import ElectiveRequest from './TeacherPages/ElectiveRequest';
 
 
 
@@ -120,6 +120,7 @@ function App() {
             <Route path="/brigada-eskwela" element={<BrigadaEskwela />} />
             <Route path="/pending-enrollment" element={<EnrollmentRequests />} />
             <Route path="/new-grades" element={<GradesManagement />} />
+            <Route path="/pending-elective" element={<ElectiveRequest />} />    
 
             <Route path="/form-137" element={<Form137 />} />
             <Route path="/form-138" element={<Form138 />} />
