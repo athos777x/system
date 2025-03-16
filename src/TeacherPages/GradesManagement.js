@@ -116,6 +116,7 @@ function GradesManagement() {
 
     setSelectedStudent(student);
     setEditingStudent(null);
+    setGradesFetched(false);
     const gradeLevel = student.current_yr_lvl;
     const fetchedSubjects = await fetchSubjects(student.student_id, gradeLevel);
     await fetchGrades(student.student_id, gradeLevel, fetchedSubjects);
@@ -204,13 +205,14 @@ function GradesManagement() {
 
     setSelectedStudent(student);
     setEditingStudent(student);
+    setGradesFetched(false);
     const gradeLevel = student.current_yr_lvl;
     const fetchedSubjects = await fetchSubjects(student.student_id, gradeLevel);
     await fetchGrades(student.student_id, gradeLevel, fetchedSubjects);
   };
 
   const fetchGrades = async (studentId, gradeLevel, existingSubjects) => {
-    if (!studentId || !gradeLevel || gradesFetched) return;
+    if (!studentId || !gradeLevel) return;
 
     try {
       const response = await axios.get('http://localhost:3001/api/grades', {
