@@ -3,7 +3,7 @@ import Pagination from '../Utilities/pagination';
 import axios from 'axios';
 import '../TeacherPagesCss/EnrollmentRequests.css';
 
-function EnrollmentRequests() {
+function ElectiveRequest() {
   const [students, setStudents] = useState([]);
   const [filteredStudents, setFilteredStudents] = useState([]);
   const [selectedStudentId, setSelectedStudentId] = useState(null);
@@ -46,7 +46,7 @@ function EnrollmentRequests() {
       console.log('Applied filters:', appliedFilters);
   
       // Make the API request to get students with the applied filters
-      const response = await axios.get('http://localhost:3001/students/pending-enrollment', {
+      const response = await axios.get('http://localhost:3001/students/pending-elective', {
         params: appliedFilters
       });
   
@@ -152,55 +152,30 @@ const handleApplyFilters = () => {
 };
 
 
-const validateStudent = async (studentId, action) => {
-  try {
-    console.log(`Validating enrollment for student ID: ${studentId} with action: ${action}`);
-
-    // Send the POST request with the action (approve/reject)
-    const response = await axios.post('http://localhost:3001/validate-enrollment', { studentId, action });
-
-    // Check for successful response
-    if (response.status === 200) {
-      console.log('Validation successful:', response.data);
-      alert(response.data.message);
-      await fetchStudents(); // Refresh the student list after validation
-    } else {
-      console.warn('Failed to validate enrollment, non-200 response:', response);
-      alert('Failed to validate enrollment.');
-    }
-  } catch (error) {
-    if (error.response) {
-      console.error('Error response:', error.response.data);
-      alert('Error validating the enrollment: ' + (error.response.data.error || 'Unknown error'));
-    } else if (error.request) {
-      console.error('No response from server:', error.request);
-      alert('No response from the server. Please check your connection.');
-    } else {
-      console.error('Error setting up request:', error.message);
-      alert('An error occurred: ' + error.message);
-    }
-  }
-};
-
-
-const approveElective = async (studentElectiveId) => {
-  try {
+const approveElective = async (studentId, action) => {
+    try {
       const response = await axios.post('http://localhost:3001/approve-elective', {
-          studentElectiveId
+        studentId,
+        action
       });
-
-      if (response.data.message) {
-          alert(response.data.message);
-          await fetchStudents(); // Refresh student list after approval
+  
+      if (response.status === 200 && response.data.message) {
+        alert(response.data.message);
+        await fetchStudents(); // Refresh student list
       } else {
-          alert('Failed to approve elective.');
+        alert(response.data.error || `Failed to ${action} elective.`);
       }
-  } catch (error) {
-      console.error('Error approving elective:', error);
-      alert('An error occurred while approving the elective.');
-  }
-};
-
+    } catch (error) {
+      console.error(`Error updating elective status to '${action}' for student ID: ${studentId}`, error);
+  
+      if (error.response) {
+        alert('Error: ' + (error.response.data.error || 'Unknown server error.'));
+      } else {
+        alert('Network error: Unable to reach the server.');
+      }
+    }
+  };
+  
 
 
   const formatDate = (isoString) => {
@@ -339,7 +314,7 @@ const approveElective = async (studentElectiveId) => {
   return (
     <div className="pending-enrollment-container">
       <div className="pending-enrollment-header">
-        <h1 className="pending-enrollment-title">Pending Enrollment</h1>
+        <h1 className="pending-enrollment-title">Pending Elective</h1>
       </div>
 
       <div className="pending-enrollment-filters">
@@ -427,24 +402,22 @@ const approveElective = async (studentElectiveId) => {
                         <>
                         {console.log('Role check passed:', roleName)}
                         {console.log('Student status:', student.active_status)}
-                        {(student.active_status && student.active_status.toLowerCase() === 'pending') && (
                           <button 
                             className="pending-enrollment-btn pending-enrollment-btn-approve" 
                             onClick={(e) => {
                               e.stopPropagation();
-                              validateStudent(student.student_id, 'approve');
+                              approveElective(student.student_id, 'approve');
                             }}
                           >
                             Approve
                           </button>
-                        )}
                         </>
                       )}
                       <button
                         className="pending-enrollment-btn pending-enrollment-btn-reject"
                         onClick={(e) => {
                           e.stopPropagation();
-                          validateStudent(student.student_id, 'reject');
+                          approveElective(student.student_id, 'reject');
                         }}
                       >
                         Reject
@@ -515,4 +488,4 @@ const approveElective = async (studentElectiveId) => {
   );
 }
 
-export default EnrollmentRequests;
+export default ElectiveRequest;

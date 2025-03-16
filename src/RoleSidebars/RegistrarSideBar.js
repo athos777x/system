@@ -26,7 +26,7 @@ function RegistrarSideBar({ showSidebar, toggleSidebar, handleLogout }) {
 
   // Check if current path is under a specific submenu
   const isRecordsPath = ['/attendance', '/brigada-eskwela', '/new-grades'].includes(location.pathname);
-  const isEnrollmentPath = ['/pending-enrollment', '/school-year', '/section-list', '/enrolled-students'].includes(location.pathname);
+  const isEnrollmentPath = ['/pending-enrollment', '/pending-elective', '/school-year', '/section-list', '/enrolled-students'].includes(location.pathname);
   const isExperimentalsPath = ['/subjects', '/grades'].includes(location.pathname);
 
   // Update useEffect to handle initial submenu state based on path
@@ -137,6 +137,12 @@ function RegistrarSideBar({ showSidebar, toggleSidebar, handleLogout }) {
                 className={location.pathname === '/pending-enrollment' ? 'active' : ''}
               >
                 <FiUsers className="icon" /> Pending Enrollment
+              </button>
+              <button 
+                onClick={() => handleNavigate('/pending-elective')}
+                className={location.pathname === '/pending-elective' ? 'active' : ''}
+              >
+                <FiUsers className="icon" /> Pending Elective
               </button>
               <button 
                 onClick={() => handleNavigate('/school-year')}

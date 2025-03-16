@@ -619,159 +619,191 @@ app.put('/students/:id/enroll', (req, res) => {
 // ENDPOINT USED:
 // STUDENTS PAGE
 app.post('/validate-enrollment', (req, res) => {
-  const { studentId } = req.body;
+  const { studentId, action } = req.body; // Get action (approve or reject)
 
-  // Step 1: Update the student_school_year table to 'active'
-  const updateStudentSchoolYearQuery = `
-    UPDATE student_school_year SET status = 'active' WHERE student_id = ?;
-  `;
-  
-  db.query(updateStudentSchoolYearQuery, [studentId], (err1, result1) => {
-    if (err1) {
-      console.error('Error updating student_school_year:', err1.message);
-      return res.status(500).json({ error: 'Database error: ' + err1.message });
-    }
+  if (action === 'reject') {
+    // Step for Reject: Update student_school_year and enrollment to 'inactive'
+    const rejectQuery = `UPDATE student_school_year SET status = 'inactive' WHERE student_id = ?;`;
+    const updateEnrollmentQuery = `UPDATE enrollment SET enrollment_status = 'inactive' WHERE student_id = ?;`;
 
-    if (result1.affectedRows === 0) {
-      console.error(`No record found in student_school_year for student ID: ${studentId}`);
-      return res.status(404).json({ error: 'No matching record found in student_school_year' });
-    }
-
-    console.log(`student_school_year status updated to 'active' for student ID: ${studentId}`);
-
-    // Step 2: Update the enrollment table to 'active'
-    const updateEnrollmentQuery = `
-      UPDATE enrollment SET enrollment_status = 'active' WHERE student_id = ?;
-    `;
-
-    db.query(updateEnrollmentQuery, [studentId], (err2, result2) => {
-      if (err2) {
-        console.error('Error updating enrollment:', err2.message);
-        return res.status(500).json({ error: 'Database error: ' + err2.message });
+    db.query(rejectQuery, [studentId], (err1, result1) => {
+      if (err1) {
+        console.error('Error updating student_school_year:', err1.message);
+        return res.status(500).json({ error: 'Database error: ' + err1.message });
       }
 
-      if (result2.affectedRows === 0) {
-        console.error(`No record found in enrollment for student ID: ${studentId}`);
-        return res.status(404).json({ error: 'No matching record found in enrollment' });
+      if (result1.affectedRows === 0) {
+        console.error(`No record found in student_school_year for student ID: ${studentId}`);
+        return res.status(404).json({ error: 'No matching record found in student_school_year' });
       }
 
-      console.log(`Enrollment status updated to 'active' for student ID: ${studentId}`);
-
-      // Step 3: Distribute the student into a section based on grade level and gender balance
-      const getStudentDetailsQuery = `
-        SELECT current_yr_lvl, gender FROM student WHERE student_id = ?;
-      `;
-
-      db.query(getStudentDetailsQuery, [studentId], (err3, result3) => {
-        if (err3) {
-          console.error('Error fetching student details:', err3.message);
-          return res.status(500).json({ error: 'Database error: ' + err3.message });
+      // Update the enrollment status to 'inactive'
+      db.query(updateEnrollmentQuery, [studentId], (err2, result2) => {
+        if (err2) {
+          console.error('Error updating enrollment:', err2.message);
+          return res.status(500).json({ error: 'Database error: ' + err2.message });
         }
 
-        if (result3.length === 0) {
-          console.error(`No details found for student ID: ${studentId}`);
-          return res.status(404).json({ error: 'No details found for the student' });
+        console.log(`Student ID: ${studentId} enrollment rejected (status set to 'inactive').`);
+        return res.status(200).json({ message: 'Enrollment rejected successfully.' });
+      });
+    });
+
+  } else if (action === 'approve') {
+    // Step for Approve: Perform all the steps except rejection
+    const updateStudentSchoolYearQuery = `UPDATE student_school_year SET status = 'active' WHERE student_id = ?;`;
+
+    db.query(updateStudentSchoolYearQuery, [studentId], (err1, result1) => {
+      if (err1) {
+        console.error('Error updating student_school_year:', err1.message);
+        return res.status(500).json({ error: 'Database error: ' + err1.message });
+      }
+
+      if (result1.affectedRows === 0) {
+        console.error(`No record found in student_school_year for student ID: ${studentId}`);
+        return res.status(404).json({ error: 'No matching record found in student_school_year' });
+      }
+
+      console.log(`student_school_year status updated to 'active' for student ID: ${studentId}`);
+
+      // Step 2: Update enrollment table to 'active'
+      const updateEnrollmentQuery = `UPDATE enrollment SET enrollment_status = 'active' WHERE student_id = ?;`;
+
+      db.query(updateEnrollmentQuery, [studentId], (err2, result2) => {
+        if (err2) {
+          console.error('Error updating enrollment:', err2.message);
+          return res.status(500).json({ error: 'Database error: ' + err2.message });
         }
 
-        const { current_yr_lvl: gradeLevel, gender } = result3[0];
+        if (result2.affectedRows === 0) {
+          console.error(`No record found in enrollment for student ID: ${studentId}`);
+          return res.status(404).json({ error: 'No matching record found in enrollment' });
+        }
 
-        // Fetch available sections for this grade level
-        const fetchSectionsQuery = `
-          SELECT section_id, max_capacity,
-            (SELECT COUNT(*) FROM student WHERE section_id = section.section_id AND gender = 'male') AS male_count,
-            (SELECT COUNT(*) FROM student WHERE section_id = section.section_id AND gender = 'female') AS female_count,
-            (SELECT COUNT(*) FROM student WHERE section_id = section.section_id) AS total_count
-          FROM section
-          WHERE grade_level = ?;
-        `;
+        console.log(`Enrollment status updated to 'active' for student ID: ${studentId}`);
 
-        db.query(fetchSectionsQuery, [gradeLevel], (err4, sections) => {
-          if (err4) {
-            console.error('Error fetching sections:', err4.message);
-            return res.status(500).json({ error: 'Database error: ' + err4.message });
+        // Step 3: Assign student to a section based on grade level & gender
+        const getStudentDetailsQuery = `SELECT current_yr_lvl, gender FROM student WHERE student_id = ?;`;
+
+        db.query(getStudentDetailsQuery, [studentId], (err3, result3) => {
+          if (err3) {
+            console.error('Error fetching student details:', err3.message);
+            return res.status(500).json({ error: 'Database error: ' + err3.message });
           }
 
-          if (sections.length === 0) {
-            console.error(`No sections found for grade level: ${gradeLevel}`);
-            return res.status(404).json({ error: 'No sections available for this grade level' });
+          if (result3.length === 0) {
+            console.error(`No details found for student ID: ${studentId}`);
+            return res.status(404).json({ error: 'No details found for the student' });
           }
 
-          // Logic to evenly distribute students by gender, considering max capacity
-          let selectedSection = null;
-          let smallestDifference = Infinity;
+          const { current_yr_lvl: gradeLevel, gender } = result3[0];
 
-          sections.forEach(section => {
-            const { section_id, male_count, female_count, total_count, max_capacity } = section;
-
-            // Ensure the section has space for another student
-            if (total_count < max_capacity) {
-              let difference;
-
-              if (gender === 'male') {
-                difference = Math.abs((male_count + 1) - female_count);
-              } else {
-                difference = Math.abs(male_count - (female_count + 1));
-              }
-
-              // Randomly select between sections with the same smallest difference
-              if (difference < smallestDifference || (difference === smallestDifference && Math.random() < 0.5)) {
-                smallestDifference = difference;
-                selectedSection = section_id;
-              }
-            }
-          });
-
-          if (!selectedSection) {
-            console.error('No suitable section found with available capacity.');
-            return res.status(500).json({ error: 'No suitable section found with available capacity.' });
-          }
-
-          // Update student's section in the student table
-          const updateStudentSectionQuery = `
-            UPDATE student SET section_id = ? WHERE student_id = ?;
+          // Fetch available sections for this grade level
+          const fetchSectionsQuery = `
+            SELECT section_id, max_capacity,
+              (SELECT COUNT(*) FROM student WHERE section_id = section.section_id AND gender = 'male') AS male_count,
+              (SELECT COUNT(*) FROM student WHERE section_id = section.section_id AND gender = 'female') AS female_count,
+              (SELECT COUNT(*) FROM student WHERE section_id = section.section_id) AS total_count
+            FROM section
+            WHERE grade_level = ?;
           `;
 
-          db.query(updateStudentSectionQuery, [selectedSection, studentId], (err5, result5) => {
-            if (err5) {
-              console.error('Error assigning section to student:', err5.message);
-              return res.status(500).json({ error: 'Database error: ' + err5.message });
+          db.query(fetchSectionsQuery, [gradeLevel], (err4, sections) => {
+            if (err4) {
+              console.error('Error fetching sections:', err4.message);
+              return res.status(500).json({ error: 'Database error: ' + err4.message });
             }
 
-            console.log(`Student ID: ${studentId} assigned to section ID: ${selectedSection}`);
-            res.status(200).json({ message: 'Enrollment validated and section assigned successfully' });
+            if (sections.length === 0) {
+              console.error(`No sections found for grade level: ${gradeLevel}`);
+              return res.status(404).json({ error: 'No sections available for this grade level' });
+            }
+
+            // Logic to distribute students by gender and capacity
+            let selectedSection = null;
+            let smallestDifference = Infinity;
+
+            sections.forEach(section => {
+              const { section_id, male_count, female_count, total_count, max_capacity } = section;
+
+              // Ensure the section has space
+              if (total_count < max_capacity) {
+                let difference = gender === 'male'
+                  ? Math.abs((male_count + 1) - female_count)
+                  : Math.abs(male_count - (female_count + 1));
+
+                if (difference < smallestDifference || (difference === smallestDifference && Math.random() < 0.5)) {
+                  smallestDifference = difference;
+                  selectedSection = section_id;
+                }
+              }
+            });
+
+            if (!selectedSection) {
+              console.error('No suitable section found with available capacity.');
+              return res.status(500).json({ error: 'No suitable section found with available capacity.' });
+            }
+
+            // Assign student to section
+            const updateStudentSectionQuery = `UPDATE student SET section_id = ? WHERE student_id = ?;`;
+
+            db.query(updateStudentSectionQuery, [selectedSection, studentId], (err5, result5) => {
+              if (err5) {
+                console.error('Error assigning section to student:', err5.message);
+                return res.status(500).json({ error: 'Database error: ' + err5.message });
+              }
+
+              console.log(`Student ID: ${studentId} assigned to section ID: ${selectedSection}`);
+              res.status(200).json({ message: 'Enrollment approved and section assigned successfully' });
+            });
           });
         });
       });
     });
-  });
+
+  } else {
+    return res.status(400).json({ error: 'Invalid action' });
+  }
 });
+
 
 
 // ENDPOINT USED:
 // STUDENTS PAGE
 app.post('/approve-elective', (req, res) => {
-  const { studentElectiveId } = req.body;
+  const { studentId, action } = req.body; // Get studentId and action ('approve' or 'reject')
 
-  if (!studentElectiveId) {
-    return res.status(400).json({ error: 'Missing required parameter: studentElectiveId' });
+  if (!studentId || !action) {
+    return res.status(400).json({ error: 'Missing required parameters: studentId and action' });
   }
 
-  // Assume your `checkCapacityQuery` and `approveQuery` remain the same:
-  const approveQuery = `
+  // Determine the correct status based on action
+  let status = action === 'approve' ? 'approved' : 'rejected';
+
+  const updateQuery = `
     UPDATE student_elective 
-    SET enrollment_status = 'approved' 
-    WHERE student_elective_id = ?;
+    SET enrollment_status = ? 
+    WHERE student_id = ?;
   `;
 
-  db.query(approveQuery, [studentElectiveId], (err, result) => {
+  db.query(updateQuery, [status, studentId], (err, result) => {
     if (err) {
-      console.error('Error approving elective enrollment:', err);
-      return res.status(500).json({ error: 'Database error' });
+      console.error(`Error updating elective status to '${status}' for student ID: ${studentId}`, err.message);
+      return res.status(500).json({ error: 'Database error: ' + err.message });
     }
 
-    res.status(200).json({ message: 'Elective enrollment approved successfully.' });
+    if (result.affectedRows === 0) {
+      console.warn(`No record found in student_elective for student ID: ${studentId}`);
+      return res.status(404).json({ error: 'No matching elective enrollment found.' });
+    }
+
+    console.log(`Elective enrollment status updated to '${status}' for student ID: ${studentId}`);
+    res.status(200).json({ message: `Elective enrollment ${status} successfully.` });
   });
 });
+
+
+
 
 // ENDPOINT USED:
 // STUDENT ENROLLMENT PAGE
@@ -1763,67 +1795,87 @@ app.get('/teacher-section/:teacherId', (req, res) => {
 // Endpoint to fetch employee details by ID
 // Function: Fetches detailed information about an employee based on their employee ID
 // Pages: EmployeePage.js
-app.get('/employees/:employeeId', (req, res) => {
-  const { employeeId } = req.params;
-  const query = 'SELECT * FROM employee WHERE employee_id = ?';
-  db.query(query, [employeeId], (err, results) => {
-    if (err) {
-      console.error('Error fetching employee details:', err);
-      res.status(500).json({ error: 'Internal server error' });
-      return;
-    }
-    if (results.length > 0) {
-      res.json(results[0]);
-    } else {
-      res.status(404).json({ error: 'Employee not found' });
-    }
-  });
-});
-
-
-// Endpoint to update employee details by ID
-// Function: Updates an employee's details based on their employee ID
-// Pages: EmployeePage.js
 app.put('/employees/:employeeId', (req, res) => {
   const { employeeId } = req.params;
-  const updatedEmployee = req.body;
+  let updatedEmployee = req.body;
+
+  // Convert birthday to YYYY-MM-DD format
+  if (updatedEmployee.birthday) {
+    const date = new Date(updatedEmployee.birthday);
+    updatedEmployee.birthday = date.toISOString().split('T')[0];
+  }
 
   console.log(`Updating employee with ID: ${employeeId}`, updatedEmployee);
 
-  // Fetch the role_id based on the role_name
+  // Step 1: Fetch role_id from roles table
   const roleQuery = 'SELECT role_id FROM roles WHERE role_name = ?';
   db.query(roleQuery, [updatedEmployee.role_name], (err, roleResults) => {
     if (err) {
       console.error('Error fetching role ID:', err);
-      res.status(500).json({ error: 'Internal server error' });
-      return;
+      return res.status(500).json({ error: 'Internal server error' });
     }
 
-    if (roleResults.length > 0) {
-      const roleId = roleResults[0].role_id;
-      updatedEmployee.role_id = roleId;
+    if (roleResults.length === 0) {
+      console.error('Role not found:', updatedEmployee.role_name);
+      return res.status(404).json({ error: 'Role not found' });
+    }
 
-      console.log('Role ID fetched:', roleId);
+    const roleId = roleResults[0].role_id;
+    updatedEmployee.role_id = roleId;
 
-      const query = 'UPDATE employee SET ? WHERE employee_id = ?';
-      db.query(query, [updatedEmployee, employeeId], (err, results) => {
+    // Step 2: Fetch user_id from employee table
+    const fetchUserIdQuery = 'SELECT user_id FROM employee WHERE employee_id = ?';
+    db.query(fetchUserIdQuery, [employeeId], (err, userResults) => {
+      if (err) {
+        console.error('Error fetching user ID:', err);
+        return res.status(500).json({ error: 'Internal server error' });
+      }
+
+      if (userResults.length === 0) {
+        console.error(`No user_id found for employee_id: ${employeeId}`);
+        return res.status(404).json({ error: 'No user found for this employee' });
+      }
+
+      const userId = userResults[0].user_id;
+
+      // Step 3: Update employee table
+      const updateEmployeeQuery = 'UPDATE employee SET ? WHERE employee_id = ?';
+      db.query(updateEmployeeQuery, [updatedEmployee, employeeId], (err, results) => {
         if (err) {
           console.error('Error updating employee details:', err);
-          res.status(500).json({ error: 'Internal server error' });
-          return;
+          return res.status(500).json({ error: 'Internal server error' });
         }
-        if (results.affectedRows > 0) {
-          res.json({ message: 'Employee updated successfully' });
-        } else {
-          res.status(404).json({ error: 'Employee not found' });
+
+        if (results.affectedRows === 0) {
+          console.error(`Employee with ID ${employeeId} not found`);
+          return res.status(404).json({ error: 'Employee not found' });
         }
+
+        console.log(`Employee with ID ${employeeId} updated successfully`);
+
+        // Step 4: Update users table
+        const updateUserQuery = 'UPDATE users SET role_id = ?, role_name = ? WHERE user_id = ?';
+        db.query(updateUserQuery, [roleId, updatedEmployee.role_name, userId], (err, userUpdateResults) => {
+          if (err) {
+            console.error('Error updating user role:', err);
+            return res.status(500).json({ error: 'Internal server error while updating user role' });
+          }
+
+          if (userUpdateResults.affectedRows === 0) {
+            console.error(`User with ID ${userId} not found`);
+            return res.status(404).json({ error: 'User not found' });
+          }
+
+          console.log(`User role updated for user_id: ${userId}`);
+          return res.json({ message: 'Employee and user role updated successfully' });
+        });
       });
-    } else {
-      console.error('Role not found:', updatedEmployee.role_name);
-      res.status(404).json({ error: 'Role not found' });
-    }
+    });
   });
 });
+
+
+
 
 
 // Endpoint to unarchive an employee
@@ -3748,5 +3800,94 @@ app.get('/api/profile-picture/:userId', (req, res) => {
     }
     
     res.status(200).json({ imageUrl: profilePictureUrl });
+  });
+});
+
+app.get('/students/pending-elective', (req, res) => {
+  const { searchTerm, grade, section, school_year } = req.query;
+
+  console.log('Received params:', { searchTerm, grade, section, school_year });
+
+  // Query to fetch the active school year
+  const getActiveSchoolYearQuery = `
+    SELECT school_year 
+    FROM school_year 
+    WHERE status = 'active' 
+    LIMIT 1
+  `;
+
+  db.query(getActiveSchoolYearQuery, (err, results) => {
+    if (err) {
+      console.error('Error fetching active school year:', err);
+      res.status(500).json({ error: 'Failed to fetch active school year' });
+      return;
+    }
+
+    const latestSchoolYear = results[0]?.school_year;
+
+    if (!latestSchoolYear) {
+      console.error('No active school year found');
+      res.status(404).json({ error: 'No active school year found' });
+      return;
+    }
+
+    console.log('Active school year:', latestSchoolYear);
+
+    // Build the main query
+    let query = `
+      SELECT s.student_id, s.user_id, s.lastname, s.firstname, s.middlename, 
+      s.current_yr_lvl, s.birthdate, s.gender, s.age, 
+      s.home_address, s.barangay, s.city_municipality, s.province, 
+      s.contact_number, s.email_address, s.status as stud_status,
+      s.mother_name, s.father_name, s.parent_address, s.father_occupation, 
+      s.mother_occupation, s.annual_hshld_income, s.number_of_siblings, 
+      s.father_educ_lvl, s.mother_educ_lvl, s.father_contact_number, 
+      s.mother_contact_number, IF(s.brigada_eskwela=1,'Attended','Not Attended') AS brigada_eskwela,
+      (SELECT ss.status FROM student_school_year ss
+      JOIN school_year sy ON ss.school_year_id = sy.school_year_id
+      WHERE ss.student_id = s.student_id AND sy.status = 'active') as active_status,
+      se.enrollment_status, se.student_elective_id
+      FROM student s
+      LEFT JOIN student_elective se ON s.student_id = se.student_id 
+      LEFT JOIN enrollment xx ON s.student_id=xx.student_id
+      WHERE se.enrollment_status='pending'
+    `;
+
+    const queryParams = [];
+    const conditions = [];
+
+    if (searchTerm) {
+      conditions.push(`(s.firstname LIKE ? OR s.lastname LIKE ?)`);
+      queryParams.push(`%${searchTerm}%`, `%${searchTerm}%`);
+    }
+
+    if (grade) {
+      conditions.push(`s.current_yr_lvl = ?`);
+      queryParams.push(grade);
+    }
+
+    if (section) {
+      conditions.push(`s.section_id = ?`);
+      queryParams.push(section);
+    }
+
+    if (conditions.length > 0) {
+      query += ' AND ' + conditions.join(' AND ');
+    }
+
+    query += ' ORDER BY s.firstname';
+
+    console.log('Final query:', query);
+    console.log('With parameters:', queryParams);
+
+    // Execute the main query
+    db.query(query, queryParams, (err, results) => {
+      if (err) {
+        console.error('Error fetching students:', err);
+        res.status(500).json({ error: 'Internal server error' });
+        return;
+      }
+      res.json(results);
+    });
   });
 });

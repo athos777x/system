@@ -751,6 +751,12 @@ useEffect(() => {
                               Assign Section
                             </button>
                           )}
+                          {/* <button 
+                              className="teacher-mgmt-btn teacher-mgmt-btn-view"
+                              onClick={() => handleAssignSubject(teacher.employee_id)}
+                            >
+                              Assign Subject
+                          </button> */}
                           <button 
                             className="teacher-mgmt-btn teacher-mgmt-btn-archive"
                             onClick={() => openArchiveModal(teacher.employee_id)}
@@ -1010,6 +1016,78 @@ useEffect(() => {
           </div>
         </div>
       )}
+
+      {/* {showAssignSubjectModal && (
+        <div className="teacher-mgmt-modal">
+          <div className="teacher-mgmt-modal-content">
+            <h2>Assign Subject</h2>
+
+            <div className="teacher-mgmt-form-group">
+              <label>Grade Level:</label>
+              <div className="teacher-mgmt-grade-buttons">
+                {[7, 8, 9, 10].map((grade) => (
+                  <button
+                    key={grade}
+                    className={`teacher-mgmt-btn ${selectedGradeLevelForSection === grade.toString() ? 'teacher-mgmt-btn-view' : ''}`}
+                    onClick={() => handleGradeLevelChangeForSection(grade.toString())}
+                  >
+                    Grade {grade}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="teacher-mgmt-form-group">
+              <label>Available Sections:</label>
+              <div className="teacher-mgmt-sections-grid">
+                {sectionsByGrade.map((section) => (
+                  <button
+                    key={section.section_id}
+                    className={`teacher-mgmt-btn ${selectedSection === section.section_id ? 'teacher-mgmt-btn-view' : ''}`}
+                    onClick={() => setSelectedSection(section.section_id)}
+                  >
+                    {section.section_name}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="teacher-mgmt-form-group">
+              <label>Available Subjects:</label>
+              <div className="teacher-mgmt-sections-grid">
+                {subjectsByGrade.map((subject) => {
+                  const subjectId = `${subject.type}-${subject.subject_id}`;
+                  return (
+                    <button
+                      key={subjectId} // Ensure unique keys
+                      className={`teacher-mgmt-btn ${selectedSubject === subjectId ? 'teacher-mgmt-btn-view' : ''}`}
+                      onClick={() => setSelectedSubject(subjectId)}
+                    >
+                      {subject.subject_name}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="teacher-mgmt-details-actions">
+              <button 
+                className="teacher-mgmt-btn teacher-mgmt-btn-view"
+                onClick={handleSubjectAssignment}
+                disabled={!selectedSection || !selectedSubject}
+              >
+                Assign Subject
+              </button>
+              <button 
+                className="teacher-mgmt-btn teacher-mgmt-btn-archive"
+                onClick={() => setShowAssignSubjectModal(false)}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )} */}
 
       {showEditModal && (
         <div className="teacher-mgmt-modal">
