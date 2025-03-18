@@ -62,7 +62,6 @@ function TeacherManagement() {
   useEffect(() => {
     console.log('Component mounted');
     fetchRoles();
-    fetchTeachers();
   }, []);
 
   useEffect(() => {
@@ -128,6 +127,10 @@ function TeacherManagement() {
   const applyFilters = (appliedFilters) => {
     let filtered = teachers;
   
+    if (appliedFilters.searchID) {
+      filtered = filtered.filter(teacher => (teacher.employee_id) === appliedFilters.employee_id);
+    }
+
     if (appliedFilters.status) {
       filtered = filtered.filter(teacher => String(teacher.status) === appliedFilters.status);
     }
@@ -153,10 +156,19 @@ function TeacherManagement() {
   };
   
 
-  const handleApplyFilters = (newFilters) => {
-    setFilters(newFilters);
-    applyFilters(newFilters);
+  const handleApplyFilters = (filters) => {
+    console.log('Applying filters:', filters);
+  
+    // ✅ Check if all filters are empty
+    const hasFilters = Object.values(filters).some(value => value !== '');
+  
+    if (hasFilters) {
+      fetchTeachers(filters); // ✅ Fetch teachers if filters are applied
+    } else {
+      setFilteredTeachers([]); // ✅ Clear the list if no filters are applied
+    }
   };
+  
 
 
   const startAdding = () => {
@@ -592,10 +604,7 @@ useEffect(() => {
         )}
       </div>
 
-      <EmployeeSearchFilter
-        handleSearch={handleSearch}
-        handleApplyFilters={handleApplyFilters}
-      />
+      <EmployeeSearchFilter handleApplyFilters={handleApplyFilters} />
 
       <div className="teacher-mgmt-table-container">
         <table className="teacher-mgmt-table">
@@ -611,8 +620,8 @@ useEffect(() => {
             {CurrentTeachers.map((teacher, index) => (
               <React.Fragment key={teacher.employee_id}>
                 <tr>
-                  <td>{index + 1}</td>
-                  <td>{teacher.firstname} {teacher.middlename && `${teacher.middlename[0]}.`} {teacher.lastname}</td>
+                  <td>{teacher.employee_id}</td>
+                  <td>{teacher.emp_name}</td>
                   <td>
                     <span className={`status-${teacher.status.toLowerCase()}`}>
                       {teacher.status.charAt(0).toUpperCase() + teacher.status.slice(1)}

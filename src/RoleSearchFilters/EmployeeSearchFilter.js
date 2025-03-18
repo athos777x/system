@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 
-function EmployeeSearchFilter({ handleSearch, handleApplyFilters }) {
+function EmployeeSearchFilter({ handleApplyFilters }) {
   const [filters, setFilters] = useState({
+    searchID: '',
     searchTerm: '',
     status: '',
     position: ''
@@ -15,38 +16,39 @@ function EmployeeSearchFilter({ handleSearch, handleApplyFilters }) {
     }));
   };
 
-  const handleSearchChange = (e) => {
-    const searchTerm = e.target.value;
-    setFilters(prev => ({
-      ...prev,
-      searchTerm
-    }));
-    handleSearch(searchTerm);
-  };
-
   const applyFilters = () => {
-    handleApplyFilters(filters);
+    handleApplyFilters(filters); // ✅ Always allow applying filters
   };
 
   return (
     <div className="teacher-mgmt-search-filter-container">
+      {/* Search by Employee ID */}
       <div className="teacher-mgmt-search-bar">
         <input
           type="text"
-          placeholder="Search by name..."
-          value={filters.searchTerm}
-          onChange={handleSearchChange}
+          name="searchID"
+          placeholder="Search by Emp ID..."
+          value={filters.searchID}
+          onChange={handleFilterChange}
         />
       </div>
-      
+
+      {/* Search by Name */}
+      <div className="teacher-mgmt-search-bar">
+        <input
+          type="text"
+          name="searchTerm"
+          placeholder="Search by name..."
+          value={filters.searchTerm}
+          onChange={handleFilterChange}
+        />
+      </div>
+
+      {/* Filters */}
       <div className="teacher-mgmt-filter-options">
         <div className="teacher-mgmt-filter-group">
-          <select
-            name="status"
-            value={filters.status}
-            onChange={handleFilterChange}
-          >
-            <option value="">Status: All</option>
+          <select name="status" value={filters.status} onChange={handleFilterChange}>
+            <option value="">Select Status</option>
             <option value="active">Active</option>
             <option value="resigned">Resigned</option>
             <option value="retired">Retired</option>
@@ -54,13 +56,9 @@ function EmployeeSearchFilter({ handleSearch, handleApplyFilters }) {
         </div>
 
         <div className="teacher-mgmt-filter-group">
-          <select
-            name="position"
-            value={filters.position}
-            onChange={handleFilterChange}
-          >
-            <option value="">Position: All</option>
-            <option value="subject_teacher">Teacher</option>
+          <select name="position" value={filters.position} onChange={handleFilterChange}>
+            <option value="">Select Position</option>
+            <option value="subject_teacher">Subject Teacher</option>
             <option value="registrar">Registrar</option>
             <option value="principal">Principal</option>
             <option value="academic_coordinator">Academic Coordinator</option>
@@ -71,11 +69,9 @@ function EmployeeSearchFilter({ handleSearch, handleApplyFilters }) {
         </div>
       </div>
 
+      {/* Apply Filters Button */}
       <div className="teacher-mgmt-filter-actions">
-        <button 
-          className="teacher-mgmt-filter-btn"
-          onClick={applyFilters}
-        >
+        <button className="teacher-mgmt-filter-btn" onClick={applyFilters}>
           Filter
         </button>
       </div>

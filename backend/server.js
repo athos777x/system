@@ -1356,9 +1356,11 @@ app.get('/filters', (req, res) => {
 app.get('/attendance/:studentId', (req, res) => {
   const studentId = req.params.studentId;
   const query = `
-    SELECT a.status, COUNT(*) as count
+    SELECT a.status, COUNT(*) as count,
+    sy.school_year
     FROM attendance a
     JOIN enrollment e ON a.enrollment_id = e.enrollment_id
+    LEFT JOIN school_year sy ON e.school_year_id=sy.school_year_id
     WHERE e.student_id = ?
     GROUP BY a.status
   `;
@@ -1474,23 +1476,25 @@ app.get('/students/:id/details', (req, res) => {
 // ENDPOINT USED:
 // TEACHER PAGE
 app.get('/employees', (req, res) => {
-  const { status, position, department, searchTerm, showArchive } = req.query;
+  const { searchID, status, position, department, searchTerm, showArchive } = req.query;
 
-  let query = 'SELECT * FROM employee WHERE 1=1';
+  let query = `
+    SELECT employee.*,  
+      CONCAT(employee.lastname, ', ', employee.firstname, ' ', 
+        IF(employee.middlename IS NOT NULL AND employee.middlename != '', 
+        CONCAT(LEFT(employee.middlename, 1), '.'), '')) AS emp_name
+    FROM employee WHERE 1=1
+  `;
   const queryParams = [];
 
-  if (status === 'showAll') {
-    // Show all employees, including archived ones
-  } else if (status) {
-    // Filter by status and exclude archived employees
+  if (status && status !== 'showAll') {
     query += ' AND status = ?';
     queryParams.push(status);
   }
 
-  if (showArchive === 'archive') {
-    query += ' AND archive_status = "archive"';
-  } else if (showArchive === 'unarchive') {
-    query += ' AND archive_status = "unarchive"';
+  if (showArchive) {
+    query += ' AND archive_status = ?';
+    queryParams.push(showArchive);
   }
 
   if (position) {
@@ -1501,6 +1505,11 @@ app.get('/employees', (req, res) => {
   if (department) {
     query += ' AND department = ?';
     queryParams.push(department);
+  }
+
+  if (searchID) {
+    query += ' AND employee_id = ?';
+    queryParams.push(searchID);
   }
 
   if (searchTerm) {
@@ -1519,9 +1528,12 @@ app.get('/employees', (req, res) => {
       res.status(500).json({ error: 'Internal server error' });
       return;
     }
+    console.log('Results:', results); // ✅ Check if emp_name exists
     res.json(results);
   });
 });
+
+
 
 // ENDPOINT USED:
 // TEACHER PAGE
@@ -3358,6 +3370,7 @@ app.get('/brigada-eskwela', (req, res) => {
   let query = `
     SELECT 
       CONCAT(a.lastname, ', ', a.firstname, ' ', IFNULL(a.middlename, '')) AS stud_name, 
+      a.student_id,
       a.current_yr_lvl AS grade_lvl, 
       b.section_name as section_name, 
       b.section_id as section_id,
@@ -3396,6 +3409,8 @@ app.get('/brigada-eskwela', (req, res) => {
   if (conditions.length > 0) {
     query += ' AND ' + conditions.join(' AND ');
   }
+
+  query += ' GROUP BY a.student_id ORDER BY a.lastname ASC';
 
   db.query(query, queryParams, (err, results) => { // Pass queryParams
     if (err) {

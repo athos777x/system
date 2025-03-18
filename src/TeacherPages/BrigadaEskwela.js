@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import Pagination from '../Utilities/pagination';
 import '../TeacherPagesCss/BrigadaEskwela.css';
+import StudentSearchFilter from '../RoleSearchFilters/StudentSearchFilter';
 
 function BrigadaEskwela() {
   const [students, setStudents] = useState([]);
@@ -18,7 +19,6 @@ function BrigadaEskwela() {
   });
 
   useEffect(() => {
-    fetchStudents();
     fetchSchoolYears();
     fetchSections();
   }, []);
@@ -118,49 +118,16 @@ function BrigadaEskwela() {
         <h1 className="brigada-title">Brigada Eskwela</h1>
       </div>
 
-      <div className="brigada-filters">
-        <div className="brigada-search">
-          <input
-            type="text"
-            placeholder="Search by student name..."
-            onChange={(e) => handleSearch(e.target.value)}
-          />
-        </div>
-        <div className="brigada-filters-group">
-          <select
-            value={filters.school_year}
-            onChange={(e) => handleFilterChange('school_year', e.target.value)}
-          >
-            <option value="">Select School Year</option>
-            {schoolYears.map((year) => (
-              <option key={year.school_year_id} value={year.school_year}>
-                {year.school_year}
-              </option>
-            ))}
-          </select>
-          <select
-            value={filters.grade}
-            onChange={(e) => handleFilterChange('grade', e.target.value)}
-          >
-            <option value="">Select Grade Level</option>
-            {[7, 8, 9, 10].map((grade) => (
-              <option key={grade} value={grade}>Grade {grade}</option>
-            ))}
-          </select>
-          <select
-            value={filters.section}
-            onChange={(e) => handleFilterChange('section', e.target.value)}
-          >
-            <option value="">Select Section</option>
-            {filteredSections.map((section) => (
-              <option key={section.section_id} value={section.section_name}>
-                {section.section_name}
-              </option>
-            ))}
-          </select>
-        </div>
-        <button onClick={handleApplyFilters}>Filter</button>
-      </div>
+      <StudentSearchFilter
+        students={students}
+        fetchStudents={fetchStudents}
+        setFilteredStudents={setFilteredStudents}
+        setCurrentPage={setCurrentPage}
+        schoolYears={schoolYears}
+        filteredSections={filteredSections} 
+        filters={filters}
+        setFilters={setFilters}
+      />
 
       <div className="brigada-table-container">
         <table className="brigada-table">
@@ -168,33 +135,22 @@ function BrigadaEskwela() {
             <tr>
               <th>#</th>
               <th>Name</th>
-              <th>Grade Level</th>
-              <th>Section</th>
               <th>Brigada Attendance</th>
             </tr>
           </thead>
           <tbody>
-            {currentStudents.length > 0 ? (
+            {currentStudents.length > 0 &&
               currentStudents.map((student, index) => (
                 <tr key={index}>
-                  <td>{indexOfFirstStudent + index + 1}</td>
+                  <td>{student.student_id}</td>
                   <td>{student.stud_name}</td>
-                  <td>Grade {student.grade_lvl}</td>
-                  <td>{student.section_name}</td>
                   <td>
                     <span className={student.brigada_attendance ? 'status-yes' : 'status-no'}>
                       {student.brigada_attendance ? 'Yes' : 'No'}
                     </span>
                   </td>
                 </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="5" style={{ textAlign: 'center' }}>
-                  No students found
-                </td>
-              </tr>
-            )}
+              ))}
           </tbody>
         </table>
       </div>

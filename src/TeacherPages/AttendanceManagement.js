@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Pagination from '../Utilities/pagination';
 import '../TeacherPagesCss/AttendanceManagement.css';
+import StudentSearchFilter from '../RoleSearchFilters/StudentSearchFilter';
 
 function AttendanceManagement() {
   const [students, setStudents] = useState([]);
@@ -21,7 +22,6 @@ function AttendanceManagement() {
   const studentsPerPage = 20;
 
   useEffect(() => {
-    fetchStudents();
     fetchSchoolYears();
     fetchSections();
   }, []);
@@ -31,9 +31,7 @@ function AttendanceManagement() {
       const response = await axios.get('http://localhost:3001/students', {
         params: appliedFilters,
       });
-      const sortedStudents = response.data.sort((a, b) =>
-        a.firstname.localeCompare(b.firstname)
-      );
+      const sortedStudents = response.data.sort((a, b) => b.lastName);
       setStudents(sortedStudents);
       setFilteredStudents(sortedStudents);
     } catch (error) {
@@ -73,7 +71,7 @@ function AttendanceManagement() {
         ...prevData,
         [studentId]: {
           grade_level: '-',
-          school_year: '-',
+          school_year: '',
           total_school_days: 0,
           days_present: 0,
           days_absent: 0,
@@ -159,49 +157,16 @@ function AttendanceManagement() {
         <h1 className="attendance-mgmt-title">Attendance</h1>
       </div>
 
-      <div className="attendance-mgmt-filters">
-        <div className="attendance-mgmt-search">
-          <input
-            type="text"
-            placeholder="Search by student name..."
-            onChange={(e) => handleSearch(e.target.value)}
-          />
-        </div>
-        <div className="attendance-mgmt-filters-group">
-          <select
-            value={filters.school_year}
-            onChange={(e) => setFilters(prev => ({ ...prev, school_year: e.target.value }))}
-          >
-            <option value="">Select School Year</option>
-            {schoolYears.map((year) => (
-              <option key={year.school_year_id} value={year.school_year}>
-                {year.school_year}
-              </option>
-            ))}
-          </select>
-          <select
-            value={filters.grade}
-            onChange={(e) => setFilters(prev => ({ ...prev, grade: e.target.value }))}
-          >
-            <option value="">Select Grade Level</option>
-            {[7, 8, 9, 10].map((grade) => (
-              <option key={grade} value={grade}>Grade {grade}</option>
-            ))}
-          </select>
-          <select
-            value={filters.section}
-            onChange={(e) => setFilters(prev => ({ ...prev, section: e.target.value }))}
-          >
-            <option value="">Select Section</option>
-            {filteredSections.map((section) => (
-              <option key={section.section_id} value={section.section_name}>
-                {section.section_name}
-              </option>
-            ))}
-          </select>
-        </div>
-        <button onClick={handleApplyFilters}>Filter</button>
-      </div>
+      <StudentSearchFilter
+        students={students}
+        fetchStudents={fetchStudents}
+        setFilteredStudents={setFilteredStudents}
+        setCurrentPage={setCurrentPage}
+        schoolYears={schoolYears}
+        filteredSections={filteredSections} 
+        filters={filters}
+        setFilters={setFilters}
+      />
 
       <div className="attendance-mgmt-table-container">
         <table className="attendance-mgmt-table">
@@ -209,7 +174,6 @@ function AttendanceManagement() {
             <tr>
               <th>#</th>
               <th>Name</th>
-              <th>Grade</th>
               <th>Status</th>
               <th>Actions</th>
             </tr>
@@ -218,11 +182,10 @@ function AttendanceManagement() {
             {currentStudents.map((student, index) => (
               <React.Fragment key={student.student_id}>
                 <tr>
-                  <td>{indexOfFirstStudent + index + 1}</td>
+                  <td>{student.student_id}</td>
                   <td>
-                    {student.firstname} {student.middlename} {student.lastname}
+                    {student.stud_name}
                   </td>
-                  <td>Grade {student.current_yr_lvl}</td>
                   <td>
                     <span className={`status-${student.active_status ? student.active_status.toLowerCase() : 'unknown'}`}>
                       {student.active_status ? (student.active_status.charAt(0).toUpperCase() + student.active_status.slice(1)) : 'Unknown'}
@@ -239,14 +202,14 @@ function AttendanceManagement() {
                 </tr>
                 {selectedStudentId === student.student_id && (
                   <tr>
-                    <td colSpan="5">
+                    <td colSpan="4">
                       <div className="attendance-details-container">
                         <div className="attendance-details-header">
                           <span>
                             Grade Level: {attendanceData[student.student_id]?.grade_level || '-'}
                           </span>
                           <span>
-                            School Year: {attendanceData[student.student_id]?.school_year || '-'}
+                            School Year: {attendanceData[student.student_id]?.school_year || student.school_year || '-'}
                           </span>
                         </div>
                         <table className="attendance-details-table">
@@ -264,10 +227,6 @@ function AttendanceManagement() {
                               <td>{attendanceData[student.student_id]?.days_absent || 0}</td>
                             </tr>
                             <tr>
-                              <th>Total Days Late</th>
-                              <td>{attendanceData[student.student_id]?.days_late || 0}</td>
-                            </tr>
-                            <tr>
                               <th>Brigada Attendance</th>
                               <td>{attendanceData[student.student_id]?.brigada_attendance || 0}</td>
                             </tr>
@@ -279,13 +238,6 @@ function AttendanceManagement() {
                 )}
               </React.Fragment>
             ))}
-            {currentStudents.length === 0 && (
-              <tr>
-                <td colSpan="5" style={{ textAlign: 'center' }}>
-                  No students found.
-                </td>
-              </tr>
-            )}
           </tbody>
         </table>
       </div>

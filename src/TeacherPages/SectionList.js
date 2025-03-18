@@ -183,7 +183,7 @@ function SectionList() {
           <option value="">All Sections</option>
           {sections.map(section => (
             <option key={section.section_id} value={section.section_id}>
-              Section {section.section_name}
+              {section.section_name}
             </option>
           ))}
         </select>
@@ -196,7 +196,6 @@ function SectionList() {
             <tr>
               <th>#</th>
               <th>Section Name</th>
-              <th>Grade Level</th>
               <th>Status</th>
               <th>Actions</th>
             </tr>
@@ -206,9 +205,8 @@ function SectionList() {
               filteredSections.map((section, index) => (
                 <React.Fragment key={section.section_id}>
                   <tr>
-                    <td>{index + 1}</td>
-                    <td>Section {section.section_name}</td>
-                    <td>Grade {section.grade_level}</td>
+                    <td>{section.section_id}</td>
+                    <td>{section.section_name}</td>
                     <td>
                       <span className={`status-${section.status.toLowerCase()}`}>
                         {section.status.charAt(0).toUpperCase() + section.status.slice(1)}
@@ -225,7 +223,7 @@ function SectionList() {
                   </tr>
                   {selectedSectionId === section.section_id && sectionDetails.section_id && (
                     <tr>
-                      <td colSpan="5">
+                      <td colSpan="4">
                         <div className="section-list-details">
                           <table>
                             <tbody>
