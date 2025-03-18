@@ -3,6 +3,7 @@ import axios from 'axios';
 import '../TeacherPagesCss/GradesManagement.css';
 import Pagination from '../Utilities/pagination';
 import { useNavigate } from 'react-router-dom';
+import StudentSearchFilter from '../RoleSearchFilters/StudentSearchFilter';
 
 function GradesManagement() {
   const navigate = useNavigate();
@@ -27,7 +28,6 @@ function GradesManagement() {
   });
 
   useEffect(() => {
-    fetchStudents();
     fetchSchoolYears();
     fetchSections();
   }, []);
@@ -79,7 +79,7 @@ function GradesManagement() {
       const response = await axios.get('http://localhost:3001/students', {
         params: appliedFilters
       });
-      const sortedStudents = response.data.sort((a, b) => b.current_yr_lvl - a.current_yr_lvl);
+      const sortedStudents = response.data.sort((a, b) => b.lastName);
       setStudents(sortedStudents);
       setFilteredStudents(sortedStudents);
     } catch (error) {
@@ -290,58 +290,23 @@ function GradesManagement() {
         <h1 className="grades-management-title">Grades</h1>
       </div>
 
-      <div className="student-mgmt-filters">
-        <div className="student-mgmt-search">
-          <input
-            type="text"
-            placeholder="Search by student name..."
-            onChange={(e) => handleSearch(e.target.value)}
-          />
-        </div>
-        <div className="student-mgmt-filters-group">
-          <select
-            value={filters.school_year}
-            onChange={(e) => handleFilterChange('school_year', e.target.value)}
-          >
-            <option value="">Select School Year</option>
-            {schoolYears.map((year) => (
-              <option key={year.school_year_id} value={year.school_year}>
-                {year.school_year}
-              </option>
-            ))}
-          </select>
-          <select
-            value={filters.grade}
-            onChange={(e) => handleFilterChange('grade', e.target.value)}
-          >
-            <option value="">Select Grade Level</option>
-            {[7, 8, 9, 10].map((grade) => (
-              <option key={grade} value={grade}>Grade {grade}</option>
-            ))}
-          </select>
-          <select
-            value={filters.section}
-            onChange={(e) => handleFilterChange('section', e.target.value)}
-          >
-            <option value="">Select Section</option>
-            {filteredSections.map((section) => (
-              <option key={section.section_id} value={section.section_name}>
-                {section.section_name}
-              </option>
-            ))}
-          </select>
-        </div>
-        <button onClick={handleApplyFilters}>Filter</button>
-      </div>
+      <StudentSearchFilter
+        students={students}
+        fetchStudents={fetchStudents}
+        setFilteredStudents={setFilteredStudents}
+        setCurrentPage={setCurrentPage}
+        schoolYears={schoolYears}
+        filteredSections={filteredSections} 
+        filters={filters}
+        setFilters={setFilters}
+      />
 
       <div className="grades-management-table-container">
         <table className="grades-management-table">
           <thead>
             <tr>
               <th>#</th>
-              <th>Student Name</th>
-              <th>Grade Level</th>
-              <th>Section</th>
+              <th>Name</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -349,12 +314,10 @@ function GradesManagement() {
             {currentStudents.map((student, index) => (
               <React.Fragment key={student.student_id}>
                 <tr>
-                  <td>{indexOfFirstStudent + index + 1}</td>
+                  <td>{student.student_id}</td>
                   <td>
-                    {student.firstname} {student.middlename && `${student.middlename[0]}.`} {student.lastname}
+                    {student.stud_name}
                   </td>
-                  <td>Grade {student.current_yr_lvl}</td>
-                  <td>Section {student.section_name}</td>
                   <td>
                     <div className="grades-management-actions">
                       <button 
@@ -386,7 +349,7 @@ function GradesManagement() {
                 </tr>
                 {selectedStudent && selectedStudent.student_id === student.student_id && (
                   <tr>
-                    <td colSpan="5">
+                    <td colSpan="3">
                       <div className="grades-details-container">
                         <h3 className="grades-details-title">Grades for {student.firstname} {student.lastname}</h3>
                         <table className="grades-details-table">
