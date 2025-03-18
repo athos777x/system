@@ -97,7 +97,7 @@ function RegistrarSideBar({ showSidebar, toggleSidebar, handleLogout }) {
           onClick={() => handleNavigate('/employees')}
           className={location.pathname === '/employees' ? 'active' : ''}
         >
-          <FiUsers className="icon" /> Teacher
+          <FiUsers className="icon" /> Employees
         </button>
         <div className={`menu-with-submenu ${showRecordsSubMenu || isRecordsPath ? 'active' : ''}`}>
           <button onClick={toggleRecordsSubMenu}>

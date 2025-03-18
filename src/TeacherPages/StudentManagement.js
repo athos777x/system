@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Pagination from '../Utilities/pagination';
 import axios from 'axios';
 import '../TeacherPagesCss/StudentManagement.css';
+import StudentSearchFilter from '../RoleSearchFilters/StudentSearchFilter';
 
 function StudentManagement() {
   const [students, setStudents] = useState([]);
@@ -64,7 +65,6 @@ function StudentManagement() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchStudents();
     fetchSchoolYears();
     fetchSections();
   }, []);
@@ -100,28 +100,51 @@ function StudentManagement() {
 
   const fetchStudents = async (appliedFilters = {}) => {
     try {
-      console.log('Applied filters:', appliedFilters);
-      const response = await axios.get('http://localhost:3001/students', {
-        params: appliedFilters
-      });
-      console.log('Full response from server:', response);
-      const sortedStudents = response.data.sort((a, b) => b.current_yr_lvl - a.current_yr_lvl);
+      console.log('Original filters:', appliedFilters);
+  
+      // ✅ Remove empty filters before sending request
+      const filteredParams = Object.fromEntries(
+        Object.entries(appliedFilters).filter(([_, value]) => value !== '' && value !== null && value !== undefined)
+      );
+  
+      console.log('Filtered params before request:', filteredParams);
+  
+      // ✅ Ensure `school_year` is included if missing
+      if (!filteredParams.school_year) {
+        try {
+          const activeYearResponse = await axios.get('http://localhost:3001/active-school-year');
+          filteredParams.school_year = activeYearResponse.data.school_year;
+          console.log('No school year selected, using active year:', filteredParams.school_year);
+        } catch (error) {
+          console.error('Error fetching active school year:', error);
+          return; // Stop execution if we can't get the active year
+        }
+      }
+  
+      // ✅ Make request with correct filters
+      const response = await axios.get('http://localhost:3001/students', { params: filteredParams });
+  
+      console.log('Response from server:', response.data);
+  
+      // ✅ Ensure sorting by `current_yr_lvl` (highest grade first)
+      const sortedStudents = response.data.sort((a, b) => b.lastname);
       setStudents(sortedStudents);
       setFilteredStudents(sortedStudents);
     } catch (error) {
       if (error.response) {
-        console.error('Error response from server:', error.response.data);
+        console.error('Server responded with an error:', error.response.data);
       } else if (error.request) {
-        console.error('No response received from server. Request was:', error.request);
+        console.error('No response received from server. Request:', error.request);
       } else {
         console.error('Error setting up request:', error.message);
       }
     }
   };
+  
 
   const handleSearch = (searchTerm) => {
     setFilters((prevFilters) => ({ ...prevFilters, searchTerm }));
-    applyFilters({ ...filters, searchTerm });
+    //applyFilters({ ...filters, searchTerm });
   };
 
 const handleFilterChange = (type, value) => {
@@ -139,30 +162,30 @@ const handleFilterChange = (type, value) => {
     }
 };
 
-const applyFilters = () => {
-    let filtered = students;
+// const applyFilters = () => {
+//     let filtered = students;
 
-    if (filters.school_year) {
-        filtered = filtered.filter(student => String(student.school_year) === filters.school_year);
-    }
-    if (filters.grade) {
-      filtered = filtered.filter(student => String(student.current_yr_lvl) === String(filters.grade));
-    }
-    if (filters.section) {
-      filtered = filtered.filter(student => String(student.section_name) === filters.section);
-    }
-    if (filters.searchTerm) {
-        filtered = filtered.filter(student => {
-            const firstName = student.firstname ? student.firstname.toLowerCase() : "";
-            const lastName = student.lastname ? student.lastname.toLowerCase() : "";
-            return firstName.includes(filters.searchTerm.toLowerCase()) || 
-                   lastName.includes(filters.searchTerm.toLowerCase());
-        });
-    }
+//     if (filters.school_year) {
+//         filtered = filtered.filter(student => String(student.school_year) === filters.school_year);
+//     }
+//     if (filters.grade) {
+//       filtered = filtered.filter(student => String(student.current_yr_lvl) === String(filters.grade));
+//     }
+//     if (filters.section) {
+//       filtered = filtered.filter(student => String(student.section_name) === filters.section);
+//     }
+//     if (filters.searchTerm) {
+//         filtered = filtered.filter(student => {
+//             const firstName = student.firstname ? student.firstname.toLowerCase() : "";
+//             const lastName = student.lastname ? student.lastname.toLowerCase() : "";
+//             return firstName.includes(filters.searchTerm.toLowerCase()) || 
+//                    lastName.includes(filters.searchTerm.toLowerCase());
+//         });
+//     }
 
-    setFilteredStudents(filtered);
-    setCurrentPage(1); // Reset to first page when filters are applied
-};
+//     setFilteredStudents(filtered);
+//     setCurrentPage(1); // Reset to first page when filters are applied
+// };
 
 const handleApplyFilters = () => {
     console.log('Applying filters:', filters);
@@ -293,11 +316,12 @@ const handleApplyFilters = () => {
       
       // Create a clean data object with only the fields needed by the backend
       const cleanData = {
+        lrn: (newStudentData.lrn),
         lastname: formatCapitalization(newStudentData.lastname),
         firstname: formatCapitalization(newStudentData.firstname),
         middlename: newStudentData.middlename ? formatCapitalization(newStudentData.middlename) : '',
         current_yr_lvl: parseInt(newStudentData.current_yr_lvl, 10),
-        birthdate: new Date(newStudentData.birthdate).toISOString().split('T')[0],
+        birthdate: new Date(newStudentData.birthdate),                
         gender: newStudentData.gender,
         age: parseInt(newStudentData.age, 10),
         home_address: formatCapitalization(newStudentData.home_address),
@@ -319,7 +343,6 @@ const handleApplyFilters = () => {
         mother_contact_number: newStudentData.mother_contact_number,
         emergency_number: newStudentData.emergency_number,
         brigada_eskwela: '0', // Default value for brigada_eskwela
-        lrn: newStudentData.lrn || '',
         status: 'active',
         active_status: 'unarchive'
       };
@@ -816,49 +839,16 @@ const handleArchive = () => {
         )}
       </div>
 
-      <div className="student-mgmt-filters">
-        <div className="student-mgmt-search">
-          <input
-            type="text"
-            placeholder="Search by student name..."
-            onChange={(e) => handleSearch(e.target.value)}
-          />
-        </div>
-        <div className="student-mgmt-filters-group">
-          <select
-            value={filters.school_year}
-            onChange={(e) => handleFilterChange('school_year', e.target.value)}
-          >
-            <option value="">Select School Year</option>
-            {schoolYears.map((year) => (
-              <option key={year.school_year_id} value={year.school_year}>
-                {year.school_year}
-              </option>
-            ))}
-          </select>
-          <select
-            value={filters.grade}
-            onChange={(e) => handleFilterChange('grade', e.target.value)}
-          >
-            <option value="">Select Grade Level</option>
-            {[7, 8, 9, 10].map((grade) => (
-              <option key={grade} value={grade}>Grade {grade}</option>
-            ))}
-          </select>
-          <select
-            value={filters.section}
-            onChange={(e) => handleFilterChange('section', e.target.value)}
-          >
-            <option value="">Select Section</option>
-            {filteredSections.map((section) => (
-              <option key={section.section_id} value={section.section_name}>
-                {section.section_name}
-              </option>
-            ))}
-          </select>
-        </div>
-        <button onClick={handleApplyFilters}>Filter</button>
-      </div>
+      <StudentSearchFilter
+        students={students}
+        fetchStudents={fetchStudents}
+        setFilteredStudents={setFilteredStudents}
+        setCurrentPage={setCurrentPage}
+        schoolYears={schoolYears}
+        filteredSections={filteredSections} 
+        filters={filters}
+        setFilters={setFilters}
+      />
 
       <div className="student-mgmt-table-container">
         <table className="student-mgmt-table">
@@ -866,7 +856,6 @@ const handleArchive = () => {
           <tr>
             <th>#</th>
             <th>Name</th>
-            <th>Grade</th>
             <th>Status</th>
             <th>Actions</th>
           </tr>
@@ -875,9 +864,8 @@ const handleArchive = () => {
           {currentStudents.map((student, index) => (
             <React.Fragment key={student.student_id}>
               <tr>
-                <td>{index + 1}</td>
-                <td>{student.firstname} {student.middlename && `${student.middlename[0]}.`} {student.lastname}</td>
-                <td>Grade {student.current_yr_lvl}</td>
+                <td>{student.student_id}</td>
+                <td>{student.stud_name}</td>
                 <td>
                     <span className={`status-${student.active_status ? student.active_status.toLowerCase() : 'pending'}`}>
                       {student.active_status ? student.active_status.toLowerCase() : 'pending'}
@@ -914,13 +902,28 @@ const handleArchive = () => {
 
               {selectedStudentId === student.student_id && (
                   <tr>
-                <td colSpan="5">
+                <td colSpan="4">
                       <div className="student-mgmt-details">
                         <div className="student-mgmt-details-content">
                           {/* Left Column */}
                           <div className="student-mgmt-details-section">
                             <table className="student-details-view-table">
                       <tbody>
+                      <tr>
+                          <th>LRN:</th>
+                          <td>
+                            {isEditing ? (
+                              <input
+                                type="text"
+                                name="lrn"
+                                value={editStudentData ? editStudentData.lrn || "" : ""}
+                                onChange={handleEditChange}
+                              />
+                            ) : (
+                              student.lrn
+                            )}
+                          </td>
+                        </tr>
                         <tr>
                           <th>Last Name:</th>
                           <td>
@@ -1129,13 +1132,13 @@ const handleArchive = () => {
                           <td>
                             {isEditing ? (
                               <input
-                                type="text"
+                                type="number"
                                         name="annual_income"
-                                        value={editStudentData ? editStudentData.annual_income || "" : ""}
+                                        value={editStudentData ? editStudentData.annual_hshld_income || "" : ""}
                                 onChange={handleEditChange}
                               />
                             ) : (
-                                      student.annual_income
+                                      student.annual_hshld_income
                             )}
                           </td>
                         </tr>
@@ -1166,6 +1169,21 @@ const handleArchive = () => {
                               />
                             ) : (
                                       student.emergency_number
+                            )}
+                          </td>
+                        </tr>
+                        <tr>
+                                  <th>Brigada Eskwela:</th>
+                          <td>
+                            {isEditing ? (
+                              <input
+                                type="text"
+                                        name="brigada eskwela"
+                                        value={editStudentData ? editStudentData.brigada_eskwela || "" : ""}
+                                onChange={handleEditChange}
+                              />
+                            ) : (
+                                      student.brigada_eskwela
                             )}
                           </td>
                         </tr>

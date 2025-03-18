@@ -159,43 +159,47 @@ app.get('/users/:userId', (req, res) => {
 // ATTENDANCE PAGE
 // STUDENTS PAGE
 app.get('/students', (req, res) => {
-  const { searchTerm, grade, section, school_year } = req.query;
+  const { searchID, searchTerm, grade, section, school_year } = req.query;
 
-  console.log('Received params:', { searchTerm, grade, section, school_year });
+  console.log('Received filters:', { searchID, searchTerm, grade, section, school_year });
 
-  // Query to fetch the active school year
-  const getActiveSchoolYearQuery = `
-    SELECT school_year 
-    FROM school_year 
-    WHERE status = 'active' 
-    LIMIT 1
-  `;
+  // Query to fetch the active school year (ONLY IF school_year is not provided AND searchID is also not provided)
+  let latestSchoolYear = school_year; // Default to user-provided school_year
+  if (!school_year && !searchID) { // Only fetch active year if no school_year is selected AND no searchID
+    const getActiveSchoolYearQuery = `SELECT school_year FROM school_year WHERE status = 'active' LIMIT 1`;
 
-  db.query(getActiveSchoolYearQuery, (err, results) => {
-    if (err) {
-      console.error('Error fetching active school year:', err);
-      res.status(500).json({ error: 'Failed to fetch active school year' });
-      return;
-    }
+    db.query(getActiveSchoolYearQuery, (err, results) => {
+      if (err) {
+        console.error('Error fetching active school year:', err);
+        res.status(500).json({ error: 'Failed to fetch active school year' });
+        return;
+      }
 
-    const latestSchoolYear = results[0]?.school_year;
+      latestSchoolYear = results[0]?.school_year;
+      if (!latestSchoolYear) {
+        console.error('No active school year found');
+        res.status(404).json({ error: 'No active school year found' });
+        return;
+      }
+      console.log('Using active school year:', latestSchoolYear);
+      fetchStudents();
+    });
+  } else {
+    fetchStudents();
+  }
 
-    if (!latestSchoolYear) {
-      console.error('No active school year found');
-      res.status(404).json({ error: 'No active school year found' });
-      return;
-    }
-
-    console.log('Active school year:', latestSchoolYear);
-
-    // Build the main query
+  function fetchStudents() {
+    // ✅ Build the main query
     let query = `
-      SELECT s.student_id, s.user_id, s.lastname, s.firstname, s.middlename, 
-      s.current_yr_lvl, s.birthdate, s.gender, s.age, 
+      SELECT s.student_id, s.user_id, s.lrn,
+      CONCAT(s.lastname, ', ', s.firstname, ' ', 
+      IF(s.middlename IS NOT NULL AND s.middlename != '', CONCAT(LEFT(s.middlename, 1), '.'), '')) AS stud_name,
+      s.lastname, s.firstname, s.middlename, 
+      s.current_yr_lvl, DATE_FORMAT(s.birthdate, '%M %e, %Y') AS birthdate, s.gender, s.age, 
       s.home_address, s.barangay, s.city_municipality, s.province, 
       s.contact_number, s.email_address, z.section_name, sy.school_year,
       s.mother_name, s.father_name, s.parent_address, s.father_occupation, 
-      s.mother_occupation, s.annual_hshld_income, s.number_of_siblings, 
+      s.mother_occupation, FORMAT(s.annual_hshld_income,2) AS annual_hshld_income, s.number_of_siblings, 
       s.father_educ_lvl, s.mother_educ_lvl, s.father_contact_number, 
       s.mother_contact_number, IF(s.brigada_eskwela=1,'Attended','Not Attended') AS brigada_eskwela,
       (SELECT ss.status FROM student_school_year ss
@@ -207,42 +211,47 @@ app.get('/students', (req, res) => {
       LEFT JOIN section z ON s.section_id=z.section_id
       LEFT JOIN student_school_year ss ON s.student_id = ss.student_id
       LEFT JOIN school_year sy ON ss.school_year_id = sy.school_year_id
-      WHERE s.active_status = 'unarchive' 
+      WHERE s.active_status = 'unarchive'
     `;
 
     const queryParams = [];
     const conditions = [];
 
-    if (searchTerm) {
-      conditions.push(`(s.firstname LIKE ? OR s.lastname LIKE ?)`);
-      queryParams.push(`%${searchTerm}%`, `%${searchTerm}%`);
+    // ✅ If searchID is used, it should work independently
+    if (searchID) {
+      conditions.push(`s.student_id = ?`);
+      queryParams.push(searchID);
+    } else {
+      // ✅ Apply filters only if searchID is NOT used
+      if (searchTerm) {
+        conditions.push(`(s.firstname LIKE ? OR s.lastname LIKE ? OR s.student_id LIKE ? )`);
+        queryParams.push(`%${searchTerm}%`, `%${searchTerm}%`, `%${searchTerm}%`);
+      }
+      if (grade) {
+        conditions.push(`s.current_yr_lvl = ?`);
+        queryParams.push(grade);
+      }
+      if (section) {
+        conditions.push(`z.section_name = ?`);
+        queryParams.push(section);
+      }
+      if (latestSchoolYear) {
+        conditions.push(`sy.school_year = ?`);
+        queryParams.push(latestSchoolYear);
+      }
     }
-
-    if (grade) {
-      conditions.push(`s.current_yr_lvl = ?`);
-      queryParams.push(grade);
-    }
-
-    if (section) {
-      conditions.push(`z.section_name = ?`);
-      queryParams.push(section);
-    }
-
-    if (school_year) {
-      conditions.push(`sy.school_year = ?`);
-      queryParams.push(school_year);
-    } 
 
     if (conditions.length > 0) {
       query += ' AND ' + conditions.join(' AND ');
     }
 
-    query += ' ORDER BY s.current_yr_lvl DESC';
+    // ✅ Move GROUP BY to the end before ORDER BY
+    query += ' GROUP BY s.student_id ORDER BY s.lastname ASC';
 
-    console.log('Final query:', query);
+    console.log('Final SQL Query:', query);
     console.log('With parameters:', queryParams);
 
-    // Execute the main query
+    // ✅ Execute the main query
     db.query(query, queryParams, (err, results) => {
       if (err) {
         console.error('Error fetching students:', err);
@@ -251,8 +260,9 @@ app.get('/students', (req, res) => {
       }
       res.json(results);
     });
-  });
+  }
 });
+
 
 app.get('/students/pending-enrollment', (req, res) => {
   const { searchTerm, grade, section, school_year } = req.query;
@@ -416,7 +426,7 @@ app.put('/students/:id', (req, res) => {
 // ENDPOINT USED:
 // STUDENTS PAGE
 app.post('/students', (req, res) => {
-  console.log('Received data:', req.body); // Check if section_id is present here
+  console.log('Received data:', req.body);
 
   const {
     lastname, firstname, middlename, current_yr_lvl, birthdate, gender, age,
@@ -424,59 +434,90 @@ app.post('/students', (req, res) => {
     email_address, mother_name, father_name, parent_address, father_occupation,
     mother_occupation, annual_hshld_income, number_of_siblings, father_educ_lvl,
     mother_educ_lvl, father_contact_number, mother_contact_number, emergency_number,
-    status, active_status, brigada_eskwela = '0', lrn // Make sure brigada_eskwela has a default value
+    status, active_status, brigada_eskwela = '0', lrn
   } = req.body;
-  
-  // Ensure brigada_eskwela is never null
+
   const brigada_eskwela_value = brigada_eskwela || '0';
-  
-  // Use a different approach with named parameters
-  const query = `
-    INSERT INTO student SET ?
-  `;
 
-  const studentData = {
-    lastname,
-    firstname,
-    middlename,
-    current_yr_lvl,
-    birthdate,
-    gender,
-    age,
-    home_address,
-    barangay,
-    city_municipality,
-    province,
-    contact_number,
-    email_address,
-    mother_name,
-    father_name,
-    parent_address,
-    father_occupation,
-    mother_occupation,
-    annual_hshld_income,
-    number_of_siblings,
-    father_educ_lvl,
-    mother_educ_lvl,
-    father_contact_number,
-    mother_contact_number,
-    emergency_number,
-    status,
-    active_status,
-    brigada_eskwela: brigada_eskwela_value,
-    lrn
-  };
+  // Step 1: Fetch the last used student_id (to prevent duplicates)
+  const getLastStudentQuery = `SELECT student_id FROM student ORDER BY student_id DESC LIMIT 1`;
 
-  console.log('Student data object:', studentData);
-  
-  db.query(query, studentData, (error, result) => {
-    if (error) {
-      console.error('Failed to add student:', error);
-      return res.status(500).json({ error: 'Failed to add student' });
+  db.query(getLastStudentQuery, (err, result) => {
+    if (err) {
+      console.error('Error fetching last student ID:', err);
+      return res.status(500).json({ error: 'Failed to fetch last student ID', details: err.message });
     }
-    res.status(201).json({ message: 'Student added successfully', studentId: result.insertId });
+
+    let nextStudentId;
+    const currentYear = new Date().getFullYear().toString(); // Get YYYY format
+
+    if (result.length === 0) {
+      nextStudentId = parseInt(`${currentYear}0001`); // First student of the year
+    } else {
+      const lastId = result[0].student_id.toString(); // Convert to string
+      const lastYear = lastId.substring(0, 4); // Extract year from last ID
+      let lastCounter = parseInt(lastId.substring(4), 10); // Extract counter
+
+      if (lastYear === currentYear) {
+        lastCounter += 1; // Increment within the same year
+      } else {
+        lastCounter = 1; // Reset to 0001 for a new year
+      }
+
+      nextStudentId = parseInt(`${currentYear}${String(lastCounter).padStart(4, '0')}`);
+    }
+
+    console.log('Generated new student ID:', nextStudentId);
+
+    // Step 2: Insert the Student into the Database
+    const query = `INSERT INTO student SET ?`;
+
+    const studentData = {
+      student_id: nextStudentId,
+      lastname,
+      firstname,
+      middlename,
+      current_yr_lvl,
+      birthdate,
+      gender,
+      age,
+      home_address,
+      barangay,
+      city_municipality,
+      province,
+      contact_number,
+      email_address,
+      mother_name,
+      father_name,
+      parent_address,
+      father_occupation,
+      mother_occupation,
+      annual_hshld_income,
+      number_of_siblings,
+      father_educ_lvl,
+      mother_educ_lvl,
+      father_contact_number,
+      mother_contact_number,
+      emergency_number,
+      status,
+      active_status,
+      brigada_eskwela: brigada_eskwela_value,
+      lrn
+    };
+
+    console.log('Student data object:', studentData);
+
+    db.query(query, studentData, (error, result) => {
+      if (error) {
+        console.error('Failed to add student:', error);
+        return res.status(500).json({ error: 'Failed to add student' });
+      }
+      res.status(201).json({ message: 'Student added successfully', studentId: nextStudentId });
+    });
   });
 });
+
+
 
 // ENDPOINT USED:
 // STUDENTS PAGE
