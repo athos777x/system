@@ -15,9 +15,12 @@ const ProfilePage = () => {
     username: '',
     password: '',
   });
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordError, setPasswordError] = useState('');
   const [originalPassword, setOriginalPassword] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(true);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [error, setError] = useState(null);
@@ -171,10 +174,6 @@ const ProfilePage = () => {
     }
   };
 
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
-  };
-
   const handleEditClick = () => {
     setIsEditing(true);
   };
@@ -185,12 +184,27 @@ const ProfilePage = () => {
       ...prev,
       password: originalPassword
     }));
+    setConfirmPassword('');
+    setPasswordError('');
     setIsEditing(false);
     setShowPassword(false);
+    setShowConfirmPassword(false);
   };
 
   const handleSaveClick = async () => {
-    const userId = localStorage.getItem('userId'); // Retrieve userId from localStorage
+    // Validate passwords match
+    if (userInfo.password !== confirmPassword) {
+      setPasswordError('Passwords do not match');
+      return;
+    }
+
+    // Validate password length
+    if (userInfo.password.length < 8) {
+      setPasswordError('Password must be at least 8 characters long');
+      return;
+    }
+
+    const userId = localStorage.getItem('userId');
 
     if (!userId) {
       console.error('User ID not found. Please log in again.');
@@ -211,6 +225,9 @@ const ProfilePage = () => {
       setOriginalPassword(userInfo.password);
       setIsEditing(false);
       setShowPassword(false);
+      setShowConfirmPassword(false);
+      setPasswordError('');
+      setConfirmPassword('');
     } catch (error) {
       console.error('Error saving user info:', error.response?.data || error.message);
     }
@@ -306,12 +323,15 @@ const ProfilePage = () => {
                       type={showPassword ? 'text' : 'password'}
                       className="user-profile-form-control"
                       value={userInfo.password}
-                      onChange={(e) => setUserInfo({...userInfo, password: e.target.value})}
+                      onChange={(e) => {
+                        setUserInfo({...userInfo, password: e.target.value});
+                        setPasswordError('');
+                      }}
                       style={{ paddingRight: '40px' }}
                     />
                     <button
                       type="button"
-                      onClick={togglePasswordVisibility}
+                      onClick={() => setShowPassword(!showPassword)}
                       style={{
                         position: 'absolute',
                         right: '10px',
@@ -330,6 +350,46 @@ const ProfilePage = () => {
                 )}
               </div>
             </div>
+            
+            {isEditing && (
+              <div className="user-profile-form-row">
+                <div className="user-profile-form-group">
+                  <label>Confirm Password</label>
+                  <div className="user-profile-password-field" style={{ position: 'relative' }}>
+                    <input
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      className="user-profile-form-control"
+                      value={confirmPassword}
+                      onChange={(e) => {
+                        setConfirmPassword(e.target.value);
+                        setPasswordError('');
+                      }}
+                      style={{ paddingRight: '40px' }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      style={{
+                        position: 'absolute',
+                        right: '10px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {showConfirmPassword ? <FiEyeOff /> : <FiEye />}
+                    </button>
+                  </div>
+                  {passwordError && (
+                    <div className="user-profile-error-message" style={{ color: 'red', fontSize: '0.8em', marginTop: '5px' }}>
+                      {passwordError}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
             
             <div className="user-profile-form-actions">
               {!isEditing ? (
