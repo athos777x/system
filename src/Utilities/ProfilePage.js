@@ -318,78 +318,73 @@ const ProfilePage = () => {
               <div className="user-profile-form-group">
                 <label>Password</label>
                 {isEditing ? (
-                  <div className="user-profile-password-field" style={{ position: 'relative' }}>
-                    <input
-                      type={showPassword ? 'text' : 'password'}
-                      className="user-profile-form-control"
-                      value={userInfo.password}
-                      onChange={(e) => {
-                        setUserInfo({...userInfo, password: e.target.value});
-                        setPasswordError('');
-                      }}
-                      style={{ paddingRight: '40px' }}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      style={{
-                        position: 'absolute',
-                        right: '10px',
-                        top: '50%',
-                        transform: 'translateY(-50%)',
-                        background: 'none',
-                        border: 'none',
-                        cursor: 'pointer'
-                      }}
-                    >
-                      {showPassword ? <FiEyeOff /> : <FiEye />}
-                    </button>
-                  </div>
+                  <>
+                    <div className="user-profile-password-field" style={{ position: 'relative', marginBottom: '10px' }}>
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        className="user-profile-form-control"
+                        value={userInfo.password}
+                        onChange={(e) => {
+                          setUserInfo({...userInfo, password: e.target.value});
+                          setPasswordError('');
+                        }}
+                        style={{ paddingRight: '40px' }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        style={{
+                          position: 'absolute',
+                          right: '10px',
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          background: 'none',
+                          border: 'none',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        {showPassword ? <FiEyeOff /> : <FiEye />}
+                      </button>
+                    </div>
+                    <label style={{ fontSize: '0.9em' }}>Confirm Password</label>
+                    <div className="user-profile-password-field" style={{ position: 'relative' }}>
+                      <input
+                        type={showConfirmPassword ? 'text' : 'password'}
+                        className="user-profile-form-control"
+                        value={confirmPassword}
+                        onChange={(e) => {
+                          setConfirmPassword(e.target.value);
+                          setPasswordError('');
+                        }}
+                        style={{ paddingRight: '40px' }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        style={{
+                          position: 'absolute',
+                          right: '10px',
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          background: 'none',
+                          border: 'none',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        {showConfirmPassword ? <FiEyeOff /> : <FiEye />}
+                      </button>
+                    </div>
+                    {passwordError && (
+                      <div className="user-profile-error-message" style={{ color: 'red', fontSize: '0.8em', marginTop: '5px' }}>
+                        {passwordError}
+                      </div>
+                    )}
+                  </>
                 ) : (
                   <div className="user-profile-info-value">••••••••</div>
                 )}
               </div>
             </div>
-            
-            {isEditing && (
-              <div className="user-profile-form-row">
-                <div className="user-profile-form-group">
-                  <label>Confirm Password</label>
-                  <div className="user-profile-password-field" style={{ position: 'relative' }}>
-                    <input
-                      type={showConfirmPassword ? 'text' : 'password'}
-                      className="user-profile-form-control"
-                      value={confirmPassword}
-                      onChange={(e) => {
-                        setConfirmPassword(e.target.value);
-                        setPasswordError('');
-                      }}
-                      style={{ paddingRight: '40px' }}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      style={{
-                        position: 'absolute',
-                        right: '10px',
-                        top: '50%',
-                        transform: 'translateY(-50%)',
-                        background: 'none',
-                        border: 'none',
-                        cursor: 'pointer'
-                      }}
-                    >
-                      {showConfirmPassword ? <FiEyeOff /> : <FiEye />}
-                    </button>
-                  </div>
-                  {passwordError && (
-                    <div className="user-profile-error-message" style={{ color: 'red', fontSize: '0.8em', marginTop: '5px' }}>
-                      {passwordError}
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
             
             <div className="user-profile-form-actions">
               {!isEditing ? (
