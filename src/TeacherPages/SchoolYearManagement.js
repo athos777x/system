@@ -116,10 +116,100 @@ function SchoolYearManagement() {
 
   const handleEditChange = (event) => {
     const { name, value } = event.target;
-    setEditFormData(prevFormData => ({
-      ...prevFormData,
-      [name]: value
-    }));
+    setEditFormData(prevFormData => {
+      const updatedFormData = {
+        ...prevFormData,
+        [name]: value
+      };
+
+      // If changing start date, ensure end date is within 1 year and adjust enrollment dates if needed
+      if (name === 'school_year_start' && value) {
+        const startDate = new Date(value);
+        const maxEndDate = new Date(startDate);
+        maxEndDate.setFullYear(maxEndDate.getFullYear() + 1);
+        
+        // If current end date is more than 1 year away, reset it
+        if (updatedFormData.school_year_end) {
+          const endDate = new Date(updatedFormData.school_year_end);
+          if (endDate > maxEndDate) {
+            updatedFormData.school_year_end = formatDateForInput(maxEndDate);
+          }
+        }
+
+        // Adjust enrollment dates if they're before the new start date
+        if (updatedFormData.enrollment_start && new Date(updatedFormData.enrollment_start) < startDate) {
+          updatedFormData.enrollment_start = value;
+        }
+        if (updatedFormData.enrollment_end && new Date(updatedFormData.enrollment_end) < startDate) {
+          updatedFormData.enrollment_end = value;
+        }
+      }
+
+      // If changing end date, adjust enrollment dates if they're after the new end date
+      if (name === 'school_year_end' && value) {
+        const endDate = new Date(value);
+        const maxEnrollmentStart = new Date(getMaxStartDate());
+        
+        // If enrollment start is after the max allowed date (current year), adjust it
+        if (updatedFormData.enrollment_start) {
+          const enrollmentStart = new Date(updatedFormData.enrollment_start);
+          if (enrollmentStart > maxEnrollmentStart) {
+            updatedFormData.enrollment_start = formatDateForInput(maxEnrollmentStart);
+          }
+          if (enrollmentStart > endDate) {
+            updatedFormData.enrollment_start = value;
+          }
+        }
+        
+        if (updatedFormData.enrollment_end && new Date(updatedFormData.enrollment_end) > endDate) {
+          updatedFormData.enrollment_end = value;
+        }
+      }
+
+      // If changing enrollment start, ensure it's not in future years and enrollment end is not before it
+      if (name === 'enrollment_start' && value) {
+        const enrollmentStart = new Date(value);
+        const maxEnrollmentStart = new Date(getMaxStartDate());
+        
+        if (enrollmentStart > maxEnrollmentStart) {
+          updatedFormData.enrollment_start = formatDateForInput(maxEnrollmentStart);
+        }
+        
+        // If enrollment end exists and is not after the new start date, set it to the day after
+        if (updatedFormData.enrollment_end) {
+          const enrollmentEnd = new Date(updatedFormData.enrollment_end);
+          if (enrollmentEnd <= enrollmentStart) {
+            const nextDay = new Date(enrollmentStart);
+            nextDay.setDate(nextDay.getDate() + 1);
+            updatedFormData.enrollment_end = formatDateForInput(nextDay);
+          }
+        }
+      }
+
+      // If changing enrollment end, ensure it's after enrollment start
+      if (name === 'enrollment_end' && value) {
+        const enrollmentEnd = new Date(value);
+        if (updatedFormData.enrollment_start) {
+          const enrollmentStart = new Date(updatedFormData.enrollment_start);
+          if (enrollmentEnd <= enrollmentStart) {
+            const nextDay = new Date(enrollmentStart);
+            nextDay.setDate(nextDay.getDate() + 1);
+            updatedFormData.enrollment_end = formatDateForInput(nextDay);
+          }
+        }
+      }
+
+      // Update school year name if both dates are set
+      if (name === 'school_year_start' || name === 'school_year_end') {
+        if (updatedFormData.school_year_start && updatedFormData.school_year_end) {
+          const startYear = new Date(updatedFormData.school_year_start).getFullYear();
+          const endYear = new Date(updatedFormData.school_year_end).getFullYear();
+          updatedFormData.school_year = `${startYear}-${endYear}`;
+        }
+      }
+
+      return updatedFormData;
+    });
   };
 
   const saveChanges = async () => {
@@ -172,6 +262,17 @@ function SchoolYearManagement() {
     return `${year}-${month}-${day}`;
   };
 
+  const resetNewSchoolYearForm = () => {
+    setNewSchoolYear({
+      school_year: '',
+      school_year_start: '',
+      school_year_end: '',
+      enrollment_start: '',
+      enrollment_end: ''
+    });
+    setShowModal(false);
+  };
+
   const handleAddSchoolYear = async () => {
     try {
       const newSchoolYearData = {
@@ -183,14 +284,7 @@ function SchoolYearManagement() {
         status: 'active'
       };
       await axios.post('http://localhost:3001/school-years', newSchoolYearData);
-      setShowModal(false);
-      setNewSchoolYear({
-        school_year: '',
-        school_year_start: '',
-        school_year_end: '',
-        enrollment_start: '',
-        enrollment_end: ''
-      });
+      resetNewSchoolYearForm();
       fetchSchoolYears();
     } catch (error) {
       console.error('Error adding school year:', error);
@@ -199,10 +293,134 @@ function SchoolYearManagement() {
 
   const handleNewSchoolYearChange = (event) => {
     const { name, value } = event.target;
-    setNewSchoolYear(prevState => ({
-      ...prevState,
-      [name]: value
-    }));
+    setNewSchoolYear(prevState => {
+      const updatedState = {
+        ...prevState,
+        [name]: value
+      };
+
+      // If changing start date, ensure end date is within 1 year and adjust enrollment dates if needed
+      if (name === 'school_year_start' && value) {
+        const startDate = new Date(value);
+        const maxEndDate = new Date(startDate);
+        maxEndDate.setFullYear(maxEndDate.getFullYear() + 1);
+        
+        // If current end date is more than 1 year away, reset it
+        if (updatedState.school_year_end) {
+          const endDate = new Date(updatedState.school_year_end);
+          if (endDate > maxEndDate) {
+            updatedState.school_year_end = formatDateForInput(maxEndDate);
+          }
+        }
+
+        // Adjust enrollment dates if they're before the new start date
+        if (updatedState.enrollment_start && new Date(updatedState.enrollment_start) < startDate) {
+          updatedState.enrollment_start = value;
+        }
+        if (updatedState.enrollment_end && new Date(updatedState.enrollment_end) < startDate) {
+          updatedState.enrollment_end = value;
+        }
+      }
+
+      // If changing end date, adjust enrollment dates if they're after the new end date
+      if (name === 'school_year_end' && value) {
+        const endDate = new Date(value);
+        const maxEnrollmentStart = new Date(getMaxStartDate());
+        
+        // If enrollment start is after the max allowed date (current year), adjust it
+        if (updatedState.enrollment_start) {
+          const enrollmentStart = new Date(updatedState.enrollment_start);
+          if (enrollmentStart > maxEnrollmentStart) {
+            updatedState.enrollment_start = formatDateForInput(maxEnrollmentStart);
+          }
+          if (enrollmentStart > endDate) {
+            updatedState.enrollment_start = value;
+          }
+        }
+        
+        if (updatedState.enrollment_end && new Date(updatedState.enrollment_end) > endDate) {
+          updatedState.enrollment_end = value;
+        }
+      }
+
+      // If changing enrollment start, ensure it's not in future years and enrollment end is not before it
+      if (name === 'enrollment_start' && value) {
+        const enrollmentStart = new Date(value);
+        const maxEnrollmentStart = new Date(getMaxStartDate());
+        
+        if (enrollmentStart > maxEnrollmentStart) {
+          updatedState.enrollment_start = formatDateForInput(maxEnrollmentStart);
+        }
+        
+        // If enrollment end exists and is not after the new start date, set it to the day after
+        if (updatedState.enrollment_end) {
+          const enrollmentEnd = new Date(updatedState.enrollment_end);
+          if (enrollmentEnd <= enrollmentStart) {
+            const nextDay = new Date(enrollmentStart);
+            nextDay.setDate(nextDay.getDate() + 1);
+            updatedState.enrollment_end = formatDateForInput(nextDay);
+          }
+        }
+      }
+
+      // If changing enrollment end, ensure it's after enrollment start
+      if (name === 'enrollment_end' && value) {
+        const enrollmentEnd = new Date(value);
+        if (updatedState.enrollment_start) {
+          const enrollmentStart = new Date(updatedState.enrollment_start);
+          if (enrollmentEnd <= enrollmentStart) {
+            const nextDay = new Date(enrollmentStart);
+            nextDay.setDate(nextDay.getDate() + 1);
+            updatedState.enrollment_end = formatDateForInput(nextDay);
+          }
+        }
+      }
+
+      // Update school year name if both dates are set
+      if (updatedState.school_year_start && updatedState.school_year_end) {
+        const startYear = new Date(updatedState.school_year_start).getFullYear();
+        const endYear = new Date(updatedState.school_year_end).getFullYear();
+        updatedState.school_year = `${startYear}-${endYear}`;
+      }
+
+      return updatedState;
+    });
+  };
+
+  const getCurrentYear = () => {
+    return new Date().getFullYear();
+  };
+
+  const getMinStartDate = () => {
+    const currentYear = getCurrentYear();
+    return `${currentYear}-01-01`;
+  };
+
+  const getMaxStartDate = () => {
+    const currentYear = getCurrentYear();
+    return `${currentYear}-12-31`;
+  };
+
+  const getMaxEndDate = () => {
+    const currentYear = getCurrentYear();
+    return `${currentYear + 1}-12-31`;
+  };
+
+  const getMaxEnrollmentStartDate = (schoolYearEnd) => {
+    const maxStartDate = new Date(getMaxStartDate());
+    if (schoolYearEnd) {
+      const endDate = new Date(schoolYearEnd);
+      return endDate < maxStartDate ? formatDateForInput(endDate) : formatDateForInput(maxStartDate);
+    }
+    return formatDateForInput(maxStartDate);
+  };
+
+  const getMinEnrollmentEndDate = (enrollmentStart) => {
+    if (!enrollmentStart) return '';
+    const startDate = new Date(enrollmentStart);
+    const nextDay = new Date(startDate);
+    nextDay.setDate(nextDay.getDate() + 1);
+    return formatDateForInput(nextDay);
   };
 
   return (
@@ -286,7 +504,8 @@ function SchoolYearManagement() {
                                     type="text"
                                     name="school_year"
                                     value={editFormData.school_year}
-                                    onChange={handleEditChange}
+                                    readOnly
+                                    style={{ backgroundColor: '#f0f0f0' }}
                                   />
                                 ) : (
                                   schoolYear.school_year
@@ -321,6 +540,8 @@ function SchoolYearManagement() {
                                     name="school_year_start"
                                     value={editFormData.school_year_start}
                                     onChange={handleEditChange}
+                                    min={getMinStartDate()}
+                                    max={getMaxStartDate()}
                                   />
                                 ) : (
                                   formatDate(schoolYear.school_year_start)
@@ -336,6 +557,8 @@ function SchoolYearManagement() {
                                     name="school_year_end"
                                     value={editFormData.school_year_end}
                                     onChange={handleEditChange}
+                                    min={editFormData.school_year_start || getMinStartDate()}
+                                    max={getMaxEndDate()}
                                   />
                                 ) : (
                                   formatDate(schoolYear.school_year_end)
@@ -351,6 +574,8 @@ function SchoolYearManagement() {
                                     name="enrollment_start"
                                     value={editFormData.enrollment_start}
                                     onChange={handleEditChange}
+                                    min={editFormData.school_year_start}
+                                    max={getMaxEnrollmentStartDate(editFormData.school_year_end)}
                                   />
                                 ) : (
                                   formatDate(schoolYear.enrollment_start)
@@ -366,6 +591,8 @@ function SchoolYearManagement() {
                                     name="enrollment_end"
                                     value={editFormData.enrollment_end}
                                     onChange={handleEditChange}
+                                    min={getMinEnrollmentEndDate(editFormData.enrollment_start)}
+                                    max={editFormData.school_year_end}
                                   />
                                 ) : (
                                   formatDate(schoolYear.enrollment_end)
@@ -405,6 +632,8 @@ function SchoolYearManagement() {
                 name="school_year"
                 value={newSchoolYear.school_year}
                 onChange={handleNewSchoolYearChange}
+                readOnly
+                style={{ backgroundColor: '#f0f0f0' }}
               />
             </label>
             <label>
@@ -414,6 +643,8 @@ function SchoolYearManagement() {
                 name="school_year_start"
                 value={newSchoolYear.school_year_start}
                 onChange={handleNewSchoolYearChange}
+                min={getMinStartDate()}
+                max={getMaxStartDate()}
               />
             </label>
             <label>
@@ -423,6 +654,8 @@ function SchoolYearManagement() {
                 name="school_year_end"
                 value={newSchoolYear.school_year_end}
                 onChange={handleNewSchoolYearChange}
+                min={newSchoolYear.school_year_start || getMinStartDate()}
+                max={getMaxEndDate()}
               />
             </label>
             <label>
@@ -432,6 +665,8 @@ function SchoolYearManagement() {
                 name="enrollment_start"
                 value={newSchoolYear.enrollment_start}
                 onChange={handleNewSchoolYearChange}
+                min={newSchoolYear.school_year_start}
+                max={getMaxEnrollmentStartDate(newSchoolYear.school_year_end)}
               />
             </label>
             <label>
@@ -441,13 +676,15 @@ function SchoolYearManagement() {
                 name="enrollment_end"
                 value={newSchoolYear.enrollment_end}
                 onChange={handleNewSchoolYearChange}
+                min={getMinEnrollmentEndDate(newSchoolYear.enrollment_start)}
+                max={newSchoolYear.school_year_end}
               />
             </label>
             <div className="school-year-button-group">
               <button className="school-year-btn school-year-btn-edit" onClick={handleAddSchoolYear}>
                 Save
               </button>
-              <button className="school-year-btn school-year-btn-cancel" onClick={() => setShowModal(false)}>
+              <button className="school-year-btn school-year-btn-cancel" onClick={resetNewSchoolYearForm}>
                 Cancel
               </button>
             </div>
