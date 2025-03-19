@@ -48,113 +48,66 @@ function HomePage() {
       </div>
       
       <div className="home-features">
-        {/* Core Management Features */}
+        {/* Student Record Management */}
         <div className="feature-card">
           <div className="feature-icon"><FaUserGraduate /></div>
-          <h3 className="feature-title">Student Management</h3>
+          <h3 className="feature-title">Student Record Management</h3>
           <p className="feature-description">
-            Manage student profiles, track enrollment status, and maintain comprehensive student records.
+            Register new students, search records, view and edit student information, manage student status, and handle profile changes.
           </p>
         </div>
 
-        <div className="feature-card">
-          <div className="feature-icon"><FaChalkboardTeacher /></div>
-          <h3 className="feature-title">Teacher Management</h3>
-          <p className="feature-description">
-            Organize teacher information, assignments, and qualifications in one centralized location.
-          </p>
-        </div>
-
+        {/* Student Academic Records */}
         <div className="feature-card">
           <div className="feature-icon"><MdGrade /></div>
-          <h3 className="feature-title">Academic Assessment</h3>
+          <h3 className="feature-title">Student Academic Records Management</h3>
           <p className="feature-description">
-            Record, calculate, and analyze student grades and test scores with an intuitive assessment system.
+            Manage student grades, attendance records, view academic history, and generate Form 137/138.
           </p>
         </div>
 
+        {/* Faculty/Registrar Management */}
         <div className="feature-card">
-          <div className="feature-icon"><FaCalendarAlt /></div>
-          <h3 className="feature-title">Schedule Management</h3>
+          <div className="feature-icon"><FaChalkboardTeacher /></div>
+          <h3 className="feature-title">Faculty/Registrar Management</h3>
           <p className="feature-description">
-            Create and manage class schedules, ensuring optimal resource allocation.
+            Add and manage faculty records, edit profiles, handle credentials, and maintain faculty information.
           </p>
         </div>
 
-        {/* Additional Management Features */}
-        <div className="feature-card">
-          <div className="feature-icon"><FaBook /></div>
-          <h3 className="feature-title">Subject Management</h3>
-          <p className="feature-description">
-            Organize academic subjects, assign teachers, and manage curriculum and assessment details.
-          </p>
-        </div>
-
-        <div className="feature-card">
-          <div className="feature-icon"><FaUserFriends /></div>
-          <h3 className="feature-title">Section Management</h3>
-          <p className="feature-description">
-            Create and organize class sections, assign students, and manage section details.
-          </p>
-        </div>
-
-        <div className="feature-card">
-          <div className="feature-icon"><MdSchool /></div>
-          <h3 className="feature-title">School Year Management</h3>
-          <p className="feature-description">
-            Define academic years, set important dates, and manage enrollment periods.
-          </p>
-        </div>
-
-        <div className="feature-card">
-          <div className="feature-icon"><FaClipboardList /></div>
-          <h3 className="feature-title">Attendance Tracking</h3>
-          <p className="feature-description">
-            Record and monitor student attendance with detailed reporting capabilities.
-          </p>
-        </div>
-
-        {/* Enrollment and Registration Features */}
+        {/* Enrollment Management */}
         <div className="feature-card">
           <div className="feature-icon"><FaUserPlus /></div>
           <h3 className="feature-title">Enrollment Management</h3>
           <p className="feature-description">
-            Process enrollment requests and manage lists of currently enrolled students across all sections.
+            Process enrollments, manage student sections, track brigade attendance, and view class lists.
           </p>
         </div>
 
-        {/* Reporting Features */}
+        {/* Subject Management */}
         <div className="feature-card">
-          <div className="feature-icon"><MdAssessment /></div>
-          <h3 className="feature-title">Reports & Analytics</h3>
+          <div className="feature-icon"><FaBook /></div>
+          <h3 className="feature-title">Subject Management</h3>
           <p className="feature-description">
-            Generate comprehensive reports and visualize data to track trends and make informed decisions.
+            Add and edit subjects, manage assigned subjects, view subject details, and archive subjects.
           </p>
         </div>
 
-        {/* Student Portal Features */}
+        {/* Section Management */}
         <div className="feature-card">
-          <div className="feature-icon"><MdDashboard /></div>
-          <h3 className="feature-title">Student Portal</h3>
+          <div className="feature-icon"><FaUsers /></div>
+          <h3 className="feature-title">Section Management</h3>
           <p className="feature-description">
-            Personalized dashboard for students to access their profiles, grades, schedules, and attendance.
+            Create sections, manage class schedules, handle advisory assignments, and view section records.
           </p>
         </div>
 
-        {/* Additional Features */}
+        {/* Report Generation */}
         <div className="feature-card">
-          <div className="feature-icon"><MdAccountCircle /></div>
-          <h3 className="feature-title">Account Management</h3>
+          <div className="feature-icon"><FaFileAlt /></div>
+          <h3 className="feature-title">Report Generation</h3>
           <p className="feature-description">
-            Manage user accounts, permissions, and system access for all stakeholders.
-          </p>
-        </div>
-
-        <div className="feature-card">
-          <div className="feature-icon"><FaHandsHelping /></div>
-          <h3 className="feature-title">Brigada Eskwela</h3>
-          <p className="feature-description">
-            Coordinate and manage volunteer activities and community involvement programs.
+            Generate various reports including enrollment reports, Form 137, SF forms, class lists, and assessment reports.
           </p>
         </div>
       </div>
