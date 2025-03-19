@@ -271,7 +271,7 @@ function SectionList() {
               ))
             ) : (
               <tr>
-                <td colSpan="5" style={{ textAlign: 'center' }}>No sections available.</td>
+                <td colSpan="4" style={{ textAlign: 'center' }}>No sections available.</td>
               </tr>
             )}
           </tbody>

@@ -273,7 +273,7 @@ function PromotionReport() {
         )}
 
         {/* Late Enrollees Card */}
-        {(roleName !== 'registrar' && roleName !=='class_adviser') && (
+        {(roleName !== 'registrar' && roleName !=='class_adviser' && roleName !=='principal') && (
         <div className="summary-report-card">
           <h3>Late Enrollees</h3>
           <p className="summary-report-description">Generate a report for late enrollees.</p>

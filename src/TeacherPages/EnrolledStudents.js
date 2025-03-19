@@ -112,7 +112,6 @@ function EnrolledStudents() {
             <tr>
               <th>#</th>
               <th>Name</th>
-              <th>Grade Level</th>
               <th>Enrollment Status</th>
             </tr>
           </thead>
@@ -121,8 +120,7 @@ function EnrolledStudents() {
               currentStudents.map((student, index) => (
                 <tr key={student.student_id}>
                   <td>{index + 1 + (currentPage - 1) * studentsPerPage}</td>
-                  <td>{`${student.firstname} ${student.middlename || ''} ${student.lastname}`}</td>
-                  <td>Grade {student.grade_level}</td>
+                  <td>{student.stud_name}</td>
                   <td>
                     <span className="status-active">
                       {student.enrollment_status.charAt(0).toUpperCase() + student.enrollment_status.slice(1)}
@@ -132,7 +130,7 @@ function EnrolledStudents() {
               ))
             ) : (
               <tr>
-                <td colSpan="4" style={{ textAlign: 'center' }}>
+                <td colSpan="3" style={{ textAlign: 'center' }}>
                   No students found
                 </td>
               </tr>

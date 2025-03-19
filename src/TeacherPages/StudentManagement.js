@@ -321,7 +321,8 @@ const handleApplyFilters = () => {
         firstname: formatCapitalization(newStudentData.firstname),
         middlename: newStudentData.middlename ? formatCapitalization(newStudentData.middlename) : '',
         current_yr_lvl: parseInt(newStudentData.current_yr_lvl, 10),
-        birthdate: new Date(newStudentData.birthdate),                
+        birthdate: new Date(newStudentData.birthdate).toISOString().split('T')[0],
+        
         gender: newStudentData.gender,
         age: parseInt(newStudentData.age, 10),
         home_address: formatCapitalization(newStudentData.home_address),
@@ -1128,7 +1129,7 @@ const handleArchive = () => {
                           </td>
                         </tr>
                         <tr>
-                                  <th>Annual Income:</th>
+                                  <th>Annual Household Income:</th>
                           <td>
                             {isEditing ? (
                               <input
@@ -1624,7 +1625,7 @@ const handleArchive = () => {
                   {errors.parent_address && <span className="student-mgmt-error">{errors.parent_address}</span>}
                 </div>
                 <div className="student-mgmt-form-group">
-                  <label>Annual Income:</label>
+                  <label>Annual Household Income:</label>
                   <input
                     type="text"
                     name="annual_income"
