@@ -68,7 +68,7 @@ function SubjectCoordinatorSideBar({ showSidebar, toggleSidebar, handleLogout })
           <FiBook className="icon" /> Subjects
         </button>
 
-        <div className={`menu-with-submenu ${showExperimentalsSubMenu || isExperimentalsPath ? 'active' : ''}`}>
+        {/* <div className={`menu-with-submenu ${showExperimentalsSubMenu || isExperimentalsPath ? 'active' : ''}`}>
           <button onClick={toggleExperimentalsSubMenu}>
             <FiLayers className="icon" /> Experimentals
           </button>
@@ -82,7 +82,7 @@ function SubjectCoordinatorSideBar({ showSidebar, toggleSidebar, handleLogout })
               </button>
             </div>
           )}
-        </div>
+        </div> */}
         
         {/* <button 
           onClick={() => handleNavigate('/profile')}

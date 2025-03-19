@@ -198,7 +198,7 @@ function ClassAdviserSideBar({ showSidebar, toggleSidebar, handleLogout }) {
         >
           <FiUser className="icon" /> Profile
         </button> */}
-        <div className={`menu-with-submenu ${showExperimentalsSubMenu || isExperimentalsPath ? 'active' : ''}`}>
+        {/* <div className={`menu-with-submenu ${showExperimentalsSubMenu || isExperimentalsPath ? 'active' : ''}`}>
           <button onClick={toggleExperimentalsSubMenu}>
             <FiLayers className="icon" /> Experimentals
           </button>
@@ -212,7 +212,7 @@ function ClassAdviserSideBar({ showSidebar, toggleSidebar, handleLogout }) {
               </button>
             </div>
           )}
-        </div>
+        </div> */}
         <button onClick={handleLogoutClick} className="logout-btn">
           <FiLogOut className="icon" /> Logout
         </button>
