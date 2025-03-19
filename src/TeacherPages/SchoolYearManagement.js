@@ -682,7 +682,7 @@ function SchoolYearManagement() {
             </label>
             <div className="school-year-button-group">
               <button className="school-year-btn school-year-btn-edit" onClick={handleAddSchoolYear}>
-                Save
+                Add
               </button>
               <button className="school-year-btn school-year-btn-cancel" onClick={resetNewSchoolYearForm}>
                 Cancel
