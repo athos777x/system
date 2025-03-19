@@ -27,7 +27,7 @@ function EmployeeSearchFilter({ handleApplyFilters }) {
         <input
           type="text"
           name="searchID"
-          placeholder="Search by Emp ID..."
+          placeholder="Search by Employee ID..."
           value={filters.searchID}
           onChange={handleFilterChange}
         />

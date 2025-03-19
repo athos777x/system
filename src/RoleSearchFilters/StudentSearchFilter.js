@@ -97,7 +97,7 @@ function StudentSearchFilter({ students, fetchStudents, setFilteredStudents, set
         <input
           type="text"
           name="searchID"
-          placeholder="Search by ID No..."
+          placeholder="Search by ID number..."
           value={tempFilters.searchID}
           onChange={(e) => handleSearch('searchID', e.target.value)}
         />

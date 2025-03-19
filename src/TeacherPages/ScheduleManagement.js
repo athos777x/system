@@ -502,7 +502,7 @@ function Principal_SchedulePage() {
                 <React.Fragment key={section.section_id}>
                   <tr>
                     <td>{index + 1}</td>
-                    <td>Section {section.section_name}</td>
+                    <td>{section.section_name}</td>
                     <td>Grade {section.grade_level}</td>
                     <td>
                       <span className={`status-${section.status.toLowerCase()}`}>

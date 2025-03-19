@@ -202,6 +202,7 @@ app.get('/students', (req, res) => {
       s.mother_occupation, FORMAT(s.annual_hshld_income,2) AS annual_hshld_income, s.number_of_siblings, 
       s.father_educ_lvl, s.mother_educ_lvl, s.father_contact_number, 
       s.mother_contact_number, IF(s.brigada_eskwela=1,'Attended','Not Attended') AS brigada_eskwela,
+      s.emergency_number,
       (SELECT ss.status FROM student_school_year ss
       JOIN school_year sy ON ss.school_year_id = sy.school_year_id
       WHERE ss.student_id = s.student_id AND sy.status = 'active') as active_status,
@@ -2269,7 +2270,8 @@ app.get('/user-role/:userId', (req, res) => {
 app.get('/enrolled-students', (req, res) => {
   const { status, grade, section, searchTerm } = req.query;
   let query = `
-    SELECT s.student_id, s.firstname, s.middlename, s.lastname, e.grade_level, e.enrollment_status
+    SELECT s.student_id, s.firstname, s.middlename, s.lastname, CONCAT(s.lastname, ', ', s.firstname, ' ', 
+      IF(s.middlename IS NOT NULL AND s.middlename != '', CONCAT(LEFT(s.middlename, 1), '.'), '')) AS stud_name, e.grade_level, e.enrollment_status
     FROM student s
     JOIN enrollment e ON s.student_id = e.student_id
     WHERE 1=1
