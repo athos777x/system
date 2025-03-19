@@ -25,6 +25,7 @@ function SubjectsManagement() {
   });
   const [showDetails, setShowDetails] = useState(false);
   const [pendingFilters, setPendingFilters] = useState({ ...filters });
+  const [errors, setErrors] = useState({});
 
   const fetchSubjects = useCallback(async () => {
     try {
@@ -68,6 +69,7 @@ function SubjectsManagement() {
   const startAdding = () => {
     setShowModal(true);
     setIsEditing(false);
+    setErrors({});
     setNewSubjectData({
       subject_name: '',
       grade_level: '7',
@@ -96,8 +98,14 @@ function SubjectsManagement() {
       setShowModal(false);
       setSelectedSubject(null);
       setShowDetails(false);
+      setErrors({});
     } catch (error) {
       console.error(`Error ${isEditing ? 'updating' : 'adding'} subject:`, error);
+      if (error.response?.data?.error === 'Subject already exists') {
+        setErrors({ subject_name: `Subject already exists${isEditing ? ' in another record' : ''}` });
+      } else {
+        setErrors({ subject_name: `Error ${isEditing ? 'updating' : 'adding'} subject` });
+      }
     }
   };
 
@@ -105,6 +113,7 @@ function SubjectsManagement() {
     setSelectedSubject(subject);
     setShowModal(true);
     setIsEditing(true);
+    setErrors({});
     setNewSubjectData(subject);
   };
 
@@ -117,6 +126,11 @@ function SubjectsManagement() {
     } catch (error) {
       console.error('Error archiving subject:', error);
     }
+  };
+
+  const closeModal = () => {
+    setShowModal(false);
+    setErrors({});
   };
 
   return (
@@ -282,6 +296,11 @@ function SubjectsManagement() {
                   onChange={handleAddChange}
                   required
                 />
+                {errors.subject_name && (
+                  <div className="error-message" style={{ color: 'red', fontSize: '0.8em', marginTop: '5px' }}>
+                    {errors.subject_name}
+                  </div>
+                )}
               </div>
 
               <div className="subjects-management-form-group">
@@ -322,17 +341,17 @@ function SubjectsManagement() {
 
               <div className="subjects-management-modal-actions">
                 <button 
-                  type="button"
-                  className="subjects-management-btn subjects-management-btn-archive" 
-                  onClick={() => setShowModal(false)}
-                >
-                  Cancel
-                </button>
-                <button 
                   type="submit"
                   className="subjects-management-btn subjects-management-btn-edit"
                 >
-                  {isEditing ? 'Update' : 'Save'}
+                  {isEditing ? 'Save' : 'Add'}
+                </button>
+                <button 
+                  type="button"
+                  className="subjects-management-btn subjects-management-btn-archive" 
+                  onClick={closeModal}
+                >
+                  Cancel
                 </button>
               </div>
             </form>

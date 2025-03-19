@@ -196,7 +196,7 @@ function SubjectTeacherSideBar({ showSidebar, toggleSidebar, handleLogout }) {
             </div>
           )}
         </div>
-        <div className={`menu-with-submenu ${showExperimentalsSubMenu || isExperimentalsPath ? 'active' : ''}`}>
+        {/* <div className={`menu-with-submenu ${showExperimentalsSubMenu || isExperimentalsPath ? 'active' : ''}`}>
           <button onClick={toggleExperimentalsSubMenu}>
             <FiLayers className="icon" /> Experimentals
           </button>
@@ -210,7 +210,7 @@ function SubjectTeacherSideBar({ showSidebar, toggleSidebar, handleLogout }) {
               </button>
             </div>
           )}
-        </div>
+        </div> */}
         {/* <button 
           onClick={() => handleNavigate('/profile')}
           className={location.pathname === '/profile' ? 'active' : ''}

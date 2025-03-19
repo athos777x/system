@@ -2530,19 +2530,39 @@ app.put('/update-subjects-status', (req, res) => {
 // SUBJECT PAGE
 app.post('/subjects', (req, res) => {
   const { subject_name, grade_level, status, grading_criteria, description, school_year, archive_status } = req.body;
-  const query = `
-    INSERT INTO subject (subject_name, grade_level, status, grading_criteria, description, school_year_id, archive_status)
-    VALUES (?, ?, ?, ?, ?, (SELECT school_year_id FROM school_year WHERE status='active'), 'unarchive')
+  
+  // First check if subject name already exists
+  const checkDuplicateQuery = `
+    SELECT COUNT(*) as count 
+    FROM subject 
+    WHERE LOWER(subject_name) = LOWER(?)
   `;
-  const queryParams = [subject_name, grade_level, status, grading_criteria, description, school_year, archive_status];
-
-  db.query(query, queryParams, (err, results) => {
-    if (err) {
-      console.error('Error adding subject:', err);
-      res.status(500).json({ error: 'Internal server error' });
-      return;
+  
+  db.query(checkDuplicateQuery, [subject_name], (checkErr, checkResults) => {
+    if (checkErr) {
+      console.error('Error checking for duplicate subject:', checkErr);
+      return res.status(500).json({ error: 'Internal server error' });
     }
-    res.status(201).json({ message: 'Subject added successfully', subjectId: results.insertId });
+    
+    if (checkResults[0].count > 0) {
+      return res.status(400).json({ error: 'Subject already exists' });
+    }
+    
+    // If no duplicate, proceed with insertion
+    const query = `
+      INSERT INTO subject (subject_name, grade_level, status, grading_criteria, description, school_year_id, archive_status)
+      VALUES (?, ?, ?, ?, ?, (SELECT school_year_id FROM school_year WHERE status='active'), 'unarchive')
+    `;
+    const queryParams = [subject_name, grade_level, status, grading_criteria, description, school_year, archive_status];
+
+    db.query(query, queryParams, (err, results) => {
+      if (err) {
+        console.error('Error adding subject:', err);
+        res.status(500).json({ error: 'Internal server error' });
+        return;
+      }
+      res.status(201).json({ message: 'Subject added successfully', subjectId: results.insertId });
+    });
   });
 });
 
@@ -2561,20 +2581,38 @@ app.put('/subjects/:subjectId', (req, res) => {
     }
   });
 
-  console.log(`Updating subject with ID: ${subjectId}`, updatedSubject);
+  // First check if subject name already exists (excluding current subject)
+  const checkDuplicateQuery = `
+    SELECT COUNT(*) as count 
+    FROM subject 
+    WHERE LOWER(subject_name) = LOWER(?)
+    AND subject_id != ?
+  `;
+  
+  db.query(checkDuplicateQuery, [updatedSubject.subject_name, subjectId], (checkErr, checkResults) => {
+    if (checkErr) {
+      console.error('Error checking for duplicate subject:', checkErr);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+    
+    if (checkResults[0].count > 0) {
+      return res.status(400).json({ error: 'Subject already exists' });
+    }
 
-  const query = 'UPDATE subject SET ? WHERE subject_id = ?';
-  db.query(query, [updatedSubject, subjectId], (err, results) => {
-    if (err) {
-      console.error('Error updating subject details:', err);
-      res.status(500).json({ error: 'Internal server error' });
-      return;
-    }
-    if (results.affectedRows > 0) {
-      res.json({ message: 'Subject updated successfully' });
-    } else {
-      res.status(404).json({ error: 'Subject not found' });
-    }
+    // If no duplicate, proceed with update
+    const query = 'UPDATE subject SET ? WHERE subject_id = ?';
+    db.query(query, [updatedSubject, subjectId], (err, results) => {
+      if (err) {
+        console.error('Error updating subject details:', err);
+        res.status(500).json({ error: 'Internal server error' });
+        return;
+      }
+      if (results.affectedRows > 0) {
+        res.json({ message: 'Subject updated successfully' });
+      } else {
+        res.status(404).json({ error: 'Subject not found' });
+      }
+    });
   });
 });
 
