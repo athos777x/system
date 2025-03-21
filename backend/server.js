@@ -1408,12 +1408,21 @@ app.get('/api/school_years', (req, res) => {
 // Function: Retrieves the current active school year
 // Pages: SchoolYearPage.js
 app.get('/current-school-year', (req, res) => {
-  try {
-    const currentSchoolYear = '2023-2024'; // Replace with actual logic to fetch from database
-    res.json({ schoolYear: currentSchoolYear });
-  } catch (error) {
-    res.status(500).send('Error fetching current school year');
-  }
+  const query = `
+    SELECT school_year 
+    FROM school_year 
+    WHERE status = 'active' 
+    LIMIT 1
+  `;
+  
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error('Error fetching current school year:', err);
+      res.status(500).send('Error fetching current school year');
+    } else {
+      res.json(results[0] || { school_year: 'N/A' });
+    }
+  });
 });
 
 // Endpoint to fetch student details
@@ -4009,5 +4018,35 @@ app.get('/students/pending-elective', (req, res) => {
       }
       res.json(results);
     });
+  });
+});
+
+// Get student schedules
+app.get('/students/:studentId/schedules', (req, res) => {
+  const studentId = req.params.studentId;
+  const query = `
+    SELECT 
+      s.subject_name,
+      sc.day,
+      TIME_FORMAT(sc.time_start, '%H:%i') as time_start,
+      TIME_FORMAT(sc.time_end, '%H:%i') as time_end,
+      CONCAT(e.firstname, ' ', IF(e.middlename IS NOT NULL AND e.middlename != '', CONCAT(LEFT(e.middlename, 1), '. '), ''), e.lastname) as teacher_name,
+      sc.schedule_status
+    FROM schedule sc
+    JOIN subject s ON sc.subject_id = s.subject_id
+    JOIN section sec ON sc.section_id = sec.section_id
+    JOIN enrollment en ON en.section_id = sec.section_id
+    JOIN employee e ON sc.teacher_id = e.employee_id
+    WHERE en.student_id = ? AND en.enrollment_status = 'active'
+    ORDER BY FIELD(sc.day, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'), sc.time_start;
+  `;
+
+  db.query(query, [studentId], (err, results) => {
+    if (err) {
+      console.error('Error fetching student schedules:', err);
+      res.status(500).send('Error fetching student schedules');
+    } else {
+      res.json(results);
+    }
   });
 });
