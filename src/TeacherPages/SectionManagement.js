@@ -29,6 +29,7 @@ function SectionManagement() {
     room_number: '',
     archive_status: 'unarchive' // Default value
   });
+  const [errors, setErrors] = useState({});
 
   const fetchActiveSchoolYear = useCallback(async () => {
     try {
@@ -147,8 +148,8 @@ function SectionManagement() {
   const startEditing = (sectionId) => {
     setSelectedSectionId(sectionId);
     setIsEditing(true);
+    setErrors({});
     const section = sections.find(sec => sec.section_id === sectionId);
-    console.log('Section to edit:', section); // Log section details to edit
     setEditFormData(section);
   };
 
@@ -162,14 +163,31 @@ function SectionManagement() {
 
   const saveChanges = async () => {
     try {
-      const { school_year_id, ...updateData } = editFormData;
-      console.log('Saving changes:', updateData); // Log changes to save
-      await axios.put(`http://localhost:3001/sections/${selectedSectionId}`, updateData);
+      // Create a copy of the edit form data without school_year field
+      const { school_year, ...updateData } = editFormData;
+      
+      // Make sure we're sending the correct fields to match the database columns
+      const dataToUpdate = {
+        section_name: updateData.section_name,
+        grade_level: updateData.grade_level,
+        status: updateData.status,
+        max_capacity: updateData.max_capacity,
+        room_number: updateData.room_number,
+        archive_status: updateData.archive_status || 'unarchive'
+      };
+
+      await axios.put(`http://localhost:3001/sections/${selectedSectionId}`, dataToUpdate);
       fetchSections(activeSchoolYear);
       fetchSectionDetails(selectedSectionId);
       setIsEditing(false);
+      setErrors({});
     } catch (error) {
       console.error('Error saving section details:', error);
+      if (error.response?.data?.error === 'Section name already exists') {
+        setErrors({ section_name: 'Section name already exists in another record' });
+      } else {
+        setErrors({ section_name: 'Error updating section' });
+      }
     }
   };
 
@@ -186,11 +204,13 @@ function SectionManagement() {
 
   const cancelEditing = () => {
     setIsEditing(false);
+    setErrors({});
     fetchSectionDetails(selectedSectionId);
   };
 
   const startAdding = () => {
     setIsAdding(true);
+    setErrors({});
     setNewSectionData({
       section_name: '',
       grade_level: '7',
@@ -198,7 +218,7 @@ function SectionManagement() {
       max_capacity: '',
       school_year_id: schoolYears.length > 0 ? schoolYears[0].school_year_id : '',
       room_number: '',
-      archive_status: 'unarchive' // Default value
+      archive_status: 'unarchive'
     });
     setShowModal(true);
   };
@@ -213,19 +233,25 @@ function SectionManagement() {
 
   const saveNewSection = async () => {
     try {
-      console.log('New section data:', newSectionData);
       await axios.post('http://localhost:3001/sections', newSectionData);
       fetchSections(activeSchoolYear);
       setIsAdding(false);
       setShowModal(false);
+      setErrors({});
     } catch (error) {
       console.error('Error adding new section:', error);
+      if (error.response?.data?.error === 'Section name already exists') {
+        setErrors({ section_name: 'Section name already exists' });
+      } else {
+        setErrors({ section_name: 'Error adding section' });
+      }
     }
   };
 
   const cancelAdding = () => {
     setIsAdding(false);
     setShowModal(false);
+    setErrors({});
   };
 
   const capitalizeStatus = (status) => {
@@ -385,12 +411,20 @@ function SectionManagement() {
                               <th>Section Name:</th>
                               <td>
                                 {isEditing ? (
-                                  <input
-                                    type="text"
-                                    name="section_name"
-                                    value={editFormData.section_name}
-                                    onChange={handleEditChange}
-                                  />
+                                  <>
+                                    <input
+                                      type="text"
+                                      name="section_name"
+                                      value={editFormData.section_name}
+                                      onChange={handleEditChange}
+                                      required
+                                    />
+                                    {errors.section_name && (
+                                      <div className="error-message" style={{ color: 'red', fontSize: '0.8em', marginTop: '5px' }}>
+                                        {errors.section_name}
+                                      </div>
+                                    )}
+                                  </>
                                 ) : (
                                   sectionDetails.section_name
                                 )}
@@ -517,7 +551,13 @@ function SectionManagement() {
                 name="section_name"
                 value={newSectionData.section_name}
                 onChange={handleAddChange}
+                required
               />
+              {errors.section_name && (
+                <div className="error-message" style={{ color: 'red', fontSize: '0.8em', marginTop: '5px' }}>
+                  {errors.section_name}
+                </div>
+              )}
             </div>
             <div className="section-mgmt-form-group">
               <label>Grade Level:</label>

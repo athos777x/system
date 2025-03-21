@@ -2188,26 +2188,39 @@ app.put('/sections/:sectionId/archive', (req, res) => {
 // ENDPOINT USED
 // SECTION PAGE
 app.post('/sections', (req, res) => {
-  const { section_name, grade_level, status, max_capacity, school_year_id, room_number } = req.body;
+  const { section_name, grade_level, status, max_capacity, school_year_id, room_number, archive_status } = req.body;
 
-  // Log the request body to see the received data
-  console.log('Request body:', req.body);
-
-  // SQL query to insert a new section with archive_status defaulted to 'unarchive'
-  const query = `
-    INSERT INTO section (section_name, grade_level, status, max_capacity, school_year_id, room_number, archive_status)
-    VALUES (?, ?, ?, ?, ?,?, 'unarchive')
+  // First check if section name already exists
+  const checkDuplicateQuery = `
+    SELECT COUNT(*) as count 
+    FROM section 
+    WHERE LOWER(section_name) = LOWER(?)
   `;
-
-  // Execute the query
-  db.query(query, [section_name, grade_level, status, max_capacity, school_year_id, room_number], (err, result) => {
-    if (err) {
-      // Log the error for detailed analysis
-      console.error('Error adding new section:', err);
-      res.status(500).json({ error: 'Internal server error', details: err.message });
-      return;
+  
+  db.query(checkDuplicateQuery, [section_name], (checkErr, checkResults) => {
+    if (checkErr) {
+      console.error('Error checking for duplicate section:', checkErr);
+      return res.status(500).json({ error: 'Internal server error' });
     }
-    res.status(201).json({ message: 'Section added successfully' });
+    
+    if (checkResults[0].count > 0) {
+      return res.status(400).json({ error: 'Section name already exists' });
+    }
+    
+    // If no duplicate, proceed with insertion
+    const query = `
+      INSERT INTO section (section_name, grade_level, status, max_capacity, school_year_id, room_number, archive_status)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `;
+    const values = [section_name, grade_level, status, max_capacity, school_year_id, room_number, archive_status || 'unarchive'];
+
+    db.query(query, values, (err, results) => {
+      if (err) {
+        console.error('Error adding section:', err);
+        return res.status(500).json({ error: 'Internal server error' });
+      }
+      res.status(201).json({ message: 'Section added successfully', sectionId: results.insertId });
+    });
   });
 });
 
@@ -2649,27 +2662,38 @@ app.put('/sections/:sectionId', (req, res) => {
   const { sectionId } = req.params;
   const updatedSection = req.body;
 
-  // Remove any fields that don't exist in the 'section' table
-  const allowedFields = ['section_name', 'grade_level', 'status', 'max_capacity', 'school_year_id', 'room_number', 'archive_status'];
-  const sanitizedUpdate = {};
-  for (const key in updatedSection) {
-    if (allowedFields.includes(key)) {
-      sanitizedUpdate[key] = updatedSection[key];
+  // First check if section name already exists (excluding current section)
+  const checkDuplicateQuery = `
+    SELECT COUNT(*) as count 
+    FROM section 
+    WHERE LOWER(section_name) = LOWER(?)
+    AND section_id != ?
+  `;
+  
+  db.query(checkDuplicateQuery, [updatedSection.section_name, sectionId], (checkErr, checkResults) => {
+    if (checkErr) {
+      console.error('Error checking for duplicate section:', checkErr);
+      return res.status(500).json({ error: 'Internal server error' });
     }
-  }
+    
+    if (checkResults[0].count > 0) {
+      return res.status(400).json({ error: 'Section name already exists' });
+    }
 
-  const query = 'UPDATE section SET ? WHERE section_id = ?';
-  db.query(query, [sanitizedUpdate, sectionId], (err, results) => {
-    if (err) {
-      console.error('Error updating section details:', err);
-      res.status(500).json({ error: 'Internal server error' });
-      return;
-    }
-    if (results.affectedRows > 0) {
-      res.json({ message: 'Section updated successfully' });
-    } else {
-      res.status(404).json({ error: 'Section not found' });
-    }
+    // If no duplicate, proceed with update
+    const query = 'UPDATE section SET ? WHERE section_id = ?';
+    db.query(query, [updatedSection, sectionId], (err, results) => {
+      if (err) {
+        console.error('Error updating section details:', err);
+        res.status(500).json({ error: 'Internal server error' });
+        return;
+      }
+      if (results.affectedRows > 0) {
+        res.json({ message: 'Section updated successfully' });
+      } else {
+        res.status(404).json({ error: 'Section not found' });
+      }
+    });
   });
 });
 
