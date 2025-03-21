@@ -1408,12 +1408,21 @@ app.get('/api/school_years', (req, res) => {
 // Function: Retrieves the current active school year
 // Pages: SchoolYearPage.js
 app.get('/current-school-year', (req, res) => {
-  try {
-    const currentSchoolYear = '2023-2024'; // Replace with actual logic to fetch from database
-    res.json({ schoolYear: currentSchoolYear });
-  } catch (error) {
-    res.status(500).send('Error fetching current school year');
-  }
+  const query = `
+    SELECT school_year 
+    FROM school_year 
+    WHERE status = 'active' 
+    LIMIT 1
+  `;
+  
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error('Error fetching current school year:', err);
+      res.status(500).send('Error fetching current school year');
+    } else {
+      res.json(results[0] || { school_year: 'N/A' });
+    }
+  });
 });
 
 // Endpoint to fetch student details
@@ -2188,26 +2197,39 @@ app.put('/sections/:sectionId/archive', (req, res) => {
 // ENDPOINT USED
 // SECTION PAGE
 app.post('/sections', (req, res) => {
-  const { section_name, grade_level, status, max_capacity, school_year_id, room_number } = req.body;
+  const { section_name, grade_level, status, max_capacity, school_year_id, room_number, archive_status } = req.body;
 
-  // Log the request body to see the received data
-  console.log('Request body:', req.body);
-
-  // SQL query to insert a new section with archive_status defaulted to 'unarchive'
-  const query = `
-    INSERT INTO section (section_name, grade_level, status, max_capacity, school_year_id, room_number, archive_status)
-    VALUES (?, ?, ?, ?, ?,?, 'unarchive')
+  // First check if section name already exists
+  const checkDuplicateQuery = `
+    SELECT COUNT(*) as count 
+    FROM section 
+    WHERE LOWER(section_name) = LOWER(?)
   `;
-
-  // Execute the query
-  db.query(query, [section_name, grade_level, status, max_capacity, school_year_id, room_number], (err, result) => {
-    if (err) {
-      // Log the error for detailed analysis
-      console.error('Error adding new section:', err);
-      res.status(500).json({ error: 'Internal server error', details: err.message });
-      return;
+  
+  db.query(checkDuplicateQuery, [section_name], (checkErr, checkResults) => {
+    if (checkErr) {
+      console.error('Error checking for duplicate section:', checkErr);
+      return res.status(500).json({ error: 'Internal server error' });
     }
-    res.status(201).json({ message: 'Section added successfully' });
+    
+    if (checkResults[0].count > 0) {
+      return res.status(400).json({ error: 'Section name already exists' });
+    }
+    
+    // If no duplicate, proceed with insertion
+    const query = `
+      INSERT INTO section (section_name, grade_level, status, max_capacity, school_year_id, room_number, archive_status)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `;
+    const values = [section_name, grade_level, status, max_capacity, school_year_id, room_number, archive_status || 'unarchive'];
+
+    db.query(query, values, (err, results) => {
+      if (err) {
+        console.error('Error adding section:', err);
+        return res.status(500).json({ error: 'Internal server error' });
+      }
+      res.status(201).json({ message: 'Section added successfully', sectionId: results.insertId });
+    });
   });
 });
 
@@ -2649,27 +2671,38 @@ app.put('/sections/:sectionId', (req, res) => {
   const { sectionId } = req.params;
   const updatedSection = req.body;
 
-  // Remove any fields that don't exist in the 'section' table
-  const allowedFields = ['section_name', 'grade_level', 'status', 'max_capacity', 'school_year_id', 'room_number', 'archive_status'];
-  const sanitizedUpdate = {};
-  for (const key in updatedSection) {
-    if (allowedFields.includes(key)) {
-      sanitizedUpdate[key] = updatedSection[key];
+  // First check if section name already exists (excluding current section)
+  const checkDuplicateQuery = `
+    SELECT COUNT(*) as count 
+    FROM section 
+    WHERE LOWER(section_name) = LOWER(?)
+    AND section_id != ?
+  `;
+  
+  db.query(checkDuplicateQuery, [updatedSection.section_name, sectionId], (checkErr, checkResults) => {
+    if (checkErr) {
+      console.error('Error checking for duplicate section:', checkErr);
+      return res.status(500).json({ error: 'Internal server error' });
     }
-  }
+    
+    if (checkResults[0].count > 0) {
+      return res.status(400).json({ error: 'Section name already exists' });
+    }
 
-  const query = 'UPDATE section SET ? WHERE section_id = ?';
-  db.query(query, [sanitizedUpdate, sectionId], (err, results) => {
-    if (err) {
-      console.error('Error updating section details:', err);
-      res.status(500).json({ error: 'Internal server error' });
-      return;
-    }
-    if (results.affectedRows > 0) {
-      res.json({ message: 'Section updated successfully' });
-    } else {
-      res.status(404).json({ error: 'Section not found' });
-    }
+    // If no duplicate, proceed with update
+    const query = 'UPDATE section SET ? WHERE section_id = ?';
+    db.query(query, [updatedSection, sectionId], (err, results) => {
+      if (err) {
+        console.error('Error updating section details:', err);
+        res.status(500).json({ error: 'Internal server error' });
+        return;
+      }
+      if (results.affectedRows > 0) {
+        res.json({ message: 'Section updated successfully' });
+      } else {
+        res.status(404).json({ error: 'Section not found' });
+      }
+    });
   });
 });
 
@@ -3985,5 +4018,35 @@ app.get('/students/pending-elective', (req, res) => {
       }
       res.json(results);
     });
+  });
+});
+
+// Get student schedules
+app.get('/students/:studentId/schedules', (req, res) => {
+  const studentId = req.params.studentId;
+  const query = `
+    SELECT 
+      s.subject_name,
+      sc.day,
+      TIME_FORMAT(sc.time_start, '%H:%i') as time_start,
+      TIME_FORMAT(sc.time_end, '%H:%i') as time_end,
+      CONCAT(e.firstname, ' ', IF(e.middlename IS NOT NULL AND e.middlename != '', CONCAT(LEFT(e.middlename, 1), '. '), ''), e.lastname) as teacher_name,
+      sc.schedule_status
+    FROM schedule sc
+    JOIN subject s ON sc.subject_id = s.subject_id
+    JOIN section sec ON sc.section_id = sec.section_id
+    JOIN enrollment en ON en.section_id = sec.section_id
+    JOIN employee e ON sc.teacher_id = e.employee_id
+    WHERE en.student_id = ? AND en.enrollment_status = 'active'
+    ORDER BY FIELD(sc.day, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'), sc.time_start;
+  `;
+
+  db.query(query, [studentId], (err, results) => {
+    if (err) {
+      console.error('Error fetching student schedules:', err);
+      res.status(500).send('Error fetching student schedules');
+    } else {
+      res.json(results);
+    }
   });
 });
