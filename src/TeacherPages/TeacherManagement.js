@@ -54,7 +54,8 @@ function TeacherManagement() {
     address: '',
     year_started: '',
     role_name: '',
-    role_id: ''
+    role_id: '',
+    status: 'active'
   });
 
   const navigate = useNavigate();
@@ -1289,6 +1290,19 @@ useEffect(() => {
                       {formatRoleName(role.role_name)}
                     </option>
                   ))}
+                </select>
+              </div>
+              <div className="teacher-mgmt-form-group">
+                <label>Status: <span style={{ color: 'red' }}>*</span></label>
+                <select
+                  name="status"
+                  value={editTeacherData.status}
+                  onChange={handleEditChange}
+                  required
+                >
+                  <option value="active">Active</option>
+                  <option value="resigned">Resigned</option>
+                  <option value="retired">Retired</option>
                 </select>
               </div>
             </div>
