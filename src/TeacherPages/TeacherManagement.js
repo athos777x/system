@@ -202,6 +202,18 @@ function TeacherManagement() {
           updates.role_id = selectedRole.role_id;
         }
       }
+
+      if (name === 'contact_number') {
+        // Only allow digits and limit to 11 characters
+        const digitsOnly = value.replace(/\D/g, '').slice(0, 11);
+        updates[name] = digitsOnly;
+      }
+
+      if (name === 'year_started') {
+        // Only allow digits and limit to 4 characters
+        const digitsOnly = value.replace(/\D/g, '').slice(0, 4);
+        updates[name] = digitsOnly;
+      }
       
       return updates;
     });
@@ -224,6 +236,55 @@ function TeacherManagement() {
       alert('Please enter year started');
       return false;
     }
+    if (!/^\d{4}$/.test(newTeacherData.year_started)) {
+      alert('Year started must be exactly 4 digits');
+      return false;
+    }
+
+    // Add validation for year range
+    const currentYear = new Date().getFullYear();
+    const yearStarted = parseInt(newTeacherData.year_started);
+    if (yearStarted < 1962 || yearStarted > currentYear) {
+      alert(`Year started must be between 1962 and ${currentYear}`);
+      return false;
+    }
+
+    if (!newTeacherData.birthday) {
+      alert('Please enter birthday');
+      return false;
+    }
+    if (!newTeacherData.gender) {
+      alert('Please select gender');
+      return false;
+    }
+    if (!newTeacherData.contact_number.trim()) {
+      alert('Please enter contact number');
+      return false;
+    }
+    if (!/^\d{11}$/.test(newTeacherData.contact_number.trim())) {
+      alert('Contact number must be exactly 11 digits');
+      return false;
+    }
+    if (!newTeacherData.address.trim()) {
+      alert('Please enter address');
+      return false;
+    }
+
+    // Calculate age
+    const today = new Date();
+    const birthDate = new Date(newTeacherData.birthday);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+
+    if (age < 25) {
+      alert('Employee must be at least 25 years old');
+      return false;
+    }
+
     return true;
   };
 
@@ -572,6 +633,18 @@ useEffect(() => {
           updates.role_id = selectedRole.role_id;
         }
       }
+
+      if (name === 'contact_number') {
+        // Only allow digits and limit to 11 characters
+        const digitsOnly = value.replace(/\D/g, '').slice(0, 11);
+        updates[name] = digitsOnly;
+      }
+
+      if (name === 'year_started') {
+        // Only allow digits and limit to 4 characters
+        const digitsOnly = value.replace(/\D/g, '').slice(0, 4);
+        updates[name] = digitsOnly;
+      }
       
       return updates;
     });
@@ -579,7 +652,24 @@ useEffect(() => {
 
   const saveEditedTeacher = async () => {
     try {
-      const response = await axios.put(`http://localhost:3001/employees/${editTeacherData.employee_id}`, editTeacherData);
+      // Add validation for required fields
+      if (!editTeacherData.address.trim()) {
+        alert('Please enter address');
+        return;
+      }
+
+      // Add validation for year started
+      const currentYear = new Date().getFullYear();
+      const yearStarted = parseInt(editTeacherData.year_started);
+      if (yearStarted < 1962 || yearStarted > currentYear) {
+        alert(`Year started must be between 1962 and ${currentYear}`);
+        return;
+      }
+
+      // Create a copy of editTeacherData without emp_name
+      const { emp_name, ...updateData } = editTeacherData;
+      
+      const response = await axios.put(`http://localhost:3001/employees/${editTeacherData.employee_id}`, updateData);
       if (response.status === 200) {
         alert('Teacher updated successfully!');
         await fetchTeachers();
@@ -599,7 +689,7 @@ useEffect(() => {
         <h1 className="teacher-mgmt-title">Employee Management</h1>
         {(roleName === 'registrar' || roleName === 'principal') && (
           <button className="teacher-mgmt-btn teacher-mgmt-btn-view" onClick={startAdding}>
-            Add New Teacher
+            Add New Employee
           </button>
         )}
       </div>
@@ -834,7 +924,7 @@ useEffect(() => {
       {showModal && (
         <div className="teacher-mgmt-modal">
           <div className="teacher-mgmt-modal-content">
-            <h2>Add New Teacher</h2>
+            <h2>Add New Employee</h2>
             <div className="teacher-mgmt-form-grid">
               <div className="teacher-mgmt-form-group">
                 <label>Last Name: <span style={{ color: 'red' }}>*</span></label>
@@ -872,6 +962,12 @@ useEffect(() => {
                   name="birthday"
                   value={newTeacherData.birthday}
                   onChange={handleAddChange}
+                  max={(() => {
+                    const today = new Date();
+                    const maxDate = new Date();
+                    maxDate.setFullYear(today.getFullYear() - 25);
+                    return maxDate.toISOString().split('T')[0];
+                  })()}
                   required
                 />
               </div>
@@ -889,21 +985,26 @@ useEffect(() => {
                 </select>
               </div>
               <div className="teacher-mgmt-form-group">
-                <label>Contact Number:</label>
+                <label>Contact Number: <span style={{ color: 'red' }}>*</span></label>
                 <input
                   type="text"
                   name="contact_number"
                   value={newTeacherData.contact_number}
                   onChange={handleAddChange}
+                  pattern="[0-9]{11}"
+                  title="Please enter exactly 11 digits"
+                  maxLength="11"
+                  required
                 />
               </div>
               <div className="teacher-mgmt-form-group">
-                <label>Address:</label>
+                <label>Address: <span style={{ color: 'red' }}>*</span></label>
                 <input
                   type="text"
                   name="address"
                   value={newTeacherData.address}
                   onChange={handleAddChange}
+                  required
                 />
               </div>
               <div className="teacher-mgmt-form-group">
@@ -913,6 +1014,9 @@ useEffect(() => {
                   name="year_started"
                   value={newTeacherData.year_started}
                   onChange={handleAddChange}
+                  pattern="[0-9]{4}"
+                  title={`Please enter a year between 1962 and ${new Date().getFullYear()}`}
+                  maxLength="4"
                   required
                 />
               </div>
@@ -1133,21 +1237,26 @@ useEffect(() => {
                 />
               </div>
               <div className="teacher-mgmt-form-group">
-                <label>Contact Number:</label>
+                <label>Contact Number: <span style={{ color: 'red' }}>*</span></label>
                 <input
                   type="text"
                   name="contact_number"
                   value={editTeacherData.contact_number}
                   onChange={handleEditChange}
+                  pattern="[0-9]{11}"
+                  title="Please enter exactly 11 digits"
+                  maxLength="11"
+                  required
                 />
               </div>
               <div className="teacher-mgmt-form-group">
-                <label>Address:</label>
+                <label>Address: <span style={{ color: 'red' }}>*</span></label>
                 <input
                   type="text"
                   name="address"
                   value={editTeacherData.address}
                   onChange={handleEditChange}
+                  required
                 />
               </div>
               <div className="teacher-mgmt-form-group">
@@ -1157,6 +1266,9 @@ useEffect(() => {
                   name="year_started"
                   value={editTeacherData.year_started}
                   onChange={handleEditChange}
+                  pattern="[0-9]{4}"
+                  title={`Please enter a year between 1962 and ${new Date().getFullYear()}`}
+                  maxLength="4"
                   required
                 />
               </div>
