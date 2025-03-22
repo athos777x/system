@@ -55,6 +55,7 @@ function StudentManagement() {
     father_contact_number: '',
     mother_contact_number: '',
     emergency_number: '',
+    emergency_contactperson: '',
     status: 'active',
     archive_status: 'unarchive'
   });
@@ -288,7 +289,8 @@ const handleApplyFilters = () => {
         "lastname", "firstname", "current_yr_lvl", "birthdate", "gender",
         "age", "home_address", "barangay", "city_municipality", "province",
         "contact_number", "email_address", "mother_name", "father_name",
-        "father_contact_number", "mother_contact_number", "emergency_number"
+        "father_contact_number", "mother_contact_number", "emergency_number",
+        "emergency_contactperson"
       ];
 
       // Check for missing required fields
@@ -343,6 +345,7 @@ const handleApplyFilters = () => {
         father_contact_number: newStudentData.father_contact_number,
         mother_contact_number: newStudentData.mother_contact_number,
         emergency_number: newStudentData.emergency_number,
+        emergency_contactperson: newStudentData.emergency_contactperson || '',
         brigada_eskwela: '0', // Default value for brigada_eskwela
         status: 'active',
         active_status: 'unarchive'
@@ -1045,6 +1048,36 @@ const handleArchive = () => {
                             )}
                           </td>
                         </tr>
+                        <tr>
+                          <th>Emergency Contact Person:</th>
+                          <td>
+                            {isEditing ? (
+                              <input
+                                type="text"
+                                name="emergency_contactperson"
+                                value={editStudentData ? editStudentData.emergency_contactperson || "" : ""}
+                                onChange={handleEditChange}
+                              />
+                            ) : (
+                              student.emergency_contactperson
+                            )}
+                          </td>
+                        </tr>
+                        <tr>
+                          <th>Emergency Contact:</th>
+                          <td>
+                            {isEditing ? (
+                              <input
+                                type="text"
+                                name="emergency_number"
+                                value={editStudentData ? editStudentData.emergency_number || "" : ""}
+                                onChange={handleEditChange}
+                              />
+                            ) : (
+                              student.emergency_number
+                            )}
+                          </td>
+                        </tr>
                               </tbody>
                             </table>
                           </div>
@@ -1155,36 +1188,6 @@ const handleArchive = () => {
                               />
                             ) : (
                               student.number_of_siblings
-                            )}
-                          </td>
-                        </tr>
-                        <tr>
-                                  <th>Emergency Contact:</th>
-                          <td>
-                            {isEditing ? (
-                              <input
-                                type="text"
-                                        name="emergency_number"
-                                        value={editStudentData ? editStudentData.emergency_number || "" : ""}
-                                onChange={handleEditChange}
-                              />
-                            ) : (
-                                      student.emergency_number
-                            )}
-                          </td>
-                        </tr>
-                        <tr>
-                                  <th>Brigada Eskwela:</th>
-                          <td>
-                            {isEditing ? (
-                              <input
-                                type="text"
-                                        name="brigada eskwela"
-                                        value={editStudentData ? editStudentData.brigada_eskwela || "" : ""}
-                                onChange={handleEditChange}
-                              />
-                            ) : (
-                                      student.brigada_eskwela
                             )}
                           </td>
                         </tr>
@@ -1504,6 +1507,17 @@ const handleArchive = () => {
                     className={errors.email_address ? "error" : ""}
                   />
                   {errors.email_address && <span className="student-mgmt-error">{errors.email_address}</span>}
+                </div>
+                <div className="student-mgmt-form-group">
+                  <label>Emergency Contact Person:</label>
+                  <input
+                    type="text"
+                    name="emergency_contactperson"
+                    value={newStudentData.emergency_contactperson}
+                    onChange={handleAddChange}
+                    className={errors.emergency_contactperson ? "error" : ""}
+                  />
+                  {errors.emergency_contactperson && <span className="student-mgmt-error">{errors.emergency_contactperson}</span>}
                 </div>
                 <div className="student-mgmt-form-group">
                   <label>Emergency Contact Number:</label>
