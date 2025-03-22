@@ -491,7 +491,6 @@ function Principal_SchedulePage() {
             <tr>
               <th>#</th>
               <th>Section Name</th>
-              <th>Grade Level</th>
               <th>Status</th>
               <th>Actions</th>
             </tr>
@@ -503,7 +502,6 @@ function Principal_SchedulePage() {
                   <tr>
                     <td>{index + 1}</td>
                     <td>{section.section_name}</td>
-                    <td>Grade {section.grade_level}</td>
                     <td>
                       <span className={`status-${section.status.toLowerCase()}`}>
                         {section.status.charAt(0).toUpperCase() + section.status.slice(1)}
@@ -520,7 +518,7 @@ function Principal_SchedulePage() {
                   </tr>
                   {selectedSectionId === section.section_id && (
                     <tr>
-                      <td colSpan="5">
+                      <td colSpan="4">
                         <div className="schedule-mgmt-details">
                           <h2 className="schedule-mgmt-details-title">Schedules</h2>
                           <table className="schedule-mgmt-details-table">
@@ -665,7 +663,7 @@ function Principal_SchedulePage() {
               ))
             ) : (
               <tr>
-                <td colSpan="5" style={{ textAlign: 'center' }}>No sections available.</td>
+                <td colSpan="4" style={{ textAlign: 'center' }}>No sections available.</td>
               </tr>
             )}
           </tbody>

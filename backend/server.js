@@ -2486,46 +2486,121 @@ app.delete('/schedules/:scheduleId', (req, res) => {
 // SUBJECT PAGE
 app.get('/subjects', (req, res) => {
   const { searchTerm, school_year, grade, archive_status } = req.query;
-
-  let query = `
-    SELECT s.subject_id, s.grade_level, s.subject_name, s.status, s.grading_criteria, 
-    s.description, s.archive_status, sy.school_year_id, sy.status as sy_status 
-    FROM subject s  
-    JOIN school_year sy ON s.school_year_id = sy.school_year_id
-    WHERE 1 = 1
-  `; // Using `WHERE 1 = 1` makes it easier to append conditions dynamically
+  console.log('Received filters:', req.query);
 
   const queryParams = [];
+  let whereClause = ' WHERE 1=1'; // Unified WHERE clause for both subjects and electives
 
+  // Apply archive_status filter
   if (archive_status) {
-    query += ' AND s.archive_status = ?';
+    whereClause += ' AND archive_status = ?';
     queryParams.push(archive_status);
   }
 
+  // Apply search filter with improved accuracy
   if (searchTerm) {
-    query += ' AND s.subject_name LIKE ?';
+    whereClause += ` AND subject_name LIKE ?`;
     queryParams.push(`%${searchTerm}%`);
-  }
+}
 
+
+  // Filter by school_year (applies only to subjects)
   if (school_year) {
-    query += ' AND sy.school_year = ?';
+    whereClause += ' AND school_year = ?';
     queryParams.push(school_year);
   }
 
+  // Filter by grade (applies only to subjects)
   if (grade) {
-    query += ' AND s.grade_level = ?';
+    whereClause += ' AND grade_level = ?';
     queryParams.push(grade);
   }
 
-  query += ' ORDER BY s.grade_level DESC'; // Keeping the order by clause at the end
+  // Unified query using UNION ALL
+  const finalQuery = `
+    SELECT DISTINCT
+        subject_id, 
+        grade_level, 
+        subject_name, 
+        status, 
+        grading_criteria, 
+        description, 
+        archive_status, 
+        school_year_id, 
+        sy_status, 
+        elective_id, 
+        hasSched
+    FROM (
+        -- Subjects
+        SELECT 
+            s.subject_id, 
+            s.grade_level, 
+            COALESCE(s.subject_name, '') AS subject_name,
+            s.status, 
+            s.grading_criteria, 
+            s.description, 
+            s.archive_status, 
+            sy.school_year_id,
+            sy.school_year, 
+            sy.status AS sy_status, 
+            0 AS elective_id, 
+            CASE 
+                WHEN COALESCE(a.schedule_count, 0) > 0 THEN 1 
+                ELSE 0 
+            END AS hasSched
+        FROM SUBJECT s
+        JOIN school_year sy ON s.school_year_id = sy.school_year_id
+        LEFT JOIN (
+            SELECT subject_id, COUNT(*) AS schedule_count
+            FROM SCHEDULE
+            WHERE elective = 0
+            GROUP BY subject_id
+        ) AS a ON a.subject_id = s.subject_id
 
-  db.query(query, queryParams, (error, results) => {
+        UNION ALL
+
+        -- Electives
+        SELECT 
+            e.elective_id AS subject_id, 
+            NULL AS grade_level, 
+            COALESCE(e.name, '') AS subject_name, 
+            e.status, 
+            NULL AS grading_criteria, 
+            NULL AS description, 
+            e.archive_status, 
+            NULL AS school_year_id, 
+            NULL as school_year,
+            e.status AS sy_status, 
+            e.elective_id, 
+            CASE 
+                WHEN COALESCE(a.schedule_count, 0) > 0 THEN 1 
+                ELSE 0 
+            END AS hasSched
+        FROM elective e
+        LEFT JOIN (
+            SELECT subject_id, COUNT(*) AS schedule_count
+            FROM SCHEDULE
+            WHERE elective = 1
+            GROUP BY subject_id
+        ) AS a ON a.subject_id = e.elective_id
+    ) AS unifiedTable
+    ${whereClause}
+    GROUP BY subject_name, grade_level
+    ORDER BY COALESCE(grade_level, 0) DESC, subject_name ASC
+  `;
+
+  console.log('Final Query:', finalQuery);
+  console.log('Query Parameters:', queryParams);
+
+  db.query(finalQuery, queryParams, (error, results) => {
     if (error) {
-      return res.status(500).send(error);
+      console.error('Error fetching subjects:', error);
+      return res.status(500).json({ error: 'Internal server error' });
     }
-    res.send(results);
+    res.json(results);
   });
 });
+
 
 
 app.put('/update-subjects-status', (req, res) => {
@@ -2640,23 +2715,35 @@ app.put('/subjects/:subjectId', (req, res) => {
 // SUBJECT PAGE
 app.put('/subjects/:subjectId/archive', (req, res) => {
   const { subjectId } = req.params;
-  // Hardcode the values for status and archive_status
+  const { elective_id } = req.body; // Get elective_id from the request body
+
+  // Hardcoded values for status and archive_status
   const status = 'inactive';
   const archive_status = 'archive';
-  
-  const query = 'UPDATE subject SET status = ?, archive_status = ? WHERE subject_id = ?';
-  db.query(query, [status, archive_status, subjectId], (err, results) => {
-    if (err) {
-      console.error('Error updating subject:', err);
-      res.status(500).json({ error: 'Internal server error' });
-      return;
-    }
-    if (results.affectedRows > 0) {
+
+  if (elective_id > 0) {
+    // If elective_id is greater than 0, update the elective table
+    const electiveQuery = 'UPDATE elective SET status = ?, archive_status = ? WHERE elective_id = ?';
+    db.query(electiveQuery, [status, archive_status, elective_id], (err, results) => {
+      if (err) {
+        console.error('Error updating elective:', err);
+        res.status(500).json({ error: 'Internal server error' });
+        return;
+      }
+      res.json({ message: 'Elective updated successfully' });
+    });
+  } else {
+    // Otherwise, update the subject table
+    const subjectQuery = 'UPDATE subject SET status = ?, archive_status = ? WHERE subject_id = ?';
+    db.query(subjectQuery, [status, archive_status, subjectId], (err, results) => {
+      if (err) {
+        console.error('Error updating subject:', err);
+        res.status(500).json({ error: 'Internal server error' });
+        return;
+      }
       res.json({ message: 'Subject updated successfully' });
-    } else {
-      res.status(404).json({ error: 'Subject not found' });
-    }
-  });
+    });
+  }
 });
 
 
