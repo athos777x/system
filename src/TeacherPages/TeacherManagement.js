@@ -57,6 +57,7 @@ function TeacherManagement() {
     role_id: '',
     status: 'active'
   });
+  const [selectedSubjectsSchoolYear, setSelectedSubjectsSchoolYear] = useState('');
 
   const navigate = useNavigate();
 
@@ -516,10 +517,12 @@ function TeacherManagement() {
   };
   
 
-  const fetchTeacherSubjects = async (teacherId) => {
+  const fetchTeacherSubjects = async (teacherId, schoolYearId = '') => {
     try {
-      const response = await axios.get(`http://localhost:3001/teacher-subjects/${teacherId}`);
-      console.log('Fetched subjects from backend:', response.data); // Debugging output
+      const response = await axios.get(`http://localhost:3001/teacher-subjects/${teacherId}`, {
+        params: { school_year_id: schoolYearId }
+      });
+      console.log('Fetched subjects from backend:', response.data);
       setTeacherSubjects(response.data);
     } catch (error) {
       console.error('Error fetching teacher subjects:', error);
@@ -545,7 +548,14 @@ function TeacherManagement() {
       setTeacherSection(null);
     } else {
       setSelectedTeacherId(teacherId);
-      fetchTeacherSubjects(teacherId);
+      // Find active school year and set it as default
+      const activeYear = schoolYears.find(year => year.status === 'active');
+      if (activeYear) {
+        setSelectedSubjectsSchoolYear(activeYear.school_year_id);
+        fetchTeacherSubjects(teacherId, activeYear.school_year_id);
+      } else {
+        fetchTeacherSubjects(teacherId);
+      }
       if (roleId === 4) {
         fetchTeacherSection(teacherId);
       }
@@ -684,6 +694,11 @@ useEffect(() => {
     }
   };
 
+  const handleSubjectsSchoolYearChange = (schoolYearId) => {
+    setSelectedSubjectsSchoolYear(schoolYearId);
+    fetchTeacherSubjects(selectedTeacherId, schoolYearId);
+  };
+
   return (
     <div className="teacher-mgmt-container">
       <div className="teacher-mgmt-header">
@@ -743,7 +758,7 @@ useEffect(() => {
                     <td colSpan="4">
                       <div className="teacher-mgmt-details-content">
                         <div className="teacher-mgmt-details-section">
-                          <h3>Personal Information</h3>
+                          <h3 style={{ margin: '0 0 1rem 0', textAlign: 'left' }}>Personal Information</h3>
                           <table className="teacher-mgmt-details-table">
                             <tbody>
                               <tr>
@@ -791,7 +806,28 @@ useEffect(() => {
                         </div>
 
                         <div className="teacher-mgmt-details-section">
-                          <h3>Assigned Subjects</h3>
+                          <div style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            marginBottom: '1rem'
+                          }}>
+                            <h3 style={{ margin: 0 }}>Assigned Subjects</h3>
+                            <select
+                              value={selectedSubjectsSchoolYear}
+                              onChange={(e) => handleSubjectsSchoolYearChange(e.target.value)}
+                              style={{
+                                padding: '5px',
+                                width: '150px'
+                              }}
+                            >
+                              {schoolYears.map((year) => (
+                                <option key={year.school_year_id} value={year.school_year_id}>
+                                  {year.school_year}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
                           {teacherSubjects.length > 0 ? (
                             <table className="teacher-mgmt-details-table">
                               <thead>
