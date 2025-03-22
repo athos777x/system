@@ -345,7 +345,6 @@ function SectionManagement() {
             <tr>
               <th>#</th>
               <th>Section Name</th>
-              <th>Grade Level</th>
               <th>Status</th>
               <th>Actions</th>
             </tr>
@@ -356,7 +355,6 @@ function SectionManagement() {
                 <tr>
                   <td>{index + 1}</td>
                   <td>{section.section_name}</td>
-                  <td>Grade {section.grade_level}</td>
                   <td>
                     <span className={`status-${section.status ? section.status.toLowerCase() : 'active'}`}>
                       {capitalizeStatus(section.status || 'active')}
@@ -387,7 +385,7 @@ function SectionManagement() {
                 </tr>
                 {selectedSectionId === section.section_id && (
                   <tr>
-                    <td colSpan="5">
+                    <td colSpan="4">
                       <div className="section-mgmt-details">
                         <table>
                           <tbody>

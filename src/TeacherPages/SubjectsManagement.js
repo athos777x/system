@@ -30,13 +30,21 @@ function SubjectsManagement() {
   const fetchSubjects = useCallback(async () => {
     try {
       await axios.put('http://localhost:3001/update-subjects-status');
+  
+      setSubjects([]); // Clear previous results before fetching
+      setFilteredSubjects([]); // Clear filtered subjects as well
+  
       const response = await axios.get('http://localhost:3001/subjects', { params: filters });
-      setSubjects(response.data);
+  
+      setSubjects(response.data); // Replace old subjects
       setFilteredSubjects(response.data);
     } catch (error) {
       console.error('Error fetching subjects:', error);
     }
   }, [filters]);
+  
+  
+  
 
   const fetchSchoolYears = async () => {
     try {
@@ -54,7 +62,18 @@ function SubjectsManagement() {
 
   const handleSearch = (searchTerm) => {
     setFilters((prevFilters) => ({ ...prevFilters, searchTerm }));
+  
+    if (searchTerm.trim() === "") {
+      setFilteredSubjects(subjects);
+    } else {
+      const lowerSearchTerm = searchTerm.toLowerCase();
+      const filtered = subjects.filter((subject) =>
+        subject.subject_name.toLowerCase().includes(lowerSearchTerm)
+      );
+      setFilteredSubjects(filtered);
+    }
   };
+  
 
   const applyFilters = (newFilters) => {
     setFilters(newFilters);
@@ -62,9 +81,23 @@ function SubjectsManagement() {
   };
 
   const handleViewClick = (subject) => {
-    setSelectedSubject(selectedSubject?.subject_id === subject.subject_id ? null : subject);
-    setShowDetails(!showDetails);
-  };
+    if (
+        selectedSubject &&
+        selectedSubject.subject_id === subject.subject_id &&
+        selectedSubject.elective_id === subject.elective_id
+    ) {
+        // If the same subject is clicked again, close details
+        setSelectedSubject(null);
+        setShowDetails(false);
+    } else {
+        // Otherwise, show the selected subject details
+        setSelectedSubject(subject);
+        setShowDetails(true);
+    }
+};
+
+
+
 
   const startAdding = () => {
     setShowModal(true);
@@ -194,7 +227,6 @@ function SubjectsManagement() {
             <tr>
               <th>#</th>
               <th>Subject Name</th>
-              <th>Grade Level</th>
               <th>Status</th>
               <th>Actions</th>
             </tr>
@@ -204,9 +236,8 @@ function SubjectsManagement() {
               filteredSubjects.map((subject, index) => (
                 <React.Fragment key={subject.subject_id}>
                   <tr>
-                    <td>{index + 1}</td>
+                    <td>{subject.subject_id}</td>
                     <td>{subject.subject_name}</td>
-                    <td>Grade {subject.grade_level}</td>
                     <td>
                       <span className={`status-${subject.status.toLowerCase()}`}>
                         {subject.status.charAt(0).toUpperCase() + subject.status.slice(1)}
@@ -229,16 +260,16 @@ function SubjectsManagement() {
                         <button 
                           className="subjects-management-btn subjects-management-btn-archive" 
                           onClick={() => handleDelete(subject)}
-                          disabled={subject?.sy_status === 'active'}
+                          disabled={subject?.hasSched == "1"}
                         >
                           Archive
                         </button>
                       </div>
                     </td>
                   </tr>
-                  {selectedSubject && selectedSubject.subject_id === subject.subject_id && showDetails && (
+                  {selectedSubject && selectedSubject.subject_id === subject.subject_id && selectedSubject.elective_id === subject.elective_id && showDetails && (
                     <tr>
-                      <td colSpan="5">
+                      <td colSpan="4">
                         <div className="subjects-management-details">
                           <table>
                             <tbody>
@@ -272,7 +303,7 @@ function SubjectsManagement() {
               ))
             ) : (
               <tr>
-                <td colSpan="5" style={{ textAlign: 'center' }}>No subjects available.</td>
+                <td colSpan="4" style={{ textAlign: 'center' }}>No subjects available.</td>
               </tr>
             )}
           </tbody>
