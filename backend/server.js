@@ -202,7 +202,7 @@ app.get('/students', (req, res) => {
       s.mother_occupation, FORMAT(s.annual_hshld_income,2) AS annual_hshld_income, s.number_of_siblings, 
       s.father_educ_lvl, s.mother_educ_lvl, s.father_contact_number, 
       s.mother_contact_number, IF(s.brigada_eskwela=1,'Attended','Not Attended') AS brigada_eskwela,
-      s.emergency_number,
+      s.emergency_number, s.emergency_contactperson,
       (SELECT ss.status FROM student_school_year ss
       JOIN school_year sy ON ss.school_year_id = sy.school_year_id
       WHERE ss.student_id = s.student_id AND sy.status = 'active') as active_status,
@@ -390,7 +390,8 @@ app.put('/students/:id', (req, res) => {
         father_occupation = ?, mother_occupation = ?, 
         annual_hshld_income = ?, number_of_siblings = ?, 
         father_educ_lvl = ?, mother_educ_lvl = ?, 
-        father_contact_number = ?, mother_contact_number = ?
+        father_contact_number = ?, mother_contact_number = ?,
+        emergency_number = ?, emergency_contactperson = ?
     WHERE student_id = ?
   `;
 
@@ -404,6 +405,7 @@ app.put('/students/:id', (req, res) => {
     updatedData.annual_hshld_income, updatedData.number_of_siblings,
     updatedData.father_educ_lvl, updatedData.mother_educ_lvl,
     updatedData.father_contact_number, updatedData.mother_contact_number,
+    updatedData.emergency_number, updatedData.emergency_contactperson,
     studentId
   ];
 
@@ -435,7 +437,7 @@ app.post('/students', (req, res) => {
     email_address, mother_name, father_name, parent_address, father_occupation,
     mother_occupation, annual_hshld_income, number_of_siblings, father_educ_lvl,
     mother_educ_lvl, father_contact_number, mother_contact_number, emergency_number,
-    status, active_status, brigada_eskwela = '0', lrn
+    emergency_contactperson, status, active_status, brigada_eskwela = '0', lrn
   } = req.body;
 
   const brigada_eskwela_value = brigada_eskwela || '0';
@@ -445,39 +447,35 @@ app.post('/students', (req, res) => {
 
   db.query(getLastStudentQuery, (err, result) => {
     if (err) {
-      console.error('Error fetching last student ID:', err);
-      return res.status(500).json({ error: 'Failed to fetch last student ID', details: err.message });
+      console.error('Failed to fetch last student ID:', err);
+      return res.status(500).json({ error: 'Failed to fetch last student ID' });
     }
 
-    let nextStudentId;
-    const currentYear = new Date().getFullYear().toString(); // Get YYYY format
-
-    if (result.length === 0) {
-      nextStudentId = parseInt(`${currentYear}0001`); // First student of the year
-    } else {
-      const lastId = result[0].student_id.toString(); // Convert to string
-      const lastYear = lastId.substring(0, 4); // Extract year from last ID
-      let lastCounter = parseInt(lastId.substring(4), 10); // Extract counter
-
-      if (lastYear === currentYear) {
-        lastCounter += 1; // Increment within the same year
-      } else {
-        lastCounter = 1; // Reset to 0001 for a new year
-      }
-
-      nextStudentId = parseInt(`${currentYear}${String(lastCounter).padStart(4, '0')}`);
+    // Calculate next student ID
+    let nextStudentId = 1;
+    if (result.length > 0) {
+      nextStudentId = result[0].student_id + 1;
     }
 
-    console.log('Generated new student ID:', nextStudentId);
+    // Step 2: Insert the new student
+    const query = `
+      INSERT INTO student (
+        student_id, lrn, lastname, firstname, middlename, current_yr_lvl,
+        birthdate, gender, age, home_address, barangay, city_municipality,
+        province, contact_number, email_address, mother_name, father_name,
+        parent_address, father_occupation, mother_occupation, annual_hshld_income,
+        number_of_siblings, father_educ_lvl, mother_educ_lvl, father_contact_number,
+        mother_contact_number, emergency_number, emergency_contactperson, status, active_status,
+        brigada_eskwela
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `;
 
-    // Step 2: Insert the Student into the Database
-    const query = `INSERT INTO student SET ?`;
-
-    const studentData = {
-      student_id: nextStudentId,
+    const studentData = [
+      nextStudentId,
+      lrn || null,
       lastname,
       firstname,
-      middlename,
+      middlename || '',
       current_yr_lvl,
       birthdate,
       gender,
@@ -490,23 +488,21 @@ app.post('/students', (req, res) => {
       email_address,
       mother_name,
       father_name,
-      parent_address,
-      father_occupation,
-      mother_occupation,
-      annual_hshld_income,
-      number_of_siblings,
-      father_educ_lvl,
-      mother_educ_lvl,
+      parent_address || '',
+      father_occupation || '',
+      mother_occupation || '',
+      annual_hshld_income || '',
+      number_of_siblings || 0,
+      father_educ_lvl || '',
+      mother_educ_lvl || '',
       father_contact_number,
       mother_contact_number,
       emergency_number,
-      status,
-      active_status,
-      brigada_eskwela: brigada_eskwela_value,
-      lrn
-    };
-
-    console.log('Student data object:', studentData);
+      emergency_contactperson || '',
+      status || 'active',
+      active_status || 'unarchive',
+      brigada_eskwela_value
+    ];
 
     db.query(query, studentData, (error, result) => {
       if (error) {
