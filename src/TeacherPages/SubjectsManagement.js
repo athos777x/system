@@ -22,6 +22,7 @@ function SubjectsManagement() {
     status: 'active',
     description: '',
     archive_status: 'unarchive',
+    subject_type: 'regular'
   });
   const [showDetails, setShowDetails] = useState(false);
   const [pendingFilters, setPendingFilters] = useState({ ...filters });
@@ -143,6 +144,7 @@ function SubjectsManagement() {
       status: 'active',
       description: '',
       archive_status: 'unarchive',
+      subject_type: 'regular'
     });
   };
 
@@ -156,10 +158,17 @@ function SubjectsManagement() {
 
   const saveNewSubject = async () => {
     try {
+      // Prepare the data to be sent
+      const subjectData = {
+        ...newSubjectData,
+        // Set grade_level to null for elective subjects
+        grade_level: newSubjectData.subject_type === 'elective' ? null : newSubjectData.grade_level
+      };
+
       if (isEditing) {
-        await axios.put(`http://localhost:3001/subjects/${selectedSubject.subject_id}`, newSubjectData);
+        await axios.put(`http://localhost:3001/subjects/${selectedSubject.subject_id}`, subjectData);
       } else {
-        await axios.post('http://localhost:3001/subjects', newSubjectData);
+        await axios.post('http://localhost:3001/subjects', subjectData);
       }
       fetchSubjects();
       setShowModal(false);
@@ -324,9 +333,15 @@ function SubjectsManagement() {
                                 <td>{selectedSubject.subject_name}</td>
                               </tr>
                               <tr>
-                                <th>Grade Level:</th>
-                                <td>Grade {selectedSubject.grade_level}</td>
+                                <th>Subject Type:</th>
+                                <td>{selectedSubject.subject_type === 'elective' ? 'Elective Subject' : 'Regular Subject'}</td>
                               </tr>
+                              {selectedSubject.subject_type !== 'elective' && (
+                                <tr>
+                                  <th>Grade Level:</th>
+                                  <td>Grade {selectedSubject.grade_level}</td>
+                                </tr>
+                              )}
                               <tr>
                                 <th>Status:</th>
                                 <td>{selectedSubject.status}</td>
@@ -377,19 +392,34 @@ function SubjectsManagement() {
               </div>
 
               <div className="subjects-management-form-group">
-                <label>Grade Level</label>
+                <label>Subject Type</label>
                 <select
-                  name="grade_level"
-                  value={newSubjectData.grade_level}
+                  name="subject_type"
+                  value={newSubjectData.subject_type}
                   onChange={handleAddChange}
                 >
-                  {grades.map((grade) => (
-                    <option key={grade} value={grade}>
-                      Grade {grade}
-                    </option>
-                  ))}
+                  <option value="regular">Regular Subject</option>
+                  <option value="elective">Elective Subject</option>
                 </select>
               </div>
+
+              {newSubjectData.subject_type === 'regular' && (
+                <div className="subjects-management-form-group">
+                  <label>Grade Level</label>
+                  <select
+                    name="grade_level"
+                    value={newSubjectData.grade_level}
+                    onChange={handleAddChange}
+                    required={newSubjectData.subject_type === 'regular'}
+                  >
+                    {grades.map((grade) => (
+                      <option key={grade} value={grade}>
+                        Grade {grade}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
               <div className="subjects-management-form-group">
                 <label>Status</label>
