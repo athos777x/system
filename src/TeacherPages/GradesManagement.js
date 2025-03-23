@@ -428,16 +428,18 @@ function GradesManagement() {
                                     const q2 = parseFloat(subject.q2) || 0;
                                     const q3 = parseFloat(subject.q3) || 0;
                                     const q4 = parseFloat(subject.q4) || 0;
+                                    const allGradesPresent = subject.q1 && subject.q2 && subject.q3 && subject.q4;
                                     const finalGrade = (q1 + q2 + q3 + q4) / 4;
-                                    return isNaN(finalGrade) ? "" : finalGrade >= 75 ? "passed" : "failed";
+                                    return allGradesPresent ? (finalGrade >= 75 ? "passed" : "failed") : "";
                                   })()}>
                                     {(() => {
                                       const q1 = parseFloat(subject.q1) || 0;
                                       const q2 = parseFloat(subject.q2) || 0;
                                       const q3 = parseFloat(subject.q3) || 0;
                                       const q4 = parseFloat(subject.q4) || 0;
+                                      const allGradesPresent = subject.q1 && subject.q2 && subject.q3 && subject.q4;
                                       const finalGrade = (q1 + q2 + q3 + q4) / 4;
-                                      return isNaN(finalGrade) ? "___" : finalGrade >= 75 ? "Passed" : "Failed";
+                                      return allGradesPresent ? (finalGrade >= 75 ? "Passed" : "Failed") : "___";
                                     })()}
                                   </td>
                                 </tr>
