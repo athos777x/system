@@ -156,7 +156,11 @@ function GradesManagement() {
     if (value === "") {
       setSubjects((prevSubjects) => {
         const updatedSubjects = [...prevSubjects];
-        updatedSubjects[index] = { ...updatedSubjects[index], [period]: value };
+        updatedSubjects[index] = { 
+          ...updatedSubjects[index], 
+          [period]: value,
+          [`${period}_invalid`]: false 
+        };
         return updatedSubjects;
       });
       return;
@@ -170,36 +174,37 @@ function GradesManagement() {
     // Convert to number for validation
     const numValue = parseInt(value);
 
-    // Validate range only for complete numbers
-    if (value.length === 2 || value.length === 3) {
-      if (numValue < 70 || numValue > 100) {
-        alert("Grades must be between 70 and 100");
-        return;
-      }
-    }
+    // Set invalid flag if complete number is outside range
+    const isInvalid = (value.length === 2 || value.length === 3) && (numValue < 70 || numValue > 100);
 
     setSubjects((prevSubjects) => {
       const updatedSubjects = [...prevSubjects];
-      updatedSubjects[index] = { ...updatedSubjects[index], [period]: value };
+      updatedSubjects[index] = { 
+        ...updatedSubjects[index], 
+        [period]: value,
+        [`${period}_invalid`]: isInvalid 
+      };
 
       // Only calculate final grade if all quarters have valid grades
-      const q1 = parseFloat(updatedSubjects[index].q1) || 0;
-      const q2 = parseFloat(updatedSubjects[index].q2) || 0;
-      const q3 = parseFloat(updatedSubjects[index].q3) || 0;
-      const q4 = parseFloat(updatedSubjects[index].q4) || 0;
+      if (!isInvalid) {
+        const q1 = parseFloat(updatedSubjects[index].q1) || 0;
+        const q2 = parseFloat(updatedSubjects[index].q2) || 0;
+        const q3 = parseFloat(updatedSubjects[index].q3) || 0;
+        const q4 = parseFloat(updatedSubjects[index].q4) || 0;
 
-      const hasAllGrades = updatedSubjects[index].q1 && 
-                          updatedSubjects[index].q2 && 
-                          updatedSubjects[index].q3 && 
-                          updatedSubjects[index].q4;
+        const hasAllGrades = updatedSubjects[index].q1 && 
+                           updatedSubjects[index].q2 && 
+                           updatedSubjects[index].q3 && 
+                           updatedSubjects[index].q4;
 
-      if (hasAllGrades) {
-        const finalGrade = (q1 + q2 + q3 + q4) / 4;
-        updatedSubjects[index].final = finalGrade.toFixed(2);
-        updatedSubjects[index].remarks = finalGrade >= 75 ? "Passed" : "Failed";
-      } else {
-        updatedSubjects[index].final = "";
-        updatedSubjects[index].remarks = "___";
+        if (hasAllGrades) {
+          const finalGrade = (q1 + q2 + q3 + q4) / 4;
+          updatedSubjects[index].final = finalGrade.toFixed(2);
+          updatedSubjects[index].remarks = finalGrade >= 75 ? "Passed" : "Failed";
+        } else {
+          updatedSubjects[index].final = "";
+          updatedSubjects[index].remarks = "___";
+        }
       }
 
       return updatedSubjects;
@@ -493,6 +498,10 @@ function GradesManagement() {
                                         onChange={(e) => handleGradeChange(index, "q1", e.target.value)}
                                         placeholder="70-100"
                                         maxLength="3"
+                                        style={{
+                                          border: subject.q1_invalid ? '2px solid #ff4444' : '1px solid #ccc',
+                                          backgroundColor: subject.q1_invalid ? '#fff0f0' : 'white'
+                                        }}
                                       />
                                     ) : (
                                       subject.q1 || "___"
@@ -506,6 +515,10 @@ function GradesManagement() {
                                         onChange={(e) => handleGradeChange(index, "q2", e.target.value)}
                                         placeholder="70-100"
                                         maxLength="3"
+                                        style={{
+                                          border: subject.q2_invalid ? '2px solid #ff4444' : '1px solid #ccc',
+                                          backgroundColor: subject.q2_invalid ? '#fff0f0' : 'white'
+                                        }}
                                       />
                                     ) : (
                                       subject.q2 || "___"
@@ -519,6 +532,10 @@ function GradesManagement() {
                                         onChange={(e) => handleGradeChange(index, "q3", e.target.value)}
                                         placeholder="70-100"
                                         maxLength="3"
+                                        style={{
+                                          border: subject.q3_invalid ? '2px solid #ff4444' : '1px solid #ccc',
+                                          backgroundColor: subject.q3_invalid ? '#fff0f0' : 'white'
+                                        }}
                                       />
                                     ) : (
                                       subject.q3 || "___"
@@ -532,6 +549,10 @@ function GradesManagement() {
                                         onChange={(e) => handleGradeChange(index, "q4", e.target.value)}
                                         placeholder="70-100"
                                         maxLength="3"
+                                        style={{
+                                          border: subject.q4_invalid ? '2px solid #ff4444' : '1px solid #ccc',
+                                          backgroundColor: subject.q4_invalid ? '#fff0f0' : 'white'
+                                        }}
                                       />
                                     ) : (
                                       subject.q4 || "___"
