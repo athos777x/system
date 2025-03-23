@@ -517,27 +517,28 @@ function TeacherManagement() {
   };
   
 
-  const fetchTeacherSubjects = async (teacherId, schoolYearId = '') => {
+  const fetchTeacherSubjects = async (teacherId, schoolYearId) => {
     try {
       const response = await axios.get(`http://localhost:3001/teacher-subjects/${teacherId}`, {
         params: { school_year_id: schoolYearId }
       });
-      console.log('Fetched subjects from backend:', response.data);
       setTeacherSubjects(response.data);
     } catch (error) {
       console.error('Error fetching teacher subjects:', error);
     }
   };
   
-
-  const fetchTeacherSection = async (teacherId) => {
+  const fetchTeacherSection = async (teacherId, schoolYearId) => {
     try {
-      const response = await axios.get(`http://localhost:3001/teacher-section/${teacherId}`);
-      setTeacherSection(response.data); // This sets an array of sections
+      const response = await axios.get(`http://localhost:3001/teacher-section/${teacherId}`, {
+        params: { school_year_id: schoolYearId }
+      });
+      setTeacherSection(response.data);
     } catch (error) {
-      console.error('Error fetching teacher section:', error);
+      console.error('Error fetching teacher sections:', error);
     }
   };
+  
   
 
   
