@@ -30,13 +30,13 @@ function SubjectsManagement() {
   const fetchSubjects = useCallback(async () => {
     try {
       await axios.put('http://localhost:3001/update-subjects-status');
-  
-      setSubjects([]); // Clear previous results before fetching
-      setFilteredSubjects([]); // Clear filtered subjects as well
-  
-      const response = await axios.get('http://localhost:3001/subjects', { params: filters });
-  
-      setSubjects(response.data); // Replace old subjects
+      const response = await axios.get('http://localhost:3001/subjects', { 
+        params: {
+          ...filters,
+          searchTerm: filters.searchTerm.trim()
+        } 
+      });
+      setSubjects(response.data);
       setFilteredSubjects(response.data);
     } catch (error) {
       console.error('Error fetching subjects:', error);
@@ -56,29 +56,42 @@ function SubjectsManagement() {
   };
   
   useEffect(() => {
-    fetchSubjects();
+    const delayDebounceFn = setTimeout(() => {
+      fetchSubjects();
+    }, 300);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [filters, fetchSubjects]);
+
+  useEffect(() => {
     fetchSchoolYears();
-  }, [filters]);
+  }, []);
 
   const handleSearch = (searchTerm) => {
-    setFilters((prevFilters) => ({ ...prevFilters, searchTerm }));
-  
-    if (searchTerm.trim() === "") {
-      setFilteredSubjects(subjects);
-    } else {
-      const lowerSearchTerm = searchTerm.toLowerCase();
-      const filtered = subjects.filter((subject) =>
-        subject.subject_name.toLowerCase().includes(lowerSearchTerm)
-      );
-      setFilteredSubjects(filtered);
-    }
+    const newFilters = { 
+      ...filters, 
+      searchTerm
+    };
+    setFilters(newFilters);
+    setPendingFilters(newFilters);
   };
   
 
-  const applyFilters = (newFilters) => {
+  const applyFilters = useCallback((newFilters) => {
     setFilters(newFilters);
-    fetchSubjects();
-  };
+  }, []);
+
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      fetchSubjects();
+    }, 300);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [filters, fetchSubjects]);
+
+  useEffect(() => {
+    fetchSchoolYears();
+  }, []);
 
   const handleViewClick = (subject) => {
     if (
@@ -233,8 +246,8 @@ function SubjectsManagement() {
           </thead>
           <tbody>
             {filteredSubjects.length > 0 ? (
-              filteredSubjects.map((subject, index) => (
-                <React.Fragment key={subject.subject_id}>
+              filteredSubjects.map((subject) => (
+                <React.Fragment key={`${subject.subject_id}-${subject.elective_id || ''}`}>
                   <tr>
                     <td>{subject.subject_id}</td>
                     <td>{subject.subject_name}</td>
@@ -260,7 +273,7 @@ function SubjectsManagement() {
                         <button 
                           className="subjects-management-btn subjects-management-btn-archive" 
                           onClick={() => handleDelete(subject)}
-                          disabled={subject?.hasSched == "1"}
+                          disabled={subject?.hasSched === "1"}
                         >
                           Archive
                         </button>
@@ -268,7 +281,7 @@ function SubjectsManagement() {
                     </td>
                   </tr>
                   {selectedSubject && selectedSubject.subject_id === subject.subject_id && selectedSubject.elective_id === subject.elective_id && showDetails && (
-                    <tr>
+                    <tr key={`details-${subject.subject_id}-${subject.elective_id || ''}`}>
                       <td colSpan="4">
                         <div className="subjects-management-details">
                           <table>

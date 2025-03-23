@@ -2489,110 +2489,104 @@ app.get('/subjects', (req, res) => {
   console.log('Received filters:', req.query);
 
   const queryParams = [];
-  let whereClause = ' WHERE 1=1'; // Unified WHERE clause for both subjects and electives
+  let whereClause = ' WHERE 1=1'; // Base WHERE clause
 
   // Apply archive_status filter
   if (archive_status) {
-    whereClause += ' AND archive_status = ?';
+    whereClause += ' AND s.archive_status = ?';
     queryParams.push(archive_status);
   }
 
-  // Apply search filter with improved accuracy
-  if (searchTerm) {
-    whereClause += ` AND subject_name LIKE ?`;
+  // Apply search filter
+  let searchCondition = '';
+  if (searchTerm && searchTerm.trim() !== '') {
+    searchCondition = ` AND LOWER(s.subject_name) LIKE LOWER(?)`;
     queryParams.push(`%${searchTerm}%`);
-}
-
-
-  // Filter by school_year (applies only to subjects)
-  if (school_year) {
-    whereClause += ' AND school_year = ?';
-    queryParams.push(school_year);
   }
 
   // Filter by grade (applies only to subjects)
+  let gradeCondition = '';
   if (grade) {
-    whereClause += ' AND grade_level = ?';
+    gradeCondition = ' AND s.grade_level = ?';
     queryParams.push(grade);
   }
 
-  // Unified query using UNION ALL
-  const finalQuery = `
-    SELECT DISTINCT
-        subject_id, 
-        grade_level, 
-        subject_name, 
-        status, 
-        grading_criteria, 
-        description, 
-        archive_status, 
-        school_year_id, 
-        sy_status, 
-        elective_id, 
-        hasSched
-    FROM (
-        -- Subjects
-        SELECT 
-            s.subject_id, 
-            s.grade_level, 
-            COALESCE(s.subject_name, '') AS subject_name,
-            s.status, 
-            s.grading_criteria, 
-            s.description, 
-            s.archive_status, 
-            sy.school_year_id,
-            sy.school_year, 
-            sy.status AS sy_status, 
-            0 AS elective_id, 
-            CASE 
-                WHEN COALESCE(a.schedule_count, 0) > 0 THEN 1 
-                ELSE 0 
-            END AS hasSched
-        FROM SUBJECT s
-        JOIN school_year sy ON s.school_year_id = sy.school_year_id
-        LEFT JOIN (
-            SELECT subject_id, COUNT(*) AS schedule_count
-            FROM SCHEDULE
-            WHERE elective = 0
-            GROUP BY subject_id
-        ) AS a ON a.subject_id = s.subject_id
+  // Filter by school_year (applies only to subjects)
+  let schoolYearCondition = '';
+  if (school_year) {
+    schoolYearCondition = ' AND sy.school_year = ?';
+    queryParams.push(school_year);
+  }
 
-        UNION ALL
+  const mainQuery = `
+    SELECT * FROM (
+      SELECT DISTINCT
+          s.subject_id,
+          s.grade_level,
+          s.subject_name,
+          s.status,
+          s.grading_criteria,
+          s.description,
+          s.archive_status,
+          s.school_year_id,
+          sy.school_year,
+          sy.status AS sy_status,
+          0 AS elective_id,
+          MAX(CASE WHEN sch.subject_id IS NOT NULL THEN '1' ELSE '0' END) AS hasSched
+      FROM SUBJECT s
+      LEFT JOIN school_year sy ON s.school_year_id = sy.school_year_id
+      LEFT JOIN (
+          SELECT DISTINCT subject_id 
+          FROM SCHEDULE 
+          WHERE elective = 0
+      ) sch ON s.subject_id = sch.subject_id
+      ${whereClause}
+      ${searchCondition}
+      ${gradeCondition}
+      ${schoolYearCondition}
+      GROUP BY s.subject_id
 
-        -- Electives
-        SELECT 
-            e.elective_id AS subject_id, 
-            NULL AS grade_level, 
-            COALESCE(e.name, '') AS subject_name, 
-            e.status, 
-            NULL AS grading_criteria, 
-            NULL AS description, 
-            e.archive_status, 
-            NULL AS school_year_id, 
-            NULL as school_year,
-            e.status AS sy_status, 
-            e.elective_id, 
-            CASE 
-                WHEN COALESCE(a.schedule_count, 0) > 0 THEN 1 
-                ELSE 0 
-            END AS hasSched
-        FROM elective e
-        LEFT JOIN (
-            SELECT subject_id, COUNT(*) AS schedule_count
-            FROM SCHEDULE
-            WHERE elective = 1
-            GROUP BY subject_id
-        ) AS a ON a.subject_id = e.elective_id
-    ) AS unifiedTable
-    ${whereClause}
-    GROUP BY subject_name, grade_level
-    ORDER BY COALESCE(grade_level, 0) DESC, subject_name ASC
+      UNION
+
+      SELECT DISTINCT
+          e.elective_id AS subject_id,
+          NULL AS grade_level,
+          e.name AS subject_name,
+          e.status,
+          NULL AS grading_criteria,
+          NULL AS description,
+          e.archive_status,
+          NULL AS school_year_id,
+          NULL AS school_year,
+          e.status AS sy_status,
+          e.elective_id,
+          MAX(CASE WHEN sch.subject_id IS NOT NULL THEN '1' ELSE '0' END) AS hasSched
+      FROM elective e
+      LEFT JOIN (
+          SELECT DISTINCT subject_id 
+          FROM SCHEDULE 
+          WHERE elective = 1
+      ) sch ON e.elective_id = sch.subject_id
+      WHERE 1=1
+      ${archive_status ? ' AND e.archive_status = ?' : ''}
+      ${searchTerm && searchTerm.trim() !== '' ? ' AND LOWER(e.name) LIKE LOWER(?)' : ''}
+      GROUP BY e.elective_id
+    ) combined
+    ORDER BY grade_level DESC, subject_name ASC
   `;
 
-  console.log('Final Query:', finalQuery);
-  console.log('Query Parameters:', queryParams);
+  // Add parameters for electives section if needed
+  if (archive_status) {
+    queryParams.push(archive_status);
+  }
+  if (searchTerm && searchTerm.trim() !== '') {
+    queryParams.push(`%${searchTerm}%`);
+  }
 
-  db.query(finalQuery, queryParams, (error, results) => {
+  console.log('Query:', mainQuery);
+  console.log('Parameters:', queryParams);
+
+  db.query(mainQuery, queryParams, (error, results) => {
     if (error) {
       console.error('Error fetching subjects:', error);
       return res.status(500).json({ error: 'Internal server error' });
