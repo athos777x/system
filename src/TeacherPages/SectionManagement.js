@@ -42,17 +42,29 @@ function SectionManagement() {
     }
   }, []);
 
-  const fetchSections = useCallback(async (schoolYearId) => {
+  const fetchSections = useCallback(async (schoolYearId, applyFilters = false) => {
     try {
-      const response = await axios.get('http://localhost:3001/sections', {
-        params: { schoolYearId }
-      });
-      setSections(response.data);
-      setFilteredSections(response.data.filter(section => section.archive_status === filters.showArchive));
+        const params = { schoolYearId };
+
+        // Only include filters if explicitly requested
+        if (applyFilters) {
+            params.searchTerm = filters.searchTerm || "";
+            params.grade = filters.grade || "";
+            params.showArchive = filters.showArchive || "";
+        }
+
+        console.log("Fetching sections with params:", params); // Debugging log
+
+        const response = await axios.get('http://localhost:3001/sections', { params });
+        setSections(response.data);
+        setFilteredSections(response.data);
     } catch (error) {
-      console.error('There was an error fetching the sections!', error);
+        console.error("Error fetching sections:", error);
     }
-  }, [filters.showArchive]);
+}, []); // **Removed `filters` from dependencies** to prevent automatic re-fetching
+
+
+  
 
   const fetchSchoolYears = useCallback(async () => {
     try {
@@ -70,14 +82,17 @@ function SectionManagement() {
 
   useEffect(() => {
     async function loadSections() {
-      const activeYear = await fetchActiveSchoolYear();
-      if (activeYear) {
-        fetchSections(activeYear.school_year_id);
-      }
+        const activeYear = await fetchActiveSchoolYear();
+        if (activeYear) {
+            fetchSections(activeYear.school_year_id, false); // Fetch without filters initially
+        }
     }
     loadSections();
     fetchSchoolYears();
   }, [fetchActiveSchoolYear, fetchSections, fetchSchoolYears]);
+
+
+
 
   const applyFilters = (updatedFilters) => {
     console.log('Updated filters:', updatedFilters);
@@ -105,10 +120,6 @@ function SectionManagement() {
     setFilteredSections(filtered);
   };
 
-  const handleApplyFilters = (filters) => {
-    setFilters(filters);
-    applyFilters(filters);
-  };
 
   const handleFilterChange = (type, value) => {
     setFilters(prevFilters => ({

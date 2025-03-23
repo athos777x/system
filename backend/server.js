@@ -2727,15 +2727,38 @@ app.put('/subjects/:subjectId/archive', (req, res) => {
       res.json({ message: `Elective ${action}d successfully` });
     });
   } else {
-    // Otherwise, update the subject table
-    const subjectQuery = 'UPDATE subject SET status = ?, archive_status = ? WHERE subject_id = ?';
-    db.query(subjectQuery, [status, archive_status, subjectId], (err, results) => {
+    // Query to get the correct school_year_id
+    const schoolYearQuery = `
+      SELECT 
+        MAX(CASE WHEN status = 'inactive' THEN school_year_id END) AS inactive_school_year_id,
+        MAX(CASE WHEN status = 'active' THEN school_year_id END) AS active_school_year_id
+      FROM school_year
+    `;
+
+    db.query(schoolYearQuery, (err, result) => {
       if (err) {
-        console.error(`Error ${action}ing subject:`, err);
+        console.error('Error fetching school year:', err);
         res.status(500).json({ error: 'Internal server error' });
         return;
       }
-      res.json({ message: `Subject ${action}d successfully` });
+
+      const school_year_id = action === 'unarchive' ? result[0].active_school_year_id : result[0].inactive_school_year_id;
+
+      if (!school_year_id) {
+        res.status(400).json({ error: 'No matching school year found' });
+        return;
+      }
+
+      // Update subject with the correct school_year_id
+      const subjectQuery = 'UPDATE subject SET archive_status = ?, school_year_id = ? WHERE subject_id = ?';
+      db.query(subjectQuery, [archive_status, school_year_id, subjectId], (err, results) => {
+        if (err) {
+          console.error(`Error ${action}ing subject:`, err);
+          res.status(500).json({ error: 'Internal server error' });
+          return;
+        }
+        res.json({ message: `Subject ${action}d successfully` });
+      });
     });
   }
 });

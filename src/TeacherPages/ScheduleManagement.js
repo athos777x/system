@@ -452,7 +452,7 @@ function Principal_SchedulePage() {
           />
         </div>
         <div className="schedule-mgmt-filters-group">
-          <select
+          {/* <select
             value={filters.grade}
             onChange={handleGradeChange}
           >
@@ -460,7 +460,7 @@ function Principal_SchedulePage() {
             {['7', '8', '9', '10'].map(grade => (
               <option key={grade} value={grade}>Grade {grade}</option>
             ))}
-          </select>
+          </select> */}
           <select
             value={filters.section}
             onChange={handleSectionChange}
@@ -468,7 +468,7 @@ function Principal_SchedulePage() {
             <option value="">All Sections</option>
             {sections.map(section => (
               <option key={section.section_id} value={section.section_id}>
-                Section {section.section_name}
+                {section.section_name}
               </option>
             ))}
           </select>
