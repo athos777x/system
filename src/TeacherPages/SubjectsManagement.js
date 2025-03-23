@@ -26,6 +26,39 @@ function SubjectsManagement() {
   const [showDetails, setShowDetails] = useState(false);
   const [pendingFilters, setPendingFilters] = useState({ ...filters });
   const [errors, setErrors] = useState({});
+  const [roleName, setRoleName] = useState('');
+
+  const fetchUserRole = async (userId) => {
+    try {
+      console.log(`Fetching role for user ID: ${userId}`); // Debugging log
+      const response = await axios.get(`http://localhost:3001/user-role/${userId}`);
+      if (response.status === 200) {
+        console.log('Response received:', response.data); // Debugging log
+        setRoleName(response.data.role_name);
+        console.log('Role name set to:', response.data.role_name); // Debugging log
+      } else {
+        console.error('Failed to fetch role name. Response status:', response.status);
+      }
+    } catch (error) {
+      if (error.response) {
+        console.error('Error response from server:', error.response.data);
+      } else if (error.request) {
+        console.error('No response received from server. Request:', error.request);
+      } else {
+        console.error('Error setting up request:', error.message);
+      }
+    }
+  };
+
+  useEffect(() => {
+    const userId = localStorage.getItem('userId'); // Retrieve userId from localStorage
+    if (userId) {
+      console.log(`Retrieved userId from localStorage: ${userId}`); // Debugging log
+      fetchUserRole(userId);
+    } else {
+      console.error('No userId found in localStorage');
+    }
+  }, []);
 
   const fetchSubjects = useCallback(async () => {
     try {
@@ -165,12 +198,18 @@ function SubjectsManagement() {
 
   const handleDelete = async (subject) => {
     try {
-      await axios.put(`http://localhost:3001/subjects/${subject.subject_id}/archive`);
+      const action = subject.archive_status === 'archive' ? 'unarchive' : 'archive';
+  
+      await axios.put(`http://localhost:3001/subjects/${subject.subject_id}/archive`, {
+        elective_id: subject.elective_id, 
+        action: action, 
+      });
+  
       fetchSubjects();
       setSelectedSubject(null);
       setShowDetails(false);
     } catch (error) {
-      console.error('Error archiving subject:', error);
+      console.error(`Error archiving subject:`, error);
     }
   };
 
@@ -270,13 +309,15 @@ function SubjectsManagement() {
                         >
                           Edit
                         </button>
+                        {roleName === 'principal' && (
                         <button 
-                          className="subjects-management-btn subjects-management-btn-archive" 
+                          className={`subjects-management-btn ${subject?.archive_status === 'archive' ? 'subjects-management-btn-unarchive' : 'subjects-management-btn-archive'}`}
                           onClick={() => handleDelete(subject)}
-                          disabled={subject?.hasSched === "1"}
+                          disabled={subject?.archive_status !== 'archive' && subject?.hasSched == "1"}
                         >
-                          Archive
+                          {subject?.archive_status === 'archive' ? 'Unarchive' : 'Archive'}
                         </button>
+                        )}
                       </div>
                     </td>
                   </tr>

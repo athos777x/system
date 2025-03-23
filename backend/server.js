@@ -2709,33 +2709,33 @@ app.put('/subjects/:subjectId', (req, res) => {
 // SUBJECT PAGE
 app.put('/subjects/:subjectId/archive', (req, res) => {
   const { subjectId } = req.params;
-  const { elective_id } = req.body; // Get elective_id from the request body
+  const { elective_id, action } = req.body; // Get elective_id and action from the request body
 
-  // Hardcoded values for status and archive_status
-  const status = 'inactive';
-  const archive_status = 'archive';
+  // Determine status and archive_status based on action
+  const status = action === 'unarchive' ? 'active' : 'inactive';
+  const archive_status = action === 'unarchive' ? 'unarchive' : 'archive';
 
   if (elective_id > 0) {
     // If elective_id is greater than 0, update the elective table
     const electiveQuery = 'UPDATE elective SET status = ?, archive_status = ? WHERE elective_id = ?';
     db.query(electiveQuery, [status, archive_status, elective_id], (err, results) => {
       if (err) {
-        console.error('Error updating elective:', err);
+        console.error(`Error ${action}ing elective:`, err);
         res.status(500).json({ error: 'Internal server error' });
         return;
       }
-      res.json({ message: 'Elective updated successfully' });
+      res.json({ message: `Elective ${action}d successfully` });
     });
   } else {
     // Otherwise, update the subject table
     const subjectQuery = 'UPDATE subject SET status = ?, archive_status = ? WHERE subject_id = ?';
     db.query(subjectQuery, [status, archive_status, subjectId], (err, results) => {
       if (err) {
-        console.error('Error updating subject:', err);
+        console.error(`Error ${action}ing subject:`, err);
         res.status(500).json({ error: 'Internal server error' });
         return;
       }
-      res.json({ message: 'Subject updated successfully' });
+      res.json({ message: `Subject ${action}d successfully` });
     });
   }
 });
