@@ -1098,14 +1098,42 @@ useEffect(() => {
 
       {showAssignSectionModal && (
         <div className="teacher-mgmt-modal">
-          <div className="teacher-mgmt-modal-content">
-            <h2>Assign Section</h2>
-            
-            <div className="teacher-mgmt-form-group">
-              <label>School Year:</label>
+          <div className="teacher-mgmt-modal-content" style={{ maxWidth: '600px' }}>
+            <div style={{ marginBottom: '20px' }}>
+              <h2 style={{ margin: 0, color: '#2e7d32' }}>Assign Section</h2>
+            </div>
+
+            <div className="teacher-mgmt-form-group" style={{ marginBottom: '20px' }}>
+              <label style={{ 
+                fontWeight: 'bold', 
+                marginBottom: '8px', 
+                display: 'block',
+                color: '#2e7d32'
+              }}>School Year:</label>
               <select
                 value={selectedSchoolYear}
                 onChange={(e) => setSelectedSchoolYear(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '8px',
+                  borderRadius: '4px',
+                  border: '1px solid #ddd',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  color: '#1e293b',
+                  backgroundColor: '#fff'
+                }}
+                onMouseOver={(e) => e.target.style.borderColor = '#81c784'}
+                onMouseOut={(e) => e.target.style.borderColor = '#ddd'}
+                onFocus={(e) => {
+                  e.target.style.outline = 'none';
+                  e.target.style.borderColor = '#4CAF50';
+                  e.target.style.boxShadow = '0 0 0 3px rgba(76, 175, 80, 0.1)';
+                }}
+                onBlur={(e) => {
+                  e.target.style.boxShadow = 'none';
+                  e.target.style.borderColor = '#ddd';
+                }}
               >
                 {schoolYears.map((year) => (
                   <option key={year.school_year_id} value={year.school_year_id}>
@@ -1115,14 +1143,46 @@ useEffect(() => {
               </select>
             </div>
 
-            <div className="teacher-mgmt-form-group">
-              <label>Grade Level:</label>
-              <div className="teacher-mgmt-grade-buttons">
+            <div className="teacher-mgmt-form-group" style={{ marginBottom: '20px' }}>
+              <label style={{ 
+                fontWeight: 'bold', 
+                marginBottom: '8px', 
+                display: 'block',
+                color: '#2e7d32'
+              }}>Grade Level:</label>
+              <div style={{ 
+                display: 'grid', 
+                gridTemplateColumns: 'repeat(4, 1fr)', 
+                gap: '10px',
+                marginBottom: '20px'
+              }}>
                 {[7, 8, 9, 10].map((grade) => (
                   <button
                     key={grade}
                     className={`teacher-mgmt-btn ${selectedGradeLevelForSection === grade.toString() ? 'teacher-mgmt-btn-view' : ''}`}
                     onClick={() => handleGradeLevelChangeForSection(grade.toString())}
+                    style={{
+                      padding: '10px',
+                      borderRadius: '4px',
+                      border: '1px solid #ddd',
+                      background: selectedGradeLevelForSection === grade.toString() ? '#4CAF50' : '#fff',
+                      color: selectedGradeLevelForSection === grade.toString() ? '#fff' : '#1e293b',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      fontWeight: '500'
+                    }}
+                    onMouseOver={(e) => {
+                      if (selectedGradeLevelForSection !== grade.toString()) {
+                        e.target.style.borderColor = '#81c784';
+                        e.target.style.backgroundColor = '#f1f8e9';
+                      }
+                    }}
+                    onMouseOut={(e) => {
+                      if (selectedGradeLevelForSection !== grade.toString()) {
+                        e.target.style.borderColor = '#ddd';
+                        e.target.style.backgroundColor = '#fff';
+                      }
+                    }}
                   >
                     Grade {grade}
                   </button>
@@ -1130,26 +1190,88 @@ useEffect(() => {
               </div>
             </div>
 
-            <div className="teacher-mgmt-form-group">
-              <label>Available Sections:</label>
-              <div className="teacher-mgmt-sections-grid">
-                {sectionsByGrade.map((section, index) => (
-                  <button 
-                    key={index}
-                    className={`teacher-mgmt-btn ${selectedSection === section.section_id ? 'teacher-mgmt-btn-view' : ''}`}
-                    onClick={() => setSelectedSection(section.section_id)}
-                  >
-                    {section.section_name}
-                  </button>
-                ))}
+            <div className="teacher-mgmt-form-group" style={{ marginBottom: '20px' }}>
+              <label style={{ 
+                fontWeight: 'bold', 
+                marginBottom: '8px', 
+                display: 'block',
+                color: '#2e7d32'
+              }}>Available Sections:</label>
+              <div style={{ 
+                display: 'grid', 
+                gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', 
+                gap: '10px',
+                maxHeight: '200px',
+                overflowY: 'auto',
+                padding: '10px',
+                border: '1px solid #ddd',
+                borderRadius: '4px',
+                backgroundColor: '#fff'
+              }}>
+                {sectionsByGrade.length > 0 ? (
+                  sectionsByGrade.map((section) => (
+                    <button 
+                      key={section.section_id}
+                      className={`teacher-mgmt-btn ${selectedSection === section.section_id ? 'teacher-mgmt-btn-view' : ''}`}
+                      onClick={() => setSelectedSection(section.section_id)}
+                      style={{
+                        padding: '10px',
+                        borderRadius: '4px',
+                        border: '1px solid #ddd',
+                        background: selectedSection === section.section_id ? '#4CAF50' : '#fff',
+                        color: selectedSection === section.section_id ? '#fff' : '#1e293b',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        fontWeight: '500'
+                      }}
+                      onMouseOver={(e) => {
+                        if (selectedSection !== section.section_id) {
+                          e.target.style.borderColor = '#81c784';
+                          e.target.style.backgroundColor = '#f1f8e9';
+                        }
+                      }}
+                      onMouseOut={(e) => {
+                        if (selectedSection !== section.section_id) {
+                          e.target.style.borderColor = '#ddd';
+                          e.target.style.backgroundColor = '#fff';
+                        }
+                      }}
+                    >
+                      {section.section_name}
+                    </button>
+                  ))
+                ) : (
+                  <div style={{ 
+                    gridColumn: '1/-1', 
+                    textAlign: 'center', 
+                    padding: '20px',
+                    color: '#666'
+                  }}>
+                    No sections available for this grade level
+                  </div>
+                )}
               </div>
             </div>
 
-            <div className="teacher-mgmt-details-actions">
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'flex-end', 
+              gap: '10px',
+              marginTop: '20px',
+              borderTop: '1px solid #ddd',
+              paddingTop: '20px'
+            }}>
               <button 
                 className="teacher-mgmt-btn teacher-mgmt-btn-view"
                 onClick={handleSectionAssignment}
                 disabled={!selectedSection}
+                style={{
+                  padding: '10px 20px',
+                  minWidth: '100px',
+                  opacity: !selectedSection ? '0.6' : '1',
+                  cursor: !selectedSection ? 'not-allowed' : 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
               >
                 Assign Section
               </button>
@@ -1159,6 +1281,11 @@ useEffect(() => {
                   setShowAssignSectionModal(false);
                   setSelectedSection('');
                   setSelectedGradeLevelForSection('7');
+                }}
+                style={{
+                  padding: '10px 20px',
+                  minWidth: '100px',
+                  transition: 'all 0.2s ease'
                 }}
               >
                 Cancel
