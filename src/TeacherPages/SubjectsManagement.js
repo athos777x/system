@@ -89,10 +89,6 @@ function SubjectsManagement() {
   };
   
   useEffect(() => {
-    fetchSubjects();
-  }, [filters, fetchSubjects]);
-
-  useEffect(() => {
     fetchSchoolYears();
   }, []);
 
@@ -109,6 +105,10 @@ function SubjectsManagement() {
   const applyFilters = useCallback((newFilters) => {
     setFilters(newFilters);
   }, []);
+
+  useEffect(() => {
+      fetchSubjects();
+  }, [filters, fetchSubjects]);
 
   useEffect(() => {
     fetchSchoolYears();
@@ -299,7 +299,7 @@ function SubjectsManagement() {
                         </button>
                         {roleName === 'principal' && (
                         <button 
-                          className={`subjects-management-btn ${subject?.archive_status === 'archive' ? 'subjects-management-btn-view' : 'subjects-management-btn-archive'}`}
+                        className={`subjects-management-btn ${subject?.archive_status === 'archive' ? 'subjects-management-btn-view' : 'subjects-management-btn-archive'}`}
                           onClick={() => handleDelete(subject)}
                           disabled={subject?.archive_status !== 'archive' && subject?.hasSched == "1"}
                         >
