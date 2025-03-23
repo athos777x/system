@@ -304,7 +304,7 @@ function GradesManagement() {
             q4: matchingGrade.q4,
             final: matchingGrade.q1 && matchingGrade.q2 && matchingGrade.q3 && matchingGrade.q4 
               ? ((parseFloat(matchingGrade.q1) + parseFloat(matchingGrade.q2) + 
-                  parseFloat(matchingGrade.q3) + parseFloat(matchingGrade.q4)) / 4).toFixed(2)
+                  parseFloat(matchingGrade.q3) + parseFloat(matchingGrade.q4)) / 4).toFixed(0)
               : null,
             remarks: matchingGrade.q1 && matchingGrade.q2 && matchingGrade.q3 && matchingGrade.q4
               ? ((parseFloat(matchingGrade.q1) + parseFloat(matchingGrade.q2) + 
