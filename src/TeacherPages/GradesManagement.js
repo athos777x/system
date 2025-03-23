@@ -31,7 +31,14 @@ function GradesManagement() {
   useEffect(() => {
     fetchSchoolYears();
     fetchSections();
+    fetchStudents(); // Initial fetch of students
   }, []);
+
+  useEffect(() => {
+    if (students.length > 0) {
+      applyFilters();
+    }
+  }, [filters]);
 
   useEffect(() => {
     if (filters.grade) {
@@ -132,8 +139,7 @@ function GradesManagement() {
       const response = await axios.get('http://localhost:3001/api/subjects-card', {
         params: { 
           studentId, 
-          gradeLevel,
-          school_year: filters.school_year // Include school year for historical data
+          gradeLevel
         },
       });
       const subjectsData = response.data || [];
@@ -146,18 +152,55 @@ function GradesManagement() {
   };
 
   const handleGradeChange = (index, period, value) => {
+    // Allow empty value
+    if (value === "") {
+      setSubjects((prevSubjects) => {
+        const updatedSubjects = [...prevSubjects];
+        updatedSubjects[index] = { ...updatedSubjects[index], [period]: value };
+        return updatedSubjects;
+      });
+      return;
+    }
+
+    // Only allow numbers
+    if (!/^\d+$/.test(value)) {
+      return;
+    }
+
+    // Convert to number for validation
+    const numValue = parseInt(value);
+
+    // Validate range only for complete numbers
+    if (value.length === 2 || value.length === 3) {
+      if (numValue < 70 || numValue > 100) {
+        alert("Grades must be between 70 and 100");
+        return;
+      }
+    }
+
     setSubjects((prevSubjects) => {
       const updatedSubjects = [...prevSubjects];
       updatedSubjects[index] = { ...updatedSubjects[index], [period]: value };
 
+      // Only calculate final grade if all quarters have valid grades
       const q1 = parseFloat(updatedSubjects[index].q1) || 0;
       const q2 = parseFloat(updatedSubjects[index].q2) || 0;
       const q3 = parseFloat(updatedSubjects[index].q3) || 0;
       const q4 = parseFloat(updatedSubjects[index].q4) || 0;
 
-      const finalGrade = (q1 + q2 + q3 + q4) / 4;
-      updatedSubjects[index].final = isNaN(finalGrade) ? "" : finalGrade.toFixed(2);
-      updatedSubjects[index].remarks = finalGrade >= 75 ? "Passed" : "Failed";
+      const hasAllGrades = updatedSubjects[index].q1 && 
+                          updatedSubjects[index].q2 && 
+                          updatedSubjects[index].q3 && 
+                          updatedSubjects[index].q4;
+
+      if (hasAllGrades) {
+        const finalGrade = (q1 + q2 + q3 + q4) / 4;
+        updatedSubjects[index].final = finalGrade.toFixed(2);
+        updatedSubjects[index].remarks = finalGrade >= 75 ? "Passed" : "Failed";
+      } else {
+        updatedSubjects[index].final = "";
+        updatedSubjects[index].remarks = "___";
+      }
 
       return updatedSubjects;
     });
@@ -222,27 +265,62 @@ function GradesManagement() {
     if (!studentId || !gradeLevel) return;
 
     try {
+      console.log('Fetching grades for:', { studentId, gradeLevel });
+
       const response = await axios.get('http://localhost:3001/api/grades', {
         params: { 
           studentId, 
-          gradeLevel,
-          school_year: filters.school_year // Include school year for historical data
+          gradeLevel
         },
       });
 
-      if (response.data.success) {
-        const fetchedGrades = response.data.grades;
-        const updatedSubjects = (existingSubjects || []).map(subject => {
-          const subjectGrades = fetchedGrades.find(grade => 
-            grade.subject_name === subject.subject_name && 
-            grade.grade_level === parseInt(gradeLevel)
-          ) || {};
-          return { ...subject, ...subjectGrades };
-        });
+      console.log('Grades response:', response.data);
 
-        setSubjects(updatedSubjects);
+      if (!response.data || !response.data.grades || response.data.grades.length === 0) {
+        console.log('No grades found, keeping existing subjects:', existingSubjects);
+        setSubjects(existingSubjects);
         setGradesFetched(true);
+        return;
       }
+
+      const gradesData = response.data.grades;
+      console.log('Fetched grades:', gradesData);
+
+      const updatedSubjects = existingSubjects.map(subject => {
+        // Find matching grade for this subject
+        const matchingGrade = gradesData.find(grade => 
+          grade.subject_name.toLowerCase().trim() === subject.subject_name.toLowerCase().trim()
+        );
+
+        console.log(`Matching grade for ${subject.subject_name}:`, matchingGrade);
+
+        // If we found a matching grade, use its values
+        if (matchingGrade) {
+          return {
+            ...subject,
+            q1: matchingGrade.q1,
+            q2: matchingGrade.q2,
+            q3: matchingGrade.q3,
+            q4: matchingGrade.q4,
+            final: matchingGrade.q1 && matchingGrade.q2 && matchingGrade.q3 && matchingGrade.q4 
+              ? ((parseFloat(matchingGrade.q1) + parseFloat(matchingGrade.q2) + 
+                  parseFloat(matchingGrade.q3) + parseFloat(matchingGrade.q4)) / 4).toFixed(2)
+              : null,
+            remarks: matchingGrade.q1 && matchingGrade.q2 && matchingGrade.q3 && matchingGrade.q4
+              ? ((parseFloat(matchingGrade.q1) + parseFloat(matchingGrade.q2) + 
+                  parseFloat(matchingGrade.q3) + parseFloat(matchingGrade.q4)) / 4) >= 75
+                ? "Passed" : "Failed"
+              : "___"
+          };
+        }
+
+        // If no matching grade was found, return the original subject
+        return subject;
+      });
+
+      console.log('Final updated subjects:', updatedSubjects);
+      setSubjects(updatedSubjects);
+      setGradesFetched(true);
     } catch (error) {
       console.error('Error fetching grades:', error);
     }
@@ -250,7 +328,7 @@ function GradesManagement() {
 
   const handleSearch = (searchTerm) => {
     setFilters((prevFilters) => ({ ...prevFilters, searchTerm }));
-    applyFilters({ ...filters, searchTerm });
+    applyFilters();
   };
 
   const handleFilterChange = (type, value) => {
@@ -261,36 +339,30 @@ function GradesManagement() {
   };
 
   const applyFilters = () => {
-    let filtered = students;
+    let filtered = [...students]; // Create a new array to avoid mutating state directly
 
     if (filters.school_year) {
-      filtered = filtered.filter(student => String(student.school_year) === filters.school_year);
+      filtered = filtered.filter(student => String(student.school_year) === String(filters.school_year));
     }
     if (filters.grade) {
-      filtered = filtered.filter(student => student.current_yr_lvl === filters.grade);
+      filtered = filtered.filter(student => String(student.current_yr_lvl) === String(filters.grade));
     }
     if (filters.section) {
-      filtered = filtered.filter(student => String(student.section_name) === filters.section);
+      filtered = filtered.filter(student => String(student.section_name) === String(filters.section));
     }
     if (filters.status) {
       filtered = filtered.filter(student => student.student_status === filters.status);
     }
     if (filters.searchTerm) {
+      const searchTerm = filters.searchTerm.toLowerCase();
       filtered = filtered.filter(student => {
-        const firstName = student.firstname ? student.firstname.toLowerCase() : "";
-        const lastName = student.lastname ? student.lastname.toLowerCase() : "";
-        return firstName.includes(filters.searchTerm.toLowerCase()) || 
-          lastName.includes(filters.searchTerm.toLowerCase());
+        const fullName = `${student.firstname} ${student.lastname}`.toLowerCase();
+        return fullName.includes(searchTerm);
       });
     }
 
     setFilteredStudents(filtered);
     setCurrentPage(1);
-  };
-
-  const handleApplyFilters = () => {
-    console.log('Applying filters:', filters);
-    fetchStudents(filters);
   };
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
@@ -378,12 +450,13 @@ function GradesManagement() {
                           <h3 className="grades-details-title">Grades for {student.firstname} {student.lastname}</h3>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                             <select 
-                              value={selectedGradeLevel || ''} 
+                              value={selectedGradeLevel || student.current_yr_lvl} 
                               onChange={handleGradeLevelChange}
                               style={{ padding: '0.5rem', borderRadius: '4px' }}
                             >
-                              {[7, 8, 9, 10].map((grade) => (
-                                <option key={grade} value={grade}>Grade {grade}</option>
+                              {Array.from({ length: student.current_yr_lvl - 6 }, (_, i) => i + 7)
+                                .map((grade) => (
+                                  <option key={grade} value={grade}>Grade {grade}</option>
                               ))}
                             </select>
                           </div>
@@ -411,6 +484,8 @@ function GradesManagement() {
                                         type="text"
                                         value={subject.q1 || ""}
                                         onChange={(e) => handleGradeChange(index, "q1", e.target.value)}
+                                        placeholder="70-100"
+                                        maxLength="3"
                                       />
                                     ) : (
                                       subject.q1 || "___"
@@ -422,6 +497,8 @@ function GradesManagement() {
                                         type="text"
                                         value={subject.q2 || ""}
                                         onChange={(e) => handleGradeChange(index, "q2", e.target.value)}
+                                        placeholder="70-100"
+                                        maxLength="3"
                                       />
                                     ) : (
                                       subject.q2 || "___"
@@ -433,6 +510,8 @@ function GradesManagement() {
                                         type="text"
                                         value={subject.q3 || ""}
                                         onChange={(e) => handleGradeChange(index, "q3", e.target.value)}
+                                        placeholder="70-100"
+                                        maxLength="3"
                                       />
                                     ) : (
                                       subject.q3 || "___"
@@ -444,39 +523,18 @@ function GradesManagement() {
                                         type="text"
                                         value={subject.q4 || ""}
                                         onChange={(e) => handleGradeChange(index, "q4", e.target.value)}
+                                        placeholder="70-100"
+                                        maxLength="3"
                                       />
                                     ) : (
                                       subject.q4 || "___"
                                     )}
                                   </td>
                                   <td>
-                                    {(() => {
-                                      const q1 = parseFloat(subject.q1) || 0;
-                                      const q2 = parseFloat(subject.q2) || 0;
-                                      const q3 = parseFloat(subject.q3) || 0;
-                                      const q4 = parseFloat(subject.q4) || 0;
-                                      const finalGrade = (q1 + q2 + q3 + q4) / 4 || "___";
-                                      return isNaN(finalGrade) ? "___" : finalGrade.toFixed(2);
-                                    })()}
+                                    {subject.final || "___"}
                                   </td>
-                                  <td className={(() => {
-                                    const q1 = parseFloat(subject.q1) || 0;
-                                    const q2 = parseFloat(subject.q2) || 0;
-                                    const q3 = parseFloat(subject.q3) || 0;
-                                    const q4 = parseFloat(subject.q4) || 0;
-                                    const allGradesPresent = subject.q1 && subject.q2 && subject.q3 && subject.q4;
-                                    const finalGrade = (q1 + q2 + q3 + q4) / 4;
-                                    return allGradesPresent ? (finalGrade >= 75 ? "passed" : "failed") : "";
-                                  })()}>
-                                    {(() => {
-                                      const q1 = parseFloat(subject.q1) || 0;
-                                      const q2 = parseFloat(subject.q2) || 0;
-                                      const q3 = parseFloat(subject.q3) || 0;
-                                      const q4 = parseFloat(subject.q4) || 0;
-                                      const allGradesPresent = subject.q1 && subject.q2 && subject.q3 && subject.q4;
-                                      const finalGrade = (q1 + q2 + q3 + q4) / 4;
-                                      return allGradesPresent ? (finalGrade >= 75 ? "Passed" : "Failed") : "___";
-                                    })()}
+                                  <td className={subject.remarks === "Passed" ? "passed" : subject.remarks === "Failed" ? "failed" : ""}>
+                                    {subject.remarks || "___"}
                                   </td>
                                 </tr>
                               ))
