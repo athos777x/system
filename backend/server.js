@@ -1246,10 +1246,10 @@ app.get('/api/grades', (req, res) => {
 
   const query = `
     SELECT subject_name, 
-    FORMAT(MAX(CASE WHEN period = 1 THEN grade ELSE NULL END),0) AS q1,
-    FORMAT(MAX(CASE WHEN period = 2 THEN grade ELSE NULL END),0) AS q2,
-    FORMAT(MAX(CASE WHEN period = 3 THEN grade ELSE NULL END),0) AS q3,
-    FORMAT(MAX(CASE WHEN period = 4 THEN grade ELSE NULL END),0) AS q4
+    MAX(CASE WHEN period = 1 THEN grade ELSE NULL END) AS q1,
+    MAX(CASE WHEN period = 2 THEN grade ELSE NULL END) AS q2,
+    MAX(CASE WHEN period = 3 THEN grade ELSE NULL END) AS q3,
+    MAX(CASE WHEN period = 4 THEN grade ELSE NULL END) AS q4
     FROM grades
     WHERE student_id = ? AND grade_level = ?
     GROUP BY subject_name;
