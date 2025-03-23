@@ -26,17 +26,50 @@ function SubjectsManagement() {
   const [showDetails, setShowDetails] = useState(false);
   const [pendingFilters, setPendingFilters] = useState({ ...filters });
   const [errors, setErrors] = useState({});
+  const [roleName, setRoleName] = useState('');
+
+  const fetchUserRole = async (userId) => {
+    try {
+      console.log(`Fetching role for user ID: ${userId}`); // Debugging log
+      const response = await axios.get(`http://localhost:3001/user-role/${userId}`);
+      if (response.status === 200) {
+        console.log('Response received:', response.data); // Debugging log
+        setRoleName(response.data.role_name);
+        console.log('Role name set to:', response.data.role_name); // Debugging log
+      } else {
+        console.error('Failed to fetch role name. Response status:', response.status);
+      }
+    } catch (error) {
+      if (error.response) {
+        console.error('Error response from server:', error.response.data);
+      } else if (error.request) {
+        console.error('No response received from server. Request:', error.request);
+      } else {
+        console.error('Error setting up request:', error.message);
+      }
+    }
+  };
+
+  useEffect(() => {
+    const userId = localStorage.getItem('userId'); // Retrieve userId from localStorage
+    if (userId) {
+      console.log(`Retrieved userId from localStorage: ${userId}`); // Debugging log
+      fetchUserRole(userId);
+    } else {
+      console.error('No userId found in localStorage');
+    }
+  }, []);
 
   const fetchSubjects = useCallback(async () => {
     try {
       await axios.put('http://localhost:3001/update-subjects-status');
-  
-      setSubjects([]); // Clear previous results before fetching
-      setFilteredSubjects([]); // Clear filtered subjects as well
-  
-      const response = await axios.get('http://localhost:3001/subjects', { params: filters });
-  
-      setSubjects(response.data); // Replace old subjects
+      const response = await axios.get('http://localhost:3001/subjects', { 
+        params: {
+          ...filters,
+          searchTerm: filters.searchTerm.trim()
+        } 
+      });
+      setSubjects(response.data);
       setFilteredSubjects(response.data);
     } catch (error) {
       console.error('Error fetching subjects:', error);
@@ -56,29 +89,42 @@ function SubjectsManagement() {
   };
   
   useEffect(() => {
-    fetchSubjects();
+    const delayDebounceFn = setTimeout(() => {
+      fetchSubjects();
+    }, 300);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [filters, fetchSubjects]);
+
+  useEffect(() => {
     fetchSchoolYears();
-  }, [filters]);
+  }, []);
 
   const handleSearch = (searchTerm) => {
-    setFilters((prevFilters) => ({ ...prevFilters, searchTerm }));
-  
-    if (searchTerm.trim() === "") {
-      setFilteredSubjects(subjects);
-    } else {
-      const lowerSearchTerm = searchTerm.toLowerCase();
-      const filtered = subjects.filter((subject) =>
-        subject.subject_name.toLowerCase().includes(lowerSearchTerm)
-      );
-      setFilteredSubjects(filtered);
-    }
+    const newFilters = { 
+      ...filters, 
+      searchTerm
+    };
+    setFilters(newFilters);
+    setPendingFilters(newFilters);
   };
   
 
-  const applyFilters = (newFilters) => {
+  const applyFilters = useCallback((newFilters) => {
     setFilters(newFilters);
-    fetchSubjects();
-  };
+  }, []);
+
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      fetchSubjects();
+    }, 300);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [filters, fetchSubjects]);
+
+  useEffect(() => {
+    fetchSchoolYears();
+  }, []);
 
   const handleViewClick = (subject) => {
     if (
@@ -152,12 +198,18 @@ function SubjectsManagement() {
 
   const handleDelete = async (subject) => {
     try {
-      await axios.put(`http://localhost:3001/subjects/${subject.subject_id}/archive`);
+      const action = subject.archive_status === 'archive' ? 'unarchive' : 'archive';
+  
+      await axios.put(`http://localhost:3001/subjects/${subject.subject_id}/archive`, {
+        elective_id: subject.elective_id, 
+        action: action, 
+      });
+  
       fetchSubjects();
       setSelectedSubject(null);
       setShowDetails(false);
     } catch (error) {
-      console.error('Error archiving subject:', error);
+      console.error(`Error archiving subject:`, error);
     }
   };
 
@@ -233,8 +285,8 @@ function SubjectsManagement() {
           </thead>
           <tbody>
             {filteredSubjects.length > 0 ? (
-              filteredSubjects.map((subject, index) => (
-                <React.Fragment key={subject.subject_id}>
+              filteredSubjects.map((subject) => (
+                <React.Fragment key={`${subject.subject_id}-${subject.elective_id || ''}`}>
                   <tr>
                     <td>{subject.subject_id}</td>
                     <td>{subject.subject_name}</td>
@@ -257,18 +309,20 @@ function SubjectsManagement() {
                         >
                           Edit
                         </button>
+                        {roleName === 'principal' && (
                         <button 
-                          className="subjects-management-btn subjects-management-btn-archive" 
+                          className={`subjects-management-btn ${subject?.archive_status === 'archive' ? 'subjects-management-btn-unarchive' : 'subjects-management-btn-archive'}`}
                           onClick={() => handleDelete(subject)}
-                          disabled={subject?.hasSched == "1"}
+                          disabled={subject?.archive_status !== 'archive' && subject?.hasSched == "1"}
                         >
-                          Archive
+                          {subject?.archive_status === 'archive' ? 'Unarchive' : 'Archive'}
                         </button>
+                        )}
                       </div>
                     </td>
                   </tr>
                   {selectedSubject && selectedSubject.subject_id === subject.subject_id && selectedSubject.elective_id === subject.elective_id && showDetails && (
-                    <tr>
+                    <tr key={`details-${subject.subject_id}-${subject.elective_id || ''}`}>
                       <td colSpan="4">
                         <div className="subjects-management-details">
                           <table>
