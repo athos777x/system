@@ -26,6 +26,7 @@ function GradesManagement() {
     section: '',
     status: ''
   });
+  const [selectedGradeLevel, setSelectedGradeLevel] = useState(null);
 
   useEffect(() => {
     fetchSchoolYears();
@@ -111,12 +112,14 @@ function GradesManagement() {
       setSelectedStudent(null);
       setSubjects([]);
       setGradesFetched(false);
+      setSelectedGradeLevel(null);
       return;
     }
 
     setSelectedStudent(student);
     setEditingStudent(null);
     setGradesFetched(false);
+    setSelectedGradeLevel(student.current_yr_lvl);
     const gradeLevel = student.current_yr_lvl;
     const fetchedSubjects = await fetchSubjects(student.student_id, gradeLevel);
     await fetchGrades(student.student_id, gradeLevel, fetchedSubjects);
@@ -127,7 +130,11 @@ function GradesManagement() {
 
     try {
       const response = await axios.get('http://localhost:3001/api/subjects-card', {
-        params: { studentId, gradeLevel },
+        params: { 
+          studentId, 
+          gradeLevel,
+          school_year: filters.school_year // Include school year for historical data
+        },
       });
       const subjectsData = response.data || [];
       setSubjects(subjectsData);
@@ -216,13 +223,20 @@ function GradesManagement() {
 
     try {
       const response = await axios.get('http://localhost:3001/api/grades', {
-        params: { studentId, gradeLevel },
+        params: { 
+          studentId, 
+          gradeLevel,
+          school_year: filters.school_year // Include school year for historical data
+        },
       });
 
       if (response.data.success) {
         const fetchedGrades = response.data.grades;
         const updatedSubjects = (existingSubjects || []).map(subject => {
-          const subjectGrades = fetchedGrades.find(grade => grade.subject_name === subject.subject_name) || {};
+          const subjectGrades = fetchedGrades.find(grade => 
+            grade.subject_name === subject.subject_name && 
+            grade.grade_level === parseInt(gradeLevel)
+          ) || {};
           return { ...subject, ...subjectGrades };
         });
 
@@ -283,6 +297,15 @@ function GradesManagement() {
   const indexOfLastStudent = currentPage * studentsPerPage;
   const indexOfFirstStudent = indexOfLastStudent - studentsPerPage;
   const currentStudents = filteredStudents.slice(indexOfFirstStudent, indexOfLastStudent);
+
+  const handleGradeLevelChange = async (event) => {
+    const newGradeLevel = event.target.value;
+    setSelectedGradeLevel(newGradeLevel);
+    if (selectedStudent) {
+      const fetchedSubjects = await fetchSubjects(selectedStudent.student_id, newGradeLevel);
+      await fetchGrades(selectedStudent.student_id, newGradeLevel, fetchedSubjects);
+    }
+  };
 
   return (
     <div className="grades-management-container">
@@ -351,7 +374,20 @@ function GradesManagement() {
                   <tr>
                     <td colSpan="3">
                       <div className="grades-details-container">
-                        <h3 className="grades-details-title">Grades for {student.firstname} {student.lastname}</h3>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                          <h3 className="grades-details-title">Grades for {student.firstname} {student.lastname}</h3>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                            <select 
+                              value={selectedGradeLevel || ''} 
+                              onChange={handleGradeLevelChange}
+                              style={{ padding: '0.5rem', borderRadius: '4px' }}
+                            >
+                              {[7, 8, 9, 10].map((grade) => (
+                                <option key={grade} value={grade}>Grade {grade}</option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
                         <table className="grades-details-table">
                           <thead>
                             <tr>
@@ -428,16 +464,18 @@ function GradesManagement() {
                                     const q2 = parseFloat(subject.q2) || 0;
                                     const q3 = parseFloat(subject.q3) || 0;
                                     const q4 = parseFloat(subject.q4) || 0;
+                                    const allGradesPresent = subject.q1 && subject.q2 && subject.q3 && subject.q4;
                                     const finalGrade = (q1 + q2 + q3 + q4) / 4;
-                                    return isNaN(finalGrade) ? "" : finalGrade >= 75 ? "passed" : "failed";
+                                    return allGradesPresent ? (finalGrade >= 75 ? "passed" : "failed") : "";
                                   })()}>
                                     {(() => {
                                       const q1 = parseFloat(subject.q1) || 0;
                                       const q2 = parseFloat(subject.q2) || 0;
                                       const q3 = parseFloat(subject.q3) || 0;
                                       const q4 = parseFloat(subject.q4) || 0;
+                                      const allGradesPresent = subject.q1 && subject.q2 && subject.q3 && subject.q4;
                                       const finalGrade = (q1 + q2 + q3 + q4) / 4;
-                                      return isNaN(finalGrade) ? "___" : finalGrade >= 75 ? "Passed" : "Failed";
+                                      return allGradesPresent ? (finalGrade >= 75 ? "Passed" : "Failed") : "___";
                                     })()}
                                   </td>
                                 </tr>
