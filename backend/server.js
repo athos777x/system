@@ -191,7 +191,7 @@ app.get('/students', (req, res) => {
   function fetchStudents() {
     // ✅ Build the main query
     let query = `
-      SELECT s.student_id, s.user_id, s.lrn,
+      SELECT s.student_id, s.user_id, s.lrn, s.section_id,
       CONCAT(s.lastname, ', ', s.firstname, ' ', 
       IF(s.middlename IS NOT NULL AND s.middlename != '', CONCAT(LEFT(s.middlename, 1), '.'), '')) AS stud_name,
       s.lastname, s.firstname, s.middlename, 
@@ -1365,13 +1365,19 @@ app.get('/filters', (req, res) => {
 app.get('/attendance/:studentId', (req, res) => {
   const studentId = req.params.studentId;
   const query = `
-    SELECT a.status, COUNT(*) as count,
-    sy.school_year
+    SELECT 
+      s.subject_name,
+      COUNT(CASE WHEN a.status = 'P' THEN 1 END) as days_present,
+      COUNT(CASE WHEN a.status = 'A' THEN 1 END) as days_absent,
+      COUNT(*) as total_days,
+      sy.school_year,
+      MAX(CASE WHEN a.status = 'B' THEN 'Yes' ELSE 'No' END) as brigada_attendance
     FROM attendance a
     JOIN enrollment e ON a.enrollment_id = e.enrollment_id
-    LEFT JOIN school_year sy ON e.school_year_id=sy.school_year_id
+    LEFT JOIN school_year sy ON e.school_year_id = sy.school_year_id
+    JOIN subject s ON a.subject_id = s.subject_id
     WHERE e.student_id = ?
-    GROUP BY a.status
+    GROUP BY s.subject_name, sy.school_year
   `;
 
   db.query(query, [studentId], (err, results) => {
@@ -1385,15 +1391,7 @@ app.get('/attendance/:studentId', (req, res) => {
       return;
     }
 
-    const attendanceData = {
-      total_school_days: results.reduce((acc, curr) => acc + curr.count, 0),
-      days_present: results.find(r => r.status === 'P')?.count || 0,
-      days_absent: results.find(r => r.status === 'A')?.count || 0,
-      days_late: results.find(r => r.status === 'L')?.count || 0,
-      brigada_attendance: results.find(r => r.status === 'B')?.count || 0
-    };
-
-    res.json(attendanceData);
+    res.json(results);
   });
 });
 
