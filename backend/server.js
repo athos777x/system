@@ -1046,37 +1046,45 @@ app.post('/apply-enrollment', (req, res) => {
 // ENDPOINT USED:
 // STUDENT ENROLLMENT PAGE
 app.post('/enroll-elective', (req, res) => {
-  const { studentId, electiveId } = req.body; // Assuming studentId is actually the user ID
+  const { studentId, electiveId, grade_level } = req.body;
 
-  // Check if the student exists and get the student_id based on user_id
-  const checkStudentQuery = `SELECT * FROM student WHERE user_id = ?`;
-  db.query(checkStudentQuery, [studentId], (err, result) => {
+  // Validate required fields
+  if (!studentId || !electiveId || !grade_level) {
+    return res.status(400).json({ error: 'Missing required fields.' });
+  }
+
+  // Check if the student is already enrolled in the elective
+  const checkEnrollmentQuery = `SELECT * FROM student_elective WHERE student_id = ? AND elective_id = ?`;
+
+  db.query(checkEnrollmentQuery, [studentId, electiveId], (err, existing) => {
     if (err) {
-      console.error('Error checking student:', err);
+      console.error('Error checking existing enrollment:', err);
       return res.status(500).json({ error: 'Database error' });
     }
 
-    if (result.length === 0) {
-      return res.status(400).json({ error: 'Student does not exist' });
+    if (existing.length > 0) {
+      return res.status(400).json({ error: 'Student is already enrolled in this elective.' });
     }
 
-    const student = result[0];
-    const actualStudentId = student.student_id; // Use the actual student_id from the database
-
-    // Proceed with adding the elective if the student exists
-    const query = `
-      INSERT INTO student_elective (user_id, elective_id, enrollment_status, student_id)
+    // Insert the elective enrollment
+    const enrollQuery = `
+      INSERT INTO student_elective (student_id, elective_id, enrollment_status, grade_level)
       VALUES (?, ?, 'pending', ?);
     `;
-    db.query(query, [studentId, electiveId, actualStudentId], (err, result) => {
+
+    db.query(enrollQuery, [studentId, electiveId, grade_level], (err, result) => {
       if (err) {
         console.error('Error enrolling in elective:', err);
         return res.status(500).json({ error: 'Database error' });
       }
-      res.status(200).json({ message: 'Elective enrollment request submitted.' });
+      res.status(200).json({ message: 'Elective enrollment request submitted successfully.' });
     });
   });
 });
+
+
+
+
 
 
 // New endpoint to get students without enrollment status
@@ -1202,40 +1210,44 @@ app.get(`/api/student/details`, (req, res) => {
 });
 
 app.get('/api/subjects-card', (req, res) => {
-  const { studentId } = req.query;
+  const { studentId, gradeLevel } = req.query;
 
-  // Validate that studentId is provided
-  if (!studentId) {
-    return res.status(400).json({ error: 'Student ID is required' });
+  // Validate that both studentId and gradeLevel are provided
+  if (!studentId || !gradeLevel) {
+    return res.status(400).json({ error: 'Student ID and Grade Level are required' });
   }
 
   const query = `
     SELECT DISTINCT 
-      a.subject_name
-    FROM subject a 
-    INNER JOIN student b ON a.grade_level = b.current_yr_lvl 
-    WHERE b.student_id = ?
-      AND a.status = 'active'
+      s.subject_name,
+      s.grade_level
+    FROM SUBJECT s
+    INNER JOIN student st ON s.grade_level = st.current_yr_lvl 
+    WHERE st.student_id = ?
+      AND s.status = 'active'
+      AND s.grade_level = ?
 
     UNION 
 
     SELECT 
-      e.name AS subject_name
+      e.name AS subject_name,
+      se.grade_level
     FROM elective e 
     INNER JOIN student_elective se ON se.elective_id = e.elective_id 
     WHERE se.student_id = ?
       AND se.enrollment_status = 'approved'
-    ORDER BY subject_name
+      AND se.grade_level = ?
+
+    ORDER BY subject_name;
   `;
 
-  // Use the studentId to query the database
-  db.query(query, [studentId, studentId], (err, results) => {
+  // Execute the query with correctly ordered parameters
+  db.query(query, [studentId, gradeLevel, studentId, gradeLevel], (err, results) => {
     if (err) {
       console.error('Error querying the database:', err);
-      return res.status(500).send('Database query error');
+      return res.status(500).json({ error: 'Database query error' });
     }
 
-    // Return the fetched subjects
     res.json(results);
   });
 });

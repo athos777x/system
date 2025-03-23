@@ -28,16 +28,27 @@ function AttendanceManagement() {
 
   const fetchStudents = async (appliedFilters = {}) => {
     try {
-      const response = await axios.get('http://localhost:3001/students', {
-        params: appliedFilters,
-      });
-      const sortedStudents = response.data.sort((a, b) => b.lastName);
-      setStudents(sortedStudents);
-      setFilteredStudents(sortedStudents);
+        const response = await axios.get('http://localhost:3001/students', {
+            params: appliedFilters,
+        });
+
+        const sortedStudents = response.data.sort((a, b) => b.lastName);
+
+        // Ensure all required fields are available
+        const updatedStudents = sortedStudents.map(student => ({
+            ...student,
+            grade_level: student.current_yr_lvl || '-', // Fallback if grade_level is missing
+            brigada_attendance: student.brigada_eskwela === 'Attended' ? 'Yes' : 'No' // Convert 1 to 'Yes' and other values to 'No'
+        }));
+
+        setStudents(updatedStudents);
+        setFilteredStudents(updatedStudents);
     } catch (error) {
-      console.error('There was an error fetching the students!', error);
+        console.error('There was an error fetching the students!', error);
     }
   };
+
+
 
   const fetchSchoolYears = async () => {
     try {
@@ -70,13 +81,11 @@ function AttendanceManagement() {
       setAttendanceData((prevData) => ({
         ...prevData,
         [studentId]: {
-          grade_level: '-',
           school_year: '',
           total_school_days: 0,
           days_present: 0,
           days_absent: 0,
           days_late: 0,
-          brigada_attendance: 0
         },
       }));
     }
@@ -206,7 +215,7 @@ function AttendanceManagement() {
                       <div className="attendance-details-container">
                         <div className="attendance-details-header">
                           <span>
-                            Grade Level: {attendanceData[student.student_id]?.grade_level || '-'}
+                            Grade Level: {student.grade_level}
                           </span>
                           <span>
                             School Year: {attendanceData[student.student_id]?.school_year || student.school_year || '-'}
@@ -228,7 +237,7 @@ function AttendanceManagement() {
                             </tr>
                             <tr>
                               <th>Brigada Attendance</th>
-                              <td>{attendanceData[student.student_id]?.brigada_attendance || 0}</td>
+                              <td>{student.brigada_attendance}</td>
                             </tr>
                           </tbody>
                         </table>

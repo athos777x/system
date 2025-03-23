@@ -70,22 +70,39 @@ function Student_EnrollmentPage() {
 
   const handleElectiveSubmit = async () => {
     try {
-      const response = await axios.post('http://localhost:3001/enroll-elective', {
-        studentId: userId,
-        electiveId: electiveChoice
+      if (!electiveChoice) {
+        alert('Please select an elective before submitting.');
+        return;
+      }
+
+      // Fetch student details to get student_id and grade_level
+      const { data: studentData } = await axios.get(`http://localhost:3001/student/profile/${userId}`);
+
+      if (!studentData?.student_id || !studentData?.current_yr_lvl) {
+        alert('Failed to retrieve student details.');
+        return;
+      }
+
+      // Send the enrollment request
+      const { data } = await axios.post('http://localhost:3001/enroll-elective', {
+        studentId: studentData.student_id,
+        electiveId: electiveChoice,
+        grade_level: studentData.current_yr_lvl
       });
 
-      if (response.data.message) {
-        alert('Elective enrollment request submitted successfully.');
-        handleCloseModal();
+      alert(data.message);
+      handleCloseModal();
+    } catch (error) {
+      console.error('Error adding elective:', error);
+      if (error.response?.data?.error) {
+        alert(error.response.data.error);
       } else {
         alert('Failed to add elective. Please try again.');
       }
-    } catch (error) {
-      console.error('Error adding elective:', error);
-      alert('Failed to add elective. Please try again.');
     }
-  };
+};
+
+  
 
   if (loading) {
     return (
