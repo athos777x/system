@@ -256,6 +256,7 @@ function GradesManagement() {
     setSelectedStudent(student);
     setEditingStudent(student);
     setGradesFetched(false);
+    setSelectedGradeLevel(student.current_yr_lvl);
     const gradeLevel = student.current_yr_lvl;
     const fetchedSubjects = await fetchSubjects(student.student_id, gradeLevel);
     await fetchGrades(student.student_id, gradeLevel, fetchedSubjects);
@@ -426,6 +427,11 @@ function GradesManagement() {
                       <button 
                         className={`grades-management-btn grades-management-btn-edit ${editingStudent && editingStudent.student_id === student.student_id ? 'cancel' : ''}`}
                         onClick={() => handleEditClick(student)}
+                        disabled={!editingStudent && selectedStudent?.student_id === student.student_id && selectedGradeLevel !== student.current_yr_lvl}
+                        style={{ 
+                          opacity: !editingStudent && selectedStudent?.student_id === student.student_id && selectedGradeLevel !== student.current_yr_lvl ? '0.5' : '1',
+                          cursor: !editingStudent && selectedStudent?.student_id === student.student_id && selectedGradeLevel !== student.current_yr_lvl ? 'not-allowed' : 'pointer'
+                        }}
                       >
                         {editingStudent && editingStudent.student_id === student.student_id ? "Cancel" : "Edit"}
                       </button>
@@ -453,6 +459,7 @@ function GradesManagement() {
                               value={selectedGradeLevel || student.current_yr_lvl} 
                               onChange={handleGradeLevelChange}
                               style={{ padding: '0.5rem', borderRadius: '4px' }}
+                              disabled={editingStudent !== null}
                             >
                               {Array.from({ length: student.current_yr_lvl - 6 }, (_, i) => i + 7)
                                 .map((grade) => (
@@ -479,7 +486,7 @@ function GradesManagement() {
                                 <tr key={index}>
                                   <td>{subject.subject_name}</td>
                                   <td>
-                                    {editingStudent ? (
+                                    {editingStudent && selectedGradeLevel === student.current_yr_lvl ? (
                                       <input
                                         type="text"
                                         value={subject.q1 || ""}
@@ -492,7 +499,7 @@ function GradesManagement() {
                                     )}
                                   </td>
                                   <td>
-                                    {editingStudent ? (
+                                    {editingStudent && selectedGradeLevel === student.current_yr_lvl ? (
                                       <input
                                         type="text"
                                         value={subject.q2 || ""}
@@ -505,7 +512,7 @@ function GradesManagement() {
                                     )}
                                   </td>
                                   <td>
-                                    {editingStudent ? (
+                                    {editingStudent && selectedGradeLevel === student.current_yr_lvl ? (
                                       <input
                                         type="text"
                                         value={subject.q3 || ""}
@@ -518,7 +525,7 @@ function GradesManagement() {
                                     )}
                                   </td>
                                   <td>
-                                    {editingStudent ? (
+                                    {editingStudent && selectedGradeLevel === student.current_yr_lvl ? (
                                       <input
                                         type="text"
                                         value={subject.q4 || ""}
