@@ -1807,21 +1807,21 @@ app.post('/assign-section/:teacherId', (req, res) => {
 // TEACHER PAGE
 app.get('/teacher-subjects/:teacherId', (req, res) => {
   const teacherId = req.params.teacherId;
+  const schoolYearId = req.query.school_year_id; // Get school_year_id from query parameters
 
   const query = `
-  SELECT  CONCAT('Grade ', c.grade_level) AS grade_level, 
-  CASE WHEN a.elective = 1 THEN d.name  
-  ELSE b.subject_name END AS subject_name,
-  c.section_name 
-  FROM SCHEDULE a 
-  LEFT JOIN SUBJECT b ON a.subject_id = b.subject_id
-  LEFT JOIN elective d ON a.subject_id = d.elective_id
-  LEFT JOIN section c ON a.section_id = c.section_id
-  WHERE a.teacher_id = ? AND a.schedule_status = 'Approved'
-
+    SELECT CONCAT('Grade ', c.grade_level) AS grade_level, 
+    CASE WHEN a.elective = 1 THEN d.name  
+    ELSE b.subject_name END AS subject_name,
+    c.section_name 
+    FROM SCHEDULE a 
+    LEFT JOIN SUBJECT b ON a.subject_id = b.subject_id
+    LEFT JOIN elective d ON a.subject_id = d.elective_id
+    LEFT JOIN section c ON a.section_id = c.section_id
+    WHERE a.teacher_id = ? AND a.schedule_status = 'Approved' AND a.school_year_id = ?
   `;
 
-  db.query(query, [teacherId], (err, results) => {
+  db.query(query, [teacherId, schoolYearId], (err, results) => {
     if (err) {
       console.error('Error fetching assigned subjects:', err);
       return res.status(500).json({ error: 'Internal server error' });
@@ -1830,19 +1830,21 @@ app.get('/teacher-subjects/:teacherId', (req, res) => {
   });
 });
 
+
 // ENDPOINT USED:
 // TEACHER PAGE
 app.get('/teacher-section/:teacherId', (req, res) => {
   const teacherId = req.params.teacherId;
+  const schoolYearId = req.query.school_year_id; // Get school_year_id from query parameters
 
   const query = `
     SELECT b.section_name, CONCAT('Grade ', a.level) AS grade_level
     FROM section_assigned a
     LEFT JOIN section b ON a.section_id = b.section_id
-    WHERE a.employee_id = ?
+    WHERE a.employee_id = ? AND a.school_year_id = ?
   `;
 
-  db.query(query, [teacherId], (err, results) => {
+  db.query(query, [teacherId, schoolYearId], (err, results) => {
     if (err) {
       console.error('Error fetching assigned sections:', err);
       return res.status(500).json({ error: 'Internal server error' });
@@ -1850,6 +1852,7 @@ app.get('/teacher-section/:teacherId', (req, res) => {
     res.json(results);
   });
 });
+
 
 // Endpoint to fetch employee details by ID
 // Function: Fetches detailed information about an employee based on their employee ID
