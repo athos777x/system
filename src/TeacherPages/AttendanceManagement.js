@@ -8,10 +8,11 @@ function AttendanceManagement() {
   const [students, setStudents] = useState([]);
   const [filteredStudents, setFilteredStudents] = useState([]);
   const [selectedStudentId, setSelectedStudentId] = useState(null);
-  const [attendanceData, setAttendanceData] = useState({});
+  const [attendanceData, setAttendanceData] = useState([]);
   const [schoolYears, setSchoolYears] = useState([]);
   const [sections, setSections] = useState([]);
   const [filteredSections, setFilteredSections] = useState([]);
+  const [sectionSubjects, setSectionSubjects] = useState([]);
   const [filters, setFilters] = useState({
     searchTerm: '',
     grade: '',
@@ -72,30 +73,38 @@ function AttendanceManagement() {
   const fetchAttendanceData = async (studentId) => {
     try {
       const response = await axios.get(`http://localhost:3001/attendance/${studentId}`);
-      setAttendanceData((prevData) => ({
-        ...prevData,
-        [studentId]: response.data,
-      }));
+      setAttendanceData(response.data);
     } catch (error) {
       console.error('There was an error fetching the attendance data!', error);
-      setAttendanceData((prevData) => ({
-        ...prevData,
-        [studentId]: {
-          school_year: '',
-          total_school_days: 0,
-          days_present: 0,
-          days_absent: 0,
-          days_late: 0,
-        },
-      }));
+      setAttendanceData([]);
     }
   };
 
-  const handleStudentClick = async (studentId) => {
-    if (!attendanceData[studentId]) {
-      await fetchAttendanceData(studentId);
+  const handleStudentClick = async (studentId, sectionId) => {
+    try {
+      if (selectedStudentId === studentId) {
+        setSelectedStudentId(null);
+        setAttendanceData([]);
+      } else {
+        setSelectedStudentId(studentId);
+        
+        // Fetch section schedules to get subjects
+        const schedulesResponse = await axios.get(`http://localhost:3001/sections/${sectionId}/schedules`);
+        const subjects = [...new Set(schedulesResponse.data.map(schedule => schedule.subject_name))];
+        
+        // Create mock attendance data for each subject
+        const mockAttendanceData = subjects.map(subject => ({
+          subject: subject,
+          totalDaysPresent: Math.floor(Math.random() * 50) + 30, // Random number between 30-80
+          totalDaysAbsent: Math.floor(Math.random() * 20), // Random number between 0-20
+          totalDaysOfClasses: 80, // Fixed total days
+        }));
+        
+        setAttendanceData(mockAttendanceData);
+      }
+    } catch (error) {
+      console.error('Error fetching attendance data:', error);
     }
-    setSelectedStudentId(selectedStudentId === studentId ? null : studentId);
   };
 
   useEffect(() => {
@@ -203,7 +212,7 @@ function AttendanceManagement() {
                   <td>
                     <button
                       className="attendance-mgmt-btn attendance-mgmt-btn-view"
-                      onClick={() => handleStudentClick(student.student_id)}
+                      onClick={() => handleStudentClick(student.student_id, student.section_id)}
                     >
                       View
                     </button>
@@ -218,27 +227,33 @@ function AttendanceManagement() {
                             Grade Level: {student.grade_level}
                           </span>
                           <span>
-                            School Year: {attendanceData[student.student_id]?.school_year || student.school_year || '-'}
+                            Section: {student.section_name}
+                          </span>
+                          <span>
+                            School Year: {student.school_year || '-'}
+                          </span>
+                          <span>
+                            Brigada Attendance: {student.brigada_eskwela || 'Not Available'}
                           </span>
                         </div>
                         <table className="attendance-details-table">
-                          <tbody>
+                          <thead>
                             <tr>
-                              <th>Total School Days</th>
-                              <td>{attendanceData[student.student_id]?.total_school_days || 0}</td>
-                            </tr>
-                            <tr>
+                              <th>Subject</th>
                               <th>Total Days Present</th>
-                              <td>{attendanceData[student.student_id]?.days_present || 0}</td>
-                            </tr>
-                            <tr>
                               <th>Total Days Absent</th>
-                              <td>{attendanceData[student.student_id]?.days_absent || 0}</td>
+                              <th>Total Days of Classes</th>
                             </tr>
-                            <tr>
-                              <th>Brigada Attendance</th>
-                              <td>{student.brigada_attendance}</td>
-                            </tr>
+                          </thead>
+                          <tbody>
+                            {attendanceData.map((record, index) => (
+                              <tr key={index}>
+                                <td>{record.subject}</td>
+                                <td>{record.totalDaysPresent}</td>
+                                <td>{record.totalDaysAbsent}</td>
+                                <td>{record.totalDaysOfClasses}</td>
+                              </tr>
+                            ))}
                           </tbody>
                         </table>
                       </div>
