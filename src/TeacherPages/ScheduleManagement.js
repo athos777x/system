@@ -431,6 +431,30 @@ function Principal_SchedulePage() {
     }
   };
 
+  const handleApproveAllClick = async (sectionId) => {
+    try {
+      // Get all pending schedules for this section
+      const pendingSchedules = sectionSchedules.filter(
+        schedule => schedule.schedule_status === 'Pending Approval'
+      );
+      
+      // Update all pending schedules to approved status
+      await Promise.all(
+        pendingSchedules.map(schedule =>
+          axios.put(`http://localhost:3001/schedules/${schedule.schedule_id}/approve`, 
+            { schedule_status: 'Approved' }
+          )
+        )
+      );
+      
+      // Refresh the schedules
+      await fetchSectionSchedules(sectionId);
+    } catch (error) {
+      console.error('Error approving schedules:', error);
+      alert('Failed to approve all schedules. Please try again.');
+    }
+  };
+
   return (
     <div className="schedule-mgmt-container">
       <div className="schedule-mgmt-header">
@@ -520,7 +544,18 @@ function Principal_SchedulePage() {
                     <tr>
                       <td colSpan="4">
                         <div className="schedule-mgmt-details">
-                          <h2 className="schedule-mgmt-details-title">Schedules</h2>
+                          <div className="schedule-mgmt-details-header">
+                            <h2 className="schedule-mgmt-details-title">Schedules</h2>
+                            {(roleName !== 'academic_coordinator' && 
+                              sectionSchedules.some(schedule => schedule.schedule_status === 'Pending Approval')) && (
+                              <button 
+                                className="schedule-mgmt-btn schedule-mgmt-btn-approve"
+                                onClick={() => handleApproveAllClick(selectedSectionId)}
+                              >
+                                Approve
+                              </button>
+                            )}
+                          </div>
                           <table className="schedule-mgmt-details-table">
                             <thead>
                               <tr>
@@ -625,14 +660,6 @@ function Principal_SchedulePage() {
                                               >
                                                 Edit
                                               </button>
-                                              {(roleName !== 'academic_coordinator') && (
-                                                <button 
-                                                  className="schedule-mgmt-btn schedule-mgmt-btn-approve" 
-                                                  onClick={() => handleApproveClick(schedule.schedule_id)}
-                                                >
-                                                  Approve
-                                                </button>
-                                              )}
                                               <button 
                                                 className="schedule-mgmt-btn schedule-mgmt-btn-delete" 
                                                 onClick={() => handleDeleteClick(schedule.schedule_id)}

@@ -258,7 +258,7 @@ function SubjectsManagement() {
             value={pendingFilters.archive_status}
             onChange={(e) => setPendingFilters((prev) => ({ ...prev, archive_status: e.target.value }))}
           >
-            <option value="unarchive">Active</option>
+            <option value="unarchive">Unarchived</option>
             <option value="archive">Archived</option>
           </select>
           <button onClick={() => applyFilters(pendingFilters)}>

@@ -359,11 +359,15 @@
   border-top: 1px solid #c8e6c9;
 }
 
+.schedule-mgmt-details-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
 .schedule-mgmt-details-title {
-  color: #2e7d32;
-  margin: 0 0 1rem 0;
-  font-size: 1.25rem;
-  font-weight: 600;
+  margin: 0;
 }
 
 .schedule-mgmt-details-table {
