@@ -56,12 +56,6 @@ function SubjectCoordinatorSideBar({ showSidebar, toggleSidebar, handleLogout })
           <FiHome className="icon" /> Home
         </button>
         <button 
-          onClick={() => handleNavigate('/student')}
-          className={location.pathname === '/student' ? 'active' : ''}
-        >
-          <FiUsers className="icon" /> Students
-        </button>
-        <button 
           onClick={() => handleNavigate('/test-subjects')}
           className={location.pathname === '/test-subjects' ? 'active' : ''}
         >

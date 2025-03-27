@@ -240,7 +240,7 @@ function PromotionReport() {
 
       <div className="summary-report-grid">
         {/* Form 137 Card */}
-        {(roleName !== 'principal' && roleName !=='class_adviser') && (
+        {(roleName !== 'principal') && (
         <div className="summary-report-card">
           <h3>Form 137</h3>
           <p className="summary-report-description">Generate Form 137 for a specific student.</p>
@@ -251,7 +251,7 @@ function PromotionReport() {
         )}
 
         {/* Form 138 Card */}
-        {(roleName !== 'principal' && roleName !== 'registrar' && roleName !=='class_adviser') && (
+        {(roleName !== 'principal' && roleName !== 'registrar') && (
         <div className="summary-report-card">
           <h3>Form 138</h3>
           <p className="summary-report-description">Generate Form 138 for a specific student.</p>
@@ -295,7 +295,7 @@ function PromotionReport() {
         )}
 
         {/* SF2 Card */}
-        {(roleName !== 'principal' && roleName !== 'registrar') && (
+        {(roleName !== 'principal' && roleName !== 'registrar' ) && (
         <div className="summary-report-card">
           <h3>SF2 - School Summary Report of Enrollment</h3>
           <p className="summary-report-description">Generate enrollment summary report by grade level.</p>
@@ -306,7 +306,7 @@ function PromotionReport() {
         )}
 
         {/* SF4 Card */}
-        {(roleName !== 'principal' && roleName !== 'registrar') && (
+        {(roleName !== 'principal' && roleName !== 'registrar' && roleName !=='class_adviser') && (
         <div className="summary-report-card">
           <h3>SF4 - Monthly Learner's Movement and Attendance</h3>
           <p className="summary-report-description">Generate monthly attendance and movement report.</p>
@@ -317,7 +317,7 @@ function PromotionReport() {
         )}
 
         {/* SF5 Card */}
-        {(roleName !== 'principal' && roleName !== 'registrar') && (
+        {(roleName !== 'principal' && roleName !== 'registrar' ) && (
         <div className="summary-report-card">
           <h3>SF5 - Report on Promotion and Learning Progress</h3>
           <p className="summary-report-description">Generate detailed promotion and learning progress report.</p>
@@ -328,7 +328,7 @@ function PromotionReport() {
         )}
 
         {/* SF6 Card */}
-        {(roleName !== 'registrar') && (
+        {(roleName !== 'registrar' && roleName !=='class_adviser') && (
         <div className="summary-report-card">
           <h3>SF6 - Summarized Report on Promotion</h3>
           <p className="summary-report-description">Generate summarized promotion and learning progress report.</p>

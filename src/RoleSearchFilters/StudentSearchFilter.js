@@ -26,32 +26,32 @@ function StudentSearchFilter({ students, fetchStudents, setFilteredStudents, set
     setTempFilters(prevFilters => ({
       ...prevFilters,
       [type]: value,
-      ...(type === 'grade' ? { section: '' } : {}) // ✅ Reset section when grade changes
+      ...(type === 'grade' ? { section: '' } : {}) 
     }));
   };
 
-  // ✅ Update sections when grade is selected
+  
   useEffect(() => {
     if (tempFilters.grade) {
-      // ✅ Get sections based on selected grade level
+    
       const sectionsForGrade = filteredSections.filter(section => String(section.grade_level) === String(tempFilters.grade));
       setAvailableSections(sectionsForGrade);
     } else {
-      setAvailableSections([]); // ✅ Clear sections when no grade is selected
+      setAvailableSections([]); 
     }
   }, [tempFilters.grade, filteredSections]);
 
-  // ✅ Prevent loading students until filters are applied
+  
   const applyFilters = () => {
     let filtered = students;
 
     if (!filters.searchID && !filters.searchTerm && !filters.school_year && !filters.grade && !filters.section) {
-      setFilteredStudents([]); // ✅ Clear student list when no filters are applied
+      setFilteredStudents([]); 
       return;
     }
 
     if (filters.searchID) {
-      filtered = filtered.filter(student => String(student.student_id) === filters.searchID); // ✅ Exact match
+      filtered = filtered.filter(student => String(student.student_id) === filters.searchID); 
     }
     if (filters.school_year) {
       filtered = filtered.filter(student => String(student.school_year) === filters.school_year);
@@ -72,21 +72,21 @@ function StudentSearchFilter({ students, fetchStudents, setFilteredStudents, set
     }
 
     setFilteredStudents(filtered);
-    setCurrentPage(1); // ✅ Reset to first page when filters are applied
+    setCurrentPage(1); 
   };
 
   const handleApplyFilters = () => {
     console.log('Applying filters:', tempFilters);
   
-    // ✅ Prevent fetching if no filters are applied
+    
     const hasFilters = Object.values(tempFilters).some(value => value !== '');
     
     if (hasFilters) {
-      setFilters(tempFilters); // ✅ Apply tempFilters when button is clicked
-      fetchStudents(tempFilters); // ✅ Fetch students with applied filters
+      setFilters(tempFilters); 
+      fetchStudents(tempFilters); 
       applyFilters();
     } else {
-      setFilteredStudents([]); // ✅ Clear student list if no filters are set
+      setFilteredStudents([]); 
     }
   };
 
@@ -136,7 +136,7 @@ function StudentSearchFilter({ students, fetchStudents, setFilteredStudents, set
           name="section" 
           value={tempFilters.section} 
           onChange={(e) => handleFilterChange('section', e.target.value)}
-          disabled={!tempFilters.grade} // ✅ Disable section dropdown until grade is selected
+          disabled={!tempFilters.grade} 
         >
           <option value="">Select Section</option>
           {availableSections.map((section) => (
