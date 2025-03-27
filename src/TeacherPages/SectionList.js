@@ -153,7 +153,7 @@ function SectionList() {
   return (
     <div className="section-list-container">
       <div className="section-list-header">
-        <h1 className="section-list-title">Section List</h1>
+        <h1 className="section-list-title">Class List</h1>
       </div>
 
       <div className="section-list-filters">
@@ -259,7 +259,7 @@ function SectionList() {
                           </table>
                           {showStudents && (
                             <div className="section-list-students-container">
-                              <h3>Student List</h3>
+                              <h3>Class List</h3>
                               {renderStudentsTable()}
                             </div>
                           )}

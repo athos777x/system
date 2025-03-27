@@ -185,7 +185,7 @@ function SubjectTeacherSideBar({ showSidebar, toggleSidebar, handleLogout }) {
                 onClick={() => handleNavigate('/section-list')}
                 className={location.pathname === '/section-list' ? 'active' : ''}
               >
-                <FiBook className="icon" /> Section List
+                <FiBook className="icon" /> Class List
               </button>
               <button 
                 onClick={() => handleNavigate('/enrolled-students')}
