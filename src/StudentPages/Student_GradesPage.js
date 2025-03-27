@@ -212,8 +212,71 @@ function Student_GradesPage() {
   if (subjects.length === 0) {
     return (
       <div className="page-container">
-        <div className="student-grades-no-grades-message">
-          No grades available at this time.
+        <div className="grades-card">
+          <h2>Grade Report Card</h2>
+          <div className="student-info-header">
+            <div className="student-info-row">
+              <div className="student-info-item">
+                <span className="student-info-label">Grade Level</span>
+                <span className="student-info-value">Grade {gradeLevel || '-'}</span>
+              </div>
+              <div className="student-info-divider" />
+              <div className="student-info-item">
+                <span className="student-info-label">Section</span>
+                <span className="student-info-value">{studentInfo.section}</span>
+              </div>
+              <div className="student-info-divider" />
+              <div className="student-info-item">
+                <span className="student-info-label">School Year</span>
+                <select 
+                  value={selectedSchoolYear || studentInfo.schoolYearId} 
+                  onChange={handleSchoolYearChange}
+                  style={{ padding: '0.5rem', borderRadius: '4px' }}
+                >
+                  {schoolYears.length > 0 ? (
+                    schoolYears.map((year) => (
+                      <option key={year.school_year_id} value={year.school_year_id}>
+                        {year.school_year}
+                      </option>
+                    ))
+                  ) : (
+                    <option value="">No school years available</option>
+                  )}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div className="grades-detailed-table">
+            <table className="students-table">
+              <thead>
+                <tr>
+                  <th>Subject</th>
+                  <th>1st Quarter</th>
+                  <th>2nd Quarter</th>
+                  <th>3rd Quarter</th>
+                  <th>4th Quarter</th>
+                  <th>Final Grade</th>
+                  <th>Remarks</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td colSpan="7" style={{ textAlign: 'center', padding: '2rem' }}>
+                    No grades available at this time.
+                  </td>
+                </tr>
+                <tr>
+                  <td><strong>General Average</strong></td>
+                  <td><span>-</span></td>
+                  <td><span>-</span></td>
+                  <td><span>-</span></td>
+                  <td><span>-</span></td>
+                  <td colSpan="2"><span><strong>-</strong></span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     );
