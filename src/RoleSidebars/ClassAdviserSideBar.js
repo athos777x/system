@@ -28,9 +28,9 @@ function ClassAdviserSideBar({ showSidebar, toggleSidebar, handleLogout }) {
   const location = useLocation();
 
   // Check if current path is under a specific submenu
-  const isRecordsPath = ['/brigada-eskwela', '/new-grades'].includes(location.pathname);
+  const isRecordsPath = ['/brigada-eskwela', '/new-grades', '/attendance'].includes(location.pathname);
   const isEnrollmentPath = ['/pending-enrollment', '/school-year', '/section-list', '/enrolled-students'].includes(location.pathname);
-  const isClassesPath = ['/section'].includes(location.pathname);
+  const isClassesPath = ['/section', '/schedule'].includes(location.pathname);
   const isExperimentalsPath = ['/grades'].includes(location.pathname);
 
   // Update useEffect to handle initial submenu state based on path
@@ -124,6 +124,12 @@ function ClassAdviserSideBar({ showSidebar, toggleSidebar, handleLogout }) {
                 <FiFileText className="icon" /> Grades
               </button>
               <button 
+                onClick={() => handleNavigate('/attendance')}
+                className={location.pathname === '/attendance' ? 'active' : ''}
+              >
+                <FiCheckSquare className="icon" /> Attendance
+              </button>
+              <button 
                 onClick={() => handleNavigate('/brigada-eskwela')}
                 className={location.pathname === '/brigada-eskwela' ? 'active' : ''}
               >
@@ -160,7 +166,7 @@ function ClassAdviserSideBar({ showSidebar, toggleSidebar, handleLogout }) {
                 onClick={() => handleNavigate('/section-list')}
                 className={location.pathname === '/section-list' ? 'active' : ''}
               >
-                <FiBook className="icon" /> Section List
+                <FiBook className="icon" /> Class List
               </button>
               <button 
                 onClick={() => handleNavigate('/enrolled-students')}
@@ -182,6 +188,12 @@ function ClassAdviserSideBar({ showSidebar, toggleSidebar, handleLogout }) {
                 className={location.pathname === '/section' ? 'active' : ''}
               >
                 <FiBook className="icon" /> Section
+              </button>
+              <button 
+                onClick={() => handleNavigate('/schedule')}
+                className={location.pathname === '/schedule' ? 'active' : ''}
+              >
+                <FiCalendar className="icon" /> Schedule
               </button>
             </div>
           )}

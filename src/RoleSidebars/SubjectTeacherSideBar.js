@@ -122,12 +122,12 @@ function SubjectTeacherSideBar({ showSidebar, toggleSidebar, handleLogout }) {
           <FiHome className="icon" /> Home
         </button>
         
-        <button 
+        {/* <button 
           onClick={() => handleNavigate('/student')}
           className={location.pathname === '/student' ? 'active' : ''}
         >
           <FiUsers className="icon" /> Students
-        </button>
+        </button> */}
 
         <button 
           onClick={() => handleNavigate('/teacher-schedule')}
@@ -154,22 +154,22 @@ function SubjectTeacherSideBar({ showSidebar, toggleSidebar, handleLogout }) {
               >
                 <FiCheckSquare className="icon" /> Attendance
               </button>
-              <button 
+              {/* <button 
                 onClick={() => handleNavigate('/brigada-eskwela')}
                 className={location.pathname === '/brigada-eskwela' ? 'active' : ''}
               >
                 <FiCheckSquare className="icon" /> Brigada Eskwela
-              </button>
+              </button> */}
             </div>
           )}
         </div>
-        <button 
+        {/* <button 
           onClick={() => handleNavigate('/section')}
           className={location.pathname === '/section' ? 'active' : ''}
         >
           <FiBook className="icon" /> Section
-        </button>
-        <div className={`menu-with-submenu ${showEnrollmentSubMenu || isEnrollmentPath ? 'active' : ''}`}>
+        </button> */}
+        {/* <div className={`menu-with-submenu ${showEnrollmentSubMenu || isEnrollmentPath ? 'active' : ''}`}>
           <button onClick={toggleEnrollmentSubMenu}>
             <FiCalendar className="icon" /> Enrollment
           </button>
@@ -185,7 +185,7 @@ function SubjectTeacherSideBar({ showSidebar, toggleSidebar, handleLogout }) {
                 onClick={() => handleNavigate('/section-list')}
                 className={location.pathname === '/section-list' ? 'active' : ''}
               >
-                <FiBook className="icon" /> Section List
+                <FiBook className="icon" /> Class List
               </button>
               <button 
                 onClick={() => handleNavigate('/enrolled-students')}
@@ -195,7 +195,7 @@ function SubjectTeacherSideBar({ showSidebar, toggleSidebar, handleLogout }) {
               </button>
             </div>
           )}
-        </div>
+        </div> */}
         {/* <div className={`menu-with-submenu ${showExperimentalsSubMenu || isExperimentalsPath ? 'active' : ''}`}>
           <button onClick={toggleExperimentalsSubMenu}>
             <FiLayers className="icon" /> Experimentals

@@ -545,7 +545,7 @@ function Principal_SchedulePage() {
                       <td colSpan="4">
                         <div className="schedule-mgmt-details">
                           <div className="schedule-mgmt-details-header">
-                            <h2 className="schedule-mgmt-details-title">Schedules</h2>
+                            <h2 className="schedule-mgmt-details-title">Section {section.section_name} - Class Schedule</h2>
                             {(roleName !== 'academic_coordinator' && 
                               sectionSchedules.some(schedule => schedule.schedule_status === 'Pending Approval')) && (
                               <button 
