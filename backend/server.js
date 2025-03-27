@@ -2016,8 +2016,6 @@ app.get('/school-years', (req, res) => {
       query += ' school_year = ?';
       queryParams.push(school_year);
     }
-  } else {
-    query += ' WHERE status = "active"'; // Default filter to show only active school years
   }
 
   console.log('Query:', query);
