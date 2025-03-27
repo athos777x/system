@@ -9,10 +9,13 @@ function Student_GradesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [gradesFetched, setGradesFetched] = useState(false);
+  const [schoolYears, setSchoolYears] = useState([]);
+  const [selectedSchoolYear, setSelectedSchoolYear] = useState(null);
   const [studentInfo, setStudentInfo] = useState({
     name: '',
     section: '',
-    schoolYear: ''
+    schoolYear: '',
+    schoolYearId: null,
   });
 
   const userId = localStorage.getItem('userId');
@@ -21,7 +24,6 @@ function Student_GradesPage() {
   useEffect(() => {
     const fetchStudentData = async () => {
       try {
-        // Get student ID and grade level
         const studentResponse = await axios.get('http://localhost:3001/user-id/convert/student-id', {
           params: { userId },
         });
@@ -30,17 +32,21 @@ function Student_GradesPage() {
           setStudentId(studentResponse.data.studentId);
           setGradeLevel(studentResponse.data.gradeLevel);
 
-          // Get section info
           const sectionResponse = await axios.get(`http://localhost:3001/student-section/${userId}`);
-          
-          // Get school year
           const schoolYearResponse = await axios.get('http://localhost:3001/school-years');
+          console.log('Fetched School Years:', schoolYearResponse.data);
+          setSchoolYears(schoolYearResponse.data || []);
           
+          const latestSchoolYear = schoolYearResponse.data[0]?.school_year_id || null;
+
           setStudentInfo({
             name: studentResponse.data.name || '',
             section: sectionResponse.data.section || 'Not Assigned',
-            schoolYear: schoolYearResponse.data[0]?.school_year || 'Current School Year'
+            schoolYear: schoolYearResponse.data[0]?.school_year || 'Current School Year',
+            schoolYearId: latestSchoolYear,
           });
+
+          setSelectedSchoolYear(latestSchoolYear); // Set the latest school year as default
         } else {
           throw new Error(studentResponse.data.message || 'Failed to fetch student data.');
         }
@@ -54,32 +60,32 @@ function Student_GradesPage() {
       fetchStudentData();
     }
   }, [userId]);
+  
 
   // Fetch subjects and grades
   useEffect(() => {
     const fetchSubjectsAndGrades = async () => {
       try {
-        if (!studentId || !gradeLevel) return;
-
+        if (!studentId || !gradeLevel || !studentInfo.schoolYearId) return;
+  
+        const schoolYearId = studentInfo.schoolYearId; // Retrieve school_year_id
+  
         const [subjectsResponse, gradesResponse] = await Promise.all([
           axios.get('http://localhost:3001/api/subjects-card', {
-            params: { studentId, gradeLevel},
+            params: { studentId, gradeLevel, schoolYearId },
           }),
           axios.get('http://localhost:3001/api/grades', {
-            params: {
-              studentId,
-              gradeLevel,
-            },
-          })
+            params: { studentId, gradeLevel, schoolYearId },
+          }),
         ]);
-
+  
         if (gradesResponse.data.success) {
           const grades = gradesResponse.data.grades;
           const updatedSubjects = (subjectsResponse.data || []).map((subject) => {
             const subjectGrades = grades.find(
               (grade) => grade.subject_name === subject.subject_name
             ) || {};
-
+  
             return {
               ...subject,
               q1: subjectGrades.q1 || '-',
@@ -88,7 +94,7 @@ function Student_GradesPage() {
               q4: subjectGrades.q4 || '-',
             };
           });
-
+  
           setSubjects(updatedSubjects);
           setGradesFetched(true);
         }
@@ -99,9 +105,23 @@ function Student_GradesPage() {
         setLoading(false);
       }
     };
-
+  
     fetchSubjectsAndGrades();
-  }, [studentId, gradeLevel]);
+  }, [studentId, gradeLevel, studentInfo.schoolYearId]); 
+  
+  
+  const handleSchoolYearChange = (event) => {
+    const newSchoolYearId = event.target.value;
+    setSelectedSchoolYear(newSchoolYearId);
+
+    const selectedYear = schoolYears.find((year) => year.school_year_id === newSchoolYearId);
+    setStudentInfo((prevInfo) => ({
+      ...prevInfo,
+      schoolYear: selectedYear ? selectedYear.school_year : prevInfo.schoolYear,
+      schoolYearId: newSchoolYearId,
+    }));
+  };
+
 
   const calculateGeneralAverage = (quarter) => {
     let total = 0;
@@ -112,7 +132,7 @@ function Student_GradesPage() {
       if (grade !== '-') {
         total += parseFloat(grade);
         count += 1;
-      }
+      } 
     });
 
     return count > 0 ? Math.round(total / count) : '-';
@@ -222,7 +242,21 @@ function Student_GradesPage() {
             <div className="student-info-divider" />
             <div className="student-info-item">
               <span className="student-info-label">School Year</span>
-              <span className="student-info-value">{studentInfo.schoolYear}</span>
+              <select 
+                value={selectedSchoolYear || studentInfo.schoolYearId} 
+                onChange={handleSchoolYearChange}
+                style={{ padding: '0.5rem', borderRadius: '4px' }}
+              >
+                {schoolYears.length > 0 ? (
+                  schoolYears.map((year) => (
+                    <option key={year.school_year_id} value={year.school_year_id}>
+                      {year.school_year}
+                    </option>
+                  ))
+                ) : (
+                  <option value="">No school years available</option>
+                )}
+              </select>
             </div>
           </div>
         </div>
