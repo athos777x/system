@@ -22,12 +22,14 @@ function GradeLevelCoordinatorSideBar({ showSidebar, toggleSidebar, handleLogout
   const [showRecordsSubMenu, setShowRecordsSubMenu] = useState(false);
   const [showEnrollmentSubMenu, setShowEnrollmentSubMenu] = useState(false);
   const [showExperimentalsSubMenu, setShowExperimentalsSubMenu] = useState(false);
+  const [showClassesSubMenu, setShowClassesSubMenu] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
   // Check if current path is under a specific submenu
-  const isRecordsPath = ['/attendance', '/new-grades'].includes(location.pathname);
+  const isRecordsPath = ['/attendance', '/new-grades', '/brigada-eskwela'].includes(location.pathname);
   const isEnrollmentPath = ['/pending-enrollment', '/school-year', '/section-list', '/enrolled-students'].includes(location.pathname);
+  const isClassesPath = ['/section', '/schedule'].includes(location.pathname);
   const isExperimentalsPath = ['/grades'].includes(location.pathname);
 
   // Update useEffect to handle initial submenu state based on path
@@ -35,6 +37,7 @@ function GradeLevelCoordinatorSideBar({ showSidebar, toggleSidebar, handleLogout
     setShowRecordsSubMenu(isRecordsPath);
     setShowEnrollmentSubMenu(isEnrollmentPath);
     setShowExperimentalsSubMenu(isExperimentalsPath);
+    setShowClassesSubMenu(isClassesPath);
   }, [location.pathname]);
 
   const toggleRecordsSubMenu = () => {
@@ -43,6 +46,16 @@ function GradeLevelCoordinatorSideBar({ showSidebar, toggleSidebar, handleLogout
     setShowExperimentalsSubMenu(false);
     if (!showRecordsSubMenu) {
       navigate('/new-grades');
+    }
+  };
+
+  const toggleClassesSubMenu = () => {
+    setShowClassesSubMenu(!showClassesSubMenu);
+    setShowRecordsSubMenu(false);
+    setShowEnrollmentSubMenu(false);
+    setShowExperimentalsSubMenu(false);
+    if (!showClassesSubMenu) {
+      navigate('/schedule');
     }
   };
 
@@ -112,8 +125,37 @@ function GradeLevelCoordinatorSideBar({ showSidebar, toggleSidebar, handleLogout
               >
                 <FiCheckSquare className="icon" /> Attendance
               </button>
+              <button 
+                onClick={() => handleNavigate('/brigada-eskwela')}
+                className={location.pathname === '/brigada-eskwela' ? 'active' : ''}
+              >
+                <FiCheckSquare className="icon" /> Brigada Eskwela
+              </button>
             </div>
           )}
+
+        <div className={`menu-with-submenu ${showClassesSubMenu || isClassesPath ? 'active' : ''}`}>
+          <button onClick={toggleClassesSubMenu}>
+            <FiClipboard className="icon" /> Classes
+          </button>
+          {showClassesSubMenu && (
+            <div className="submenu">
+              {/* <button 
+                onClick={() => handleNavigate('/section')}
+                className={location.pathname === '/section' ? 'active' : ''}
+              >
+                <FiBook className="icon" /> Section
+              </button> */}
+              <button 
+                onClick={() => handleNavigate('/schedule')}
+                className={location.pathname === '/schedule' ? 'active' : ''}
+              >
+                <FiCalendar className="icon" /> Schedule
+              </button>
+            </div>
+          )}
+        </div>
+
         </div>
         <div className={`menu-with-submenu ${showEnrollmentSubMenu || isEnrollmentPath ? 'active' : ''}`}>
           <button onClick={toggleEnrollmentSubMenu}>

@@ -423,7 +423,7 @@ const approveElective = async (studentElectiveId) => {
                       >
                         View
                       </button>
-                      {(roleName === 'registrar' || roleName === 'principal') && (
+                      {(roleName === 'registrar' || roleName === 'grade_level_coordinator' || roleName === 'class_adviser') && (
                         <>
                         {console.log('Role check passed:', roleName)}
                         {console.log('Student status:', student.active_status)}
