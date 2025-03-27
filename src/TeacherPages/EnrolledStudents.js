@@ -12,6 +12,7 @@ function EnrolledStudents() {
   const [selectedStudentId, setSelectedStudentId] = useState(null);
   const [studentSchedules, setStudentSchedules] = useState([]);
   const [currentSchoolYear, setCurrentSchoolYear] = useState('');
+  const [currentSchoolYearId, setCurrentSchoolYearId] = useState(null);
   const [filters, setFilters] = useState({
     searchTerm: '',
     grade: ''
@@ -19,33 +20,52 @@ function EnrolledStudents() {
 
   useEffect(() => {
     fetchCurrentSchoolYear();
-    fetchStudents();
-  }, []);
+}, []);
+
+useEffect(() => {
+    if (currentSchoolYearId) {
+        fetchStudents();
+    }
+}, [currentSchoolYearId]); 
+
 
   const fetchCurrentSchoolYear = async () => {
     try {
-      const response = await axios.get('http://localhost:3001/current-school-year');
-      setCurrentSchoolYear(response.data.school_year);
+        const response = await axios.get('http://localhost:3001/current-school-year');
+        setCurrentSchoolYear(response.data.school_year);
+        setCurrentSchoolYearId(response.data.school_year_id); // Store school_year_id
     } catch (error) {
-      console.error('Error fetching current school year:', error);
+        console.error('Error fetching current school year:', error);
     }
-  };
+};
 
-  const fetchStudents = async (appliedFilters = {}) => {
-    try {
+
+const fetchStudents = async (appliedFilters = {}) => {
+  if (!currentSchoolYearId) {
+      console.warn("No school_year_id available yet. Fetching students skipped.");
+      return;
+  }
+
+  try {
+      const queryParams = { ...appliedFilters, school_year_id: currentSchoolYearId }; 
+      console.log("Fetching students with params:", queryParams); // Debugging
+
       const response = await axios.get('http://localhost:3001/enrolled-students', {
-        params: appliedFilters,
+          params: queryParams,
       });
+
       const activeStudents = response.data.filter(
-        (student) => student.enrollment_status === 'active'
+          (student) => student.enrollment_status === 'active'
       );
       setStudents(activeStudents);
       setFilteredStudents(activeStudents);
       setTotalEnrolledStudents(activeStudents.length);
-    } catch (error) {
+  } catch (error) {
       console.error('There was an error fetching the students!', error);
-    }
-  };
+  }
+};
+
+
 
   const handleSearch = (event) => {
     const searchTerm = event.target.value;

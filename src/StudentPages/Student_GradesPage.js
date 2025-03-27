@@ -63,7 +63,7 @@ function Student_GradesPage() {
 
         const [subjectsResponse, gradesResponse] = await Promise.all([
           axios.get('http://localhost:3001/api/subjects-card', {
-            params: { studentId },
+            params: { studentId, gradeLevel},
           }),
           axios.get('http://localhost:3001/api/grades', {
             params: {

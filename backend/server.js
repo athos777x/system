@@ -189,7 +189,6 @@ app.get('/students', (req, res) => {
   }
 
   function fetchStudents() {
-    // ✅ Build the main query
     let query = `
       SELECT s.student_id, s.user_id, s.lrn, s.section_id,
       CONCAT(s.lastname, ', ', s.firstname, ' ', 
@@ -197,7 +196,7 @@ app.get('/students', (req, res) => {
       s.lastname, s.firstname, s.middlename, 
       s.current_yr_lvl, DATE_FORMAT(s.birthdate, '%M %e, %Y') AS birthdate, s.gender, s.age, 
       s.home_address, s.barangay, s.city_municipality, s.province, 
-      s.contact_number, s.email_address, z.section_name, sy.school_year,
+      s.contact_number, s.email_address, z.section_name, sy.school_year, sy.school_year_id,
       s.mother_name, s.father_name, s.parent_address, s.father_occupation, 
       s.mother_occupation, FORMAT(s.annual_hshld_income,2) AS annual_hshld_income, s.number_of_siblings, 
       s.father_educ_lvl, s.mother_educ_lvl, s.father_contact_number, 
@@ -1210,11 +1209,11 @@ app.get(`/api/student/details`, (req, res) => {
 });
 
 app.get('/api/subjects-card', (req, res) => {
-  const { studentId, gradeLevel } = req.query;
+  const { studentId, gradeLevel, schoolYearId } = req.query; // Extract schoolYearId
 
-  // Validate that both studentId and gradeLevel are provided
-  if (!studentId || !gradeLevel) {
-    return res.status(400).json({ error: 'Student ID and Grade Level are required' });
+  // Validate that all required parameters are provided
+  if (!studentId || !gradeLevel || !schoolYearId) {
+    return res.status(400).json({ error: 'Student ID, Grade Level, and School Year ID are required' });
   }
 
   const query = `
@@ -1226,6 +1225,7 @@ app.get('/api/subjects-card', (req, res) => {
     WHERE st.student_id = ?
       AND s.status = 'active'
       AND s.grade_level = ?
+      AND s.school_year_id = ? 
 
     UNION 
 
@@ -1237,12 +1237,13 @@ app.get('/api/subjects-card', (req, res) => {
     WHERE se.student_id = ?
       AND se.enrollment_status = 'approved'
       AND se.grade_level = ?
+      AND e.school_year_id = ? 
 
     ORDER BY subject_name;
   `;
 
   // Execute the query with correctly ordered parameters
-  db.query(query, [studentId, gradeLevel, studentId, gradeLevel], (err, results) => {
+  db.query(query, [studentId, gradeLevel, schoolYearId, studentId, gradeLevel, schoolYearId], (err, results) => {
     if (err) {
       console.error('Error querying the database:', err);
       return res.status(500).json({ error: 'Database query error' });
@@ -1254,20 +1255,20 @@ app.get('/api/subjects-card', (req, res) => {
 
 // Backend: Fetch grades for all subjects and periods for a student
 app.get('/api/grades', (req, res) => {
-  const { studentId, gradeLevel } = req.query;
+  const { studentId, gradeLevel, schoolYearId } = req.query; // Extract schoolYearId
 
   const query = `
     SELECT subject_name, 
-    MAX(CASE WHEN period = 1 THEN grade ELSE NULL END) AS q1,
-    MAX(CASE WHEN period = 2 THEN grade ELSE NULL END) AS q2,
-    MAX(CASE WHEN period = 3 THEN grade ELSE NULL END) AS q3,
-    MAX(CASE WHEN period = 4 THEN grade ELSE NULL END) AS q4
+      MAX(CASE WHEN period = 1 THEN grade ELSE NULL END) AS q1,
+      MAX(CASE WHEN period = 2 THEN grade ELSE NULL END) AS q2,
+      MAX(CASE WHEN period = 3 THEN grade ELSE NULL END) AS q3,
+      MAX(CASE WHEN period = 4 THEN grade ELSE NULL END) AS q4
     FROM grades
-    WHERE student_id = ? AND grade_level = ?
+    WHERE student_id = ? AND grade_level = ? AND school_year_id = ?
     GROUP BY subject_name;
   `;
 
-  db.query(query, [studentId, gradeLevel], (err, results) => {
+  db.query(query, [studentId, gradeLevel, schoolYearId], (err, results) => {
     if (err) {
       console.error('Error fetching grades:', err);
       return res.status(500).json({ success: false, message: 'Failed to fetch grades.' });
@@ -1276,6 +1277,7 @@ app.get('/api/grades', (req, res) => {
     res.json({ success: true, grades: results });
   });
 });
+
 
 
 
@@ -1399,7 +1401,7 @@ app.get('/attendance/:studentId', (req, res) => {
 // Function: Retrieves all school years in descending order
 // Pages: SchoolYearSearchFilter.js, SearchFilter.js
 app.get('/api/school_years', (req, res) => {
-  const query = 'SELECT school_year FROM school_year ORDER BY school_year DESC';
+  const query = 'SELECT school_year, school_year_id FROM school_year ORDER BY school_year DESC';
   db.query(query, (err, results) => {
     if (err) {
       console.error('Error fetching school years:', err);
@@ -1415,7 +1417,7 @@ app.get('/api/school_years', (req, res) => {
 // Pages: SchoolYearPage.js
 app.get('/current-school-year', (req, res) => {
   const query = `
-    SELECT school_year 
+    SELECT school_year, school_year_id
     FROM school_year 
     WHERE status = 'active' 
     LIMIT 1
@@ -2299,15 +2301,24 @@ app.get('/user-role/:userId', (req, res) => {
 
 // ENDPOINT FOR ENROLLED_STUDENTS PAGE
 app.get('/enrolled-students', (req, res) => {
-  const { status, grade, section, searchTerm } = req.query;
+  const { status, grade, section, searchTerm, school_year_id } = req.query;
+
+  // Ensure school_year_id is provided
+  if (!school_year_id) {
+    return res.status(400).json({ error: "Missing school_year_id parameter" });
+  }
+
   let query = `
-    SELECT s.student_id, s.firstname, s.middlename, s.lastname, CONCAT(s.lastname, ', ', s.firstname, ' ', 
-      IF(s.middlename IS NOT NULL AND s.middlename != '', CONCAT(LEFT(s.middlename, 1), '.'), '')) AS stud_name, e.grade_level, e.enrollment_status
+    SELECT s.student_id, s.firstname, s.middlename, s.lastname, 
+      CONCAT(s.lastname, ', ', s.firstname, ' ', 
+      IF(s.middlename IS NOT NULL AND s.middlename != '', CONCAT(LEFT(s.middlename, 1), '.'), '')) AS stud_name, 
+      e.grade_level, e.enrollment_status
     FROM student s
     JOIN enrollment e ON s.student_id = e.student_id
-    WHERE 1=1
+    WHERE e.school_year_id = ?
   `;
-  const queryParams = [];
+
+  const queryParams = [school_year_id]; // Ensure school_year_id is first param
 
   if (status) {
     query += ' AND e.enrollment_status = ?';
@@ -2341,6 +2352,8 @@ app.get('/enrolled-students', (req, res) => {
     res.json(results);
   });
 });
+
+
 
 // Endpoint to fetch schedules
 // Function: Retrieves a list of schedules with optional filtering by search term, date, and section
