@@ -65,6 +65,20 @@ function StudentManagement() {
 
   const navigate = useNavigate();
 
+  // Add this constant for education levels near the top of the file, after the imports
+  const EDUCATION_LEVELS = [
+    "Elementary Level",
+    "Elementary Graduate",
+    "High School Level",
+    "High School Graduate",
+    "College Level",
+    "College Graduate",
+    "Vocational",
+    "Post Graduate",
+    "Doctorate",
+    "No Formal Education"
+  ];
+
   // Add these validation functions after the useState declarations and before the useEffect hooks
   const validateLRN = (lrn) => {
     const lrnRegex = /^\d{1,100}$/;
@@ -101,6 +115,15 @@ function StudentManagement() {
     if (!income) return "";  // Income is optional
     const incomeNum = parseFloat(income);
     if (isNaN(incomeNum) || incomeNum < 0) return "Please enter a valid income amount";
+    return "";
+  };
+
+  const validateSiblings = (siblings) => {
+    if (!siblings && siblings !== 0) return ""; // Optional field
+    const siblingCount = parseInt(siblings);
+    if (isNaN(siblingCount)) return "Number of siblings must be a valid number";
+    if (siblingCount < 0) return "Number of siblings cannot be negative";
+    if (siblingCount > 20) return "Please verify number of siblings if more than 20";
     return "";
   };
 
@@ -348,6 +371,13 @@ const handleApplyFilters = () => {
         break;
       case 'gender':
         newErrors[name] = !value ? "Gender is required" : "";
+        break;
+      case 'number_of_siblings':
+        if (value.trim() !== '') {
+          newErrors[name] = validateSiblings(value);
+        } else {
+          newErrors[name] = "";
+        }
         break;
       default:
         // All other fields are optional
@@ -949,6 +979,24 @@ const handleArchive = () => {
   
   
 
+  // Add this function to calculate min and max dates for the birthdate picker
+  const calculateDateRange = () => {
+    const today = new Date();
+    
+    // For max date (minimum age of 10)
+    const maxDate = new Date(today);
+    maxDate.setFullYear(today.getFullYear() - 10);
+    
+    // For min date (maximum age of 20)
+    const minDate = new Date(today);
+    minDate.setFullYear(today.getFullYear() - 20);
+    
+    return {
+      min: minDate.toISOString().split('T')[0],
+      max: maxDate.toISOString().split('T')[0]
+    };
+  };
+
   return (
     <div className="student-mgmt-container">
       <div className="student-mgmt-header">
@@ -1114,6 +1162,8 @@ const handleArchive = () => {
                                 name="birthdate"
                                 value={editStudentData ? editStudentData.birthdate || "" : ""}
                                 onChange={handleEditChange}
+                                min={calculateDateRange().min}
+                                max={calculateDateRange().max}
                               />
                             ) : (
                                       student.birthdate
@@ -1302,6 +1352,10 @@ const handleArchive = () => {
                                 name="number_of_siblings"
                                 value={editStudentData ? editStudentData.number_of_siblings || "" : ""}
                                 onChange={handleEditChange}
+                                min="0"
+                                max="20"
+                                step="1"
+                                className={errors.number_of_siblings ? "error" : ""}
                               />
                             ) : (
                               student.number_of_siblings
@@ -1523,6 +1577,8 @@ const handleArchive = () => {
                     name="birthdate"
                     value={newStudentData.birthdate}
                     onChange={handleAddChange}
+                    min={calculateDateRange().min}
+                    max={calculateDateRange().max}
                     className={errors.birthdate ? "error" : ""}
                   />
                   {errors.birthdate && <span className="student-mgmt-error">{errors.birthdate}</span>}
@@ -1690,13 +1746,17 @@ const handleArchive = () => {
                 </div>
                 <div className="student-mgmt-form-group">
                   <label>Mother's Education Level:</label>
-                  <input
-                    type="text"
+                  <select
                     name="mother_educ_lvl"
                     value={newStudentData.mother_educ_lvl}
                     onChange={handleAddChange}
                     className={errors.mother_educ_lvl ? "error" : ""}
-                  />
+                  >
+                    <option value="">Select Education Level</option>
+                    {EDUCATION_LEVELS.map((level) => (
+                      <option key={level} value={level}>{level}</option>
+                    ))}
+                  </select>
                   {errors.mother_educ_lvl && <span className="student-mgmt-error">{errors.mother_educ_lvl}</span>}
                 </div>
                 <div className="student-mgmt-form-group">
@@ -1735,13 +1795,17 @@ const handleArchive = () => {
                 </div>
                 <div className="student-mgmt-form-group">
                   <label>Father's Education Level:</label>
-                  <input
-                    type="text"
+                  <select
                     name="father_educ_lvl"
                     value={newStudentData.father_educ_lvl}
                     onChange={handleAddChange}
                     className={errors.father_educ_lvl ? "error" : ""}
-                  />
+                  >
+                    <option value="">Select Education Level</option>
+                    {EDUCATION_LEVELS.map((level) => (
+                      <option key={level} value={level}>{level}</option>
+                    ))}
+                  </select>
                   {errors.father_educ_lvl && <span className="student-mgmt-error">{errors.father_educ_lvl}</span>}
                 </div>
                 <div className="student-mgmt-form-group">
@@ -1773,6 +1837,9 @@ const handleArchive = () => {
                     name="number_of_siblings"
                     value={newStudentData.number_of_siblings}
                     onChange={handleAddChange}
+                    min="0"
+                    max="20"
+                    step="1"
                     className={errors.number_of_siblings ? "error" : ""}
                   />
                   {errors.number_of_siblings && <span className="student-mgmt-error">{errors.number_of_siblings}</span>}
