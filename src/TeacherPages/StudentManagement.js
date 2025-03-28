@@ -65,6 +65,45 @@ function StudentManagement() {
 
   const navigate = useNavigate();
 
+  // Add these validation functions after the useState declarations and before the useEffect hooks
+  const validateLRN = (lrn) => {
+    const lrnRegex = /^\d{1,100}$/;
+    return lrnRegex.test(lrn) ? "" : "LRN must be between 1 and 100 digits";
+  };
+
+  const validateName = (name, fieldName) => {
+    if (!name) return `${fieldName} is required`;
+    const nameRegex = /^[A-Za-z\s\-']+$/;
+    return nameRegex.test(name) ? "" : `${fieldName} should only contain letters, spaces, and hyphens`;
+  };
+
+  const validateContactNumber = (number, fieldName) => {
+    if (!number) return ""; // Make it optional
+    if (!number.startsWith('09')) return `${fieldName} must start with '09'`;
+    const phoneRegex = /^09\d{9}$/;
+    return phoneRegex.test(number) ? "" : `${fieldName} must be 11 digits starting with '09'`;
+  };
+
+  const validateEmail = (email) => {
+    if (!email) return ""; // Make it optional
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email) ? "" : "Please enter a valid email address";
+  };
+
+  const validateAge = (age) => {
+    const ageNum = parseInt(age);
+    if (isNaN(ageNum)) return "Age must be a number";
+    if (ageNum < 10 || ageNum > 20) return "Age must be between 10 and 20";
+    return "";
+  };
+
+  const validateIncome = (income) => {
+    if (!income) return "";  // Income is optional
+    const incomeNum = parseFloat(income);
+    if (isNaN(incomeNum) || incomeNum < 0) return "Please enter a valid income amount";
+    return "";
+  };
+
   useEffect(() => {
     fetchSchoolYears();
     fetchSections();
@@ -246,30 +285,83 @@ const handleApplyFilters = () => {
     return age.toString();
   };
 
-  // Update the handleAddChange function to auto-calculate age when birthdate changes
+  // Update the handleAddChange function
   const handleAddChange = (e) => {
     const { name, value } = e.target;
-    
-    // If birthdate is changed, automatically calculate and update age
-    if (name === 'birthdate' && value) {
-      const calculatedAge = calculateAge(value);
-      setNewStudentData(prevData => ({ 
-        ...prevData, 
-        [name]: value,
-        age: calculatedAge
+    let newErrors = { ...errors };
+
+    // Validate based on field name
+    switch (name) {
+      case 'lrn':
+        newErrors[name] = validateLRN(value);
+        break;
+      case 'lastname':
+      case 'firstname':
+        newErrors[name] = validateName(value, name.charAt(0).toUpperCase() + name.slice(1));
+        break;
+      case 'middlename':
+        if (value.trim() !== '') {
+          newErrors[name] = validateName(value, 'Middle name');
+        } else {
+          newErrors[name] = ""; // Clear error if empty
+        }
+        break;
+      case 'contact_number':
+      case 'father_contact_number':
+      case 'mother_contact_number':
+      case 'emergency_number':
+        if (value.trim() !== '') {
+          newErrors[name] = validateContactNumber(value, name.replace(/_/g, ' ').toLowerCase());
+        } else {
+          newErrors[name] = ""; // Clear error if empty
+        }
+        break;
+      case 'email_address':
+        if (value.trim() !== '') {
+          newErrors[name] = validateEmail(value);
+        } else {
+          newErrors[name] = ""; // Clear error if empty
+        }
+        break;
+      case 'birthdate':
+        if (!value) {
+          newErrors[name] = "Birthdate is required";
+        } else {
+          const calculatedAge = calculateAge(value);
+          newErrors['age'] = validateAge(calculatedAge);
+          setNewStudentData(prevData => ({
+            ...prevData,
+            [name]: value,
+            age: calculatedAge
+          }));
+        }
+        break;
+      case 'annual_income':
+        if (value.trim() !== '') {
+          newErrors[name] = validateIncome(value);
+        } else {
+          newErrors[name] = ""; // Clear error if empty
+        }
+        break;
+      case 'current_yr_lvl':
+        newErrors[name] = !value ? "Year level is required" : "";
+        break;
+      case 'gender':
+        newErrors[name] = !value ? "Gender is required" : "";
+        break;
+      default:
+        // All other fields are optional
+        newErrors[name] = "";
+    }
+
+    setErrors(newErrors);
+
+    // Update the form data
+    if (name !== 'birthdate') {  // birthdate is handled separately above
+      setNewStudentData(prevData => ({
+        ...prevData,
+        [name]: value
       }));
-      
-      // Remove error messages for both birthdate and age
-      setErrors(prevErrors => ({ 
-        ...prevErrors, 
-        [name]: value ? "" : "This field is required",
-        age: calculatedAge ? "" : "This field is required"
-      }));
-    } else {
-      setNewStudentData(prevData => ({ ...prevData, [name]: value }));
-      
-      // Remove error message once the user starts typing
-      setErrors(prevErrors => ({ ...prevErrors, [name]: value ? "" : "This field is required" }));
     }
   };
 
@@ -284,69 +376,95 @@ const handleApplyFilters = () => {
 
   const saveNewStudent = async () => {
     try {
-      // Required fields based on the database schema
+      // Only basic information fields are required
       const requiredFields = [
-        "lastname", "firstname", "current_yr_lvl", "birthdate", "gender",
-        "age", "home_address", "barangay", "city_municipality", "province",
-        "contact_number", "email_address", "mother_name", "father_name",
-        "father_contact_number", "mother_contact_number", "emergency_number",
-        "emergency_contactperson"
+        "lrn", "lastname", "firstname", "current_yr_lvl", 
+        "birthdate", "gender", "age"
       ];
 
-      // Check for missing required fields
+      // Validate all fields
       let newErrors = {};
+      
+      // Check required fields
       requiredFields.forEach(field => {
         if (!newStudentData[field]) {
-          newErrors[field] = "This field is required";
+          newErrors[field] = `${field.replace(/_/g, ' ')} is required`;
         }
       });
 
-      // Validate phone number lengths
-      const phoneFields = ["contact_number", "father_contact_number", "mother_contact_number", "emergency_number"];
-      phoneFields.forEach(field => {
-        if (newStudentData[field] && newStudentData[field].length > 11) {
-          newErrors[field] = "Phone number should not exceed 11 digits";
-        }
-      });
+      // Run specific validations
+      if (newStudentData.lrn) newErrors.lrn = validateLRN(newStudentData.lrn);
+      if (newStudentData.lastname) newErrors.lastname = validateName(newStudentData.lastname, 'Last name');
+      if (newStudentData.firstname) newErrors.firstname = validateName(newStudentData.firstname, 'First name');
+      if (newStudentData.middlename && newStudentData.middlename.trim() !== '') {
+        newErrors.middlename = validateName(newStudentData.middlename, 'Middle name');
+      }
+
+      // Optional field validations - only validate if they have a value
+      if (newStudentData.contact_number) {
+        newErrors.contact_number = validateContactNumber(newStudentData.contact_number, 'Contact number');
+      }
+      if (newStudentData.father_contact_number) {
+        newErrors.father_contact_number = validateContactNumber(newStudentData.father_contact_number, 'Father contact number');
+      }
+      if (newStudentData.mother_contact_number) {
+        newErrors.mother_contact_number = validateContactNumber(newStudentData.mother_contact_number, 'Mother contact number');
+      }
+      if (newStudentData.emergency_number) {
+        newErrors.emergency_number = validateContactNumber(newStudentData.emergency_number, 'Emergency number');
+      }
+      if (newStudentData.email_address) {
+        newErrors.email_address = validateEmail(newStudentData.email_address);
+      }
+      if (newStudentData.age) {
+        newErrors.age = validateAge(newStudentData.age);
+      }
+      if (newStudentData.annual_income) {
+        newErrors.annual_income = validateIncome(newStudentData.annual_income);
+      }
+
+      // Filter out empty error messages
+      newErrors = Object.fromEntries(
+        Object.entries(newErrors).filter(([_, value]) => value !== "")
+      );
 
       // If there are validation errors, show them and prevent submission
       if (Object.keys(newErrors).length > 0) {
         setErrors(newErrors);
-        alert("Please fix the validation errors before submitting");
+        alert("Please fix all validation errors before submitting");
         return;
       }
       
       // Create a clean data object with only the fields needed by the backend
       const cleanData = {
-        lrn: (newStudentData.lrn),
+        lrn: newStudentData.lrn,
         lastname: formatCapitalization(newStudentData.lastname),
         firstname: formatCapitalization(newStudentData.firstname),
         middlename: newStudentData.middlename ? formatCapitalization(newStudentData.middlename) : '',
         current_yr_lvl: parseInt(newStudentData.current_yr_lvl, 10),
         birthdate: new Date(newStudentData.birthdate).toISOString().split('T')[0],
-        
         gender: newStudentData.gender,
         age: parseInt(newStudentData.age, 10),
-        home_address: formatCapitalization(newStudentData.home_address),
-        barangay: formatCapitalization(newStudentData.barangay),
-        city_municipality: formatCapitalization(newStudentData.city_municipality),
-        province: formatCapitalization(newStudentData.province),
-        contact_number: newStudentData.contact_number,
-        email_address: newStudentData.email_address,
-        mother_name: formatCapitalization(newStudentData.mother_name),
-        father_name: formatCapitalization(newStudentData.father_name),
+        home_address: newStudentData.home_address ? formatCapitalization(newStudentData.home_address) : '',
+        barangay: newStudentData.barangay ? formatCapitalization(newStudentData.barangay) : '',
+        city_municipality: newStudentData.city_municipality ? formatCapitalization(newStudentData.city_municipality) : '',
+        province: newStudentData.province ? formatCapitalization(newStudentData.province) : '',
+        contact_number: newStudentData.contact_number || '',
+        email_address: newStudentData.email_address || '',
+        mother_name: newStudentData.mother_name ? formatCapitalization(newStudentData.mother_name) : '',
+        father_name: newStudentData.father_name ? formatCapitalization(newStudentData.father_name) : '',
         parent_address: newStudentData.parent_address ? formatCapitalization(newStudentData.parent_address) : '',
         father_occupation: newStudentData.father_occupation ? formatCapitalization(newStudentData.father_occupation) : '',
         mother_occupation: newStudentData.mother_occupation ? formatCapitalization(newStudentData.mother_occupation) : '',
-        annual_hshld_income: newStudentData.annual_income || '',
+        annual_hshld_income: newStudentData.annual_income ? newStudentData.annual_income : '0',
         number_of_siblings: newStudentData.number_of_siblings ? parseInt(newStudentData.number_of_siblings, 10) : 0,
         father_educ_lvl: newStudentData.father_educ_lvl || '',
         mother_educ_lvl: newStudentData.mother_educ_lvl || '',
-        father_contact_number: newStudentData.father_contact_number,
-        mother_contact_number: newStudentData.mother_contact_number,
-        emergency_number: newStudentData.emergency_number,
+        father_contact_number: newStudentData.father_contact_number || '',
+        mother_contact_number: newStudentData.mother_contact_number || '',
+        emergency_number: newStudentData.emergency_number || '',
         emergency_contactperson: newStudentData.emergency_contactperson || '',
-        brigada_eskwela: '0', // Default value for brigada_eskwela
+        brigada_eskwela: '0',
         status: 'active',
         active_status: 'unarchive'
       };
@@ -356,7 +474,6 @@ const handleApplyFilters = () => {
 
       // Send the POST request with detailed error handling
       try {
-        // Use fetch instead of axios for more control
         const response = await fetch('http://localhost:3001/students', {
           method: 'POST',
           headers: {
