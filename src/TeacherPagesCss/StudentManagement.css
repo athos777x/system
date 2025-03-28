@@ -993,4 +993,25 @@
   color: #78909c;
   font-weight: normal;
   font-style: italic;
+}
+
+.student-details-view-table .category-header {
+  background-color: #f0f0f0;
+  font-weight: bold;
+  text-align: left;
+  padding: 10px;
+  border-bottom: 2px solid #ddd;
+}
+
+.student-details-view-table .category-header th {
+  font-size: 1.1em;
+  color: #333;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Add some spacing between categories */
+.student-details-view-table .category-header:not(:first-child) {
+  margin-top: 20px;
+  border-top: 1px solid #ddd;
 } 

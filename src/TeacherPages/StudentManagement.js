@@ -1078,215 +1078,225 @@ const handleArchive = () => {
                           <div className="student-mgmt-details-section">
                             <table className="student-details-view-table">
                       <tbody>
+                      <tr className="category-header" style={{ backgroundColor: '#f0f7f0' }}>
+                        <th colSpan="2" style={{ padding: '10px', color: '#2c5c2c', fontWeight: 'bold', fontSize: '0.95em', textTransform: 'uppercase', borderBottom: '1px solid #e0e0e0' }}>Basic Information</th>
+                      </tr>
                       <tr>
-                          <th>LRN:</th>
-                          <td>
-                            {isEditing ? (
-                              <input
-                                type="text"
-                                name="lrn"
-                                value={editStudentData ? editStudentData.lrn || "" : ""}
-                                onChange={handleEditChange}
-                              />
-                            ) : (
-                              student.lrn
-                            )}
-                          </td>
-                        </tr>
-                        <tr>
-                          <th>Last Name:</th>
-                          <td>
-                            {isEditing ? (
-                              <input
-                                type="text"
-                                name="lastname"
-                                value={editStudentData ? editStudentData.lastname || "" : ""}
-                                onChange={handleEditChange}
-                              />
-                            ) : (
-                              student.lastname
-                            )}
-                          </td>
-                        </tr>
-                        <tr>
-                          <th>First Name:</th>
-                          <td>
-                            {isEditing ? (
-                              <input
-                                type="text"
-                                name="firstname"
-                                value={editStudentData ? editStudentData.firstname || "" : ""}
-                                onChange={handleEditChange}
-                              />
-                            ) : (
-                              student.firstname
-                            )}
-                          </td>
-                        </tr>
-                        <tr>
-                          <th>Middle Name:</th>
-                          <td>
-                            {isEditing ? (
-                              <input
-                                type="text"
-                                name="middlename"
-                                value={editStudentData ? editStudentData.middlename || "" : ""}
-                                onChange={handleEditChange}
-                              />
-                            ) : (
-                                      student.middlename
-                            )}
-                          </td>
-                        </tr>
-                        <tr>
-                          <th>Grade Level:</th>
-                          <td>
-                            {isEditing ? (
-                              <input
-                                type="text"
-                                name="current_yr_lvl"
-                                value={editStudentData ? editStudentData.current_yr_lvl || "" : ""}
-                                onChange={handleEditChange}
-                              />
-                            ) : (
-                              student.current_yr_lvl
-                            )}
-                          </td>
-                        </tr>
-                        <tr>
-                          <th>Birthdate:</th>
-                          <td>
-                            {isEditing ? (
-                              <input
-                                type="date"
-                                name="birthdate"
-                                value={editStudentData ? editStudentData.birthdate || "" : ""}
-                                onChange={handleEditChange}
-                                min={calculateDateRange().min}
-                                max={calculateDateRange().max}
-                              />
-                            ) : (
-                                      student.birthdate
-                            )}
-                          </td>
-                        </tr>
-                        <tr>
-                          <th>Gender:</th>
-                          <td>
-                            {isEditing ? (
-                              <input
-                                type="text"
-                                name="gender"
-                                value={editStudentData ? editStudentData.gender || "" : ""}
-                                onChange={handleEditChange}
-                              />
-                            ) : (
-                              student.gender
-                            )}
-                          </td>
-                        </tr>
-                        <tr>
-                          <th>Age:</th>
-                          <td>{student.age}</td>
-                        </tr>
-                        <tr>
-                          <th>Home Address:</th>
-                          <td>
-                            {isEditing ? (
-                              <input
-                                type="text"
-                                name="home_address"
-                                value={editStudentData ? editStudentData.home_address || "" : ""}
-                                onChange={handleEditChange}
-                              />
-                            ) : (
-                              student.home_address
-                            )}
-                          </td>
-                        </tr>
-                        <tr>
-                          <th>Barangay:</th>
-                          <td>
-                            {isEditing ? (
-                              <input
-                                type="text"
-                                name="barangay"
-                                value={editStudentData ? editStudentData.barangay || "" : ""}
-                                onChange={handleEditChange}
-                              />
-                            ) : (
-                              student.barangay
-                            )}
-                          </td>
-                        </tr>
-                        <tr>
-                          <th>City Municipality:</th>
-                          <td>
-                            {isEditing ? (
-                              <input
-                                type="text"
-                                name="city_municipality"
-                                value={editStudentData ? editStudentData.city_municipality || "" : ""}
-                                onChange={handleEditChange}
-                              />
-                            ) : (
-                              student.city_municipality
-                            )}
-                          </td>
-                        </tr>
-                        <tr>
-                          <th>Province:</th>
-                          <td>
-                            {isEditing ? (
-                              <input
-                                type="text"
-                                name="province"
-                                value={editStudentData ? editStudentData.province || "" : ""}
-                                onChange={handleEditChange}
-                              />
-                            ) : (
-                              student.province
-                            )}
-                          </td>
-                        </tr>
-                        <tr>
-                          <th>Contact Number:</th>
-                          <td>
-                            {isEditing ? (
-                              <input
-                                type="text"
-                                name="contact_number"
-                                value={editStudentData ? editStudentData.contact_number || "" : ""}
-                                onChange={handleEditChange}
-                              />
-                            ) : (
-                              student.contact_number
-                            )}
-                          </td>
-                        </tr>
-                        <tr>
-                          <th>Email:</th>
-                          <td>
-                            {isEditing ? (
-                              <input
-                                type="email"
-                                name="email_address"
-                                value={editStudentData ? editStudentData.email_address || "" : ""}
-                                onChange={handleEditChange}
-                              />
-                            ) : (
-                              student.email_address
-                            )}
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
+                        <th>LRN:</th>
+                        <td>
+                          {isEditing ? (
+                            <input
+                              type="text"
+                              name="lrn"
+                              value={editStudentData ? editStudentData.lrn || "" : ""}
+                              onChange={handleEditChange}
+                            />
+                          ) : (
+                            student.lrn
+                          )}
+                        </td>
+                      </tr>
+                      <tr>
+                        <th>Last Name:</th>
+                        <td>
+                          {isEditing ? (
+                            <input
+                              type="text"
+                              name="lastname"
+                              value={editStudentData ? editStudentData.lastname || "" : ""}
+                              onChange={handleEditChange}
+                            />
+                          ) : (
+                            student.lastname
+                          )}
+                        </td>
+                      </tr>
+                      <tr>
+                        <th>First Name:</th>
+                        <td>
+                          {isEditing ? (
+                            <input
+                              type="text"
+                              name="firstname"
+                              value={editStudentData ? editStudentData.firstname || "" : ""}
+                              onChange={handleEditChange}
+                            />
+                          ) : (
+                            student.firstname
+                          )}
+                        </td>
+                      </tr>
+                      <tr>
+                        <th>Middle Name:</th>
+                        <td>
+                          {isEditing ? (
+                            <input
+                              type="text"
+                              name="middlename"
+                              value={editStudentData ? editStudentData.middlename || "" : ""}
+                              onChange={handleEditChange}
+                            />
+                          ) : (
+                            student.middlename
+                          )}
+                        </td>
+                      </tr>
+                      <tr>
+                        <th>Grade Level:</th>
+                        <td>
+                          {isEditing ? (
+                            <input
+                              type="text"
+                              name="current_yr_lvl"
+                              value={editStudentData ? editStudentData.current_yr_lvl || "" : ""}
+                              onChange={handleEditChange}
+                            />
+                          ) : (
+                            student.current_yr_lvl
+                          )}
+                        </td>
+                      </tr>
+                      <tr>
+                        <th>Birthdate:</th>
+                        <td>
+                          {isEditing ? (
+                            <input
+                              type="date"
+                              name="birthdate"
+                              value={editStudentData ? editStudentData.birthdate || "" : ""}
+                              onChange={handleEditChange}
+                              min={calculateDateRange().min}
+                              max={calculateDateRange().max}
+                            />
+                          ) : (
+                            student.birthdate
+                          )}
+                        </td>
+                      </tr>
+                      <tr>
+                        <th>Gender:</th>
+                        <td>
+                          {isEditing ? (
+                            <input
+                              type="text"
+                              name="gender"
+                              value={editStudentData ? editStudentData.gender || "" : ""}
+                              onChange={handleEditChange}
+                            />
+                          ) : (
+                            student.gender
+                          )}
+                        </td>
+                      </tr>
+                      <tr>
+                        <th>Age:</th>
+                        <td>{student.age}</td>
+                      </tr>
+
+                      <tr className="category-header" style={{ backgroundColor: '#f0f7f0' }}>
+                        <th colSpan="2" style={{ padding: '10px', color: '#2c5c2c', fontWeight: 'bold', fontSize: '0.95em', textTransform: 'uppercase', borderBottom: '1px solid #e0e0e0' }}>Contact Information</th>
+                      </tr>
+                      <tr>
+                        <th>Home Address:</th>
+                        <td>
+                          {isEditing ? (
+                            <input
+                              type="text"
+                              name="home_address"
+                              value={editStudentData ? editStudentData.home_address || "" : ""}
+                              onChange={handleEditChange}
+                            />
+                          ) : (
+                            student.home_address
+                          )}
+                        </td>
+                      </tr>
+                      <tr>
+                        <th>Barangay:</th>
+                        <td>
+                          {isEditing ? (
+                            <input
+                              type="text"
+                              name="barangay"
+                              value={editStudentData ? editStudentData.barangay || "" : ""}
+                              onChange={handleEditChange}
+                            />
+                          ) : (
+                            student.barangay
+                          )}
+                        </td>
+                      </tr>
+                      <tr>
+                        <th>City Municipality:</th>
+                        <td>
+                          {isEditing ? (
+                            <input
+                              type="text"
+                              name="city_municipality"
+                              value={editStudentData ? editStudentData.city_municipality || "" : ""}
+                              onChange={handleEditChange}
+                            />
+                          ) : (
+                            student.city_municipality
+                          )}
+                        </td>
+                      </tr>
+                      <tr>
+                        <th>Province:</th>
+                        <td>
+                          {isEditing ? (
+                            <input
+                              type="text"
+                              name="province"
+                              value={editStudentData ? editStudentData.province || "" : ""}
+                              onChange={handleEditChange}
+                            />
+                          ) : (
+                            student.province
+                          )}
+                        </td>
+                      </tr>
+                      <tr>
+                        <th>Contact Number:</th>
+                        <td>
+                          {isEditing ? (
+                            <input
+                              type="text"
+                              name="contact_number"
+                              value={editStudentData ? editStudentData.contact_number || "" : ""}
+                              onChange={handleEditChange}
+                            />
+                          ) : (
+                            student.contact_number
+                          )}
+                        </td>
+                      </tr>
+                      <tr>
+                        <th>Email:</th>
+                        <td>
+                          {isEditing ? (
+                            <input
+                              type="email"
+                              name="email_address"
+                              value={editStudentData ? editStudentData.email_address || "" : ""}
+                              onChange={handleEditChange}
+                            />
+                          ) : (
+                            student.email_address
+                          )}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
                           </div>
 
                           {/* Right Column */}
                           <div className="student-mgmt-details-section">
                             <table className="student-details-view-table">
                               <tbody>
+                                <tr className="category-header" style={{ backgroundColor: '#f0f7f0' }}>
+                                  <th colSpan="2" style={{ padding: '10px', color: '#2c5c2c', fontWeight: 'bold', fontSize: '0.95em', textTransform: 'uppercase', borderBottom: '1px solid #e0e0e0' }}>Family Information</th>
+                                </tr>
                                 <tr>
                                   <th>Parent Address:</th>
                           <td>
@@ -1464,6 +1474,10 @@ const handleArchive = () => {
                             )}
                           </td>
                         </tr>
+
+                        <tr className="category-header" style={{ backgroundColor: '#f0f7f0' }}>
+                          <th colSpan="2" style={{ padding: '10px', color: '#2c5c2c', fontWeight: 'bold', fontSize: '0.95em', textTransform: 'uppercase', borderBottom: '1px solid #e0e0e0' }}>Emergency Contact Information</th>
+                        </tr>
                         <tr>
                           <th>Emergency Contact Person:</th>
                           <td>
@@ -1518,12 +1532,14 @@ const handleArchive = () => {
                         </>
                       ) : (
                             <>
-                              <button
-                                    className="student-mgmt-btn student-mgmt-btn-print"
-                                    onClick={() => handlePrint(student.student_id)}
-                              >
-                                    Print
-                              </button>
+                                  {/* Print button temporarily hidden
+                                  <button
+                                        className="student-mgmt-btn student-mgmt-btn-print"
+                                        onClick={() => handlePrint(student.student_id)}
+                                  >
+                                        Print
+                                  </button>
+                                  */}
                                   {roleName === 'registrar' && (
                               <button
                                       className="student-mgmt-btn student-mgmt-btn-archive"
