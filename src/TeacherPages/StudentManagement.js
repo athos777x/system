@@ -1174,14 +1174,78 @@ const handleArchive = () => {
                           <th>Gender:</th>
                           <td>
                             {isEditing ? (
-                                      <input
-                                        type="text"
+                              <input
+                                type="text"
                                 name="gender"
-                                        value={editStudentData ? editStudentData.gender || "" : ""}
+                                value={editStudentData ? editStudentData.gender || "" : ""}
                                 onChange={handleEditChange}
-                                      />
+                              />
                             ) : (
                               student.gender
+                            )}
+                          </td>
+                        </tr>
+                        <tr>
+                          <th>Age:</th>
+                          <td>{student.age}</td>
+                        </tr>
+                        <tr>
+                          <th>Home Address:</th>
+                          <td>
+                            {isEditing ? (
+                              <input
+                                type="text"
+                                name="home_address"
+                                value={editStudentData ? editStudentData.home_address || "" : ""}
+                                onChange={handleEditChange}
+                              />
+                            ) : (
+                              student.home_address
+                            )}
+                          </td>
+                        </tr>
+                        <tr>
+                          <th>Barangay:</th>
+                          <td>
+                            {isEditing ? (
+                              <input
+                                type="text"
+                                name="barangay"
+                                value={editStudentData ? editStudentData.barangay || "" : ""}
+                                onChange={handleEditChange}
+                              />
+                            ) : (
+                              student.barangay
+                            )}
+                          </td>
+                        </tr>
+                        <tr>
+                          <th>City Municipality:</th>
+                          <td>
+                            {isEditing ? (
+                              <input
+                                type="text"
+                                name="city_municipality"
+                                value={editStudentData ? editStudentData.city_municipality || "" : ""}
+                                onChange={handleEditChange}
+                              />
+                            ) : (
+                              student.city_municipality
+                            )}
+                          </td>
+                        </tr>
+                        <tr>
+                          <th>Province:</th>
+                          <td>
+                            {isEditing ? (
+                              <input
+                                type="text"
+                                name="province"
+                                value={editStudentData ? editStudentData.province || "" : ""}
+                                onChange={handleEditChange}
+                              />
+                            ) : (
+                              student.province
                             )}
                           </td>
                         </tr>
@@ -1215,38 +1279,8 @@ const handleArchive = () => {
                             )}
                           </td>
                         </tr>
-                        <tr>
-                          <th>Emergency Contact Person:</th>
-                          <td>
-                            {isEditing ? (
-                              <input
-                                type="text"
-                                name="emergency_contactperson"
-                                value={editStudentData ? editStudentData.emergency_contactperson || "" : ""}
-                                onChange={handleEditChange}
-                              />
-                            ) : (
-                              student.emergency_contactperson
-                            )}
-                          </td>
-                        </tr>
-                        <tr>
-                          <th>Emergency Contact:</th>
-                          <td>
-                            {isEditing ? (
-                              <input
-                                type="text"
-                                name="emergency_number"
-                                value={editStudentData ? editStudentData.emergency_number || "" : ""}
-                                onChange={handleEditChange}
-                              />
-                            ) : (
-                              student.emergency_number
-                            )}
-                          </td>
-                        </tr>
-                              </tbody>
-                            </table>
+                      </tbody>
+                    </table>
                           </div>
 
                           {/* Right Column */}
@@ -1259,8 +1293,8 @@ const handleArchive = () => {
                             {isEditing ? (
                               <input
                                 type="text"
-                                        name="parent_address"
-                                        value={editStudentData ? editStudentData.parent_address || "" : ""}
+                                name="parent_address"
+                                value={editStudentData ? editStudentData.parent_address || "" : ""}
                                 onChange={handleEditChange}
                               />
                             ) : (
@@ -1274,12 +1308,27 @@ const handleArchive = () => {
                             {isEditing ? (
                               <input
                                 type="text"
-                                        name="mother_name"
-                                        value={editStudentData ? editStudentData.mother_name || "" : ""}
+                                name="mother_name"
+                                value={editStudentData ? editStudentData.mother_name || "" : ""}
                                 onChange={handleEditChange}
                               />
                             ) : (
                                       student.mother_name
+                            )}
+                          </td>
+                        </tr>
+                        <tr>
+                                  <th>Mother's Contact Number:</th>
+                          <td>
+                            {isEditing ? (
+                              <input
+                                type="text"
+                                name="mother_contact_number"
+                                value={editStudentData ? editStudentData.mother_contact_number || "" : ""}
+                                onChange={handleEditChange}
+                              />
+                            ) : (
+                              student.mother_contact_number
                             )}
                           </td>
                         </tr>
@@ -1289,12 +1338,31 @@ const handleArchive = () => {
                             {isEditing ? (
                               <input
                                 type="text"
-                                        name="mother_occupation"
-                                        value={editStudentData ? editStudentData.mother_occupation || "" : ""}
+                                name="mother_occupation"
+                                value={editStudentData ? editStudentData.mother_occupation || "" : ""}
                                 onChange={handleEditChange}
                               />
                             ) : (
                                       student.mother_occupation
+                            )}
+                          </td>
+                        </tr>
+                        <tr>
+                          <th>Mother's Education Level:</th>
+                          <td>
+                            {isEditing ? (
+                              <select
+                                name="mother_educ_lvl"
+                                value={editStudentData ? editStudentData.mother_educ_lvl || "" : ""}
+                                onChange={handleEditChange}
+                              >
+                                <option value="">Select Education Level</option>
+                                {EDUCATION_LEVELS.map((level) => (
+                                  <option key={level} value={level}>{level}</option>
+                                ))}
+                              </select>
+                            ) : (
+                              student.mother_educ_lvl
                             )}
                           </td>
                         </tr>
@@ -1304,12 +1372,27 @@ const handleArchive = () => {
                             {isEditing ? (
                               <input
                                 type="text"
-                                        name="father_name"
-                                        value={editStudentData ? editStudentData.father_name || "" : ""}
+                                name="father_name"
+                                value={editStudentData ? editStudentData.father_name || "" : ""}
                                 onChange={handleEditChange}
                               />
                             ) : (
                                       student.father_name
+                            )}
+                          </td>
+                        </tr>
+                        <tr>
+                          <th>Father's Contact Number:</th>
+                          <td>
+                            {isEditing ? (
+                              <input
+                                type="text"
+                                name="father_contact_number"
+                                value={editStudentData ? editStudentData.father_contact_number || "" : ""}
+                                onChange={handleEditChange}
+                              />
+                            ) : (
+                              student.father_contact_number
                             )}
                           </td>
                         </tr>
@@ -1329,17 +1412,36 @@ const handleArchive = () => {
                           </td>
                         </tr>
                         <tr>
-                                  <th>Annual Household Income:</th>
+                          <th>Father's Education Level:</th>
+                          <td>
+                            {isEditing ? (
+                              <select
+                                name="father_educ_lvl"
+                                value={editStudentData ? editStudentData.father_educ_lvl || "" : ""}
+                                onChange={handleEditChange}
+                              >
+                                <option value="">Select Education Level</option>
+                                {EDUCATION_LEVELS.map((level) => (
+                                  <option key={level} value={level}>{level}</option>
+                                ))}
+                              </select>
+                            ) : (
+                              student.father_educ_lvl
+                            )}
+                          </td>
+                        </tr>
+                        <tr>
+                          <th>Annual Household Income:</th>
                           <td>
                             {isEditing ? (
                               <input
                                 type="number"
-                                        name="annual_income"
-                                        value={editStudentData ? editStudentData.annual_hshld_income || "" : ""}
+                                name="annual_income"
+                                value={editStudentData ? editStudentData.annual_hshld_income || "" : ""}
                                 onChange={handleEditChange}
                               />
                             ) : (
-                                      student.annual_hshld_income
+                              student.annual_hshld_income
                             )}
                           </td>
                         </tr>
@@ -1362,8 +1464,38 @@ const handleArchive = () => {
                             )}
                           </td>
                         </tr>
-                      </tbody>
-                    </table>
+                        <tr>
+                          <th>Emergency Contact Person:</th>
+                          <td>
+                            {isEditing ? (
+                              <input
+                                type="text"
+                                name="emergency_contactperson"
+                                value={editStudentData ? editStudentData.emergency_contactperson || "" : ""}
+                                onChange={handleEditChange}
+                              />
+                            ) : (
+                              student.emergency_contactperson
+                            )}
+                          </td>
+                        </tr>
+                        <tr>
+                          <th>Emergency Contact Number:</th>
+                          <td>
+                            {isEditing ? (
+                              <input
+                                type="text"
+                                name="emergency_number"
+                                value={editStudentData ? editStudentData.emergency_number || "" : ""}
+                                onChange={handleEditChange}
+                              />
+                            ) : (
+                              student.emergency_number
+                            )}
+                          </td>
+                        </tr>
+                              </tbody>
+                            </table>
                           </div>
                           
                           {/* Action Buttons */}
