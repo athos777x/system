@@ -20,33 +20,70 @@ function Student_GradesPage() {
 
   const userId = localStorage.getItem('userId');
 
+  useEffect(() => {
+    const fetchSchoolYears = async () => {
+      try {
+        const schoolYearResponse = await axios.get(
+          `http://localhost:3001/student/${userId}/school-years`
+        );
+
+        if (schoolYearResponse.data.length > 0) {
+          setSchoolYears(schoolYearResponse.data);
+          const activeSchoolYear = schoolYearResponse.data.find(year => year.is_active) || schoolYearResponse.data[0];
+
+          setSelectedSchoolYear(activeSchoolYear.school_year_id);
+          setStudentInfo(prev => ({
+            ...prev,
+            schoolYear: activeSchoolYear.school_year,
+            schoolYearId: activeSchoolYear.school_year_id,
+          }));
+        }
+      } catch (error) {
+        console.error('Error fetching school years:', error);
+        setError('An error occurred while fetching school years.');
+      }
+    };
+
+    if (userId) {
+      fetchSchoolYears();
+    }
+  }, [userId]);
+
   // Fetch student info and grades
   useEffect(() => {
+    if (!selectedSchoolYear) return;
+  
     const fetchStudentData = async () => {
       try {
-        const studentResponse = await axios.get('http://localhost:3001/user-id/convert/student-id', {
-          params: { userId },
-        });
-
+        const studentResponse = await axios.get(
+          `http://localhost:3001/user-id/convert/student-id?userId=${userId}&schoolYearId=${selectedSchoolYear}`
+        );
+  
         if (studentResponse.data.success) {
-          setStudentId(studentResponse.data.studentId);
+          console.log("Fetched Student ID:", studentResponse.data.studentId);
+          console.log("Fetched School Year ID:", studentResponse.data.schoolYearId);
+  
+          const studentId = studentResponse.data.studentId;
+          setStudentId(studentId);
           setGradeLevel(studentResponse.data.gradeLevel);
-
-          const sectionResponse = await axios.get(`http://localhost:3001/student-section/${userId}`);
-          const schoolYearResponse = await axios.get('http://localhost:3001/school-years');
-          console.log('Fetched School Years:', schoolYearResponse.data);
-          setSchoolYears(schoolYearResponse.data || []);
-          
-          const latestSchoolYear = schoolYearResponse.data[0]?.school_year_id || null;
-
-          setStudentInfo({
+  
+          if (!studentId) {
+            console.error("Error: studentId is undefined!");
+            return;
+          }
+  
+          const sectionResponse = await axios.get(
+            `http://localhost:3001/student-section/${studentId}`,
+            { params: { schoolYearId: selectedSchoolYear } } // Ensure correct schoolYearId
+          );
+  
+          console.log("Section Response:", sectionResponse.data);
+  
+          setStudentInfo(prev => ({
+            ...prev,
             name: studentResponse.data.name || '',
-            section: sectionResponse.data.section || 'Not Assigned',
-            schoolYear: schoolYearResponse.data[0]?.school_year || 'Current School Year',
-            schoolYearId: latestSchoolYear,
-          });
-
-          setSelectedSchoolYear(latestSchoolYear); // Set the latest school year as default
+            section: sectionResponse.data.section || 'Not Assigned', // Use correct response data
+          }));
         } else {
           throw new Error(studentResponse.data.message || 'Failed to fetch student data.');
         }
@@ -55,11 +92,11 @@ function Student_GradesPage() {
         setError('An error occurred while fetching student data.');
       }
     };
-
-    if (userId) {
-      fetchStudentData();
-    }
-  }, [userId]);
+  
+    fetchStudentData();
+  }, [selectedSchoolYear]);
+  
+  
   
 
   // Fetch subjects and grades
