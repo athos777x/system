@@ -136,6 +136,7 @@ function BrigadaEskwela() {
               <th>#</th>
               <th>Name</th>
               <th>Brigada Attendance</th>
+              <th>Remarks</th>
             </tr>
           </thead>
           <tbody>
@@ -149,6 +150,7 @@ function BrigadaEskwela() {
                       {student.brigada_attendance ? 'Yes' : 'No'}
                     </span>
                   </td>
+                  <td>{student.remarks || '-'}</td>
                 </tr>
               ))}
           </tbody>
