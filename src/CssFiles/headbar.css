@@ -125,3 +125,15 @@
   margin-right: 10px;
   font-size: 16px;
 }
+
+.dropdown-role {
+  padding: 8px 16px;
+  color: #2e7d32;
+  font-size: 0.9em;
+  text-align: center;
+  background-color: #f1f8e9;
+  margin: 8px 16px;
+  border-radius: 12px;
+  font-weight: 500;
+  font-style: normal;
+}

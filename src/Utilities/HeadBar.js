@@ -119,6 +119,13 @@ function HeaderBar({ showSidebar, toggleSidebar, onLogout, user }) {
         />
         {dropdownVisible && (
           <div className="dropdown-menu">
+            {user && user.role && (
+              <div className="dropdown-role">
+                {user.role.split('_')
+                  .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                  .join(' ')}
+              </div>
+            )}
             <button className="dropdown-item" onClick={handleViewProfile}>
               <FiUser /> My Profile
             </button>
