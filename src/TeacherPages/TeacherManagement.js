@@ -779,18 +779,6 @@ useEffect(() => {
                                 <td>{teacher.middlename || 'N/A'}</td>
                               </tr>
                               <tr>
-                                <th>Contact Number:</th>
-                                <td>{teacher.contact_number}</td>
-                              </tr>
-                              <tr>
-                                <th>Address:</th>
-                                <td>{teacher.address}</td>
-                              </tr>
-                              <tr>
-                                <th>Year Started:</th>
-                                <td>{teacher.year_started}</td>
-                              </tr>
-                              <tr>
                                 <th>Role:</th>
                                 <td>{formatRoleName(teacher.role_name)}</td>
                               </tr>
@@ -836,6 +824,8 @@ useEffect(() => {
                                   <th>Grade Level</th>
                                   <th>Subject Name</th>
                                   <th>Section</th>
+                                  <th>Day</th>
+                                  <th>Time</th>
                                 </tr>
                               </thead>
                               <tbody>
@@ -844,6 +834,8 @@ useEffect(() => {
                                     <td>{subject.grade_level}</td>
                                     <td>{subject.subject_name}</td>
                                     <td>{subject.section_name}</td>
+                                    <td>{subject.day || 'Not set'}</td>
+                                    <td>{subject.time || 'Not set'}</td>
                                   </tr>
                                 ))}
                               </tbody>
