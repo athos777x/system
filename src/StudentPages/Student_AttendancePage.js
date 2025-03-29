@@ -7,6 +7,8 @@ import axios from 'axios';
 function Student_AttendancePage() {
   const [attendanceData, setAttendanceData] = useState([]);
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [schoolYears, setSchoolYears] = useState([]);
+  const [selectedSchoolYear, setSelectedSchoolYear] = useState('');
   const [studentInfo, setStudentInfo] = useState({
     grade_level: '',
     section_name: '',
@@ -16,50 +18,73 @@ function Student_AttendancePage() {
   const userId = localStorage.getItem('userId');
 
   useEffect(() => {
+    const fetchSchoolYears = async () => {
+      try {
+        const response = await axios.get(`http://localhost:3001/student/${userId}/school-years`);
+        setSchoolYears(response.data || []);
+        if (response.data.length > 0) {
+          setSelectedSchoolYear(response.data[0].school_year_id);
+        }
+      } catch (error) {
+        console.error('Error fetching school years:', error);
+      }
+    };
+
+    if (userId) {
+      fetchSchoolYears();
+    }
+  }, [userId]);
+
+  useEffect(() => {
     const fetchStudentInfo = async () => {
       try {
-        // First get the student ID and grade level
-        const studentResponse = await axios.get(`http://localhost:3001/user-id/convert/student-id?userId=${userId}`);
-        console.log('Student Response:', studentResponse.data);
-        
+        if (!userId || !selectedSchoolYear) return;
+  
+        // Fetch studentId using userId
+        const studentResponse = await axios.get(
+          `http://localhost:3001/user-id/convert/student-id?userId=${userId}&schoolYearId=${selectedSchoolYear}`
+        );
+  
         if (studentResponse.data.success) {
-          // Then get the section name
-          const sectionResponse = await axios.get(`http://localhost:3001/student-section/${userId}`);
-          console.log('Section Response:', sectionResponse.data);
-          
-          // Get the active school year - this endpoint defaults to active school years
-          const schoolYearResponse = await axios.get('http://localhost:3001/school-years');
-          console.log('School Year Response:', schoolYearResponse.data);
-          
-          // The response will be an array with the active school year
-          const activeSchoolYear = schoolYearResponse.data[0]?.school_year;
-          
+          const studentId = studentResponse.data.studentId; // Extract student_id
+  
+          // Fetch section using studentId
+          const sectionResponse = await axios.get(
+            `http://localhost:3001/student-section/${studentId}?schoolYearId=${selectedSchoolYear}`
+          );
+  
+          // Update state with student info
           setStudentInfo({
-            grade_level: `Grade ${studentResponse.data.gradeLevel}`,
+            grade_level: `Grade ${studentResponse.data.gradeLevel || 'N/A'}`,
             section_name: sectionResponse.data.section || 'Not Assigned',
-            school_year: activeSchoolYear || 'Not Set'
+            school_year: schoolYears.find(year => year.school_year_id === selectedSchoolYear)?.school_year || 'Not Set'
           });
         }
       } catch (error) {
         console.error('Error fetching student info:', error);
       }
     };
+  
+    if (userId && selectedSchoolYear) {
+      fetchStudentInfo();
+    }
+  }, [userId, selectedSchoolYear, schoolYears]);
+  
 
+  useEffect(() => {
     const fetchAttendance = async () => {
       try {
-        const response = await axios.get(`http://localhost:3001/attendance/${userId}`);
+        if (!userId || !selectedSchoolYear) return;
+        const response = await axios.get(`http://localhost:3001/attendance/${userId}?schoolYearId=${selectedSchoolYear}`);
         setAttendanceData(response.data);
       } catch (error) {
         console.error('Error fetching attendance data:', error);
       }
     };
 
-    if (userId) {
-      fetchStudentInfo();
-      fetchAttendance();
-    }
-  }, [userId]);
-
+    fetchAttendance();
+  }, [userId, selectedSchoolYear]);
+  
   const handleDateChange = (date) => {
     setSelectedDate(date);
   };
@@ -100,6 +125,10 @@ function Student_AttendancePage() {
     }
   };
 
+  const handleSchoolYearChange = (event) => {
+    setSelectedSchoolYear(event.target.value);
+  };  
+
   const formatDate = (date) => {
     return new Date(date).toLocaleDateString('en-US', {
       weekday: 'long',
@@ -125,7 +154,21 @@ function Student_AttendancePage() {
           <div className="student-info-divider" />
           <div className="student-info-item">
             <span className="student-info-label">School Year:</span>
-            <span className="student-info-value">{studentInfo.school_year}</span>
+            <select 
+              value={selectedSchoolYear} 
+              onChange={handleSchoolYearChange}
+              style={{ padding: '0.5rem', borderRadius: '4px' }}
+            >
+              {schoolYears.length > 0 ? (
+                schoolYears.map((year) => (
+                  <option key={year.school_year_id} value={year.school_year_id}>
+                    {year.school_year}
+                  </option>
+                ))
+              ) : (
+                <option value="">No school years available</option>
+              )}
+            </select>
           </div>
         </div>
       </div>

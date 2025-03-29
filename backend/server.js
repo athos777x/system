@@ -2868,6 +2868,12 @@ app.get('/student/profile/:userId', (req, res) => {
 // STUDENT SCHEDULE PAGE
 app.get('/user/:userId/schedule', (req, res) => {
   const userId = req.params.userId;
+  const schoolYearId = req.query.schoolYearId; // Get school year ID from request query
+
+  if (!schoolYearId) {
+    return res.status(400).json({ error: "Missing schoolYearId parameter" });
+  }
+
   const query = `
     SELECT s.subject_name, sc.day, 
     TIME_FORMAT(sc.time_start, '%H:%i:%s') as time_start, 
@@ -2877,10 +2883,13 @@ app.get('/user/:userId/schedule', (req, res) => {
     JOIN section sec ON sc.section_id = sec.section_id
     JOIN enrollment e ON e.section_id = sec.section_id
     JOIN student st ON st.student_id = e.student_id
-    WHERE st.user_id = ? AND e.enrollment_status = 'active' AND sc.schedule_status = 'Approved'
+    WHERE st.user_id = ? AND e.enrollment_status = 'active' 
+    AND sc.schedule_status = 'Approved' 
+    AND sc.school_year_id = ?
     ORDER BY FIELD(sc.day, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'), sc.time_start;
   `;
-  db.query(query, [userId], (err, results) => {
+
+  db.query(query, [userId, schoolYearId], (err, results) => {
     if (err) {
       console.error('Error fetching schedule:', err);
       res.status(500).send('Error fetching schedule');
@@ -2889,6 +2898,7 @@ app.get('/user/:userId/schedule', (req, res) => {
     }
   });
 });
+
 
 // TEACHER SCHEDULE PAGE
 app.get('/teacher/:userId/schedule', (req, res) => {
@@ -3351,25 +3361,24 @@ app.post('/submit-grade', (req, res) => {
   );
 });
 
-
-
-
-
-app.get('/student-section/:userId', (req, res) => {
+app.get('/student-section/:studentId', (req, res) => {
   try {
-    const { userId } = req.params;
-    console.log('Fetching section for userId:', userId);
-    
+    const { studentId } = req.params;
+    const { schoolYearId } = req.query; // Retrieve schoolYearId from query parameters
+
+    console.log('Fetching section for studentId:', studentId, 'School Year ID:', schoolYearId);
+
     const query = `
       SELECT b.section_name 
-      FROM student a 
+      FROM enrollment a 
       LEFT JOIN section b ON a.section_id = b.section_id 
-        AND a.current_yr_lvl = b.grade_level 
-      WHERE a.user_id = ?
+        AND a.grade_level = b.grade_level 
+      WHERE a.student_id = ? AND a.school_year_id = ?
     `;
-    
-    console.log('Executing query:', query);
-    db.query(query, [userId], (err, results) => {
+
+    console.log('Executing query:', query, 'with values:', [studentId, schoolYearId]);
+
+    db.query(query, [studentId, schoolYearId], (err, results) => {
       if (err) {
         console.error('Database error:', err);
         return res.status(500).json({ 
@@ -3377,14 +3386,14 @@ app.get('/student-section/:userId', (req, res) => {
           details: err.message 
         });
       }
-      
+
       console.log('Query results:', results);
-      
+
       if (results.length > 0) {
         console.log('Section found:', results[0].section_name);
         res.json({ section: results[0].section_name });
       } else {
-        console.log('No section found for user');
+        console.log('No section found for student in selected school year');
         res.json({ section: null });
       }
     });
@@ -3396,6 +3405,8 @@ app.get('/student-section/:userId', (req, res) => {
     });
   }
 });
+
+
 
 app.post('/insert-component', (req, res) => {
   console.log('Request body:', req.body); // Log the entire request body
@@ -3787,34 +3798,42 @@ app.get('/students/names', (req, res) => {
 
 
 app.get('/user-id/convert/student-id', (req, res) => {
-  const { userId } = req.query;
+  const { userId, schoolYearId } = req.query;
 
-  // Validate the input
-  if (!userId) {
-    return res.status(400).json({ success: false, message: 'User ID is required.' });
+  // Validate inputs
+  if (!userId || !schoolYearId) {
+    return res.status(400).json({ success: false, message: 'User ID and School Year ID are required.' });
   }
 
   try {
-    // SQL query to fetch student_id and grade_level (current_yr_lvl)
-    const query = 'SELECT student_id, current_yr_lvl as grade_level FROM student WHERE user_id = ?';
+    // SQL query to fetch student_id and grade_level based on selected school year
+    const query = `
+      SELECT 
+        a.student_id, 
+        b.grade_level 
+      FROM student a 
+      LEFT JOIN enrollment b 
+        ON a.student_id = b.student_id 
+      WHERE a.user_id = ? AND b.school_year_id = ?
+    `;
 
     // Execute the query
-    db.query(query, [userId], (err, results) => {
+    db.query(query, [userId, schoolYearId], (err, results) => {
       if (err) {
         console.error('Error executing query:', err);
         return res.status(500).json({ success: false, message: 'Database error occurred.' });
       }
 
-      // Check if any results were returned
+      // Check if results exist
       if (results.length === 0) {
-        return res.status(404).json({ success: false, message: 'No student found for the given user ID.' });
+        return res.status(404).json({ success: false, message: 'No student found for the given User ID and School Year.' });
       }
 
-      // Respond with the student_id and grade_level
+      // Respond with student_id and grade_level
       res.status(200).json({
         success: true,
         studentId: results[0].student_id,
-        gradeLevel: results[0].grade_level, // Send gradeLevel too
+        gradeLevel: results[0].grade_level, // Updated grade level per school year
       });
     });
   } catch (error) {
@@ -3822,6 +3841,7 @@ app.get('/user-id/convert/student-id', (req, res) => {
     res.status(500).json({ success: false, message: 'An unexpected error occurred.' });
   }
 });
+
 
 app.get('/api/students/search', (req, res) => {
   const searchQuery = req.query.q || ''; // Get query parameter (q)
@@ -4174,3 +4194,39 @@ app.get('/students/:studentId/schedules', (req, res) => {
     }
   });
 });
+
+app.get('/student/:userId/school-years', (req, res) => {
+  const { userId } = req.params;
+
+  // Validate input
+  if (!userId) {
+    return res.status(400).json({ success: false, message: 'User ID is required.' });
+  }
+
+  try {
+    // SQL query to get only the school years where the student is enrolled
+    const query = `
+      SELECT DISTINCT sy.school_year_id, sy.school_year 
+      FROM school_year sy
+      INNER JOIN enrollment e ON sy.school_year_id = e.school_year_id
+      INNER JOIN student s ON e.student_id = s.student_id
+      WHERE s.user_id = ?
+      ORDER BY sy.school_year DESC
+    `;
+
+    // Execute the query
+    db.query(query, [userId], (err, results) => {
+      if (err) {
+        console.error('Error executing query:', err);
+        return res.status(500).json({ success: false, message: 'Database error occurred.' });
+      }
+
+      res.status(200).json(results);
+    });
+  } catch (error) {
+    console.error('Unexpected error:', error);
+    res.status(500).json({ success: false, message: 'An unexpected error occurred.' });
+  }
+});
+
+
