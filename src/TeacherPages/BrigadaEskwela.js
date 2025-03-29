@@ -134,6 +134,7 @@ function BrigadaEskwela() {
           <thead>
             <tr>
               <th>#</th>
+              <th>LRN</th>
               <th>Name</th>
               <th>Brigada Attendance</th>
               <th>Remarks</th>
@@ -144,6 +145,7 @@ function BrigadaEskwela() {
               currentStudents.map((student, index) => (
                 <tr key={index}>
                   <td>{student.student_id}</td>
+                  <td>{student.lrn}</td>
                   <td>{student.stud_name}</td>
                   <td>
                     <span className={student.brigada_attendance ? 'status-yes' : 'status-no'}>
