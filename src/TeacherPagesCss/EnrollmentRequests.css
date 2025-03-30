@@ -161,18 +161,18 @@
 }
 
 .pending-enrollment-table > thead > tr > th:nth-child(2) {
-  width: 35% !important;
+  width: 30% !important;
   min-width: 200px !important;
 }
 
 .pending-enrollment-table > thead > tr > th:nth-child(3) {
-  width: 15% !important;
-  min-width: 120px !important;
+  width: 12% !important;
+  min-width: 100px !important;
 }
 
 .pending-enrollment-table > thead > tr > th:nth-child(4) {
-  width: 15% !important;
-  min-width: 120px !important;
+  width: 12% !important;
+  min-width: 100px !important;
 }
 
 .pending-enrollment-table > thead > tr > th:nth-child(5) {
@@ -181,8 +181,8 @@
 }
 
 .pending-enrollment-table > thead > tr > th:nth-child(6) {
-  width: 20% !important;
-  min-width: 150px !important;
+  width: 31% !important;
+  min-width: 280px !important;
 }
 
 .pending-enrollment-table thead {

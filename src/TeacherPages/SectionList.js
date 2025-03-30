@@ -131,18 +131,28 @@ function SectionList() {
     <table className="section-list-students-table">
       <thead>
         <tr>
-          <th>Boys</th>
-          <th>Girls</th>
+          <th style={{ textAlign: 'left', width: '80px', paddingRight: '16px' }}>LRN</th>
+          <th style={{ textAlign: 'left' }}>Boys</th>
+          <th style={{ textAlign: 'left', width: '80px', paddingRight: '16px' }}>LRN</th>
+          <th style={{ textAlign: 'left' }}>Girls</th>
         </tr>
       </thead>
       <tbody>
         {Array.from({ length: Math.max(studentsByGender.boys.length, studentsByGender.girls.length) }).map((_, index) => (
           <tr key={index}>
-            <td>
-              {studentsByGender.boys[index] ? `${index + 1}. ${studentsByGender.boys[index].firstname} ${studentsByGender.boys[index].lastname}` : ''}
+            <td style={{ textAlign: 'left', width: '80px', paddingRight: '16px' }}>
+              {studentsByGender.boys[index] ? studentsByGender.boys[index].lrn : ''}
             </td>
-            <td>
-              {studentsByGender.girls[index] ? `${index + 1}. ${studentsByGender.girls[index].firstname} ${studentsByGender.girls[index].lastname}` : ''}
+            <td style={{ textAlign: 'left', paddingLeft: '8px' }}>
+              {studentsByGender.boys[index] ? 
+                `${studentsByGender.boys[index].lastname}, ${studentsByGender.boys[index].firstname} ${studentsByGender.boys[index].middlename || ''}` : ''}
+            </td>
+            <td style={{ textAlign: 'left', width: '80px', paddingRight: '16px' }}>
+              {studentsByGender.girls[index] ? studentsByGender.girls[index].lrn : ''}
+            </td>
+            <td style={{ textAlign: 'left', paddingLeft: '8px' }}>
+              {studentsByGender.girls[index] ? 
+                `${studentsByGender.girls[index].lastname}, ${studentsByGender.girls[index].firstname} ${studentsByGender.girls[index].middlename || ''}` : ''}
             </td>
           </tr>
         ))}

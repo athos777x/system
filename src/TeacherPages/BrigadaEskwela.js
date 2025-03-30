@@ -106,6 +106,26 @@ function BrigadaEskwela() {
     applyFilters();
   };
   
+  const handleToggleAttendance = async (studentId, currentStatus) => {
+    try {
+      await axios.put(`http://localhost:3001/brigada-eskwela/${studentId}`, {
+        brigada_attendance: !currentStatus
+      });
+      
+      // Update the local state
+      const updatedStudents = students.map(student => {
+        if (student.student_id === studentId) {
+          return { ...student, brigada_attendance: !currentStatus };
+        }
+        return student;
+      });
+      
+      setStudents(updatedStudents);
+      setFilteredStudents(updatedStudents);
+    } catch (error) {
+      console.error('Error updating brigada attendance:', error);
+    }
+  };
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
   const indexOfLastStudent = currentPage * studentsPerPage;
@@ -134,8 +154,11 @@ function BrigadaEskwela() {
           <thead>
             <tr>
               <th>#</th>
+              <th>LRN</th>
               <th>Name</th>
               <th>Brigada Attendance</th>
+              <th>Remarks</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -143,11 +166,21 @@ function BrigadaEskwela() {
               currentStudents.map((student, index) => (
                 <tr key={index}>
                   <td>{student.student_id}</td>
+                  <td>{student.lrn}</td>
                   <td>{student.stud_name}</td>
                   <td>
                     <span className={student.brigada_attendance ? 'status-yes' : 'status-no'}>
                       {student.brigada_attendance ? 'Yes' : 'No'}
                     </span>
+                  </td>
+                  <td>{student.remarks || '-'}</td>
+                  <td>
+                    <button 
+                      className="toggle-attendance-btn"
+                      onClick={() => handleToggleAttendance(student.student_id, student.brigada_attendance)}
+                    >
+                      {student.brigada_attendance ? 'Mark as Absent' : 'Mark as Present'}
+                    </button>
                   </td>
                 </tr>
               ))}

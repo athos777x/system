@@ -381,4 +381,34 @@
     display: block;
     overflow-x: auto;
   }
+}
+
+.grade-level-school-year-container {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.grade-level-indicator {
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  background-color: #fff;
+  color: #666;
+  font-size: 14px;
+  white-space: nowrap;
+  height: 35px;
+  display: flex;
+  align-items: center;
+  user-select: none;
+  cursor: default;
+}
+
+.school-year-selector {
+  padding: 0.5rem;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  background-color: #fff;
+  font-size: 14px;
+  height: 35px;
 } 

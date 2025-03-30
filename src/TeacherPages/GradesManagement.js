@@ -496,19 +496,22 @@ function GradesManagement() {
                       <div className="grades-details-container">
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                           <h3 className="grades-details-title">Grades for {student.firstname} {student.lastname}</h3>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                          <select 
-                            value={selectedSchoolYear || student.school_year_id} 
-                            onChange={handleSchoolYearChange}
-                            style={{ padding: '0.5rem', borderRadius: '4px' }}
-                            disabled={editingStudent !== null}
-                          >
-                            {schoolYears.map((year) => (
-                              <option key={year.school_year_id} value={year.school_year_id}>
-                                {year.school_year}
-                              </option>
-                            ))}
-                          </select>
+                          <div className="grade-level-school-year-container">
+                            <div className="grade-level-indicator">
+                              Grade {selectedGradeLevel || student.current_yr_lvl}
+                            </div>
+                            <select 
+                              value={selectedSchoolYear || student.school_year_id} 
+                              onChange={handleSchoolYearChange}
+                              className="school-year-selector"
+                              disabled={editingStudent !== null}
+                            >
+                              {schoolYears.map((year) => (
+                                <option key={year.school_year_id} value={year.school_year_id}>
+                                  {year.school_year}
+                                </option>
+                              ))}
+                            </select>
                           </div>
                         </div>
                         <table className="grades-details-table">

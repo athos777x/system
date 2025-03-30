@@ -20,6 +20,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 function RegistrarSideBar({ showSidebar, toggleSidebar, handleLogout }) {
   const [showRecordsSubMenu, setShowRecordsSubMenu] = useState(false);
   const [showEnrollmentSubMenu, setShowEnrollmentSubMenu] = useState(false);
+  const [showClassesSubMenu, setShowClassesSubMenu] = useState(false);
   const [showExperimentalsSubMenu, setShowExperimentalsSubMenu] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -27,12 +28,14 @@ function RegistrarSideBar({ showSidebar, toggleSidebar, handleLogout }) {
   // Check if current path is under a specific submenu
   const isRecordsPath = ['/attendance', '/brigada-eskwela', '/new-grades'].includes(location.pathname);
   const isEnrollmentPath = ['/pending-enrollment', '/pending-elective', '/school-year', '/section-list', '/enrolled-students'].includes(location.pathname);
+  const isClassesPath = ['/section', '/schedule'].includes(location.pathname);
   const isExperimentalsPath = ['/subjects', '/grades'].includes(location.pathname);
 
   // Update useEffect to handle initial submenu state based on path
   React.useEffect(() => {
     setShowRecordsSubMenu(isRecordsPath);
     setShowEnrollmentSubMenu(isEnrollmentPath);
+    setShowClassesSubMenu(isClassesPath);
     setShowExperimentalsSubMenu(isExperimentalsPath);
   }, [location.pathname]);
 
@@ -60,6 +63,16 @@ function RegistrarSideBar({ showSidebar, toggleSidebar, handleLogout }) {
     setShowEnrollmentSubMenu(false);
     if (!showExperimentalsSubMenu) {
       navigate('/subjects');
+    }
+  };
+
+  const toggleClassesSubMenu = () => {
+    setShowClassesSubMenu(!showClassesSubMenu);
+    setShowRecordsSubMenu(false);
+    setShowEnrollmentSubMenu(false);
+    setShowExperimentalsSubMenu(false);
+    if (!showClassesSubMenu) {
+      navigate('/section');
     }
   };
 
@@ -161,6 +174,27 @@ function RegistrarSideBar({ showSidebar, toggleSidebar, handleLogout }) {
                 className={location.pathname === '/enrolled-students' ? 'active' : ''}
               >
                 <FiUsers className="icon" /> Enrolled Students
+              </button>
+            </div>
+          )}
+        </div>
+        <div className={`menu-with-submenu ${showClassesSubMenu || isClassesPath ? 'active' : ''}`}>
+          <button onClick={toggleClassesSubMenu}>
+            <FiBook className="icon" /> Classes
+          </button>
+          {showClassesSubMenu && (
+            <div className="submenu">
+              <button 
+                onClick={() => handleNavigate('/section')}
+                className={location.pathname === '/section' ? 'active' : ''}
+              >
+                <FiLayers className="icon" /> Section
+              </button>
+              <button 
+                onClick={() => handleNavigate('/schedule')}
+                className={location.pathname === '/schedule' ? 'active' : ''}
+              >
+                <FiCalendar className="icon" /> Schedule
               </button>
             </div>
           )}
