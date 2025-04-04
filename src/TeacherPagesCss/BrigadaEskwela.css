@@ -291,18 +291,15 @@
 
 /* Update the toggle button styles */
 .toggle-attendance-btn {
-  padding: 6px 12px;
-  height: 32px;
+  padding: 0.5rem 1rem;
   border: none;
-  border-radius: 4px;
-  font-size: 13px;
+  border-radius: 6px;
+  font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease-in-out;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
   min-width: 100px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
@@ -317,12 +314,12 @@ tr:has(.status-yes) .toggle-attendance-btn:hover {
 }
 
 tr:has(.status-no) .toggle-attendance-btn {
-  background-color: #00C851;
+  background-color: #4CAF50;
   color: white;
 }
 
 tr:has(.status-no) .toggle-attendance-btn:hover {
-  background-color: #007E33;
+  background-color: #388e3c;
 }
 
 .toggle-attendance-btn:active {
@@ -330,6 +327,114 @@ tr:has(.status-no) .toggle-attendance-btn:hover {
 }
 
 .toggle-attendance-btn:disabled {
+  background-color: #e0e0e0;
+  color: #9e9e9e;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* Modal styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  backdrop-filter: blur(4px);
+}
+
+.modal {
+  background-color: white;
+  padding: 2rem;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  position: relative;
+  z-index: 10000;
+}
+
+.modal h3 {
+  color: #2e7d32;
+  margin: 0 0 1rem 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.modal-student-name {
+  color: #1e293b;
+  font-size: 1rem;
+  margin: 0 0 1.5rem 0;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.modal textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  min-height: 100px;
+  resize: vertical;
+  margin-bottom: 1.5rem;
+}
+
+.modal textarea:focus {
+  outline: none;
+  border-color: #4CAF50;
+  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.modal-actions button {
+  padding: 0.5rem 1rem;
+  background: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 0.875rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 100px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.modal-actions button:first-child {
+  background-color: #4CAF50;
+}
+
+.modal-actions button:first-child:hover {
+  background-color: #388e3c;
+}
+
+.modal-actions button:last-child {
+  background-color: #ff4444;
+}
+
+.modal-actions button:last-child:hover {
+  background-color: #cc0000;
+}
+
+.modal-actions button:active {
+  transform: translateY(1px);
+}
+
+.modal-actions button:disabled {
   background-color: #e0e0e0;
   color: #9e9e9e;
   cursor: not-allowed;
