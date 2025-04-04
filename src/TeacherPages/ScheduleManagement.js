@@ -247,7 +247,7 @@ function Principal_SchedulePage() {
 
   const saveChanges = async () => {
     try {
-      const { schedule_id, teacher_id, time_start, time_end, day, schedule_status } = editFormData;
+      const { schedule_id, teacher_id, time_start, time_end, day } = editFormData;
       
       // Sort days before storing
       const sortedDays = sortDays([...day]);
@@ -256,9 +256,7 @@ function Principal_SchedulePage() {
         teacher_id,
         time_start,
         time_end,
-        // If only one day is selected, send as string, otherwise as JSON array
-        day: sortedDays.length === 1 ? sortedDays[0] : JSON.stringify(sortedDays),
-        schedule_status
+        day: sortedDays.length === 1 ? sortedDays[0] : JSON.stringify(sortedDays)
       });
       fetchSectionSchedules(selectedSectionId);
       setIsEditing(false);
@@ -623,14 +621,9 @@ function Principal_SchedulePage() {
                                           </select>
                                         </td>
                                         <td>
-                                          <select
-                                            name="schedule_status"
-                                            value={editFormData.schedule_status}
-                                            onChange={handleEditChange}
-                                          >
-                                            <option value="Approved">Approved</option>
-                                            <option value="Pending Approval">Pending Approval</option>
-                                          </select>
+                                          <span className={`status-${editFormData.schedule_status.toLowerCase().replace(' ', '-')}`}>
+                                            {editFormData.schedule_status}
+                                          </span>
                                         </td>
                                         <td>
                                           <div className="schedule-mgmt-actions">
