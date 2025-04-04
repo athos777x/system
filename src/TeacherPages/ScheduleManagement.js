@@ -486,6 +486,15 @@ function Principal_SchedulePage() {
             ))}
           </select> */}
           <select
+            value={filters.schoolYear}
+            onChange={handleSchoolYearChange}
+          >
+            <option value="">All School Years</option>
+            {schoolYears.map(year => (
+              <option key={year} value={year}>{year}</option>
+            ))}
+          </select>
+          <select
             value={filters.section}
             onChange={handleSectionChange}
           >
@@ -496,16 +505,7 @@ function Principal_SchedulePage() {
               </option>
             ))}
           </select>
-          <select
-            value={filters.schoolYear}
-            onChange={handleSchoolYearChange}
-          >
-            <option value="">All School Years</option>
-            {schoolYears.map(year => (
-              <option key={year} value={year}>{year}</option>
-            ))}
-          </select>
-          <button onClick={() => applyFilters(filters)}>Filter</button>
+        <button onClick={() => applyFilters(filters)}>Filter</button>
         </div>
       </div>
 
