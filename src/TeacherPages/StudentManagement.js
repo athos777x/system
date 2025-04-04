@@ -1499,6 +1499,26 @@ const handleArchive = () => {
                           </td>
                         </tr>
 
+                        <tr>
+                          <th>Status:</th>
+                          <td>
+                            {isEditing ? (
+                              <select
+                                name="active_status"
+                                value={editStudentData ? editStudentData.active_status || "" : ""}
+                                onChange={handleEditChange}
+                              >
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                                <option value="withdrawn">Withdrawn</option>
+                                <option value="transferred">Transferred</option>
+                              </select>
+                            ) : (
+                              student.active_status
+                            )}
+                          </td>
+                        </tr>
+
                         <tr className="category-header" style={{ backgroundColor: '#f0f7f0' }}>
                           <th colSpan="2" style={{ padding: '10px', color: '#2c5c2c', fontWeight: 'bold', fontSize: '0.95em', textTransform: 'uppercase', borderBottom: '1px solid #e0e0e0' }}>Emergency Contact Information</th>
                         </tr>
