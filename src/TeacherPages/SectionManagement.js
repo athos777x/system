@@ -104,6 +104,10 @@ function SectionManagement() {
       );
     }
 
+    if (updatedFilters.school_year) {
+      filtered = filtered.filter(section => section.school_year === updatedFilters.school_year);
+    }
+
     if (updatedFilters.grade) {
       filtered = filtered.filter(section => section.grade_level === updatedFilters.grade);
     }
@@ -323,6 +327,17 @@ function SectionManagement() {
           />
         </div>
         <div className="section-mgmt-filters-group">
+          <select 
+            className="section-mgmt-select"
+            value={filters.school_year} 
+            onChange={(e) => handleFilterChange('school_year', e.target.value)}>
+            <option value="">Select School Year</option>
+            {schoolYears.map((year) => (
+              <option key={year.school_year_id} value={year.school_year}>
+                {year.school_year}
+              </option>
+            ))}
+          </select>
           <select
             className="section-mgmt-select"
             value={filters.grade}

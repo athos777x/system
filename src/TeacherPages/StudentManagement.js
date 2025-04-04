@@ -202,6 +202,7 @@ function StudentManagement() {
         console.error('Error setting up request:', error.message);
       }
     }
+    
   };
   
 
@@ -1153,6 +1154,29 @@ const handleArchive = () => {
                             />
                           ) : (
                             student.current_yr_lvl
+                          )}
+                        </td>
+                      </tr>
+                      <tr>
+                        <th>Section:</th>
+                        <td>
+                          {isEditing ? (
+                            <select
+                              name="section_name"
+                              value={editStudentData?.section_name || ""}
+                              onChange={handleEditChange}
+                            >
+                              <option value="">Select Section</option>
+                              {sections
+                                .filter((section) => section.year_level === student.current_yr_lvl) // ✅ Filter sections by year level
+                                .map((section) => (
+                                  <option key={section.id} value={student.section_name}>
+                                    {student.section_name}
+                                  </option>
+                                ))}
+                            </select>
+                          ) : (
+                            student?.section_name || "No Section"
                           )}
                         </td>
                       </tr>

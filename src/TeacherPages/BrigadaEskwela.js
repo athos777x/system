@@ -18,6 +18,11 @@ function BrigadaEskwela() {
     section: '',
   });
 
+  // Modal state for absence reason
+  const [showModal, setShowModal] = useState(false);
+  const [absenceReason, setAbsenceReason] = useState('');
+  const [currentStudentId, setCurrentStudentId] = useState(null);
+
   useEffect(() => {
     fetchSchoolYears();
     fetchSections();
@@ -25,8 +30,9 @@ function BrigadaEskwela() {
 
   useEffect(() => {
     if (filters.grade) {
-      // Filter sections based on the selected grade level
-      const sectionsForGrade = sections.filter(section => String(section.grade_level) === String(filters.grade));
+      const sectionsForGrade = sections.filter(
+        (section) => String(section.grade_level) === String(filters.grade)
+      );
       setFilteredSections(sectionsForGrade);
     } else {
       setFilteredSections(sections);
@@ -71,55 +77,82 @@ function BrigadaEskwela() {
     setFilters((prevFilters) => ({ ...prevFilters, searchTerm }));
     applyFilters({ ...filters, searchTerm });
   };
-  
+
   const handleFilterChange = (type, value) => {
-    setFilters(prevFilters => ({
+    setFilters((prevFilters) => ({
       ...prevFilters,
-      [type]: value
+      [type]: value,
     }));
   };
-  
+
   const applyFilters = () => {
     let filtered = students;
-  
+
     if (filters.school_year) {
-      filtered = filtered.filter(student => String(student.school_year) === filters.school_year);
-    }
-    if (filters.grade) {
-      filtered = filtered.filter(student => String(student.grade_lvl) === String(filters.grade));
-    }
-    if (filters.section) {
-      filtered = filtered.filter(student => String(student.section_name) === String(filters.section));
-    }
-    if (filters.searchTerm) {
-      filtered = filtered.filter(student =>
-        student.stud_name.toLowerCase().includes(filters.searchTerm.toLowerCase())
+      filtered = filtered.filter(
+        (student) => String(student.school_year) === filters.school_year
       );
     }
-  
+    if (filters.grade) {
+      filtered = filtered.filter(
+        (student) => String(student.grade_lvl) === String(filters.grade)
+      );
+    }
+    if (filters.section) {
+      filtered = filtered.filter(
+        (student) => String(student.section_name) === String(filters.section)
+      );
+    }
+    if (filters.searchTerm) {
+      filtered = filtered.filter((student) =>
+        student.stud_name
+          .toLowerCase()
+          .includes(filters.searchTerm.toLowerCase())
+      );
+    }
+
     setFilteredStudents(filtered);
     setCurrentPage(1);
   };
-  
+
   const handleApplyFilters = () => {
     console.log('Applying filters:', filters);
     applyFilters();
   };
-  
-  const handleToggleAttendance = async (studentId, currentStatus) => {
+
+  const handleToggleAttendance = (studentId, currentStatus) => {
+    if (!currentStatus) {
+      setCurrentStudentId(studentId);
+      setShowModal(true); // Show modal for absent reason
+    } else {
+      updateAttendance(studentId, currentStatus);
+    }
+  };
+
+  const handleModalSubmit = () => {
+    if (absenceReason.trim()) {
+      updateAttendance(currentStudentId, false, absenceReason);
+      setShowModal(false); // Close modal
+      setAbsenceReason(''); // Clear reason input
+    } else {
+      alert('Please provide a reason for absence');
+    }
+  };
+
+  const updateAttendance = async (studentId, status, reason = '') => {
     try {
       await axios.put(`http://localhost:3001/brigada-eskwela/${studentId}`, {
-        brigada_attendance: !currentStatus
+        brigada_attendance: status,
+        absence_reason: reason, // Send the absence reason
       });
-      
-      // Update the local state
-      const updatedStudents = students.map(student => {
+
+      const updatedStudents = students.map((student) => {
         if (student.student_id === studentId) {
-          return { ...student, brigada_attendance: !currentStatus };
+          return { ...student, brigada_attendance: status, absence_reason: reason };
         }
         return student;
       });
-      
+
       setStudents(updatedStudents);
       setFilteredStudents(updatedStudents);
     } catch (error) {
@@ -144,7 +177,7 @@ function BrigadaEskwela() {
         setFilteredStudents={setFilteredStudents}
         setCurrentPage={setCurrentPage}
         schoolYears={schoolYears}
-        filteredSections={filteredSections} 
+        filteredSections={filteredSections}
         filters={filters}
         setFilters={setFilters}
       />
@@ -169,15 +202,19 @@ function BrigadaEskwela() {
                   <td>{student.lrn}</td>
                   <td>{student.stud_name}</td>
                   <td>
-                    <span className={student.brigada_attendance ? 'status-yes' : 'status-no'}>
+                    <span
+                      className={student.brigada_attendance ? 'status-yes' : 'status-no'}
+                    >
                       {student.brigada_attendance ? 'Yes' : 'No'}
                     </span>
                   </td>
                   <td>{student.remarks || '-'}</td>
                   <td>
-                    <button 
+                    <button
                       className="toggle-attendance-btn"
-                      onClick={() => handleToggleAttendance(student.student_id, student.brigada_attendance)}
+                      onClick={() =>
+                        handleToggleAttendance(student.student_id, student.brigada_attendance)
+                      }
                     >
                       {student.brigada_attendance ? 'Mark as Absent' : 'Mark as Present'}
                     </button>
@@ -196,6 +233,24 @@ function BrigadaEskwela() {
           onPageChange={paginate}
         />
       </div>
+
+      {/* Modal for absence reason */}
+      {showModal && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <h3>Enter Absence Reason</h3>
+            <textarea
+              value={absenceReason}
+              onChange={(e) => setAbsenceReason(e.target.value)}
+              placeholder="Why is the student absent?"
+            ></textarea>
+            <div className="modal-actions">
+              <button onClick={handleModalSubmit}>Submit</button>
+              <button onClick={() => setShowModal(false)}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
