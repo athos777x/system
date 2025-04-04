@@ -18,10 +18,10 @@ function BrigadaEskwela() {
     section: '',
   });
 
-  // Modal state for absence reason
+  // Modal state
   const [showModal, setShowModal] = useState(false);
   const [absenceReason, setAbsenceReason] = useState('');
-  const [currentStudentId, setCurrentStudentId] = useState(null);
+  const [selectedStudent, setSelectedStudent] = useState(null);
 
   useEffect(() => {
     fetchSchoolYears();
@@ -120,35 +120,52 @@ function BrigadaEskwela() {
     applyFilters();
   };
 
-  const handleToggleAttendance = (studentId, currentStatus) => {
-    if (!currentStatus) {
-      setCurrentStudentId(studentId);
-      setShowModal(true); // Show modal for absent reason
+  const handleToggleAttendance = (student) => {
+    if (student.brigada_attendance) {
+      // If student is present, show modal for marking absent
+      setSelectedStudent(student);
+      setShowModal(true);
+      setAbsenceReason('');
     } else {
-      updateAttendance(studentId, currentStatus);
+      // If student is absent, directly mark as present
+      updateAttendance(student.student_id, true);
     }
   };
 
   const handleModalSubmit = () => {
-    if (absenceReason.trim()) {
-      updateAttendance(currentStudentId, false, absenceReason);
-      setShowModal(false); // Close modal
-      setAbsenceReason(''); // Clear reason input
-    } else {
+    if (!absenceReason.trim()) {
       alert('Please provide a reason for absence');
+      return;
     }
+    
+    if (selectedStudent) {
+      updateAttendance(selectedStudent.student_id, false, absenceReason);
+      setShowModal(false);
+      setAbsenceReason('');
+      setSelectedStudent(null);
+    }
+  };
+
+  const handleModalClose = () => {
+    setShowModal(false);
+    setAbsenceReason('');
+    setSelectedStudent(null);
   };
 
   const updateAttendance = async (studentId, status, reason = '') => {
     try {
       await axios.put(`http://localhost:3001/brigada-eskwela/${studentId}`, {
         brigada_attendance: status,
-        absence_reason: reason, // Send the absence reason
+        absence_reason: reason,
       });
 
       const updatedStudents = students.map((student) => {
         if (student.student_id === studentId) {
-          return { ...student, brigada_attendance: status, absence_reason: reason };
+          return { 
+            ...student, 
+            brigada_attendance: status, 
+            remarks: status ? '' : reason 
+          };
         }
         return student;
       });
@@ -157,6 +174,7 @@ function BrigadaEskwela() {
       setFilteredStudents(updatedStudents);
     } catch (error) {
       console.error('Error updating brigada attendance:', error);
+      alert('Failed to update attendance. Please try again.');
     }
   };
 
@@ -196,8 +214,8 @@ function BrigadaEskwela() {
           </thead>
           <tbody>
             {currentStudents.length > 0 &&
-              currentStudents.map((student, index) => (
-                <tr key={index}>
+              currentStudents.map((student) => (
+                <tr key={student.student_id}>
                   <td>{student.student_id}</td>
                   <td>{student.lrn}</td>
                   <td>{student.stud_name}</td>
@@ -212,9 +230,7 @@ function BrigadaEskwela() {
                   <td>
                     <button
                       className="toggle-attendance-btn"
-                      onClick={() =>
-                        handleToggleAttendance(student.student_id, student.brigada_attendance)
-                      }
+                      onClick={() => handleToggleAttendance(student)}
                     >
                       {student.brigada_attendance ? 'Mark as Absent' : 'Mark as Present'}
                     </button>
@@ -234,19 +250,19 @@ function BrigadaEskwela() {
         />
       </div>
 
-      {/* Modal for absence reason */}
       {showModal && (
         <div className="modal-overlay">
           <div className="modal">
-            <h3>Enter Absence Reason</h3>
+            <h3>Mark Student as Absent</h3>
+            <p className="modal-student-name">Student: {selectedStudent?.stud_name}</p>
             <textarea
               value={absenceReason}
               onChange={(e) => setAbsenceReason(e.target.value)}
-              placeholder="Why is the student absent?"
+              placeholder="Please provide a reason for absence..."
             ></textarea>
             <div className="modal-actions">
               <button onClick={handleModalSubmit}>Submit</button>
-              <button onClick={() => setShowModal(false)}>Cancel</button>
+              <button onClick={handleModalClose}>Cancel</button>
             </div>
           </div>
         </div>
