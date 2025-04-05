@@ -47,6 +47,7 @@ import QuarterlyAssessment from './reports/quarterly_assessment';
 import ClassList from './reports/class_list';
 import ClassHonorRoll from './reports/class_honor_roll';
 import NutritionalReport from './reports/nutritional_report';
+import Roster from './reports/roster';
 
 
 
@@ -143,6 +144,7 @@ function App() {
             <Route path="/class-list" element={<ClassList />} />
             <Route path="/class-honor-roll" element={<ClassHonorRoll />} />
             <Route path="/nutritional-report" element={<NutritionalReport />} />
+            <Route path="/roster" element={<Roster />} />
             
           </Route>
           

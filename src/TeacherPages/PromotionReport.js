@@ -351,7 +351,7 @@ function PromotionReport() {
         )}
 
         {/* Quarterly Assessment Report Card */}
-        {(roleName === 'principal') && (
+        {(roleName === 'class_adviser') && (
         <div className="summary-report-card">
           <h3>Quarterly Assessment Report</h3>
           <p className="summary-report-description">Generate quarterly assessment report with detailed statistics.</p>
@@ -362,7 +362,7 @@ function PromotionReport() {
         )}
 
         {/* Class List Report Card */}
-        {(roleName === 'principal') && (
+        {(roleName === 'class_adviser') && (
         <div className="summary-report-card">
           <h3>Class List Report</h3>
           <p className="summary-report-description">Generate detailed class list with student information.</p>
@@ -373,7 +373,7 @@ function PromotionReport() {
         )}
 
         {/* Class Honor Roll Report Card */}
-        {(roleName === 'principal') && (
+        {(roleName === 'class_adviser') && (
         <div className="summary-report-card">
           <h3>Class Honor Roll Report</h3>
           <p className="summary-report-description">Generate honor roll list with student rankings and achievements.</p>
@@ -384,12 +384,23 @@ function PromotionReport() {
         )}
 
         {/* Nutritional Report Card */}
-        {(roleName === 'principal') && (
+        {(roleName === 'class_adviser') && (
         <div className="summary-report-card">
           <h3>Nutritional Report</h3>
           <p className="summary-report-description">Generate nutritional status report with BMI and health metrics.</p>
           <button className="summary-report-btn" onClick={() => openModal('nutritional_report')}>
             Generate Nutritional Report
+          </button>
+        </div>
+        )}
+
+        {/* Roster of Enrolled Students Card */}
+        {(roleName === 'principal') && (
+        <div className="summary-report-card">
+          <h3>Roster of Enrolled Students</h3>
+          <p className="summary-report-description">Generate roster of enrolled students with complete information.</p>
+          <button className="summary-report-btn" onClick={() => openModal('roster')}>
+            Generate Roster of Enrolled Students
           </button>
         </div>
         )}
@@ -878,6 +889,38 @@ function PromotionReport() {
                     ))}
                   </select>
                   <button type="button" onClick={() => navigate('/nutritional-report', { state: { schoolYear: selectedSchoolYear, grade, section } })}>Generate Report</button>
+                </form>
+              </div>
+            )}
+            {modalContent === 'roster' && (
+              <div>
+                <h3>Generate Roster of Enrolled Students</h3>
+                <form onSubmit={(e) => e.preventDefault()}>
+                  <label>School Year:</label>
+                  <select value={selectedSchoolYear} onChange={(e) => setSelectedSchoolYear(e.target.value)} required>
+                    <option value="">--Select One--</option>
+                    {schoolYears.map((year, index) => (
+                      <option key={index} value={year}>{year}</option>
+                    ))}
+                  </select>
+                  <label>Grade:</label>
+                  <select value={grade} onChange={handleGradeChange} required>
+                    <option value="">--Select One--</option>
+                    <option value="7">Grade 7</option>
+                    <option value="8">Grade 8</option>
+                    <option value="9">Grade 9</option>
+                    <option value="10">Grade 10</option>
+                  </select>
+                  <label>Section:</label>
+                  <select value={section} onChange={(e) => setSection(e.target.value)} required>
+                    <option value="">--Select One--</option>
+                    {sections.map((sec) => (
+                      <option key={sec.section_name} value={sec.section_name}>
+                        {sec.section_name}
+                      </option>
+                    ))}
+                  </select>
+                  <button type="button" onClick={() => navigate('/roster', { state: { schoolYear: selectedSchoolYear, grade, section } })}>Generate Report</button>
                 </form>
               </div>
             )}
