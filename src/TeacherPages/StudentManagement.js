@@ -57,6 +57,7 @@ function StudentManagement() {
     emergency_number: '',
     emergency_contactperson: '',
     brigada_eskwela: '0',
+    brigada_remarks: '',
     status: 'active',
     archive_status: 'unarchive'
   });
@@ -283,9 +284,12 @@ const handleApplyFilters = () => {
       number_of_siblings: '',
       father_educ_lvl: '',
       mother_educ_lvl: '',
-      father_contact_number: '',  
+      father_contact_number: '',
       mother_contact_number: '',
       emergency_number: '',
+      emergency_contactperson: '',
+      brigada_eskwela: '0',
+      brigada_remarks: '',
       status: 'active',
       active_status: 'unarchive',
       user_id: ''
@@ -496,7 +500,8 @@ const handleApplyFilters = () => {
         mother_contact_number: newStudentData.mother_contact_number || '',
         emergency_number: newStudentData.emergency_number || '',
         emergency_contactperson: newStudentData.emergency_contactperson || '',
-        brigada_eskwela: '0',
+        brigada_eskwela: newStudentData.brigada_eskwela,
+        brigada_remarks: newStudentData.brigada_eskwela === '0' ? newStudentData.brigada_remarks : '',
         status: 'active',
         active_status: 'unarchive'
       };
@@ -1492,7 +1497,7 @@ const handleArchive = () => {
                               <input
                                 type="number"
                                 name="annual_income"
-                                value={editStudentData ? editStudentData.annual_hshld_income || "" : ""}
+                                value={editStudentData ? editStudentData.annual_income || "" : ""}
                                 onChange={handleEditChange}
                               />
                             ) : (
@@ -1814,6 +1819,20 @@ const handleArchive = () => {
                   </select>
                   {errors.brigada_eskwela && <span className="student-mgmt-error">{errors.brigada_eskwela}</span>}
                 </div>
+                {(newStudentData.brigada_eskwela === '0' || newStudentData.brigada_eskwela === 0) && (
+                  <div className="student-mgmt-form-group">
+                    <label>Remarks:</label>
+                    <textarea
+                      name="brigada_remarks"
+                      value={newStudentData.brigada_remarks}
+                      onChange={handleAddChange}
+                      className={errors.brigada_remarks ? "error" : ""}
+                      placeholder="Please provide reason for not attending Brigada Eskwela"
+                      rows="3"
+                    />
+                    {errors.brigada_remarks && <span className="student-mgmt-error">{errors.brigada_remarks}</span>}
+                  </div>
+                )}
               </div>
             </div>
 
