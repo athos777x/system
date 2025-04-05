@@ -118,8 +118,8 @@ function SectionList() {
   const fetchStudentsByGender = async (sectionId) => {
     try {
       const response = await axios.get(`http://localhost:3001/sections/${sectionId}/students`);
-      const boys = response.data.boys;
-      const girls = response.data.girls;
+      const boys = response.data.boys.sort((a, b) => a.lastname.localeCompare(b.lastname));
+      const girls = response.data.girls.sort((a, b) => a.lastname.localeCompare(b.lastname));
       setStudentsByGender({ boys, girls });
       setShowStudents(true);
     } catch (error) {

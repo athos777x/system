@@ -1,0 +1,192 @@
+.quarterly-assessment-page {
+  padding: 20px;
+  background-color: #f5f5f5;
+  min-height: 100vh;
+}
+
+.quarterly-assessment-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 15px;
+  font-family: 'Arial', sans-serif;
+  background-color: #fff;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  font-size: 12px;
+}
+
+.quarterly-assessment-header {
+  text-align: center;
+  margin-bottom: 8px;
+  border-bottom: 1px solid #000;
+  padding-bottom: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.quarterly-assessment-header-text {
+  flex: 1;
+  padding: 0 10px;
+}
+
+.quarterly-assessment-header h1, .quarterly-assessment-header h2, .quarterly-assessment-header h3 {
+  font-size: 14px;
+  margin: 2px 0;
+  font-weight: normal;
+}
+
+.quarterly-assessment-header h1 {
+  text-transform: uppercase;
+  font-weight: bold;
+}
+
+.quarterly-assessment-header h2:nth-of-type(2) {
+  font-weight: bold;
+}
+
+.quarterly-assessment-header h3:last-child {
+  font-weight: bold;
+}
+
+.quarterly-assessment-header-logos {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.quarterly-assessment-logo {
+  width: 50px;
+  height: auto;
+}
+
+.quarterly-assessment-school-info {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 15px;
+  padding: 5px 0;
+  border-bottom: 1px solid #ddd;
+}
+
+.quarterly-assessment-info-item {
+  display: flex;
+  align-items: center;
+}
+
+.quarterly-assessment-info-label {
+  font-weight: bold;
+  margin-right: 5px;
+}
+
+.quarterly-assessment-table-container {
+  margin-bottom: 15px;
+  overflow-x: auto;
+}
+
+.quarterly-assessment-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 15px;
+  font-size: 11px;
+}
+
+.quarterly-assessment-table th,
+.quarterly-assessment-table td {
+  border: 1px solid #ddd;
+  padding: 4px;
+  text-align: center;
+}
+
+.quarterly-assessment-table th {
+  background-color: #f2f2f2;
+  font-weight: bold;
+}
+
+.quarterly-assessment-table tbody tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+.quarterly-assessment-summary {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 15px;
+  padding: 5px 0;
+  border-top: 1px solid #ddd;
+}
+
+.quarterly-assessment-summary-item {
+  margin-left: 20px;
+  display: flex;
+  align-items: center;
+}
+
+.quarterly-assessment-summary-label {
+  font-weight: bold;
+  margin-right: 5px;
+}
+
+.quarterly-assessment-footer {
+  margin-top: 20px;
+}
+
+.quarterly-assessment-signature-section {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 30px;
+}
+
+.quarterly-assessment-signature {
+  text-align: center;
+  width: 45%;
+}
+
+.quarterly-assessment-signature-line {
+  border-bottom: 1px solid #000;
+  margin-bottom: 5px;
+}
+
+.quarterly-assessment-signature-name {
+  font-weight: bold;
+  margin-bottom: 2px;
+}
+
+.quarterly-assessment-signature-title {
+  font-size: 11px;
+}
+
+.quarterly-assessment-buttons {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.quarterly-assessment-buttons button {
+  background-color: #4CAF50;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  margin: 0 10px;
+  transition: background-color 0.3s;
+}
+
+.quarterly-assessment-buttons button:hover {
+  background-color: #45a049;
+}
+
+@media print {
+  .quarterly-assessment-buttons {
+    display: none;
+  }
+  
+  .quarterly-assessment-container {
+    box-shadow: none;
+    padding: 0;
+  }
+  
+  .quarterly-assessment-page {
+    background-color: white;
+    padding: 0;
+  }
+} 

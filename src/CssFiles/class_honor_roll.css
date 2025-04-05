@@ -1,0 +1,202 @@
+.class-honor-roll-page {
+  padding: 20px;
+  background-color: #f5f5f5;
+  min-height: 100vh;
+}
+
+.class-honor-roll-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  background-color: white;
+  padding: 20px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.class-honor-roll-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.class-honor-roll-header-logos {
+  width: 100px;
+  text-align: center;
+}
+
+.class-honor-roll-logo {
+  width: 80px;
+  height: auto;
+}
+
+.class-honor-roll-header-text {
+  text-align: center;
+  flex-grow: 1;
+}
+
+.class-honor-roll-header-text h1 {
+  font-size: 14px;
+  margin: 0;
+  font-weight: normal;
+}
+
+.class-honor-roll-header-text h2 {
+  font-size: 16px;
+  margin: 5px 0;
+  font-weight: bold;
+}
+
+.class-honor-roll-header-text h3 {
+  font-size: 18px;
+  margin: 5px 0;
+  font-weight: bold;
+}
+
+.class-honor-roll-school-info {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.class-honor-roll-info-item {
+  display: flex;
+  gap: 10px;
+}
+
+.class-honor-roll-info-label {
+  font-weight: bold;
+  min-width: 120px;
+}
+
+.class-honor-roll-table-container {
+  margin-bottom: 20px;
+  overflow-x: auto;
+}
+
+.class-honor-roll-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.class-honor-roll-table th,
+.class-honor-roll-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
+
+.class-honor-roll-table th {
+  background-color: #f5f5f5;
+  font-weight: bold;
+}
+
+.class-honor-roll-table tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+.class-honor-roll-table tr:hover {
+  background-color: #f0f0f0;
+}
+
+.class-honor-roll-table tr:first-child {
+  background-color: #e6f3ff;
+  font-weight: bold;
+}
+
+.class-honor-roll-table tr:nth-child(2) {
+  background-color: #f0f7ff;
+}
+
+.class-honor-roll-table tr:nth-child(3) {
+  background-color: #f5f9ff;
+}
+
+.class-honor-roll-summary {
+  display: flex;
+  justify-content: flex-end;
+  gap: 20px;
+  margin-bottom: 20px;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.class-honor-roll-summary-item {
+  display: flex;
+  gap: 10px;
+}
+
+.class-honor-roll-summary-label {
+  font-weight: bold;
+}
+
+.class-honor-roll-footer {
+  margin-top: 40px;
+}
+
+.class-honor-roll-signature-section {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 20px;
+}
+
+.class-honor-roll-signature {
+  text-align: center;
+  width: 200px;
+}
+
+.class-honor-roll-signature-line {
+  border-bottom: 1px solid #000;
+  margin-bottom: 5px;
+}
+
+.class-honor-roll-signature-name {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.class-honor-roll-signature-title {
+  font-size: 12px;
+}
+
+.class-honor-roll-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.class-honor-roll-buttons button {
+  padding: 8px 16px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.class-honor-roll-buttons button:hover {
+  background-color: #0056b3;
+}
+
+@media print {
+  .class-honor-roll-page {
+    padding: 0;
+    background-color: white;
+  }
+
+  .class-honor-roll-container {
+    box-shadow: none;
+    padding: 0;
+  }
+
+  .class-honor-roll-buttons {
+    display: none;
+  }
+} 

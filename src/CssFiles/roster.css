@@ -1,0 +1,192 @@
+.roster-page {
+  padding: 20px;
+  background-color: #f5f5f5;
+  min-height: 100vh;
+}
+
+.roster-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 15px;
+  font-family: 'Arial', sans-serif;
+  background-color: #fff;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  font-size: 12px;
+}
+
+.roster-header {
+  text-align: center;
+  margin-bottom: 8px;
+  border-bottom: 1px solid #000;
+  padding-bottom: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.roster-header-text {
+  flex: 1;
+  padding: 0 10px;
+}
+
+.roster-header h1, .roster-header h2, .roster-header h3 {
+  font-size: 14px;
+  margin: 2px 0;
+  font-weight: normal;
+}
+
+.roster-header h1 {
+  text-transform: uppercase;
+  font-weight: bold;
+}
+
+.roster-header h2:nth-of-type(2) {
+  font-weight: bold;
+}
+
+.roster-header h3:last-child {
+  font-weight: bold;
+}
+
+.roster-header-logos {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.roster-logo {
+  width: 50px;
+  height: auto;
+}
+
+.roster-school-info {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 15px;
+  padding: 5px 0;
+  border-bottom: 1px solid #ddd;
+}
+
+.roster-info-item {
+  display: flex;
+  align-items: center;
+}
+
+.roster-info-label {
+  font-weight: bold;
+  margin-right: 5px;
+}
+
+.roster-table-container {
+  margin-bottom: 15px;
+  overflow-x: auto;
+}
+
+.roster-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 15px;
+}
+
+.roster-table th,
+.roster-table td {
+  border: 1px solid #ddd;
+  padding: 6px;
+  text-align: left;
+}
+
+.roster-table th {
+  background-color: #f2f2f2;
+  font-weight: bold;
+  text-align: center;
+}
+
+.roster-table tbody tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+.roster-summary {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 15px;
+  padding: 5px 0;
+  border-top: 1px solid #ddd;
+}
+
+.roster-summary-item {
+  margin-left: 20px;
+  display: flex;
+  align-items: center;
+}
+
+.roster-summary-label {
+  font-weight: bold;
+  margin-right: 5px;
+}
+
+.roster-footer {
+  margin-top: 20px;
+}
+
+.roster-signature-section {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 30px;
+}
+
+.roster-signature {
+  text-align: center;
+  width: 45%;
+}
+
+.roster-signature-line {
+  border-bottom: 1px solid #000;
+  margin-bottom: 5px;
+}
+
+.roster-signature-name {
+  font-weight: bold;
+  margin-bottom: 2px;
+}
+
+.roster-signature-title {
+  font-size: 11px;
+}
+
+.roster-buttons {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.roster-buttons button {
+  background-color: #4CAF50;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  margin: 0 10px;
+  transition: background-color 0.3s;
+}
+
+.roster-buttons button:hover {
+  background-color: #45a049;
+}
+
+@media print {
+  .roster-buttons {
+    display: none;
+  }
+  
+  .roster-container {
+    box-shadow: none;
+    padding: 0;
+  }
+  
+  .roster-page {
+    background-color: white;
+    padding: 0;
+  }
+} 
