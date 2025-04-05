@@ -42,6 +42,11 @@ import Teacher_SchedulePage from './TeacherPages/Teacher_SchedulePage';
 import ExperimentalSubjects from './TeacherPages/ExperimentalSubjects';
 import ExperimentalGrades from './TeacherPages/ExperimentalGrades';
 import ElectiveRequest from './TeacherPages/ElectiveRequest';
+import EarlyEnrollment from './reports/early_enrollment';
+import QuarterlyAssessment from './reports/quarterly_assessment';
+import ClassList from './reports/class_list';
+import ClassHonorRoll from './reports/class_honor_roll';
+import NutritionalReport from './reports/nutritional_report';
 
 
 
@@ -133,6 +138,11 @@ function App() {
             <Route path="/sf6" element={<SF6 />} />
 
             <Route path="/student-grades" element={<StudentGrades />} />
+            <Route path="/early-enrollment" element={<EarlyEnrollment />} />
+            <Route path="/quarterly-assessment" element={<QuarterlyAssessment />} />
+            <Route path="/class-list" element={<ClassList />} />
+            <Route path="/class-honor-roll" element={<ClassHonorRoll />} />
+            <Route path="/nutritional-report" element={<NutritionalReport />} />
             
           </Route>
           

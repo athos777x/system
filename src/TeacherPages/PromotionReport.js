@@ -15,6 +15,7 @@ function PromotionReport() {
   const [schoolYears, setSchoolYears] = useState([]); // Store fetched school years
   const [selectedSchoolYear, setSelectedSchoolYear] = useState(""); // Selected school year
   const [roleName, setRoleName] = useState('');
+  const [quarter, setQuarter] = useState("");
 
   useEffect(() => {
     // Fetch school years from the backend
@@ -337,6 +338,61 @@ function PromotionReport() {
           </button>
         </div>
         )}
+
+        {/* Early Enrollment Report Card */}
+        {(roleName === 'principal') && (
+        <div className="summary-report-card">
+          <h3>Early Enrollment Report</h3>
+          <p className="summary-report-description">Generate early enrollment report for the upcoming school year.</p>
+          <button className="summary-report-btn" onClick={() => openModal('early_enrollment')}>
+            Generate Early Enrollment Report
+          </button>
+        </div>
+        )}
+
+        {/* Quarterly Assessment Report Card */}
+        {(roleName === 'principal') && (
+        <div className="summary-report-card">
+          <h3>Quarterly Assessment Report</h3>
+          <p className="summary-report-description">Generate quarterly assessment report with detailed statistics.</p>
+          <button className="summary-report-btn" onClick={() => openModal('quarterly_assessment')}>
+            Generate Quarterly Assessment Report
+          </button>
+        </div>
+        )}
+
+        {/* Class List Report Card */}
+        {(roleName === 'principal') && (
+        <div className="summary-report-card">
+          <h3>Class List Report</h3>
+          <p className="summary-report-description">Generate detailed class list with student information.</p>
+          <button className="summary-report-btn" onClick={() => openModal('class_list')}>
+            Generate Class List Report
+          </button>
+        </div>
+        )}
+
+        {/* Class Honor Roll Report Card */}
+        {(roleName === 'principal') && (
+        <div className="summary-report-card">
+          <h3>Class Honor Roll Report</h3>
+          <p className="summary-report-description">Generate honor roll list with student rankings and achievements.</p>
+          <button className="summary-report-btn" onClick={() => openModal('class_honor_roll')}>
+            Generate Class Honor Roll Report
+          </button>
+        </div>
+        )}
+
+        {/* Nutritional Report Card */}
+        {(roleName === 'principal') && (
+        <div className="summary-report-card">
+          <h3>Nutritional Report</h3>
+          <p className="summary-report-description">Generate nutritional status report with BMI and health metrics.</p>
+          <button className="summary-report-btn" onClick={() => openModal('nutritional_report')}>
+            Generate Nutritional Report
+          </button>
+        </div>
+        )}
       </div>
 
       {showModal && (
@@ -646,6 +702,182 @@ function PromotionReport() {
                     <option value="10">Grade 10</option>
                   </select>
                   <button type="button" onClick={handleGenerateSF6}>Generate Report</button>
+                </form>
+              </div>
+            )}
+            {modalContent === 'early_enrollment' && (
+              <div>
+                <h3>Generate Early Enrollment Report</h3>
+                <form onSubmit={(e) => e.preventDefault()}>
+                  <label>School Year:</label>
+                  <select value={selectedSchoolYear} onChange={(e) => setSelectedSchoolYear(e.target.value)} required>
+                    <option value="">--Select One--</option>
+                    {schoolYears.map((year, index) => (
+                      <option key={index} value={year}>{year}</option>
+                    ))}
+                  </select>
+                  <label>Grade:</label>
+                  <select value={grade} onChange={handleGradeChange} required>
+                    <option value="">--Select One--</option>
+                    <option value="7">Grade 7</option>
+                    <option value="8">Grade 8</option>
+                    <option value="9">Grade 9</option>
+                    <option value="10">Grade 10</option>
+                  </select>
+                  <label>Section:</label>
+                  <select value={section} onChange={(e) => setSection(e.target.value)} required>
+                    <option value="">--Select One--</option>
+                    {sections.map((sec) => (
+                      <option key={sec.section_name} value={sec.section_name}>
+                        {sec.section_name}
+                      </option>
+                    ))}
+                  </select>
+                  <button type="button" onClick={() => navigate('/early-enrollment', { state: { schoolYear: selectedSchoolYear, grade, section } })}>Generate Report</button>
+                </form>
+              </div>
+            )}
+            {modalContent === 'quarterly_assessment' && (
+              <div>
+                <h3>Generate Quarterly Assessment Report</h3>
+                <form onSubmit={(e) => e.preventDefault()}>
+                  <label>School Year:</label>
+                  <select value={selectedSchoolYear} onChange={(e) => setSelectedSchoolYear(e.target.value)} required>
+                    <option value="">--Select One--</option>
+                    {schoolYears.map((year, index) => (
+                      <option key={index} value={year}>{year}</option>
+                    ))}
+                  </select>
+                  <label>Grade:</label>
+                  <select value={grade} onChange={handleGradeChange} required>
+                    <option value="">--Select One--</option>
+                    <option value="7">Grade 7</option>
+                    <option value="8">Grade 8</option>
+                    <option value="9">Grade 9</option>
+                    <option value="10">Grade 10</option>
+                  </select>
+                  <label>Section:</label>
+                  <select value={section} onChange={(e) => setSection(e.target.value)} required>
+                    <option value="">--Select One--</option>
+                    {sections.map((sec) => (
+                      <option key={sec.section_name} value={sec.section_name}>
+                        {sec.section_name}
+                      </option>
+                    ))}
+                  </select>
+                  <label>Quarter:</label>
+                  <select value={quarter} onChange={(e) => setQuarter(e.target.value)} required>
+                    <option value="">--Select One--</option>
+                    <option value="1">First Quarter</option>
+                    <option value="2">Second Quarter</option>
+                    <option value="3">Third Quarter</option>
+                    <option value="4">Fourth Quarter</option>
+                  </select>
+                  <button type="button" onClick={() => navigate('/quarterly-assessment', { state: { schoolYear: selectedSchoolYear, grade, section, quarter } })}>Generate Report</button>
+                </form>
+              </div>
+            )}
+            {modalContent === 'class_list' && (
+              <div>
+                <h3>Generate Class List Report</h3>
+                <form onSubmit={(e) => e.preventDefault()}>
+                  <label>School Year:</label>
+                  <select value={selectedSchoolYear} onChange={(e) => setSelectedSchoolYear(e.target.value)} required>
+                    <option value="">--Select One--</option>
+                    {schoolYears.map((year, index) => (
+                      <option key={index} value={year}>{year}</option>
+                    ))}
+                  </select>
+                  <label>Grade:</label>
+                  <select value={grade} onChange={handleGradeChange} required>
+                    <option value="">--Select One--</option>
+                    <option value="7">Grade 7</option>
+                    <option value="8">Grade 8</option>
+                    <option value="9">Grade 9</option>
+                    <option value="10">Grade 10</option>
+                  </select>
+                  <label>Section:</label>
+                  <select value={section} onChange={(e) => setSection(e.target.value)} required>
+                    <option value="">--Select One--</option>
+                    {sections.map((sec) => (
+                      <option key={sec.section_name} value={sec.section_name}>
+                        {sec.section_name}
+                      </option>
+                    ))}
+                  </select>
+                  <button type="button" onClick={() => navigate('/class-list', { state: { schoolYear: selectedSchoolYear, grade, section } })}>Generate Report</button>
+                </form>
+              </div>
+            )}
+            {modalContent === 'class_honor_roll' && (
+              <div>
+                <h3>Generate Class Honor Roll Report</h3>
+                <form onSubmit={(e) => e.preventDefault()}>
+                  <label>School Year:</label>
+                  <select value={selectedSchoolYear} onChange={(e) => setSelectedSchoolYear(e.target.value)} required>
+                    <option value="">--Select One--</option>
+                    {schoolYears.map((year, index) => (
+                      <option key={index} value={year}>{year}</option>
+                    ))}
+                  </select>
+                  <label>Grade:</label>
+                  <select value={grade} onChange={handleGradeChange} required>
+                    <option value="">--Select One--</option>
+                    <option value="7">Grade 7</option>
+                    <option value="8">Grade 8</option>
+                    <option value="9">Grade 9</option>
+                    <option value="10">Grade 10</option>
+                  </select>
+                  <label>Section:</label>
+                  <select value={section} onChange={(e) => setSection(e.target.value)} required>
+                    <option value="">--Select One--</option>
+                    {sections.map((sec) => (
+                      <option key={sec.section_name} value={sec.section_name}>
+                        {sec.section_name}
+                      </option>
+                    ))}
+                  </select>
+                  <label>Quarter:</label>
+                  <select value={quarter} onChange={(e) => setQuarter(e.target.value)} required>
+                    <option value="">--Select One--</option>
+                    <option value="1">First Quarter</option>
+                    <option value="2">Second Quarter</option>
+                    <option value="3">Third Quarter</option>
+                    <option value="4">Fourth Quarter</option>
+                  </select>
+                  <button type="button" onClick={() => navigate('/class-honor-roll', { state: { schoolYear: selectedSchoolYear, grade, section, quarter } })}>Generate Report</button>
+                </form>
+              </div>
+            )}
+            {modalContent === 'nutritional_report' && (
+              <div>
+                <h3>Generate Nutritional Report</h3>
+                <form onSubmit={(e) => e.preventDefault()}>
+                  <label>School Year:</label>
+                  <select value={selectedSchoolYear} onChange={(e) => setSelectedSchoolYear(e.target.value)} required>
+                    <option value="">--Select One--</option>
+                    {schoolYears.map((year, index) => (
+                      <option key={index} value={year}>{year}</option>
+                    ))}
+                  </select>
+                  <label>Grade:</label>
+                  <select value={grade} onChange={handleGradeChange} required>
+                    <option value="">--Select One--</option>
+                    <option value="7">Grade 7</option>
+                    <option value="8">Grade 8</option>
+                    <option value="9">Grade 9</option>
+                    <option value="10">Grade 10</option>
+                  </select>
+                  <label>Section:</label>
+                  <select value={section} onChange={(e) => setSection(e.target.value)} required>
+                    <option value="">--Select One--</option>
+                    {sections.map((sec) => (
+                      <option key={sec.section_name} value={sec.section_name}>
+                        {sec.section_name}
+                      </option>
+                    ))}
+                  </select>
+                  <button type="button" onClick={() => navigate('/nutritional-report', { state: { schoolYear: selectedSchoolYear, grade, section } })}>Generate Report</button>
                 </form>
               </div>
             )}

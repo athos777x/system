@@ -1,0 +1,196 @@
+.early-enrollment-page {
+  padding: 20px;
+  background-color: #f5f5f5;
+  min-height: 100vh;
+}
+
+.early-enrollment-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 15px;
+  font-family: 'Arial', sans-serif;
+  background-color: #fff;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  font-size: 12px;
+}
+
+.early-enrollment-header {
+  text-align: center;
+  margin-bottom: 8px;
+  border-bottom: 1px solid #000;
+  padding-bottom: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.early-enrollment-header-text {
+  flex: 1;
+  padding: 0 10px;
+}
+
+.early-enrollment-header h1, .early-enrollment-header h2, .early-enrollment-header h3 {
+  font-size: 14px;
+  margin: 2px 0;
+  font-weight: normal;
+}
+
+.early-enrollment-header h1 {
+  text-transform: uppercase;
+  font-weight: bold;
+}
+
+.early-enrollment-header h2:nth-of-type(2) {
+  font-weight: bold;
+}
+
+.early-enrollment-header h3:last-child {
+  font-weight: bold;
+}
+
+.early-enrollment-header-logos {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.early-enrollment-logo {
+  width: 50px;
+  height: auto;
+}
+
+.early-enrollment-school-info {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 15px;
+  padding: 5px 0;
+  border-bottom: 1px solid #ddd;
+}
+
+.early-enrollment-info-item {
+  display: flex;
+  align-items: center;
+}
+
+.early-enrollment-info-label {
+  font-weight: bold;
+  margin-right: 5px;
+}
+
+.early-enrollment-table-container {
+  margin-bottom: 15px;
+  overflow-x: auto;
+}
+
+.early-enrollment-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 15px;
+}
+
+.early-enrollment-table th,
+.early-enrollment-table td {
+  border: 1px solid #ddd;
+  padding: 6px;
+  text-align: center;
+}
+
+.early-enrollment-table th {
+  background-color: #f2f2f2;
+  font-weight: bold;
+}
+
+.early-enrollment-table tbody tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+.early-enrollment-total-row {
+  background-color: #f2f2f2;
+  font-weight: bold;
+}
+
+.early-enrollment-summary {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 15px;
+  padding: 5px 0;
+  border-top: 1px solid #ddd;
+}
+
+.early-enrollment-summary-item {
+  margin-left: 20px;
+  display: flex;
+  align-items: center;
+}
+
+.early-enrollment-summary-label {
+  font-weight: bold;
+  margin-right: 5px;
+}
+
+.early-enrollment-footer {
+  margin-top: 20px;
+}
+
+.early-enrollment-signature-section {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 30px;
+}
+
+.early-enrollment-signature {
+  text-align: center;
+  width: 45%;
+}
+
+.early-enrollment-signature-line {
+  border-bottom: 1px solid #000;
+  margin-bottom: 5px;
+}
+
+.early-enrollment-signature-name {
+  font-weight: bold;
+  margin-bottom: 2px;
+}
+
+.early-enrollment-signature-title {
+  font-size: 11px;
+}
+
+.early-enrollment-buttons {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.early-enrollment-buttons button {
+  background-color: #4CAF50;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  margin: 0 10px;
+  transition: background-color 0.3s;
+}
+
+.early-enrollment-buttons button:hover {
+  background-color: #45a049;
+}
+
+@media print {
+  .early-enrollment-buttons {
+    display: none;
+  }
+  
+  .early-enrollment-container {
+    box-shadow: none;
+    padding: 0;
+  }
+  
+  .early-enrollment-page {
+    background-color: white;
+    padding: 0;
+  }
+} 
