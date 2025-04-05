@@ -23,6 +23,9 @@ function BrigadaEskwela() {
   const [absenceReason, setAbsenceReason] = useState('');
   const [selectedStudent, setSelectedStudent] = useState(null);
 
+  const [showRemarksModal, setShowRemarksModal] = useState(false);
+  const [newRemarks, setNewRemarks] = useState('');
+
   useEffect(() => {
     fetchSchoolYears();
     fetchSections();
@@ -121,14 +124,14 @@ function BrigadaEskwela() {
   };
 
   const handleToggleAttendance = (student) => {
-    if (student.brigada_attendance) {
+    if (student.brigada_attendance === 'Present') {
       // If student is present, show modal for marking absent
       setSelectedStudent(student);
       setShowModal(true);
       setAbsenceReason('');
     } else {
-      // If student is absent, directly mark as present
-      updateAttendance(student.student_id, true);
+      // If student is absent, directly mark as present with "Attended" remark
+      updateAttendance(student.student_id, true, "Attended");
     }
   };
 
@@ -152,19 +155,19 @@ function BrigadaEskwela() {
     setSelectedStudent(null);
   };
 
-  const updateAttendance = async (studentId, status, reason = '') => {
+  const updateAttendance = async (studentId, status, remarks = '') => {
     try {
       await axios.put(`http://localhost:3001/brigada-eskwela/${studentId}`, {
         brigada_attendance: status,
-        absence_reason: reason,
+        remarks: remarks,
       });
 
       const updatedStudents = students.map((student) => {
         if (student.student_id === studentId) {
           return { 
             ...student, 
-            brigada_attendance: status, 
-            remarks: status ? '' : reason 
+            brigada_attendance: status ? 'Present' : 'No',
+            remarks: remarks 
           };
         }
         return student;
@@ -176,6 +179,39 @@ function BrigadaEskwela() {
       console.error('Error updating brigada attendance:', error);
       alert('Failed to update attendance. Please try again.');
     }
+  };
+
+  const handleAddRemarks = async (studentId, remarks) => {
+    try {
+      await axios.put(`http://localhost:3001/brigada-eskwela/${studentId}/remarks`, {
+        remarks: remarks
+      });
+
+      const updatedStudents = students.map((student) => {
+        if (student.student_id === studentId) {
+          return { 
+            ...student, 
+            remarks: remarks 
+          };
+        }
+        return student;
+      });
+
+      setStudents(updatedStudents);
+      setFilteredStudents(updatedStudents);
+      setShowRemarksModal(false);
+      setNewRemarks('');
+      setSelectedStudent(null);
+    } catch (error) {
+      console.error('Error updating remarks:', error);
+      alert('Failed to update remarks. Please try again.');
+    }
+  };
+
+  const handleRemarksModalClose = () => {
+    setShowRemarksModal(false);
+    setNewRemarks('');
+    setSelectedStudent(null);
   };
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
@@ -228,12 +264,26 @@ function BrigadaEskwela() {
                   </td>
                   <td>{student.remarks || '-'}</td>
                   <td>
-                    <button
-                      className="toggle-attendance-btn"
-                      onClick={() => handleToggleAttendance(student)}
-                    >
-                        {student.brigada_attendance === 'Present' ? 'Mark as Absent' : 'Mark as Present'}
-                    </button>
+                    {student.brigada_attendance !== 'Present' && (
+                      <div className="button-group">
+                        <button
+                          className="toggle-attendance-btn"
+                          onClick={() => handleToggleAttendance(student)}
+                        >
+                          Mark as Present
+                        </button>
+                        <button
+                          className="add-remarks-btn"
+                          onClick={() => {
+                            setSelectedStudent(student);
+                            setShowRemarksModal(true);
+                            setNewRemarks(student.remarks || '');
+                          }}
+                        >
+                          Add Remarks
+                        </button>
+                      </div>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -253,7 +303,7 @@ function BrigadaEskwela() {
       {showModal && (
         <div className="modal-overlay">
           <div className="modal">
-            <h3>Mark Student as Absent</h3>
+            <h3>Reason for Absence</h3>
             <p className="modal-student-name">Student: {selectedStudent?.stud_name}</p>
             <textarea
               value={absenceReason}
@@ -261,8 +311,26 @@ function BrigadaEskwela() {
               placeholder="Please provide a reason for absence..."
             ></textarea>
             <div className="modal-actions">
-              <button onClick={handleModalSubmit}>Submit</button>
+              <button onClick={() => handleModalSubmit()}>Submit</button>
               <button onClick={handleModalClose}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showRemarksModal && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <h3>Add Remarks</h3>
+            <p className="modal-student-name">Student: {selectedStudent?.stud_name}</p>
+            <textarea
+              value={newRemarks}
+              onChange={(e) => setNewRemarks(e.target.value)}
+              placeholder="Reason for absence"
+            ></textarea>
+            <div className="modal-actions">
+              <button onClick={() => handleAddRemarks(selectedStudent.student_id, newRemarks)}>Save</button>
+              <button onClick={handleRemarksModalClose}>Cancel</button>
             </div>
           </div>
         </div>
