@@ -404,6 +404,11 @@ function SectionManagement() {
                     <button
                       className="section-mgmt-btn section-mgmt-btn-archive"
                       onClick={() => toggleArchiveStatus(section.section_id, section.status)}
+                      disabled={section.hasSched === '1'}
+                      style={{
+                        opacity: section.hasSched === '1' ? 0.5 : 1,
+                        cursor: section.hasSched === '1' ? 'not-allowed' : 'pointer'
+                      }}
                     >
                       {section.status === 'inactive' ? 'Unarchive' : 'Archive'}
                     </button>

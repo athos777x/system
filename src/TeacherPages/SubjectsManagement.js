@@ -309,11 +309,15 @@ function SubjectsManagement() {
                         {roleName === 'principal' && (
                         <button 
                         className={`subjects-management-btn ${subject?.archive_status === 'archive' ? 'subjects-management-btn-view' : 'subjects-management-btn-archive'}`}
-                          onClick={() => handleDelete(subject)}
-                          disabled={subject?.archive_status !== 'archive' && subject?.hasSched == "1"}
-                        >
-                          {subject?.archive_status === 'archive' ? 'Unarchive' : 'Archive'}
-                        </button>
+                        onClick={() => handleDelete(subject)}
+                        disabled={subject?.archive_status !== 'archive' && subject?.hasSched === "1"}
+                        style={{
+                          opacity: subject?.archive_status !== 'archive' && subject?.hasSched === "1" ? 0.5 : 1, 
+                          cursor: subject?.archive_status !== 'archive' && subject?.hasSched === "1" ? 'not-allowed' : 'pointer'
+                        }}
+                      >
+                        {subject?.archive_status === 'archive' ? 'Unarchive' : 'Archive'}
+                      </button>                    
                         )}
                       </div>
                     </td>
