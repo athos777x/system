@@ -3585,7 +3585,8 @@ app.get('/brigada-eskwela', (req, res) => {
       b.section_name as section_name, 
       b.section_id as section_id,
       IF(a.brigada_eskwela = 1, 'Present', 'Absent') AS brigada_attendance,
-      s.school_year
+      s.school_year, 
+      a.lrn
     FROM student a 
     LEFT JOIN section b ON a.section_id = b.section_id 
     LEFT JOIN student_school_year c ON a.student_id=c.student_id

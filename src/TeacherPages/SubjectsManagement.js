@@ -219,9 +219,11 @@ function SubjectsManagement() {
     <div className="subjects-management-container">
       <div className="subjects-management-header">
         <h1 className="subjects-management-title">Subject Management</h1>
+        {roleName !== 'subject_coordinator' && (
         <button className="subjects-management-btn-add" onClick={startAdding}>
           Add Subject
         </button>
+        )}
       </div>
 
       <div className="subjects-management-filters">

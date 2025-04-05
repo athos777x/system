@@ -284,8 +284,7 @@
 
 /* Make sure the LRN column has consistent styling */
 .brigada-table td:nth-child(2) {
-  font-family: monospace;  /* Makes the LRN numbers align better */
-  text-align: left;
+  text-align: center;
   padding-left: 16px;
 }
 

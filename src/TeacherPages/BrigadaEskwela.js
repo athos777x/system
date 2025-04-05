@@ -221,9 +221,9 @@ function BrigadaEskwela() {
                   <td>{student.stud_name}</td>
                   <td>
                     <span
-                      className={student.brigada_attendance ? 'status-yes' : 'status-no'}
+                      className={student.brigada_attendance === 'Present' ? 'status-yes' : 'status-no'}
                     >
-                      {student.brigada_attendance ? 'Yes' : 'No'}
+                      {student.brigada_attendance === 'Present' ? 'Yes' : 'No'}
                     </span>
                   </td>
                   <td>{student.remarks || '-'}</td>
@@ -232,7 +232,7 @@ function BrigadaEskwela() {
                       className="toggle-attendance-btn"
                       onClick={() => handleToggleAttendance(student)}
                     >
-                      {student.brigada_attendance ? 'Mark as Absent' : 'Mark as Present'}
+                        {student.brigada_attendance === 'Present' ? 'Mark as Absent' : 'Mark as Present'}
                     </button>
                   </td>
                 </tr>
