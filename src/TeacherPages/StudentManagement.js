@@ -56,6 +56,7 @@ function StudentManagement() {
     mother_contact_number: '',
     emergency_number: '',
     emergency_contactperson: '',
+    brigada_eskwela: '0',
     status: 'active',
     archive_status: 'unarchive'
   });
@@ -1799,6 +1800,19 @@ const handleArchive = () => {
                     className={errors.age ? "error read-only" : "read-only"}
                   />
                   {errors.age && <span className="student-mgmt-error">{errors.age}</span>}
+                </div>
+                <div className="student-mgmt-form-group">
+                  <label>Brigada Eskwela Attendance:</label>
+                  <select
+                    name="brigada_eskwela"
+                    value={newStudentData.brigada_eskwela}
+                    onChange={handleAddChange}
+                    className={errors.brigada_eskwela ? "error" : ""}
+                  >
+                    <option value="0">No</option>
+                    <option value="1">Yes</option>
+                  </select>
+                  {errors.brigada_eskwela && <span className="student-mgmt-error">{errors.brigada_eskwela}</span>}
                 </div>
               </div>
             </div>
