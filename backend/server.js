@@ -2108,10 +2108,12 @@ app.put('/school-years/:schoolYearId', (req, res) => {
 app.get('/sections', (req, res) => {
   const { searchTerm, grade, showArchive } = req.query;
   let query = `
-    SELECT s.section_id, s.section_name, s.grade_level, s.status, s.max_capacity, sy.school_year, s.archive_status, s.room_number
+    SELECT s.section_id, s.section_name, s.grade_level, s.status, s.max_capacity, sy.school_year, s.archive_status, s.room_number,
+    MAX(CASE WHEN b.section_id IS NOT NULL THEN '1' ELSE '0' END) AS hasSched
     FROM section s
     JOIN school_year sy ON s.school_year_id = sy.school_year_id
-    WHERE sy.status = 'active'
+    LEFT JOIN schedule b on s.section_id=b.section_id and s.grade_level=b.grade_level
+    WHERE sy.status = 'active' GROUP BY s.section_name, s.grade_level
   `;
   const queryParams = [];
 
@@ -2146,7 +2148,7 @@ app.get('/sections', (req, res) => {
 app.get('/sections/:id', (req, res) => {
   const { id } = req.params;
   const query = `
-    SELECT s.section_id, s.section_name, s.grade_level, s.status, s.max_capacity, sy.school_year, s.room_number
+    SELECT s.section_id, s.section_name, s.grade_level, s.status, s.max_capacity, sy.school_year, s.room_number, s.archive_status
     FROM section s
     JOIN school_year sy ON s.school_year_id = sy.school_year_id
     WHERE s.section_id = ?
@@ -4228,5 +4230,33 @@ app.get('/student/:userId/school-years', (req, res) => {
     res.status(500).json({ success: false, message: 'An unexpected error occurred.' });
   }
 });
+
+// Endpoint to get grade_level based on school_year_id and student_id
+app.get('/get-grade-level/:student_id', (req, res) => {
+  const { student_id } = req.params;
+
+  const query = `
+    SELECT a.grade_level, b.school_year, b.school_year_id
+    FROM enrollment a 
+    LEFT JOIN school_year b 
+    ON a.school_year_id = b.school_year_id 
+    WHERE a.student_id = ?
+  `;
+
+  db.query(query, [student_id], (err, results) => {
+    if (err) {
+      console.error('Error fetching grade level:', err);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ message: 'No enrollment data found' });
+    }
+
+    res.json(results); // Send full list, not just the first result
+  });
+});
+
+
 
 

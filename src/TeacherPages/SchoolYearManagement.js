@@ -58,6 +58,8 @@ function SchoolYearManagement() {
       let filtered = sortedSchoolYears;
       if (selectedFilter.school_year) {
         filtered = filtered.filter(sy => sy.school_year === selectedFilter.school_year);
+      } else {
+        filtered = filtered.filter(sy => sy.status === 'active');
       }
       
       setSchoolYears(sortedSchoolYears);

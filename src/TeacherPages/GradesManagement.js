@@ -96,14 +96,27 @@ function GradesManagement() {
     }
   };
 
-  const fetchSchoolYears = async () => {
+  const fetchSchoolYears = async (studentId) => {
     try {
-      const response = await axios.get('http://localhost:3001/api/school_years');
-      setSchoolYears(response.data);
+      const response = await axios.get(`http://localhost:3001/get-grade-level/${studentId}`);
+      
+      if (response.status === 200) {
+        // Assuming response.data contains an array with { grade_level, school_year, school_year_id }
+        setSchoolYears(response.data);
+        // Optionally, set the default selectedGradeLevel to the first item in the array if it's not already set
+        if (!selectedGradeLevel && response.data.length > 0) {
+          setSelectedGradeLevel(response.data[0].grade_level); // Default to first grade level
+          setSelectedSchoolYear(response.data[0].school_year_id); // Default to first school year
+        }
+      } else {
+        console.error('Failed to fetch school years:', response.status);
+      }
     } catch (error) {
       console.error('Error fetching school years:', error);
     }
   };
+  
+  
 
   const fetchSections = async () => {
     try {
@@ -143,6 +156,7 @@ function GradesManagement() {
     // Fetch subjects and grades with the correct school year
     const fetchedSubjects = await fetchSubjects(student.student_id, gradeLevel, schoolYearId);
     await fetchGrades(student.student_id, gradeLevel, fetchedSubjects, schoolYearId);
+    await fetchSchoolYears(student.student_id); // Pass studentId here
 };
 
 
@@ -419,9 +433,6 @@ function GradesManagement() {
 };
 
 
-
-
-
   return (
     <div className="grades-management-container">
       <div className="grades-management-header">
@@ -497,9 +508,9 @@ function GradesManagement() {
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                           <h3 className="grades-details-title">Grades for {student.firstname} {student.lastname}</h3>
                           <div className="grade-level-school-year-container">
-                            <div className="grade-level-indicator">
-                              Grade {selectedGradeLevel || student.current_yr_lvl}
-                            </div>
+                            {/* <div className="grade-level-indicator">
+                              Grade {selectedGradeLevel || student.grade_level}
+                            </div> */}
                             <select 
                               value={selectedSchoolYear || student.school_year_id} 
                               onChange={handleSchoolYearChange}
@@ -508,7 +519,7 @@ function GradesManagement() {
                             >
                               {schoolYears.map((year) => (
                                 <option key={year.school_year_id} value={year.school_year_id}>
-                                  {year.school_year}
+                                  {`Grade ${year.grade_level} - SY ${year.school_year}`}  {/* Map grade_level with school_year */}
                                 </option>
                               ))}
                             </select>
