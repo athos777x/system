@@ -11,6 +11,7 @@ function PromotionReport() {
   const [section, setSection] = useState("");
   const [sections, setSections] = useState([]); // State to store sections
   const [studentName, setStudentName] = useState("");
+  const [lrn, setLRN] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [schoolYears, setSchoolYears] = useState([]); // Store fetched school years
   const [selectedSchoolYear, setSelectedSchoolYear] = useState(""); // Selected school year
@@ -85,7 +86,7 @@ function PromotionReport() {
   };
 
   const handleGenerateForm137 = () => {
-    if (!grade || !section || !studentName) {
+    if (!selectedSchoolYear || !studentName) {
       alert('Please fill in all the required fields before generating.');
       return;
     }
@@ -105,7 +106,7 @@ function PromotionReport() {
   };
 
   const handleGenerateGoodMoral = () => {
-    if (!grade || !section || !studentName) {
+    if (!selectedSchoolYear || !studentName) {
       alert('Please fill in all the required fields before generating.');
       return;
     }
@@ -126,14 +127,12 @@ function PromotionReport() {
 
   const fetchStudentNames = async () => {
     try {
-      if (!grade || !section) {
-        console.error("Both grade and section must be selected.");
-        return;
-      }
-      const response = await fetch(`http://localhost:3001/students/names?gradeLevel=${grade}&sectionName=${section}&searchTerm=${studentName}`);
+      const response = await fetch(`http://localhost:3001/students/names?searchTerm=${studentName}&lrn=${lrn}`);
+      
       if (!response.ok) {
         throw new Error(`Error: ${response.status}`);
       }
+  
       const data = await response.json();
       setSuggestions(data);
     } catch (error) {
@@ -421,7 +420,7 @@ function PromotionReport() {
                       <option key={index} value={year}>{year}</option>
                     ))}
                   </select>
-                  <label>Grade:</label>
+                  {/* <label>Grade:</label>
                   <select value={grade} onChange={handleGradeChange} required> 
                     <option value="">--Select One--</option>
                     <option value="7">Grade 7</option>
@@ -437,7 +436,15 @@ function PromotionReport() {
                         {sec.section_name}
                       </option>
                     ))}
-                  </select>
+                  </select> */}
+                  <label>LRN:</label>
+                  <input
+                    type="text"
+                    value={lrn}
+                    onChange={(e) => setLRN(e.target.value)}
+                    placeholder="Enter student lrn"
+                    required
+                  />
                   <label>Student Name:</label>
                   <input
                     type="text"
@@ -512,7 +519,14 @@ function PromotionReport() {
               <div>
                 <h3>Generate Good Moral Certificate</h3>
                 <form onSubmit={(e) => e.preventDefault()}>
-                  <label>Grade:</label>
+                <label>School Year:</label>
+                  <select value={selectedSchoolYear} onChange={(e) => setSelectedSchoolYear(e.target.value)} required>
+                    <option value="">--Select One--</option>
+                    {schoolYears.map((year, index) => (
+                      <option key={index} value={year}>{year}</option>
+                    ))}
+                  </select>
+                  {/* <label>Grade:</label>
                   <select value={grade} onChange={handleGradeChange} required>
                     <option value="">--Select One--</option>
                     <option value="7">Grade 7</option>
@@ -528,7 +542,15 @@ function PromotionReport() {
                         {sec.section_name}
                       </option>
                     ))}
-                  </select>
+                  </select> */}
+                  <label>LRN:</label>
+                  <input
+                    type="text"
+                    value={lrn}
+                    onChange={(e) => setLRN(e.target.value)}
+                    placeholder="Enter student lrn"
+                    required
+                  />
                   <label>Student Name:</label>
                   <input
                     type="text"

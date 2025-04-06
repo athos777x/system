@@ -208,56 +208,6 @@ function StudentManagement() {
   };
   
 
-  const handleSearch = (searchTerm) => {
-    setFilters((prevFilters) => ({ ...prevFilters, searchTerm }));
-    //applyFilters({ ...filters, searchTerm });
-  };
-
-const handleFilterChange = (type, value) => {
-    if (type === 'grade') {
-      setFilters(prevFilters => ({
-        ...prevFilters,
-        [type]: value,
-        section: '' // Reset section when grade changes
-      }));
-    } else {
-    setFilters(prevFilters => ({
-        ...prevFilters,
-        [type]: value
-    }));
-    }
-};
-
-// const applyFilters = () => {
-//     let filtered = students;
-
-//     if (filters.school_year) {
-//         filtered = filtered.filter(student => String(student.school_year) === filters.school_year);
-//     }
-//     if (filters.grade) {
-//       filtered = filtered.filter(student => String(student.current_yr_lvl) === String(filters.grade));
-//     }
-//     if (filters.section) {
-//       filtered = filtered.filter(student => String(student.section_name) === filters.section);
-//     }
-//     if (filters.searchTerm) {
-//         filtered = filtered.filter(student => {
-//             const firstName = student.firstname ? student.firstname.toLowerCase() : "";
-//             const lastName = student.lastname ? student.lastname.toLowerCase() : "";
-//             return firstName.includes(filters.searchTerm.toLowerCase()) || 
-//                    lastName.includes(filters.searchTerm.toLowerCase());
-//         });
-//     }
-
-//     setFilteredStudents(filtered);
-//     setCurrentPage(1); // Reset to first page when filters are applied
-// };
-
-const handleApplyFilters = () => {
-    console.log('Applying filters:', filters);
-    fetchStudents(filters); // Fetch students with the current filters
-};
-
   const startAdding = () => {
     setIsAdding(true);
     setNewStudentData({
@@ -881,7 +831,7 @@ const handleArchive = () => {
     const updatedStudentData = { 
       ...formattedData, 
       birthdate: formattedBirthdate,
-      annual_hshld_income: formattedData.annual_income || '',
+      annual_hshld_income: parseFloat(formattedData.annual_hshld_income.replace(/,/g, '')) || 0, // Format income to remove commas
       brigada_eskwela: '0' // Default value for brigada_eskwela
     };
 
@@ -911,7 +861,7 @@ const handleArchive = () => {
         );
 
         // Reset the form only after saving is successful
-        setEditStudentData(null);
+        // setEditStudentData(null);
 
         // Refresh the student list
         await fetchStudents();
@@ -1168,16 +1118,16 @@ const handleArchive = () => {
                         <td>
                           {isEditing ? (
                             <select
-                              name="section_name"
-                              value={editStudentData?.section_name || ""}
+                              name="section_id"
+                              value={editStudentData?.section_id || ""}
                               onChange={handleEditChange}
                             >
                               <option value="">Select Section</option>
                               {sections
-                                .filter((section) => section.year_level === student.current_yr_lvl) // ✅ Filter sections by year level
+                                .filter((section) => section.grade_level === student.current_yr_lvl) // ✅ Filter sections by year level
                                 .map((section) => (
-                                  <option key={section.id} value={student.section_name}>
-                                    {student.section_name}
+                                  <option key={section.id} value={section.section_id}>
+                                    {section.section_name}
                                   </option>
                                 ))}
                             </select>
@@ -1193,13 +1143,17 @@ const handleArchive = () => {
                             <input
                               type="date"
                               name="birthdate"
-                              value={editStudentData ? editStudentData.birthdate || "" : ""}
+                              value={editStudentData ? new Date(editStudentData.birthdate).toISOString().split('T')[0] : ""}
                               onChange={handleEditChange}
                               min={calculateDateRange().min}
                               max={calculateDateRange().max}
                             />
                           ) : (
-                            student.birthdate
+                            new Date(student.birthdate).toLocaleDateString('en-US', {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric'
+                            })
                           )}
                         </td>
                       </tr>
@@ -1495,9 +1449,9 @@ const handleArchive = () => {
                           <td>
                             {isEditing ? (
                               <input
-                                type="number"
+                                type="text"
                                 name="annual_income"
-                                value={editStudentData ? editStudentData.annual_income || "" : ""}
+                                value={editStudentData ? editStudentData.annual_hshld_income || "" : ""}
                                 onChange={handleEditChange}
                               />
                             ) : (
