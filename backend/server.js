@@ -390,7 +390,7 @@ app.put('/students/:id', (req, res) => {
         annual_hshld_income = ?, number_of_siblings = ?, 
         father_educ_lvl = ?, mother_educ_lvl = ?, 
         father_contact_number = ?, mother_contact_number = ?,
-        emergency_number = ?, emergency_contactperson = ?
+        emergency_number = ?, emergency_contactperson = ?, section_id = ?
     WHERE student_id = ?
   `;
 
@@ -405,6 +405,7 @@ app.put('/students/:id', (req, res) => {
     updatedData.father_educ_lvl, updatedData.mother_educ_lvl,
     updatedData.father_contact_number, updatedData.mother_contact_number,
     updatedData.emergency_number, updatedData.emergency_contactperson,
+    updatedData.section_id,
     studentId
   ];
 
@@ -436,12 +437,11 @@ app.post('/students', (req, res) => {
     email_address, mother_name, father_name, parent_address, father_occupation,
     mother_occupation, annual_hshld_income, number_of_siblings, father_educ_lvl,
     mother_educ_lvl, father_contact_number, mother_contact_number, emergency_number,
-    emergency_contactperson, status, active_status, brigada_eskwela = '0', lrn
+    emergency_contactperson, status, active_status, brigada_eskwela = '0', brigada_remarks, lrn
   } = req.body;
 
   const brigada_eskwela_value = brigada_eskwela || '0';
 
-  // Step 1: Fetch the last used student_id (to prevent duplicates)
   const getLastStudentQuery = `SELECT student_id FROM student ORDER BY student_id DESC LIMIT 1`;
 
   db.query(getLastStudentQuery, (err, result) => {
@@ -450,13 +450,11 @@ app.post('/students', (req, res) => {
       return res.status(500).json({ error: 'Failed to fetch last student ID' });
     }
 
-    // Calculate next student ID
     let nextStudentId = 1;
     if (result.length > 0) {
       nextStudentId = result[0].student_id + 1;
     }
 
-    // Step 2: Insert the new student
     const query = `
       INSERT INTO student (
         student_id, lrn, lastname, firstname, middlename, current_yr_lvl,
@@ -508,10 +506,33 @@ app.post('/students', (req, res) => {
         console.error('Failed to add student:', error);
         return res.status(500).json({ error: 'Failed to add student' });
       }
-      res.status(201).json({ message: 'Student added successfully', studentId: nextStudentId });
+
+      // Proceed with brigada_details insert if brigada_eskwela is '0'
+      if (brigada_eskwela === '0') {
+        const brigada_id = brigada_eskwela; // assume same as student_id
+
+        const insertBrigadaDetailsQuery = `
+          INSERT INTO brigada_details (student_id, brigada_id, remarks)
+          VALUES (?, ?, ?)
+        `;
+        db.query(insertBrigadaDetailsQuery, [nextStudentId, brigada_id, brigada_remarks || ''], (err3) => {
+          if (err3) {
+            console.error('Failed to insert brigada_remarks:', err3);
+            return res.status(500).json({ error: 'Failed to insert brigada remarks' });
+          }
+
+          res.status(201).json({
+            message: 'Student and brigada details added successfully',
+            studentId: nextStudentId
+          });
+        });
+      } else {
+        res.status(201).json({ message: 'Student added successfully', studentId: nextStudentId });
+      }
     });
   });
 });
+
 
 
 
@@ -1114,20 +1135,34 @@ app.get('/unregistered-students', (req, res) => {
 // New endpoint to get all student names for auto-suggest
 // Endpoint to get student names for auto-suggest
 app.get('/students/names', (req, res) => {
-  const { searchTerm, gradeLevel, sectionName } = req.query;
+  const { searchTerm, gradeLevel, sectionName, lrn } = req.query;
 
-  // Base query with JOIN between student and section tables
+  // Start with base query
   let query = `
-    SELECT CONCAT(a.lastname, ', ', a.firstname, ' ', IFNULL(a.middlename, '')) AS stud_name
+    SELECT CONCAT(a.lastname, ', ', a.firstname, ' ', IFNULL(a.middlename, '')) AS stud_name, a.lrn 
     FROM student a
     LEFT JOIN section b ON a.section_id = b.section_id
-    WHERE a.current_yr_lvl = ? AND b.section_name = ?
+    WHERE 1=1
   `;
 
-  // Initialize query parameters array
-  const queryParams = [gradeLevel, sectionName];
+  const queryParams = [];
 
-  // Add search term filter if provided
+  // Optional filters
+  if (gradeLevel) {
+    query += ' AND a.current_yr_lvl = ?';
+    queryParams.push(gradeLevel);
+  }
+
+  if (sectionName) {
+    query += ' AND b.section_name = ?';
+    queryParams.push(sectionName);
+  }
+
+  if (lrn) {
+    query += ' AND a.lrn = ?';
+    queryParams.push(lrn);
+  }
+
   if (searchTerm) {
     query += ' AND (a.firstname LIKE ? OR a.lastname LIKE ?)';
     queryParams.push(`%${searchTerm}%`, `%${searchTerm}%`);
@@ -1142,6 +1177,7 @@ app.get('/students/names', (req, res) => {
     res.json(results);
   });
 });
+
 
 
 app.get('/sections-report', async (req, res) => {
@@ -3586,11 +3622,13 @@ app.get('/brigada-eskwela', (req, res) => {
       b.section_id as section_id,
       IF(a.brigada_eskwela = 1, 'Present', 'Absent') AS brigada_attendance,
       s.school_year, 
-      a.lrn
+      a.lrn,
+      dd.remarks
     FROM student a 
     LEFT JOIN section b ON a.section_id = b.section_id 
     LEFT JOIN student_school_year c ON a.student_id=c.student_id
     LEFT JOIN school_year s ON c.school_year_id = s.school_year_id
+    LEFT JOIN brigada_details dd ON a.student_id=dd.student_id
     WHERE a.section_id != ''
   `;
 
@@ -4258,6 +4296,25 @@ app.get('/get-grade-level/:student_id', (req, res) => {
   });
 });
 
+app.get('/api/student/:student_id/brigada-remarks', async (req, res) => {
+  const { student_id } = req.params;
+
+  try {
+    // Query to get the brigada remarks from the brigada_details table
+    const query = 'SELECT remarks FROM brigada_details WHERE student_id = ?';
+    const [rows] = await db.execute(query, [student_id]);
+
+    // If no remarks found
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'No remarks found' });
+    }
+
+    res.json({ remarks: rows[0].remarks });  // Send the remarks in response
+  } catch (error) {
+    console.error('Error fetching brigada remarks:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
 
 
 
