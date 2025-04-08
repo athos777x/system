@@ -424,10 +424,8 @@ const approveElective = async (studentElectiveId) => {
         );
         setAvailableSections(filteredSections);
         
-        // If there are available sections, set the first one as default
-        if (filteredSections.length > 0) {
-          setSelectedSection(filteredSections[0].section_id);
-        }
+        // Set to empty string for auto-assign as default
+        setSelectedSection('');
       } catch (error) {
         console.error('Error fetching sections:', error);
       }
