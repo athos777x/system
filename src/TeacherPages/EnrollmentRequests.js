@@ -156,12 +156,16 @@ const handleApplyFilters = () => {
 };
 
 
-const validateStudent = async (studentId, action) => {
+const validateStudent = async (studentId, action, sectionId) => {
   try {
     console.log(`Validating enrollment for student ID: ${studentId} with action: ${action}`);
 
-    // Send the POST request with the action (approve/reject)
-    const response = await axios.post('http://localhost:3001/validate-enrollment', { studentId, action });
+    // Send the POST request with the action (approve/reject) and section ID
+    const response = await axios.post('http://localhost:3001/validate-enrollment', { 
+      studentId, 
+      action,
+      sectionId // Add section ID to the request
+    });
 
     // Check for successful response
     if (response.status === 200) {
@@ -393,6 +397,8 @@ const approveElective = async (studentElectiveId) => {
   const EnrollmentModal = ({ student, onClose, onEnroll }) => {
     const [requirementsChecked, setRequirementsChecked] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [availableSections, setAvailableSections] = useState([]);
+    const [selectedSection, setSelectedSection] = useState('');
 
     useEffect(() => {
       const fetchData = async () => {
@@ -402,10 +408,30 @@ const approveElective = async (studentElectiveId) => {
           student.current_yr_lvl,
           student.school_year_id
         );
+        await fetchAvailableSections();
         setLoading(false);
       };
       fetchData();
     }, [student]);
+
+    const fetchAvailableSections = async () => {
+      try {
+        // Fetch sections for the student's grade level
+        const response = await axios.get('http://localhost:3001/sections');
+        // Filter sections to only include those matching the student's grade level
+        const filteredSections = response.data.filter(
+          section => section.grade_level === student.current_yr_lvl
+        );
+        setAvailableSections(filteredSections);
+        
+        // If there are available sections, set the first one as default
+        if (filteredSections.length > 0) {
+          setSelectedSection(filteredSections[0].section_id);
+        }
+      } catch (error) {
+        console.error('Error fetching sections:', error);
+      }
+    };
 
     const handleEnroll = () => {
       if (!requirementsChecked) {
@@ -422,7 +448,8 @@ const approveElective = async (studentElectiveId) => {
         if (!confirmEnroll) return;
       }
 
-      onEnroll(student.student_id);
+      // If no section is selected, the backend will automatically assign one
+      onEnroll(student.student_id, selectedSection || null);
     };
 
     return (
@@ -439,6 +466,31 @@ const approveElective = async (studentElectiveId) => {
                 <tr>
                   <th>Grade Level:</th>
                   <td>{student.current_yr_lvl}</td>
+                </tr>
+                <tr>
+                  <th>Section:</th>
+                  <td>
+                    <select 
+                      value={selectedSection}
+                      onChange={(e) => setSelectedSection(e.target.value)}
+                      className="section-selector"
+                    >
+                      <option value="">Auto-assign section</option>
+                      {availableSections.map((section) => (
+                        <option 
+                          key={section.section_id} 
+                          value={section.section_id}
+                        >
+                          {section.section_name} (Grade {section.grade_level})
+                        </option>
+                      ))}
+                    </select>
+                    {availableSections.length === 0 && (
+                      <div className="section-info-message">
+                        Section will be automatically assigned based on grade level and gender distribution
+                      </div>
+                    )}
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -604,25 +656,25 @@ const approveElective = async (studentElectiveId) => {
                       </button>
                       {(roleName === 'registrar' || roleName === 'grade_level_coordinator' || roleName === 'class_adviser') && (
                         <>
-                          {(student.active_status && student.active_status.toLowerCase() === 'pending') && (
-                            <button 
-                              className="pending-enrollment-btn pending-enrollment-btn-approve" 
-                              onClick={(e) => {
-                                e.stopPropagation();
+                        {(student.active_status && student.active_status.toLowerCase() === 'pending') && (
+                          <button 
+                            className="pending-enrollment-btn pending-enrollment-btn-approve" 
+                            onClick={(e) => {
+                              e.stopPropagation();
                                 setSelectedStudent(student);
                                 setShowRequirementsModal(true);
-                              }}
-                            >
+                            }}
+                          >
                               Enroll
-                            </button>
-                          )}
+                          </button>
+                        )}
                         </>
                       )}
                       <button
                         className="pending-enrollment-btn pending-enrollment-btn-reject"
                         onClick={(e) => {
                           e.stopPropagation();
-                          validateStudent(student.student_id, 'reject');
+                          validateStudent(student.student_id, 'reject', student.section_id);
                         }}
                       >
                         Reject
@@ -649,8 +701,8 @@ const approveElective = async (studentElectiveId) => {
             setShowRequirementsModal(false);
             setSelectedStudent(null);
           }}
-          onEnroll={(studentId) => {
-            validateStudent(studentId, 'approve');
+          onEnroll={(studentId, sectionId) => {
+            validateStudent(studentId, 'approve', sectionId);
             setShowRequirementsModal(false);
             setSelectedStudent(null);
           }}
