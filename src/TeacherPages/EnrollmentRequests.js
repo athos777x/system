@@ -15,6 +15,10 @@ function EnrollmentRequests() {
   const [schoolYears, setSchoolYears] = useState([]);
   const [sections, setSections] = useState([]);
   const [filteredSections, setFilteredSections] = useState([]);
+  const [requirementsChecked, setRequirementsChecked] = useState(false);
+  const [showRequirementsModal, setShowRequirementsModal] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [subjects, setSubjects] = useState([]);
 
   const [filters, setFilters] = useState({
     searchTerm: '',
@@ -333,8 +337,183 @@ const approveElective = async (studentElectiveId) => {
     setShowCancelModal(true);
   };
 
- 
-  
+  const fetchSubjectsAndGrades = async (studentId, gradeLevel, schoolYearId) => {
+    try {
+      const response = await axios.get('http://localhost:3001/api/subjects-card', {
+        params: { 
+          studentId, 
+          gradeLevel,
+          schoolYearId  
+        },
+      });
+      const subjectsData = response.data || [];
+
+      // Fetch grades for these subjects
+      const gradesResponse = await axios.get('http://localhost:3001/api/grades', {
+        params: { 
+          studentId, 
+          gradeLevel,
+          schoolYearId 
+        },
+      });
+
+      if (gradesResponse.data && gradesResponse.data.grades) {
+        const gradesData = gradesResponse.data.grades;
+        const updatedSubjects = subjectsData.map(subject => {
+          const matchingGrade = gradesData.find(grade => 
+            grade.subject_name.toLowerCase().trim() === subject.subject_name.toLowerCase().trim()
+          );
+
+          if (matchingGrade) {
+            const q1 = parseFloat(matchingGrade.q1) || 0;
+            const q2 = parseFloat(matchingGrade.q2) || 0;
+            const q3 = parseFloat(matchingGrade.q3) || 0;
+            const q4 = parseFloat(matchingGrade.q4) || 0;
+            const final = ((q1 + q2 + q3 + q4) / 4).toFixed(0);
+
+            return {
+              ...subject,
+              q1: matchingGrade.q1,
+              q2: matchingGrade.q2,
+              q3: matchingGrade.q3,
+              q4: matchingGrade.q4,
+              final: final,
+              remarks: parseFloat(final) >= 75 ? "Passed" : "Failed"
+            };
+          }
+          return subject;
+        });
+        setSubjects(updatedSubjects);
+      }
+    } catch (error) {
+      console.error('Error fetching subjects and grades:', error);
+    }
+  };
+
+  const EnrollmentModal = ({ student, onClose, onEnroll }) => {
+    const [requirementsChecked, setRequirementsChecked] = useState(false);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+      const fetchData = async () => {
+        setLoading(true);
+        await fetchSubjectsAndGrades(
+          student.student_id,
+          student.current_yr_lvl,
+          student.school_year_id
+        );
+        setLoading(false);
+      };
+      fetchData();
+    }, [student]);
+
+    const handleEnroll = () => {
+      if (!requirementsChecked) {
+        alert('Please check the requirements box before enrolling.');
+        return;
+      }
+
+      // Check if student has any failed subjects
+      const hasFailedSubjects = subjects.some(subject => subject.remarks === "Failed");
+      if (hasFailedSubjects) {
+        const confirmEnroll = window.confirm(
+          'Warning: This student has failed subjects. Do you still want to proceed with enrollment?'
+        );
+        if (!confirmEnroll) return;
+      }
+
+      onEnroll(student.student_id);
+    };
+
+    return (
+      <div className="enrollment-modal">
+        <div className="enrollment-modal-content">
+          <h2>Student Enrollment</h2>
+          <div className="student-info">
+            <table>
+              <tbody>
+                <tr>
+                  <th>Student Name:</th>
+                  <td>{`${student.firstname} ${student.middlename ? student.middlename + ' ' : ''}${student.lastname}`}</td>
+                </tr>
+                <tr>
+                  <th>Grade Level:</th>
+                  <td>{student.current_yr_lvl}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div className="grades-details-container">
+            <h3>Previous School Year Grades</h3>
+            {loading ? (
+              <p>Loading grades...</p>
+            ) : (
+              <table className="grades-details-table">
+                <thead>
+                  <tr>
+                    <th>Subjects</th>
+                    <th>1st Grading</th>
+                    <th>2nd Grading</th>
+                    <th>3rd Grading</th>
+                    <th>4th Grading</th>
+                    <th>Final Grade</th>
+                    <th>Remarks</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {subjects.length > 0 ? (
+                    subjects.map((subject, index) => (
+                      <tr key={index}>
+                        <td>{subject.subject_name}</td>
+                        <td>{subject.q1 || "___"}</td>
+                        <td>{subject.q2 || "___"}</td>
+                        <td>{subject.q3 || "___"}</td>
+                        <td>{subject.q4 || "___"}</td>
+                        <td>{subject.final || "___"}</td>
+                        <td className={subject.remarks === "Passed" ? "passed" : subject.remarks === "Failed" ? "failed" : ""}>
+                          {subject.remarks || "___"}
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="7" style={{ textAlign: "center" }}>No academic records available.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            )}
+          </div>
+
+          <div className="requirements-section">
+            <label className="requirements-checkbox">
+              <input
+                type="checkbox"
+                checked={requirementsChecked}
+                onChange={(e) => setRequirementsChecked(e.target.checked)}
+              />
+              I confirm that all required documents have been submitted
+            </label>
+          </div>
+          <div className="modal-actions">
+            <button 
+              className="pending-enrollment-btn pending-enrollment-btn-approve"
+              onClick={handleEnroll}
+            >
+              Enroll
+            </button>
+            <button 
+              className="pending-enrollment-btn pending-enrollment-btn-reject"
+              onClick={onClose}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="pending-enrollment-container">
@@ -425,19 +604,18 @@ const approveElective = async (studentElectiveId) => {
                       </button>
                       {(roleName === 'registrar' || roleName === 'grade_level_coordinator' || roleName === 'class_adviser') && (
                         <>
-                        {console.log('Role check passed:', roleName)}
-                        {console.log('Student status:', student.active_status)}
-                        {(student.active_status && student.active_status.toLowerCase() === 'pending') && (
-                          <button 
-                            className="pending-enrollment-btn pending-enrollment-btn-approve" 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              validateStudent(student.student_id, 'approve');
-                            }}
-                          >
-                            Approve
-                          </button>
-                        )}
+                          {(student.active_status && student.active_status.toLowerCase() === 'pending') && (
+                            <button 
+                              className="pending-enrollment-btn pending-enrollment-btn-approve" 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedStudent(student);
+                                setShowRequirementsModal(true);
+                              }}
+                            >
+                              Enroll
+                            </button>
+                          )}
                         </>
                       )}
                       <button
@@ -463,6 +641,21 @@ const approveElective = async (studentElectiveId) => {
           </tbody>
         </table>
       </div>
+
+      {showRequirementsModal && selectedStudent && (
+        <EnrollmentModal
+          student={selectedStudent}
+          onClose={() => {
+            setShowRequirementsModal(false);
+            setSelectedStudent(null);
+          }}
+          onEnroll={(studentId) => {
+            validateStudent(studentId, 'approve');
+            setShowRequirementsModal(false);
+            setSelectedStudent(null);
+          }}
+        />
+      )}
 
       {selectedStudentId && (
         <div className="pending-enrollment-details">

@@ -393,4 +393,154 @@
     margin: 0 -1rem;
     border-radius: 0;
   }
+}
+
+/* Enrollment Modal Styles */
+.enrollment-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.enrollment-modal-content {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 600px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.enrollment-modal h2 {
+  color: #2e7d32;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.enrollment-modal .student-info {
+  margin-bottom: 2rem;
+}
+
+.enrollment-modal .student-info table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.enrollment-modal .student-info th,
+.enrollment-modal .student-info td {
+  padding: 0.75rem;
+  border: 1px solid #c8e6c9;
+}
+
+.enrollment-modal .student-info th {
+  background: #e8f5e9;
+  color: #2e7d32;
+  width: 40%;
+  text-align: left;
+}
+
+.requirements-section {
+  margin-bottom: 2rem;
+  padding: 1rem;
+  background: #f1f8e9;
+  border-radius: 8px;
+}
+
+.requirements-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.requirements-checkbox input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+@media (max-width: 768px) {
+  .enrollment-modal-content {
+    width: 95%;
+    padding: 1.5rem;
+  }
+}
+
+/* Grades table in enrollment modal */
+.enrollment-modal .grades-details-container {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.enrollment-modal .grades-details-container h3 {
+  color: #2e7d32;
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+}
+
+.enrollment-modal .grades-details-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.enrollment-modal .grades-details-table th {
+  background: #e8f5e9;
+  color: #2e7d32;
+  font-weight: 600;
+  padding: 0.75rem;
+  text-align: center;
+  border: 1px solid #c8e6c9;
+  font-size: 0.9rem;
+}
+
+.enrollment-modal .grades-details-table td {
+  padding: 0.75rem;
+  text-align: center;
+  border: 1px solid #e0e0e0;
+  font-size: 0.9rem;
+}
+
+.enrollment-modal .grades-details-table .passed {
+  color: #4CAF50;
+  font-weight: 500;
+}
+
+.enrollment-modal .grades-details-table .failed {
+  color: #ef5350;
+  font-weight: 500;
+}
+
+/* Make the modal scrollable if content is too long */
+.enrollment-modal-content {
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+/* Loading state */
+.enrollment-modal .grades-details-container p {
+  text-align: center;
+  padding: 1rem;
+  color: #666;
+}
+
+/* Adjust modal width for the grades table */
+.enrollment-modal-content {
+  max-width: 1000px;
 } 
