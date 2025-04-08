@@ -543,4 +543,46 @@
 /* Adjust modal width for the grades table */
 .enrollment-modal-content {
   max-width: 1000px;
+}
+
+/* Section selector styles */
+.enrollment-modal .section-selector {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #c8e6c9;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  color: #1e293b;
+  background-color: white;
+  cursor: pointer;
+}
+
+.enrollment-modal .section-selector:hover {
+  border-color: #81c784;
+}
+
+.enrollment-modal .section-selector:focus {
+  outline: none;
+  border-color: #4CAF50;
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.1);
+}
+
+.enrollment-modal .section-selector option {
+  padding: 0.5rem;
+}
+
+/* Make the section cell wider to accommodate the dropdown */
+.enrollment-modal .student-info td {
+  width: 60%;
+}
+
+.enrollment-modal .section-info-message {
+  color: #1976d2;
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  background-color: #e3f2fd;
+  border-radius: 4px;
+  text-align: center;
+  font-style: italic;
 } 
