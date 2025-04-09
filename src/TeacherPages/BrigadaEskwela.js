@@ -155,24 +155,24 @@ function BrigadaEskwela() {
     setSelectedStudent(null);
   };
 
-  const updateAttendance = async (studentId, status, remarks = '') => {
+  const updateAttendance = async (studentId, status) => {
     try {
+      // Send the brigada_attendance status (0 or 1)
       await axios.put(`http://localhost:3001/brigada-eskwela/${studentId}`, {
-        brigada_attendance: status,
-        remarks: remarks,
+        brigada_attendance: status ? 1 : 0, // Convert status to 1 or 0
       });
-
+  
+      // Update the students state to reflect the new attendance status
       const updatedStudents = students.map((student) => {
         if (student.student_id === studentId) {
-          return { 
-            ...student, 
+          return {
+            ...student,
             brigada_attendance: status ? 'Present' : 'No',
-            remarks: remarks 
           };
         }
         return student;
       });
-
+  
       setStudents(updatedStudents);
       setFilteredStudents(updatedStudents);
     } catch (error) {
@@ -180,13 +180,17 @@ function BrigadaEskwela() {
       alert('Failed to update attendance. Please try again.');
     }
   };
+  
 
   const handleAddRemarks = async (studentId, remarks) => {
     try {
-      await axios.put(`http://localhost:3001/brigada-eskwela/${studentId}/remarks`, {
+      // Sending studentId in the URL
+      await axios.post(`http://localhost:3001/brigada-eskwela/remarks`, {
+        studentId: studentId,  // Send studentId with the body if needed, or just as a query parameter.
         remarks: remarks
       });
 
+      // Update the students state to reflect the new remarks
       const updatedStudents = students.map((student) => {
         if (student.student_id === studentId) {
           return { 
@@ -203,10 +207,11 @@ function BrigadaEskwela() {
       setNewRemarks('');
       setSelectedStudent(null);
     } catch (error) {
-      console.error('Error updating remarks:', error);
-      alert('Failed to update remarks. Please try again.');
+      console.error('Error adding remarks:', error);
+      alert('Failed to add remarks. Please try again.');
     }
-  };
+};
+
 
   const handleRemarksModalClose = () => {
     setShowRemarksModal(false);
