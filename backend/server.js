@@ -4381,7 +4381,10 @@ app.get('/students/by-adviser', (req, res) => {
         s.father_educ_lvl, s.mother_educ_lvl, s.father_contact_number, 
         s.mother_contact_number, IF(s.brigada_eskwela=1,'Attended','Not Attended') AS brigada_eskwela,
         s.emergency_number, s.emergency_contactperson,
-        se.enrollment_status, se.student_elective_id
+          (SELECT ss.status FROM student_school_year ss
+          JOIN school_year sy ON ss.school_year_id = sy.school_year_id
+          WHERE ss.student_id = s.student_id AND sy.status = 'active') as active_status,
+          se.enrollment_status, se.student_elective_id
         FROM student s
         LEFT JOIN student_elective se ON s.student_id = se.student_id
         LEFT JOIN section z ON s.section_id = z.section_id
