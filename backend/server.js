@@ -3696,6 +3696,59 @@ app.get('/brigada-eskwela', (req, res) => {
   });
 });
 
+app.post('/brigada-eskwela/remarks', (req, res) => {
+  const { studentId, remarks } = req.body; // Extract studentId and remarks from the request body
+
+  if (!studentId || !remarks) {
+    return res.status(400).json({ error: 'Missing studentId or remarks' });
+  }
+
+  const query = `
+    INSERT INTO brigada_details (student_id, remarks)
+    VALUES (?, ?)
+  `;
+
+  const queryParams = [studentId, remarks];
+
+  db.query(query, queryParams, (err, results) => {
+    if (err) {
+      console.error('Error inserting brigada details:', err);
+      return res.status(500).json({ error: 'Failed to insert brigada details' });
+    }
+
+    res.status(201).json({ message: 'Brigada details added successfully' });
+  });
+});
+
+app.put('/brigada-eskwela/:studentId', (req, res) => {
+  const { studentId } = req.params;
+  const { brigada_attendance } = req.body; // Only brigada_attendance is required
+
+  // Check if brigada_attendance is provided (0 or 1)
+  if (brigada_attendance === undefined) {
+    return res.status(400).json({ error: 'Missing brigada_attendance' });
+  }
+
+  // Update the brigada_eskwela value in the student table
+  const query = `
+    UPDATE student
+    SET brigada_eskwela = ?
+    WHERE student_id = ?
+  `;
+
+  const queryParams = [brigada_attendance ? 1 : 0, studentId]; // Set brigada_eskwela to 1 for "Present" or 0 for "No"
+
+  db.query(query, queryParams, (err, results) => {
+    if (err) {
+      console.error('Error updating student attendance:', err);
+      return res.status(500).json({ error: 'Failed to update student attendance' });
+    }
+
+    res.status(200).json({ message: 'Student attendance updated successfully' });
+  });
+});
+
+
 
 app.get('/get-students', async (req, res) => {
   const { grade, section } = req.query;
