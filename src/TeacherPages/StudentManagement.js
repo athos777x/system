@@ -255,6 +255,7 @@ function StudentManagement() {
       active_status: 'unarchive',
       user_id: ''
     });
+    setErrors({}); // Reset errors when starting to add a new student
     setShowModal(true);
   };
 
@@ -528,38 +529,9 @@ function StudentManagement() {
 
   
 const cancelAdding = () => {
-  // Reset form data and close modal
-  setNewStudentData({
-    lastname: '',
-    middlename: '',
-    firstname: '',
-    current_yr_lvl: '',
-    birthdate: '',
-    gender: '',
-    age: '',
-    home_address: '',
-    barangay: '',
-    city_municipality: '',
-    province: '',
-    contact_number: '',
-    email_address: '',
-    mother_name: '',
-    father_name: '',
-    parent_address: '',
-    father_occupation: '',
-    mother_occupation: '',
-    annual_hshld_income: '',
-    number_of_siblings: '',
-    father_educ_lvl: '',
-    mother_educ_lvl: '',
-    father_contact_number: '',
-    mother_contact_number: '',
-    emergency_number: '',
-    status: 'active',
-    active_status: 'unarchive',
-    user_id: ''
-  });
-  setShowModal(false);  // Close the modal
+  setIsAdding(false);
+  setShowModal(false);
+  setErrors({}); // Reset errors when closing the add new student modal
 };
 
 const enrollStudent = async (studentId) => {
@@ -716,6 +688,9 @@ const handleArchive = () => {
       setIsEditing(false);
       setEditStudentData(null);
       setErrors({}); // Reset errors when closing the details view
+    } else {
+      // Reset errors when opening the details view
+      setErrors({});
     }
   };
 
@@ -725,6 +700,7 @@ const handleArchive = () => {
     setIsEditing(true);
     setSelectedStudentId(studentId); // Ensure details are expanded
     setErrors({}); // Reset errors when starting edit mode
+    setIsAdding(false); // Ensure add mode is not active
   };
 
   const paginate = (pageNumber) => {
