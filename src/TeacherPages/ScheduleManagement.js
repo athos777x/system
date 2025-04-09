@@ -503,7 +503,7 @@ function Principal_SchedulePage() {
     <div className="schedule-mgmt-container">
       <div className="schedule-mgmt-header">
         <h1 className="schedule-mgmt-title">Schedule Management</h1>
-        {(roleName !== 'principal') && (
+        {(roleName === 'academic_coordinator') && (
           <button className="schedule-mgmt-btn-add" onClick={startAdding}>
             Add New Schedule
           </button>
@@ -590,7 +590,7 @@ function Principal_SchedulePage() {
                         <div className="schedule-mgmt-details">
                           <div className="schedule-mgmt-details-header">
                             <h2 className="schedule-mgmt-details-title">Section {section.section_name} - Class Schedule</h2>
-                            {(roleName !== 'academic_coordinator' && 
+                            {(roleName !== 'academic_coordinator' && roleName !== 'grade_level_coordinator' && roleName !== 'registrar' && 
                               sectionSchedules.some(schedule => schedule.schedule_status === 'Pending Approval')) && (
                               <button 
                                 className="schedule-mgmt-btn schedule-mgmt-btn-approve"

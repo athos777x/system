@@ -169,12 +169,12 @@ function GradeLevelCoordinatorSideBar({ showSidebar, toggleSidebar, handleLogout
               >
                 <FiUsers className="icon" /> Pending Enrollment
               </button>
-              <button 
+              {/* <button 
                 onClick={() => handleNavigate('/school-year')}
                 className={location.pathname === '/school-year' ? 'active' : ''}
               >
                 <FiCalendar className="icon" /> School Year
-              </button>
+              </button> */}
               <button 
                 onClick={() => handleNavigate('/section-list')}
                 className={location.pathname === '/section-list' ? 'active' : ''}
@@ -190,12 +190,12 @@ function GradeLevelCoordinatorSideBar({ showSidebar, toggleSidebar, handleLogout
             </div>
           )}
         </div>
-        <button 
+        {/* <button 
           onClick={() => handleNavigate('/summary-report-promotion')}
           className={location.pathname === '/summary-report-promotion' ? 'active' : ''}
         >
           <FiFileText className="icon" /> Generate Report
-        </button>
+        </button> */}
         {/* <button 
           onClick={() => handleNavigate('/profile')}
           className={location.pathname === '/profile' ? 'active' : ''}
