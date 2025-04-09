@@ -67,7 +67,7 @@ function ClassAdviserSideBar({ showSidebar, toggleSidebar, handleLogout }) {
     setShowRecordsSubMenu(false);
     setShowExperimentalsSubMenu(false);
     if (!showClassesSubMenu) {
-      navigate('/section');
+      navigate('/schedule');
     }
   };
 
@@ -156,12 +156,12 @@ function ClassAdviserSideBar({ showSidebar, toggleSidebar, handleLogout }) {
               >
                 <FiUsers className="icon" /> Pending Enrollment
               </button>
-              <button 
+              {/* <button 
                 onClick={() => handleNavigate('/school-year')}
                 className={location.pathname === '/school-year' ? 'active' : ''}
               >
                 <FiCalendar className="icon" /> School Year
-              </button>
+              </button> */}
               <button 
                 onClick={() => handleNavigate('/section-list')}
                 className={location.pathname === '/section-list' ? 'active' : ''}
@@ -183,12 +183,12 @@ function ClassAdviserSideBar({ showSidebar, toggleSidebar, handleLogout }) {
           </button>
           {showClassesSubMenu && (
             <div className="submenu">
-              <button 
+              {/* <button 
                 onClick={() => handleNavigate('/section')}
                 className={location.pathname === '/section' ? 'active' : ''}
               >
                 <FiBook className="icon" /> Section
-              </button>
+              </button> */}
               <button 
                 onClick={() => handleNavigate('/schedule')}
                 className={location.pathname === '/schedule' ? 'active' : ''}

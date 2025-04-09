@@ -503,7 +503,7 @@ function Principal_SchedulePage() {
     <div className="schedule-mgmt-container">
       <div className="schedule-mgmt-header">
         <h1 className="schedule-mgmt-title">Schedule Management</h1>
-        {(roleName !== 'principal') && (
+        {(roleName === 'academic_coordinator') && (
           <button className="schedule-mgmt-btn-add" onClick={startAdding}>
             Add New Schedule
           </button>
@@ -590,7 +590,7 @@ function Principal_SchedulePage() {
                         <div className="schedule-mgmt-details">
                           <div className="schedule-mgmt-details-header">
                             <h2 className="schedule-mgmt-details-title">Section {section.section_name} - Class Schedule</h2>
-                            {(roleName !== 'academic_coordinator' && 
+                            {(roleName !== 'academic_coordinator' && roleName !== 'grade_level_coordinator' && roleName !== 'registrar' && 
                               sectionSchedules.some(schedule => schedule.schedule_status === 'Pending Approval')) && (
                               <button 
                                 className="schedule-mgmt-btn schedule-mgmt-btn-approve"
@@ -609,7 +609,9 @@ function Principal_SchedulePage() {
                                 <th>Day</th>
                                 <th>Teacher</th>
                                 <th>Status</th>
-                                <th>Actions</th>
+                                {(roleName !== 'registrar' && roleName !== 'grade_level_coordinator' && roleName !== 'class_adviser') && (
+                                  <th>Actions</th>
+                                )}
                               </tr>
                             </thead>
                             <tbody>
@@ -671,12 +673,14 @@ function Principal_SchedulePage() {
                                             {editFormData.schedule_status}
                                           </span>
                                         </td>
-                                        <td>
-                                          <div className="schedule-mgmt-actions">
-                                            <button className="schedule-mgmt-btn schedule-mgmt-btn-edit" onClick={saveChanges}>Save</button>
-                                            <button className="schedule-mgmt-btn schedule-mgmt-btn-cancel" onClick={cancelEditing}>Cancel</button>
-                                          </div>
-                                        </td>
+                                        {(roleName !== 'registrar' && roleName !== 'grade_level_coordinator' && roleName !== 'class_adviser') && (
+                                          <td>
+                                            <div className="schedule-mgmt-actions">
+                                              <button className="schedule-mgmt-btn schedule-mgmt-btn-edit" onClick={saveChanges}>Save</button>
+                                              <button className="schedule-mgmt-btn schedule-mgmt-btn-cancel" onClick={cancelEditing}>Cancel</button>
+                                            </div>
+                                          </td>
+                                        )}
                                       </>
                                     ) : (
                                       <>
@@ -690,31 +694,33 @@ function Principal_SchedulePage() {
                                             {schedule.schedule_status}
                                           </span>
                                         </td>
-                                        <td>
-                                          {schedule.schedule_status === 'Pending Approval' && (
-                                            <div className="schedule-mgmt-actions">
-                                              <button 
-                                                className="schedule-mgmt-btn schedule-mgmt-btn-edit" 
-                                                onClick={() => startEditing(schedule)}
-                                              >
-                                                Edit
-                                              </button>
-                                              <button 
-                                                className="schedule-mgmt-btn schedule-mgmt-btn-delete" 
-                                                onClick={() => handleDeleteClick(schedule.schedule_id)}
-                                              >
-                                                Delete
-                                              </button>
-                                            </div>
-                                          )}
-                                        </td>
+                                        {(roleName !== 'registrar' && roleName !== 'grade_level_coordinator' && roleName !== 'class_adviser') && (
+                                          <td>
+                                            {schedule.schedule_status === 'Pending Approval' && (
+                                              <div className="schedule-mgmt-actions">
+                                                <button 
+                                                  className="schedule-mgmt-btn schedule-mgmt-btn-edit" 
+                                                  onClick={() => startEditing(schedule)}
+                                                >
+                                                  Edit
+                                                </button>
+                                                <button 
+                                                  className="schedule-mgmt-btn schedule-mgmt-btn-delete" 
+                                                  onClick={() => handleDeleteClick(schedule.schedule_id)}
+                                                >
+                                                  Delete
+                                                </button>
+                                              </div>
+                                            )}
+                                          </td>
+                                        )}
                                       </>
                                     )}
                                   </tr>
                                 ))
                               ) : (
                                 <tr>
-                                  <td colSpan="7" style={{ textAlign: 'center' }}>
+                                  <td colSpan={roleName === 'registrar' || roleName === 'grade_level_coordinator' || roleName === 'class_adviser' ? "6" : "7"} style={{ textAlign: 'center' }}>
                                     {sectionSchedules === null ? 'Loading schedules...' : 'No schedules available'}
                                   </td>
                                 </tr>

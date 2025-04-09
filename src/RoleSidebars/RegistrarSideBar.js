@@ -72,7 +72,7 @@ function RegistrarSideBar({ showSidebar, toggleSidebar, handleLogout }) {
     setShowEnrollmentSubMenu(false);
     setShowExperimentalsSubMenu(false);
     if (!showClassesSubMenu) {
-      navigate('/section');
+      navigate('/schedule');
     }
   };
 
@@ -106,12 +106,12 @@ function RegistrarSideBar({ showSidebar, toggleSidebar, handleLogout }) {
         >
           <FiUsers className="icon" /> Students
         </button>
-        <button 
+        {/* <button 
           onClick={() => handleNavigate('/employees')}
           className={location.pathname === '/employees' ? 'active' : ''}
         >
           <FiUsers className="icon" /> Employees
-        </button>
+        </button> */}
         <div className={`menu-with-submenu ${showRecordsSubMenu || isRecordsPath ? 'active' : ''}`}>
           <button onClick={toggleRecordsSubMenu}>
             <FiClipboard className="icon" /> Student Academic Records
@@ -124,12 +124,12 @@ function RegistrarSideBar({ showSidebar, toggleSidebar, handleLogout }) {
               >
                 <FiFileText className="icon" /> Grades
               </button>
-              <button 
+              {/* <button 
                 onClick={() => handleNavigate('/attendance')}
                 className={location.pathname === '/attendance' ? 'active' : ''}
               >
                 <FiCheckSquare className="icon" /> Attendance
-              </button>
+              </button> */}
               <button 
                 onClick={() => handleNavigate('/brigada-eskwela')}
                 className={location.pathname === '/brigada-eskwela' ? 'active' : ''}
@@ -157,12 +157,12 @@ function RegistrarSideBar({ showSidebar, toggleSidebar, handleLogout }) {
               >
                 <FiUsers className="icon" /> Pending Elective
               </button>
-              <button 
+              {/* <button 
                 onClick={() => handleNavigate('/school-year')}
                 className={location.pathname === '/school-year' ? 'active' : ''}
               >
                 <FiCalendar className="icon" /> School Year
-              </button>
+              </button> */}
               <button 
                 onClick={() => handleNavigate('/section-list')}
                 className={location.pathname === '/section-list' ? 'active' : ''}
@@ -184,12 +184,12 @@ function RegistrarSideBar({ showSidebar, toggleSidebar, handleLogout }) {
           </button>
           {showClassesSubMenu && (
             <div className="submenu">
-              <button 
+              {/* <button 
                 onClick={() => handleNavigate('/section')}
                 className={location.pathname === '/section' ? 'active' : ''}
               >
                 <FiLayers className="icon" /> Section
-              </button>
+              </button> */}
               <button 
                 onClick={() => handleNavigate('/schedule')}
                 className={location.pathname === '/schedule' ? 'active' : ''}
