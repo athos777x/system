@@ -241,7 +241,7 @@ function StudentManagement() {
       parent_address: '',
       father_occupation: '',
       mother_occupation: '',
-      annual_income: '',
+      annual_hshld_income: '',
       number_of_siblings: '',
       father_educ_lvl: '',
       mother_educ_lvl: '',
@@ -326,7 +326,7 @@ function StudentManagement() {
           }));
         }
         break;
-      case 'annual_income':
+      case 'annual_hshld_income':
         if (value.trim() !== '') {
           newErrors[name] = validateIncome(value);
         } else {
@@ -416,8 +416,8 @@ function StudentManagement() {
       if (newStudentData.age) {
         newErrors.age = validateAge(newStudentData.age);
       }
-      if (newStudentData.annual_income) {
-        newErrors.annual_income = validateIncome(newStudentData.annual_income);
+      if (newStudentData.annual_hshld_income) {
+        newErrors.annual_hshld_income = validateIncome(newStudentData.annual_hshld_income);
       }
 
       // Filter out empty error messages
@@ -453,7 +453,7 @@ function StudentManagement() {
         parent_address: newStudentData.parent_address ? formatCapitalization(newStudentData.parent_address) : '',
         father_occupation: newStudentData.father_occupation ? formatCapitalization(newStudentData.father_occupation) : '',
         mother_occupation: newStudentData.mother_occupation ? formatCapitalization(newStudentData.mother_occupation) : '',
-        annual_hshld_income: newStudentData.annual_income ? newStudentData.annual_income : '0',
+        annual_hshld_income: newStudentData.annual_hshld_income ? newStudentData.annual_hshld_income : '0',
         number_of_siblings: newStudentData.number_of_siblings ? parseInt(newStudentData.number_of_siblings, 10) : 0,
         father_educ_lvl: newStudentData.father_educ_lvl || '',
         mother_educ_lvl: newStudentData.mother_educ_lvl || '',
@@ -551,7 +551,7 @@ const cancelAdding = () => {
     parent_address: '',
     father_occupation: '',
     mother_occupation: '',
-    annual_income: '',
+    annual_hshld_income: '',
     number_of_siblings: '',
     father_educ_lvl: '',
     mother_educ_lvl: '',
@@ -1461,7 +1461,7 @@ const handleArchive = () => {
                             {isEditing ? (
                               <input
                                 type="text"
-                                name="annual_income"
+                                name="annual_hshld_income"
                                 value={editStudentData ? editStudentData.annual_hshld_income || "" : ""}
                                 onChange={handleEditChange}
                               />
@@ -2013,12 +2013,12 @@ const handleArchive = () => {
                   <label>Annual Household Income:</label>
                   <input
                     type="text"
-                    name="annual_income"
-                    value={newStudentData.annual_income}
+                    name="annual_hshld_income"
+                    value={newStudentData.annual_hshld_income}
                     onChange={handleAddChange}
-                    className={errors.annual_income ? "error" : ""}
+                    className={errors.annual_hshld_income ? "error" : ""}
                   />
-                  {errors.annual_income && <span className="student-mgmt-error">{errors.annual_income}</span>}
+                  {errors.annual_hshld_income && <span className="student-mgmt-error">{errors.annual_hshld_income}</span>}
                 </div>
                 <div className="student-mgmt-form-group">
                   <label>Number of Siblings:</label>
