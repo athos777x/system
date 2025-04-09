@@ -567,15 +567,19 @@
   box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
 }
 
+/* Error styling for input fields */
 .student-mgmt-form-group input.error,
 .student-mgmt-form-group select.error {
   border-color: #ef5350;
 }
 
+/* Error message styling */
 .student-mgmt-error {
   color: #ef5350;
   font-size: 0.8rem;
   margin-top: 0.25rem;
+  display: block;
+  text-align: left;
 }
 
 .student-mgmt-pagination {
@@ -1014,4 +1018,10 @@
 .student-details-view-table .category-header:not(:first-child) {
   margin-top: 20px;
   border-top: 1px solid #ddd;
+}
+
+/* Error styling for input fields in the edit view table */
+.student-details-view-table input.error,
+.student-details-view-table select.error {
+  border-color: #ef5350 !important;
 } 
