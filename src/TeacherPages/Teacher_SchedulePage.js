@@ -27,8 +27,8 @@ function Teacher_SchedulePage() {
         
         const userId = localStorage.getItem('userId');
         // First, get the teacher's information
-        const teacherResponse = await axios.get(`http://localhost:3001/user/${userId}`);
-        setTeacherName(`${teacherResponse.data.first_name} ${teacherResponse.data.last_name}`);
+        // const teacherResponse = await axios.get(`http://localhost:3001/user/${userId}`);
+        // setTeacherName(`${teacherResponse.data.first_name} ${teacherResponse.data.last_name}`);
         
         // Then, get the teacher's schedule
         const response = await axios.get(`http://localhost:3001/teacher/${userId}/schedule`);
@@ -82,43 +82,58 @@ function Teacher_SchedulePage() {
 
   const renderSchedule = () => {
     // Initialize schedule grid
-    const scheduleGrid = timeSlots.map(() => 
+    const scheduleGrid = timeSlots.map(() =>
       daysOfWeek.map(() => ({ content: null, isOccupied: false }))
     );
-
+  
     // Fill in the schedule grid if there's data
     if (schedule && schedule.length > 0) {
       schedule.forEach(item => {
         const startIndex = getTimeSlotIndex(item.time_start);
         const endIndex = getTimeSlotIndex(item.time_end);
         const duration = endIndex - startIndex;
-
+  
         item.days.forEach(day => {
           const dayIndex = daysOfWeek.indexOf(day);
+  
           if (dayIndex !== -1) {
+            // Ensure row and column are defined before assigning
+            for (let i = startIndex; i < endIndex; i++) {
+              if (!scheduleGrid[i]) {
+                scheduleGrid[i] = [];
+              }
+              if (!scheduleGrid[i][dayIndex]) {
+                scheduleGrid[i][dayIndex] = { content: null, isOccupied: false };
+              }
+            }
+  
             // Mark the starting cell with the subject info
-            scheduleGrid[startIndex][dayIndex] = {
-              content: {
-                subject: item.subject_name,
-                section: item.section_name,
-                grade: item.grade_level,
-                span: duration
-              },
-              isOccupied: true
-            };
-
-            // Mark subsequent cells as occupied
-            for (let i = startIndex + 1; i < endIndex; i++) {
-              scheduleGrid[i][dayIndex] = {
-                content: null,
+            if (scheduleGrid[startIndex] && scheduleGrid[startIndex][dayIndex]) {
+              scheduleGrid[startIndex][dayIndex] = {
+                content: {
+                  subject: item.subject_name,
+                  section: item.section_name,
+                  grade: item.grade_level,
+                  span: duration
+                },
                 isOccupied: true
               };
+            }
+  
+            // Mark subsequent cells as occupied
+            for (let i = startIndex + 1; i < endIndex; i++) {
+              if (scheduleGrid[i] && scheduleGrid[i][dayIndex]) {
+                scheduleGrid[i][dayIndex] = {
+                  content: null,
+                  isOccupied: true
+                };
+              }
             }
           }
         });
       });
     }
-
+  
     return (
       <table className="schedule-table">
         <thead>
@@ -135,12 +150,12 @@ function Teacher_SchedulePage() {
               <td>{timeSlot}</td>
               {daysOfWeek.map((day, colIndex) => {
                 const cell = scheduleGrid[rowIndex][colIndex];
-                
+  
                 // Skip rendering if cell is occupied but not the start of a subject
                 if (cell.isOccupied && !cell.content) {
                   return null;
                 }
-
+  
                 // Render subject cell
                 if (cell.content) {
                   return (
@@ -156,7 +171,7 @@ function Teacher_SchedulePage() {
                     </td>
                   );
                 }
-
+  
                 // Render empty cell
                 return <td key={`${day}-${rowIndex}`}></td>;
               })}
@@ -166,6 +181,8 @@ function Teacher_SchedulePage() {
       </table>
     );
   };
+  
+  
 
   const generatePDF = async () => {
     try {

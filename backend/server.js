@@ -2941,27 +2941,53 @@ app.get('/user/:userId/schedule', (req, res) => {
 // TEACHER SCHEDULE PAGE
 app.get('/teacher/:userId/schedule', (req, res) => {
   const userId = req.params.userId;
-  const query = `
-    SELECT s.subject_name, sc.day, 
-    TIME_FORMAT(sc.time_start, '%H:%i:%s') as time_start, 
-    TIME_FORMAT(sc.time_end, '%h:%i %p') as time_end,
-    sec.section_name, sec.grade_level
-    FROM schedule sc
-    JOIN subject s ON sc.subject_id = s.subject_id
-    JOIN section sec ON sc.section_id = sec.section_id
-    JOIN teacher t ON sc.teacher_id = t.teacher_id
-    WHERE t.user_id = ? AND sc.schedule_status = 'Approved'
-    ORDER BY FIELD(sc.day, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'), sc.time_start;
-  `;
-  db.query(query, [userId], (err, results) => {
+
+  // Query to fetch employee_id based on user_id
+  const getEmployeeIdQuery = 'SELECT employee_id FROM employee WHERE user_id = ? LIMIT 1';
+
+  db.query(getEmployeeIdQuery, [userId], (err, employeeResults) => {
     if (err) {
-      console.error('Error fetching teacher schedule:', err);
-      res.status(500).send('Error fetching teacher schedule');
-    } else {
-      res.json(results);
+      console.error('Error fetching employee ID:', err);
+      return res.status(500).send('Error fetching employee ID');
     }
+
+    if (employeeResults.length === 0) {
+      console.log('Employee not found for userId:', userId);
+      return res.status(404).send('Employee not found');
+    }
+
+    const employeeId = employeeResults[0].employee_id;
+
+    // Query to fetch teacher's schedule based on employee_id
+    const scheduleQuery = `
+      SELECT s.subject_name, sc.day, 
+        TIME_FORMAT(sc.time_start, '%H:%i:%s') AS time_start, 
+        TIME_FORMAT(sc.time_end, '%h:%i %p') AS time_end,
+        sec.section_name, sec.grade_level
+      FROM schedule sc
+      JOIN subject s ON sc.subject_id = s.subject_id
+      JOIN section sec ON sc.section_id = sec.section_id
+      JOIN employee t ON sc.teacher_id = t.employee_id
+      WHERE t.employee_id = ? AND sc.schedule_status = 'Approved'
+      ORDER BY FIELD(sc.day, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'), sc.time_start;
+    `;
+
+    db.query(scheduleQuery, [employeeId], (err, scheduleResults) => {
+      if (err) {
+        console.error('Error fetching teacher schedule:', err);
+        return res.status(500).send('Error fetching teacher schedule');
+      }
+
+      if (scheduleResults.length === 0) {
+        console.log('No schedule found for employeeId:', employeeId);
+        return res.status(404).json({ message: 'No schedule found' });
+      }
+
+      return res.json(scheduleResults);
+    });
   });
 });
+
 
 //ENDPOINTS USED:
 // REGISTRAR ACCOUNT PAGE
@@ -4317,4 +4343,557 @@ app.get('/api/student/:student_id/brigada-remarks', async (req, res) => {
 });
 
 
+app.get('/students/by-adviser', (req, res) => {
+  const { user_id, searchTerm, grade, section, school_year } = req.query;
 
+  if (!user_id) {
+    return res.status(400).json({ error: 'Missing user_id' });
+  }
+
+  // Step 1: Get employee_id from user_id
+  const getEmployeeIdQuery = 'SELECT employee_id FROM employee WHERE user_id = ? LIMIT 1';
+  db.query(getEmployeeIdQuery, [user_id], (err, empResult) => {
+    if (err) {
+      console.error('Error fetching employee_id:', err);
+      return res.status(500).json({ error: 'Failed to fetch employee_id' });
+    }
+
+    if (empResult.length === 0) {
+      return res.status(404).json({ error: 'Employee not found' });
+    }
+
+    const employee_id = empResult[0].employee_id;
+
+    // Step 2: Get active school year if not provided
+    let latestSchoolYear = school_year;
+
+    function fetchStudents() {
+      let query = `
+        SELECT s.student_id, s.user_id, s.lrn, s.section_id,
+        CONCAT(s.lastname, ', ', s.firstname, ' ', 
+        IF(s.middlename IS NOT NULL AND s.middlename != '', CONCAT(LEFT(s.middlename, 1), '.'), '')) AS stud_name,
+        s.lastname, s.firstname, s.middlename, 
+        s.current_yr_lvl, DATE_FORMAT(s.birthdate, '%M %e, %Y') AS birthdate, s.gender, s.age, 
+        s.home_address, s.barangay, s.city_municipality, s.province, 
+        s.contact_number, s.email_address, z.section_name, sy.school_year, sy.school_year_id,
+        s.mother_name, s.father_name, s.parent_address, s.father_occupation, 
+        s.mother_occupation, FORMAT(s.annual_hshld_income,2) AS annual_hshld_income, s.number_of_siblings, 
+        s.father_educ_lvl, s.mother_educ_lvl, s.father_contact_number, 
+        s.mother_contact_number, IF(s.brigada_eskwela=1,'Attended','Not Attended') AS brigada_eskwela,
+        s.emergency_number, s.emergency_contactperson,
+        se.enrollment_status, se.student_elective_id
+        FROM student s
+        LEFT JOIN student_elective se ON s.student_id = se.student_id
+        LEFT JOIN section z ON s.section_id = z.section_id
+        LEFT JOIN student_school_year ss ON s.student_id = ss.student_id
+        LEFT JOIN school_year sy ON ss.school_year_id = sy.school_year_id
+        WHERE s.active_status = 'unarchive' AND z.section_adviser = ?
+      `;
+
+      const queryParams = [employee_id];
+      const conditions = [];
+
+      if (searchTerm) {
+        conditions.push(`(s.firstname LIKE ? OR s.lastname LIKE ? OR s.student_id LIKE ? OR s.lrn LIKE ?)`);
+        queryParams.push(`%${searchTerm}%`, `%${searchTerm}%`, `%${searchTerm}%`, `%${searchTerm}%`);
+      }
+      if (grade) {
+        conditions.push(`s.current_yr_lvl = ?`);
+        queryParams.push(grade);
+      }
+      if (section) {
+        conditions.push(`z.section_name = ?`);
+        queryParams.push(section);
+      }
+      if (latestSchoolYear) {
+        conditions.push(`sy.school_year = ?`);
+        queryParams.push(latestSchoolYear);
+      }
+
+      if (conditions.length > 0) {
+        query += ' AND ' + conditions.join(' AND ');
+      }
+
+      query += ' GROUP BY s.student_id ORDER BY s.lastname ASC';
+
+      console.log('Adviser SQL Query:', query);
+      console.log('Params:', queryParams);
+
+      db.query(query, queryParams, (err, results) => {
+        if (err) {
+          console.error('Error fetching students:', err);
+          return res.status(500).json({ error: 'Failed to fetch students' });
+        }
+
+        res.json(results);
+      });
+    }
+
+    // If school_year not provided, fetch active one
+    if (!school_year) {
+      const getActiveSY = `SELECT school_year FROM school_year WHERE status = 'active' LIMIT 1`;
+      db.query(getActiveSY, (err, result) => {
+        if (err) {
+          console.error('Error getting active school year:', err);
+          return res.status(500).json({ error: 'Failed to get active school year' });
+        }
+
+        latestSchoolYear = result[0]?.school_year;
+        if (!latestSchoolYear) {
+          return res.status(404).json({ error: 'No active school year found' });
+        }
+
+        fetchStudents();
+      });
+    } else {
+      fetchStudents();
+    }
+  });
+});
+
+// Backend Route
+// Backend Route
+app.get('/sections/by-adviser/:user_id', (req, res) => {
+  const { user_id } = req.params;  // Correctly retrieve user_id from route parameters
+  const { searchTerm, grade, showArchive, schoolYearId } = req.query;
+
+  if (!user_id) {
+    return res.status(400).json({ error: 'Missing user_id in request' });
+  }
+
+  // Step 1: Get employee_id from user_id
+  const getEmployeeQuery = 'SELECT employee_id FROM employee WHERE user_id = ? LIMIT 1';
+  db.query(getEmployeeQuery, [user_id], (empErr, empResult) => {
+    if (empErr) {
+      console.error('Error fetching employee_id:', empErr);
+      return res.status(500).json({ error: 'Internal server error (employee lookup)' });
+    }
+
+    if (empResult.length === 0) {
+      return res.status(404).json({ error: 'Employee not found for provided user_id' });
+    }
+
+    const employeeId = empResult[0].employee_id;
+    // Step 2: Get sections based on employee_id
+    let query = `
+      SELECT s.section_id, s.section_name, s.grade_level, s.status, s.max_capacity, 
+             sy.school_year, s.archive_status, s.room_number,
+             MAX(CASE WHEN b.section_id IS NOT NULL THEN '1' ELSE '0' END) AS hasSched
+      FROM section s
+      JOIN school_year sy ON s.school_year_id = sy.school_year_id
+      LEFT JOIN schedule b ON s.section_id = b.section_id AND s.grade_level = b.grade_level
+      LEFT JOIN section_assigned c ON s.section_id = c.section_id AND s.grade_level = c.level
+      WHERE sy.status = 'active' AND c.employee_id = ?
+    `;
+
+    const queryParams = [employeeId];
+
+    // Apply filters if provided
+    if (searchTerm) {
+      query += ' AND s.section_name LIKE ?';
+      queryParams.push(`%${searchTerm}%`);
+    }
+
+    if (grade) {
+      query += ' AND s.grade_level = ?';
+      queryParams.push(grade);
+    }
+
+    if (showArchive) {
+      query += ' AND s.archive_status = ?';
+      queryParams.push(showArchive);
+    }
+
+    if (schoolYearId) {
+      query += ' AND sy.school_year = ?';
+      queryParams.push(schoolYearId);
+    }
+
+    query += ' GROUP BY s.section_name, s.grade_level';
+
+    console.log('📤 Executing section query with params:', queryParams);
+    console.log('📤 Final SQL query:', query);  // Log the final query for debugging
+
+    db.query(query, queryParams, (err, results) => {
+      if (err) {
+        console.error('❌ Error fetching sections:', err);
+        return res.status(500).json({ error: 'Internal server error' });
+      }
+
+      if (results.length === 0) {
+        console.log('⚠️ No sections found for employee_id:', employeeId);
+        return res.status(404).json({ error: 'No sections found for this adviser' });
+      }
+
+      console.log('✅ Sections found:', results);
+      res.json(results);
+    });
+  });
+});
+
+// GET schedules by adviser for a specific section
+app.get('/sections/:sectionId/schedules/by-adviser', (req, res) => {
+  const { user_id } = req.query;
+  const { sectionId } = req.params;
+
+  if (!user_id) {
+    return res.status(400).json({ error: 'user_id is required' });
+  }
+
+  const getEmployeeIdQuery = 'SELECT employee_id FROM employee WHERE user_id = ? LIMIT 1';
+  db.query(getEmployeeIdQuery, [user_id], (err, empResult) => {
+    if (err) {
+      console.error('❌ Error fetching employee_id:', err);
+      return res.status(500).json({ error: 'Failed to fetch employee_id' });
+    }
+
+    if (empResult.length === 0) {
+      console.warn('⚠️ No employee found for user_id:', user_id);
+      return res.status(404).json({ error: 'Employee not found' });
+    }
+
+    const employee_id = empResult[0].employee_id;
+    console.log('✅ Found employee_id:', employee_id);
+
+    const scheduleQuery = `
+      SELECT sc.schedule_id, sc.teacher_id,
+           IF(sc.elective='0',sb.subject_name,f.name) AS subject_name, 
+           TIME_FORMAT(sc.time_start, '%h:%i %p') AS time_start, 
+           TIME_FORMAT(sc.time_end, '%h:%i %p') AS time_end, 
+           sc.day, sc.section_id, sc.schedule_status,
+           CONCAT(e.firstname, ' ', IF(e.middlename IS NOT NULL AND e.middlename != '', CONCAT(LEFT(e.middlename, 1), '. '), ''), e.lastname) AS teacher_name
+    FROM SCHEDULE sc
+    JOIN SUBJECT sb ON sc.subject_id = sb.subject_id
+    LEFT JOIN employee e ON sc.teacher_id = e.employee_id
+    LEFT JOIN elective f ON sc.elective=f.elective_id
+    LEFT JOIN section_assigned g ON sc.section_id=g.section_id AND sc.teacher_id=g.employee_id
+    WHERE g.employee_id= ? and sc.section_id = ?
+    ORDER BY sc.time_start
+    `;
+
+    db.query(scheduleQuery, [employee_id, sectionId], (err, schedules) => {
+      if (err) {
+        console.error('❌ Error fetching section schedules:', err);
+        return res.status(500).json({ error: 'Failed to fetch schedules' });
+      }
+
+      console.log('✅ Schedules retrieved:', schedules.length);
+      res.json(schedules);
+    });
+  });
+});
+
+
+app.get('/sections/by-class-adviser', (req, res) => {
+  const userId = req.query.user_id;
+  const { searchTerm, grade, showArchive } = req.query;
+
+  console.log('Received user_id:', userId);  // Log the incoming user_id.
+
+  if (!userId) {
+    return res.status(400).json({ error: 'Missing user_id in query' });
+  }
+
+  const getEmployeeIdQuery = 'SELECT employee_id FROM employee WHERE user_id = ? LIMIT 1';
+
+  db.query(getEmployeeIdQuery, [userId], (err, employeeResult) => {
+    if (err) {
+      console.error('Error fetching employee_id:', err);
+      return res.status(500).json({ error: 'Failed to fetch employee ID', details: err });
+    }
+
+    console.log('Employee lookup result:', employeeResult);  // Log query result.
+
+    if (employeeResult.length === 0) {
+      return res.status(404).json({ error: 'Employee not found for this user' });
+    }
+
+    const employeeId = employeeResult[0].employee_id;
+
+    let query = `SELECT s.section_id, s.section_name, s.grade_level, s.status, s.max_capacity, sy.school_year, s.archive_status, s.room_number,
+        MAX(CASE WHEN b.section_id IS NOT NULL THEN '1' ELSE '0' END) AS hasSched
+      FROM section s
+      JOIN school_year sy ON s.school_year_id = sy.school_year_id
+      LEFT JOIN schedule b on s.section_id = b.section_id AND s.grade_level = b.grade_level
+      LEFT JOIN section_assigned c ON s.section_id = c.section_id AND s.grade_level = c.level
+      WHERE sy.status = 'active' AND c.employee_id = ?`;
+
+    const queryParams = [employeeId];
+
+    if (searchTerm) {
+      query += ' AND s.section_name LIKE ?';
+      queryParams.push(`%${searchTerm}%`);
+    }
+
+    if (grade) {
+      query += ' AND s.grade_level = ?';
+      queryParams.push(grade);
+    }
+
+    if (showArchive) {
+      query += ' AND s.archive_status = ?';
+      queryParams.push(showArchive);
+    }
+
+    query += ' GROUP BY s.section_name, s.grade_level';
+
+    db.query(query, queryParams, (err, results) => {
+      if (err) {
+        console.error('Error fetching sections:', err);
+        return res.status(500).json({ error: 'Internal server error', details: err });
+      }
+      console.log('Query results:', results);  // Log query results.
+      res.json(results);
+    });
+  });
+});
+
+
+app.get('/subjects/by-coordinator/:user_id', (req, res) => {
+  const { user_id } = req.params;  // Get user_id from URL path
+  const { searchTerm, school_year, grade, archive_status } = req.query;
+
+  console.log('Received filters:', req.query);
+  console.log('User ID:', user_id);
+
+  if (!user_id) {
+    return res.status(400).json({ error: 'Missing user_id in request' });
+  }
+
+  // Step 1: Get employee_id from user_id
+  const getEmployeeQuery = 'SELECT employee_id FROM employee WHERE user_id = ? LIMIT 1';
+  db.query(getEmployeeQuery, [user_id], (empErr, empResult) => {
+    if (empErr) {
+      console.error('Error fetching employee_id:', empErr);
+      return res.status(500).json({ error: 'Internal server error (employee lookup)' });
+    }
+
+    if (empResult.length === 0) {
+      return res.status(404).json({ error: 'Employee not found for provided user_id' });
+    }
+
+    const employeeId = empResult[0].employee_id;
+
+    // --- Query building ---
+    const queryParams = [];
+    let whereClause = ' WHERE 1=1'; // Base WHERE clause for both subject and elective queries
+
+    // Archive status for regular subjects
+    whereClause += ' AND s.archive_status = ?';
+    queryParams.push('unarchive'); // For regular subjects
+
+    // Search term (subject_name) for both subject and elective
+    if (searchTerm && searchTerm.trim() !== '') {
+      whereClause += ' AND (LOWER(s.subject_name) LIKE LOWER(?) OR LOWER(e.name) LIKE LOWER(?))';
+      queryParams.push(`%${searchTerm}%`, `%${searchTerm}%`);
+    }
+
+    // Grade level filter for subject only
+    if (grade) {
+      whereClause += ' AND s.grade_level = ?';
+      queryParams.push(grade);
+    }
+
+    // School year filter for subject only
+    if (school_year) {
+      whereClause += ' AND sy.school_year = ?';
+      queryParams.push(school_year);
+    }
+
+    // Main query logic
+    const mainQuery = `
+      SELECT * FROM (
+        -- Regular subjects
+        SELECT 
+            s.subject_id,
+            s.grade_level,
+            s.subject_name,
+            s.status,
+            s.grading_criteria,
+            s.description,
+            s.archive_status,
+            s.school_year_id,
+            sy.school_year,
+            sy.status AS sy_status,
+            0 AS elective_id,
+            sch.teacher_id, 
+            sch.schedule_status,
+            MAX(CASE WHEN sch.subject_id IS NOT NULL THEN '1' ELSE '0' END) AS hasSched
+        FROM SUBJECT s
+        LEFT JOIN school_year sy ON s.school_year_id = sy.school_year_id
+        LEFT JOIN (
+            SELECT DISTINCT subject_id, teacher_id, schedule_status
+            FROM SCHEDULE
+            WHERE elective = 0
+        ) sch ON s.subject_id = sch.subject_id
+        ${whereClause}  -- Filters for regular subject
+        GROUP BY 
+            s.subject_id, s.grade_level, s.subject_name, s.status, s.grading_criteria,
+            s.description, s.archive_status, s.school_year_id, sy.school_year, sy.status, sch.teacher_id
+
+        UNION
+
+        -- Elective subjects
+        SELECT 
+            e.elective_id AS subject_id,
+            NULL AS grade_level,
+            e.name AS subject_name,
+            e.status,
+            NULL AS grading_criteria,
+            NULL AS description,
+            e.archive_status,
+            NULL AS school_year_id,
+            NULL AS school_year,
+            e.status AS sy_status,
+            e.elective_id,
+            sch.teacher_id,
+            sch.schedule_status,
+            MAX(CASE WHEN sch.subject_id IS NOT NULL THEN '1' ELSE '0' END) AS hasSched
+        FROM elective e
+        LEFT JOIN (
+            SELECT DISTINCT subject_id, teacher_id, schedule_status
+            FROM SCHEDULE
+            WHERE elective = 1
+        ) sch ON e.elective_id = sch.subject_id
+        WHERE e.archive_status = 'unarchive'  -- Filter for elective subjects
+        GROUP BY 
+            e.elective_id, e.name, e.status, e.archive_status, sch.teacher_id
+      ) combined
+      WHERE teacher_id = ? AND schedule_status='Approved'
+      ORDER BY grade_level DESC, subject_name ASC;
+    `;
+
+    // Add the final parameter for teacher_id
+    queryParams.push(employeeId);
+
+    console.log('Query:', mainQuery);
+    console.log('Parameters:', queryParams);
+
+    // Execute the query
+    db.query(mainQuery, queryParams, (error, results) => {
+      if (error) {
+        console.error('Error fetching subjects:', error);
+        return res.status(500).json({ error: 'Internal server error' });
+      }
+
+      if (results.length === 0) {
+        return res.status(404).json({ error: 'No subjects found matching the criteria' });
+      }
+
+      res.json(results);
+    });
+  });
+});
+
+
+app.get('/students/by-teacher', (req, res) => {
+  const { user_id, searchTerm, grade, section, school_year } = req.query;
+
+  if (!user_id) {
+    return res.status(400).json({ error: 'Missing user_id' });
+  }
+
+  // Step 1: Get employee_id from user_id
+  const getEmployeeIdQuery = 'SELECT employee_id FROM employee WHERE user_id = ? LIMIT 1';
+  db.query(getEmployeeIdQuery, [user_id], (err, empResult) => {
+    if (err) {
+      console.error('Error fetching employee_id:', err);
+      return res.status(500).json({ error: 'Failed to fetch employee_id' });
+    }
+
+    if (empResult.length === 0) {
+      return res.status(404).json({ error: 'Employee not found' });
+    }
+
+    const employee_id = empResult[0].employee_id;
+
+    // Step 2: Get active school year if not provided
+    let latestSchoolYear = school_year;
+
+    function fetchStudents() {
+      let query = `
+        SELECT s.student_id, s.user_id, s.lrn, s.section_id,
+        CONCAT(s.lastname, ', ', s.firstname, ' ', 
+        IF(s.middlename IS NOT NULL AND s.middlename != '', CONCAT(LEFT(s.middlename, 1), '.'), '')) AS stud_name,
+        s.lastname, s.firstname, s.middlename, 
+        s.current_yr_lvl, DATE_FORMAT(s.birthdate, '%M %e, %Y') AS birthdate, s.gender, s.age, 
+        s.home_address, s.barangay, s.city_municipality, s.province, 
+        s.contact_number, s.email_address, z.section_name, sy.school_year, sy.school_year_id,
+        s.mother_name, s.father_name, s.parent_address, s.father_occupation, 
+        s.mother_occupation, FORMAT(s.annual_hshld_income,2) AS annual_hshld_income, s.number_of_siblings, 
+        s.father_educ_lvl, s.mother_educ_lvl, s.father_contact_number, 
+        s.mother_contact_number, IF(s.brigada_eskwela=1,'Attended','Not Attended') AS brigada_eskwela,
+        s.emergency_number, s.emergency_contactperson,
+        (SELECT ss.status FROM student_school_year ss
+        JOIN school_year sy ON ss.school_year_id = sy.school_year_id
+        WHERE ss.student_id = s.student_id AND sy.status = 'active') AS active_status,
+        se.enrollment_status, se.student_elective_id
+        FROM student s
+        LEFT JOIN student_elective se ON s.student_id = se.student_id
+        LEFT JOIN section z ON s.section_id = z.section_id
+        LEFT JOIN student_school_year ss ON s.student_id = ss.student_id
+        LEFT JOIN school_year sy ON ss.school_year_id = sy.school_year_id
+        LEFT JOIN subject_assigned d ON z.grade_level=d.level AND z.section_id=d.section_id AND d.school_year_id=z.school_year_id
+        WHERE s.active_status = 'unarchive' AND d.employee_id = ?
+      `;
+
+      const queryParams = [employee_id];
+      const conditions = [];
+
+      if (searchTerm) {
+        conditions.push(`(s.firstname LIKE ? OR s.lastname LIKE ? OR s.student_id LIKE ? OR s.lrn LIKE ?)`);
+        queryParams.push(`%${searchTerm}%`, `%${searchTerm}%`, `%${searchTerm}%`, `%${searchTerm}%`);
+      }
+      if (grade) {
+        conditions.push(`s.current_yr_lvl = ?`);
+        queryParams.push(grade);
+      }
+      if (section) {
+        conditions.push(`z.section_name = ?`);
+        queryParams.push(section);
+      }
+      if (latestSchoolYear) {
+        conditions.push(`sy.school_year = ?`);
+        queryParams.push(latestSchoolYear);
+      }
+
+      if (conditions.length > 0) {
+        query += ' AND ' + conditions.join(' AND ');
+      }
+
+      query += ' GROUP BY s.student_id ORDER BY s.lastname ASC';
+
+      console.log('Adviser SQL Query:', query);
+      console.log('Params:', queryParams);
+
+      db.query(query, queryParams, (err, results) => {
+        if (err) {
+          console.error('Error fetching students:', err);
+          return res.status(500).json({ error: 'Failed to fetch students' });
+        }
+
+        res.json(results);
+      });
+    }
+
+    // If school_year not provided, fetch active one
+    if (!school_year) {
+      const getActiveSY = `SELECT school_year FROM school_year WHERE status = 'active' LIMIT 1`;
+      db.query(getActiveSY, (err, result) => {
+        if (err) {
+          console.error('Error getting active school year:', err);
+          return res.status(500).json({ error: 'Failed to get active school year' });
+        }
+
+        latestSchoolYear = result[0]?.school_year;
+        if (!latestSchoolYear) {
+          return res.status(404).json({ error: 'No active school year found' });
+        }
+
+        fetchStudents();
+      });
+    } else {
+      fetchStudents();
+    }
+  });
+});

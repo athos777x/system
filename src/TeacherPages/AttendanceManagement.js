@@ -13,6 +13,7 @@ function AttendanceManagement() {
   const [sections, setSections] = useState([]);
   const [filteredSections, setFilteredSections] = useState([]);
   const [sectionSubjects, setSectionSubjects] = useState([]);
+  const [roleName, setRoleName] = useState('');
   const [filters, setFilters] = useState({
     searchTerm: '',
     grade: '',
@@ -25,29 +26,77 @@ function AttendanceManagement() {
   useEffect(() => {
     fetchSchoolYears();
     fetchSections();
+  // Ensure roleName is available before calling fetchStudents
+  if (roleName) {
+    fetchStudents(roleName); // Pass roleName to fetchStudents
+  }
+}, [roleName]); // Depend on roleName to trigger re-fetching when roleName changes
+
+  useEffect(() => {
+    const userId = localStorage.getItem('userId'); // Retrieve userId from localStorage
+    if (userId) {
+      console.log(`Retrieved userId from localStorage: ${userId}`); // Debugging log
+      fetchUserRole(userId);
+    } else {
+      console.error('No userId found in localStorage');
+    }
   }, []);
+
+  const fetchUserRole = async (userId) => {
+    try {
+      console.log(`Fetching role for user ID: ${userId}`); // Debugging log
+      const response = await axios.get(`http://localhost:3001/user-role/${userId}`);
+      if (response.status === 200) {
+        console.log('Response received:', response.data); // Debugging log
+        setRoleName(response.data.role_name);
+        console.log('Role name set to:', response.data.role_name); // Debugging log
+      } else {
+        console.error('Failed to fetch role name. Response status:', response.status);
+      }
+    } catch (error) {
+      if (error.response) {
+        console.error('Error response from server:', error.response.data);
+      } else if (error.request) {
+        console.error('No response received from server. Request:', error.request);
+      } else {
+        console.error('Error setting up request:', error.message);
+      }
+    }
+  };
 
   const fetchStudents = async (appliedFilters = {}) => {
     try {
-        const response = await axios.get('http://localhost:3001/students', {
-            params: appliedFilters,
-        });
-
-        const sortedStudents = response.data.sort((a, b) => b.lastName);
-
-        // Ensure all required fields are available
-        const updatedStudents = sortedStudents.map(student => ({
-            ...student,
-            grade_level: student.current_yr_lvl || '-', // Fallback if grade_level is missing
-            brigada_attendance: student.brigada_eskwela === 'Attended' ? 'Yes' : 'No' // Convert 1 to 'Yes' and other values to 'No'
-        }));
-
-        setStudents(updatedStudents);
-        setFilteredStudents(updatedStudents);
+      const userId = localStorage.getItem('userId'); // Retrieve userId from localStorage
+      const filteredParams = { ...appliedFilters };
+  
+      if (userId) {
+        filteredParams.user_id = userId; // Add user_id to the request parameters
+      }
+  
+  
+      const endpoint = roleName === 'subject_teacher'
+        ? 'http://localhost:3001/students/by-teacher'
+        : 'http://localhost:3001/students';
+  
+      const response = await axios.get(endpoint, {
+        params: filteredParams,
+      });
+  
+      const sortedStudents = response.data.sort((a, b) => b.lastName);
+  
+      const updatedStudents = sortedStudents.map(student => ({
+        ...student,
+        grade_level: student.current_yr_lvl || '-',
+        brigada_attendance: student.brigada_eskwela === 'Attended' ? 'Yes' : 'No'
+      }));
+  
+      setStudents(updatedStudents);
+      setFilteredStudents(updatedStudents);
     } catch (error) {
-        console.error('There was an error fetching the students!', error);
+      console.error('There was an error fetching the students!', error);
     }
   };
+  
 
 
 
