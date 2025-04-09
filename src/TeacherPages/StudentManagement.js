@@ -241,7 +241,7 @@ function StudentManagement() {
       parent_address: '',
       father_occupation: '',
       mother_occupation: '',
-      annual_income: '',
+      annual_hshld_income: '',
       number_of_siblings: '',
       father_educ_lvl: '',
       mother_educ_lvl: '',
@@ -255,6 +255,7 @@ function StudentManagement() {
       active_status: 'unarchive',
       user_id: ''
     });
+    setErrors({}); // Reset errors when starting to add a new student
     setShowModal(true);
   };
 
@@ -300,11 +301,8 @@ function StudentManagement() {
       case 'father_contact_number':
       case 'mother_contact_number':
       case 'emergency_number':
-        if (value.trim() !== '') {
-          newErrors[name] = validateContactNumber(value, name.replace(/_/g, ' ').toLowerCase());
-        } else {
-          newErrors[name] = ""; // Clear error if empty
-        }
+        // Always validate; the function handles empty strings correctly.
+        newErrors[name] = validateContactNumber(value, name.replace(/_/g, ' ').toLowerCase());
         break;
       case 'email_address':
         if (value.trim() !== '') {
@@ -326,7 +324,7 @@ function StudentManagement() {
           }));
         }
         break;
-      case 'annual_income':
+      case 'annual_hshld_income':
         if (value.trim() !== '') {
           newErrors[name] = validateIncome(value);
         } else {
@@ -416,8 +414,8 @@ function StudentManagement() {
       if (newStudentData.age) {
         newErrors.age = validateAge(newStudentData.age);
       }
-      if (newStudentData.annual_income) {
-        newErrors.annual_income = validateIncome(newStudentData.annual_income);
+      if (newStudentData.annual_hshld_income) {
+        newErrors.annual_hshld_income = validateIncome(newStudentData.annual_hshld_income);
       }
 
       // Filter out empty error messages
@@ -453,7 +451,7 @@ function StudentManagement() {
         parent_address: newStudentData.parent_address ? formatCapitalization(newStudentData.parent_address) : '',
         father_occupation: newStudentData.father_occupation ? formatCapitalization(newStudentData.father_occupation) : '',
         mother_occupation: newStudentData.mother_occupation ? formatCapitalization(newStudentData.mother_occupation) : '',
-        annual_hshld_income: newStudentData.annual_income ? newStudentData.annual_income : '0',
+        annual_hshld_income: newStudentData.annual_hshld_income ? newStudentData.annual_hshld_income : '0',
         number_of_siblings: newStudentData.number_of_siblings ? parseInt(newStudentData.number_of_siblings, 10) : 0,
         father_educ_lvl: newStudentData.father_educ_lvl || '',
         mother_educ_lvl: newStudentData.mother_educ_lvl || '',
@@ -531,38 +529,9 @@ function StudentManagement() {
 
   
 const cancelAdding = () => {
-  // Reset form data and close modal
-  setNewStudentData({
-    lastname: '',
-    middlename: '',
-    firstname: '',
-    current_yr_lvl: '',
-    birthdate: '',
-    gender: '',
-    age: '',
-    home_address: '',
-    barangay: '',
-    city_municipality: '',
-    province: '',
-    contact_number: '',
-    email_address: '',
-    mother_name: '',
-    father_name: '',
-    parent_address: '',
-    father_occupation: '',
-    mother_occupation: '',
-    annual_income: '',
-    number_of_siblings: '',
-    father_educ_lvl: '',
-    mother_educ_lvl: '',
-    father_contact_number: '',
-    mother_contact_number: '',
-    emergency_number: '',
-    status: 'active',
-    active_status: 'unarchive',
-    user_id: ''
-  });
-  setShowModal(false);  // Close the modal
+  setIsAdding(false);
+  setShowModal(false);
+  setErrors({}); // Reset errors when closing the add new student modal
 };
 
 const enrollStudent = async (studentId) => {
@@ -715,9 +684,13 @@ const handleArchive = () => {
   const toggleStudentDetails = (studentId) => {
     setSelectedStudentId(selectedStudentId === studentId ? null : studentId);
     if (selectedStudentId === studentId) {
-      // If we're closing the details, also exit edit mode
+      // If we're closing the details, also exit edit mode and clear errors
       setIsEditing(false);
       setEditStudentData(null);
+      setErrors({}); // Reset errors when closing the details view
+    } else {
+      // Reset errors when opening the details view
+      setErrors({});
     }
   };
 
@@ -726,6 +699,8 @@ const handleArchive = () => {
     setEditStudentData(student);
     setIsEditing(true);
     setSelectedStudentId(studentId); // Ensure details are expanded
+    setErrors({}); // Reset errors when starting edit mode
+    setIsAdding(false); // Ensure add mode is not active
   };
 
   const paginate = (pageNumber) => {
@@ -776,17 +751,84 @@ const handleArchive = () => {
   // Update the handleEditChange function to auto-calculate age when birthdate changes
   const handleEditChange = (e) => {
     const { name, value } = e.target;
-    
-    // If birthdate is changed, automatically calculate and update age
-    if (name === 'birthdate' && value) {
-      const calculatedAge = calculateAge(value);
-      setEditStudentData({ 
-        ...editStudentData, 
-        [name]: value,
-        age: calculatedAge
-      });
-    } else {
-      setEditStudentData({ ...editStudentData, [name]: value });
+    let newErrors = { ...errors };
+
+    // Validate based on field name
+    switch (name) {
+      case 'lrn':
+        newErrors[name] = validateLRN(value);
+        break;
+      case 'lastname':
+      case 'firstname':
+        newErrors[name] = validateName(value, name.charAt(0).toUpperCase() + name.slice(1));
+        break;
+      case 'middlename':
+        if (value.trim() !== '') {
+          newErrors[name] = validateName(value, 'Middle name');
+        } else {
+          newErrors[name] = ""; // Clear error if empty
+        }
+        break;
+      case 'contact_number':
+      case 'father_contact_number':
+      case 'mother_contact_number':
+      case 'emergency_number':
+        // Always validate; the function handles empty strings correctly.
+        newErrors[name] = validateContactNumber(value, name.replace(/_/g, ' ').toLowerCase());
+        break;
+      case 'email_address':
+        if (value.trim() !== '') {
+          newErrors[name] = validateEmail(value);
+        } else {
+          newErrors[name] = ""; // Clear error if empty
+        }
+        break;
+      case 'birthdate':
+        if (!value) {
+          newErrors[name] = "Birthdate is required";
+        } else {
+          const calculatedAge = calculateAge(value);
+          newErrors['age'] = validateAge(calculatedAge);
+          setEditStudentData(prevData => ({
+            ...prevData,
+            [name]: value,
+            age: calculatedAge
+          }));
+        }
+        break;
+      case 'annual_hshld_income':
+        if (value.trim() !== '') {
+          newErrors[name] = validateIncome(value);
+        } else {
+          newErrors[name] = ""; // Clear error if empty
+        }
+        break;
+      case 'current_yr_lvl':
+        newErrors[name] = !value ? "Year level is required" : "";
+        break;
+      case 'gender':
+        newErrors[name] = !value ? "Gender is required" : "";
+        break;
+      case 'number_of_siblings':
+        if (value.trim() !== '') {
+          newErrors[name] = validateSiblings(value);
+        } else {
+          newErrors[name] = "";
+        }
+        break;
+      default:
+        // All other fields are optional
+        newErrors[name] = "";
+    }
+
+    setErrors(newErrors);
+
+    // Update the form data
+    if (name !== 'birthdate') {  // birthdate is handled separately above
+      setEditStudentData(prevData => ({
+        ...prevData,
+        [name]: value
+      }));
     }
   };
 
@@ -812,10 +854,47 @@ const handleArchive = () => {
         }
     });
 
-    // If errors exist, show them and prevent submission
+    // Run specific validations
+    if (editStudentData.lrn) newErrors.lrn = validateLRN(editStudentData.lrn);
+    if (editStudentData.lastname) newErrors.lastname = validateName(editStudentData.lastname, 'Last name');
+    if (editStudentData.firstname) newErrors.firstname = validateName(editStudentData.firstname, 'First name');
+    if (editStudentData.middlename && editStudentData.middlename.trim() !== '') {
+      newErrors.middlename = validateName(editStudentData.middlename, 'Middle name');
+    }
+
+    // Optional field validations - only validate if they have a value
+    if (editStudentData.contact_number) {
+      newErrors.contact_number = validateContactNumber(editStudentData.contact_number, 'Contact number');
+    }
+    if (editStudentData.father_contact_number) {
+      newErrors.father_contact_number = validateContactNumber(editStudentData.father_contact_number, 'Father contact number');
+    }
+    if (editStudentData.mother_contact_number) {
+      newErrors.mother_contact_number = validateContactNumber(editStudentData.mother_contact_number, 'Mother contact number');
+    }
+    if (editStudentData.emergency_number) {
+      newErrors.emergency_number = validateContactNumber(editStudentData.emergency_number, 'Emergency number');
+    }
+    if (editStudentData.email_address) {
+      newErrors.email_address = validateEmail(editStudentData.email_address);
+    }
+    if (editStudentData.age) {
+      newErrors.age = validateAge(editStudentData.age);
+    }
+    if (editStudentData.annual_hshld_income) {
+      newErrors.annual_hshld_income = validateIncome(editStudentData.annual_hshld_income);
+    }
+
+    // Filter out empty error messages
+    newErrors = Object.fromEntries(
+      Object.entries(newErrors).filter(([_, value]) => value !== "")
+    );
+
+    // If there are validation errors, show them and prevent submission
     if (Object.keys(newErrors).length > 0) {
-        setErrors(newErrors);
-        return;
+      setErrors(newErrors);
+      alert("Please fix all validation errors before submitting");
+      return;
     }
 
     // Apply proper capitalization to text fields
@@ -1058,10 +1137,12 @@ const handleArchive = () => {
                               name="lrn"
                               value={editStudentData ? editStudentData.lrn || "" : ""}
                               onChange={handleEditChange}
+                              className={errors.lrn ? "error" : ""}
                             />
                           ) : (
                             student.lrn
                           )}
+                          {errors.lrn && <span className="student-mgmt-error">{errors.lrn}</span>}
                         </td>
                       </tr>
                       <tr>
@@ -1073,10 +1154,12 @@ const handleArchive = () => {
                               name="lastname"
                               value={editStudentData ? editStudentData.lastname || "" : ""}
                               onChange={handleEditChange}
+                              className={errors.lastname ? "error" : ""}
                             />
                           ) : (
                             student.lastname
                           )}
+                          {errors.lastname && <span className="student-mgmt-error">{errors.lastname}</span>}
                         </td>
                       </tr>
                       <tr>
@@ -1088,10 +1171,12 @@ const handleArchive = () => {
                               name="firstname"
                               value={editStudentData ? editStudentData.firstname || "" : ""}
                               onChange={handleEditChange}
+                              className={errors.firstname ? "error" : ""}
                             />
                           ) : (
                             student.firstname
                           )}
+                          {errors.firstname && <span className="student-mgmt-error">{errors.firstname}</span>}
                         </td>
                       </tr>
                       <tr>
@@ -1103,25 +1188,34 @@ const handleArchive = () => {
                               name="middlename"
                               value={editStudentData ? editStudentData.middlename || "" : ""}
                               onChange={handleEditChange}
+                              className={errors.middlename ? "error" : ""}
                             />
                           ) : (
                             student.middlename
                           )}
+                          {errors.middlename && <span className="student-mgmt-error">{errors.middlename}</span>}
                         </td>
                       </tr>
                       <tr>
                         <th>Grade Level:</th>
                         <td>
                           {isEditing ? (
-                            <input
-                              type="text"
+                            <select
                               name="current_yr_lvl"
                               value={editStudentData ? editStudentData.current_yr_lvl || "" : ""}
                               onChange={handleEditChange}
-                            />
+                              className={errors.current_yr_lvl ? "error" : ""}
+                            >
+                              <option value="">Select Year Level</option>
+                              <option value="7">7</option>
+                              <option value="8">8</option>
+                              <option value="9">9</option>
+                              <option value="10">10</option>
+                            </select>
                           ) : (
                             student.current_yr_lvl
                           )}
+                          {errors.current_yr_lvl && <span className="student-mgmt-error">{errors.current_yr_lvl}</span>}
                         </td>
                       </tr>
                       <tr>
@@ -1177,10 +1271,12 @@ const handleArchive = () => {
                               name="gender"
                               value={editStudentData ? editStudentData.gender || "" : ""}
                               onChange={handleEditChange}
+                              className={errors.gender ? "error" : ""}
                             />
                           ) : (
                             student.gender
                           )}
+                          {errors.gender && <span className="student-mgmt-error">{errors.gender}</span>}
                         </td>
                       </tr>
                       <tr>
@@ -1220,10 +1316,12 @@ const handleArchive = () => {
                               name="home_address"
                               value={editStudentData ? editStudentData.home_address || "" : ""}
                               onChange={handleEditChange}
+                              className={errors.home_address ? "error" : ""}
                             />
                           ) : (
                             student.home_address
                           )}
+                          {errors.home_address && <span className="student-mgmt-error">{errors.home_address}</span>}
                         </td>
                       </tr>
                       <tr>
@@ -1235,10 +1333,12 @@ const handleArchive = () => {
                               name="barangay"
                               value={editStudentData ? editStudentData.barangay || "" : ""}
                               onChange={handleEditChange}
+                              className={errors.barangay ? "error" : ""}
                             />
                           ) : (
                             student.barangay
                           )}
+                          {errors.barangay && <span className="student-mgmt-error">{errors.barangay}</span>}
                         </td>
                       </tr>
                       <tr>
@@ -1250,10 +1350,12 @@ const handleArchive = () => {
                               name="city_municipality"
                               value={editStudentData ? editStudentData.city_municipality || "" : ""}
                               onChange={handleEditChange}
+                              className={errors.city_municipality ? "error" : ""}
                             />
                           ) : (
                             student.city_municipality
                           )}
+                          {errors.city_municipality && <span className="student-mgmt-error">{errors.city_municipality}</span>}
                         </td>
                       </tr>
                       <tr>
@@ -1265,10 +1367,12 @@ const handleArchive = () => {
                               name="province"
                               value={editStudentData ? editStudentData.province || "" : ""}
                               onChange={handleEditChange}
+                              className={errors.province ? "error" : ""}
                             />
                           ) : (
                             student.province
                           )}
+                          {errors.province && <span className="student-mgmt-error">{errors.province}</span>}
                         </td>
                       </tr>
                       <tr>
@@ -1280,10 +1384,13 @@ const handleArchive = () => {
                               name="contact_number"
                               value={editStudentData ? editStudentData.contact_number || "" : ""}
                               onChange={handleEditChange}
+                              className={errors.contact_number ? "error" : ""}
+                              maxLength={11}
                             />
                           ) : (
                             student.contact_number
                           )}
+                          {errors.contact_number && <span className="student-mgmt-error">{errors.contact_number}</span>}
                         </td>
                       </tr>
                       <tr>
@@ -1295,10 +1402,12 @@ const handleArchive = () => {
                               name="email_address"
                               value={editStudentData ? editStudentData.email_address || "" : ""}
                               onChange={handleEditChange}
+                              className={errors.email_address ? "error" : ""}
                             />
                           ) : (
                             student.email_address
                           )}
+                          {errors.email_address && <span className="student-mgmt-error">{errors.email_address}</span>}
                         </td>
                       </tr>
                     </tbody>
@@ -1321,10 +1430,12 @@ const handleArchive = () => {
                                 name="parent_address"
                                 value={editStudentData ? editStudentData.parent_address || "" : ""}
                                 onChange={handleEditChange}
+                                className={errors.parent_address ? "error" : ""}
                               />
                             ) : (
                                       student.parent_address
                             )}
+                            {errors.parent_address && <span className="student-mgmt-error">{errors.parent_address}</span>}
                           </td>
                         </tr>
                         <tr>
@@ -1336,10 +1447,12 @@ const handleArchive = () => {
                                 name="mother_name"
                                 value={editStudentData ? editStudentData.mother_name || "" : ""}
                                 onChange={handleEditChange}
+                                className={errors.mother_name ? "error" : ""}
                               />
                             ) : (
                                       student.mother_name
                             )}
+                            {errors.mother_name && <span className="student-mgmt-error">{errors.mother_name}</span>}
                           </td>
                         </tr>
                         <tr>
@@ -1351,10 +1464,13 @@ const handleArchive = () => {
                                 name="mother_contact_number"
                                 value={editStudentData ? editStudentData.mother_contact_number || "" : ""}
                                 onChange={handleEditChange}
+                                className={errors.mother_contact_number ? "error" : ""}
+                                maxLength={11}
                               />
                             ) : (
                               student.mother_contact_number
                             )}
+                            {errors.mother_contact_number && <span className="student-mgmt-error">{errors.mother_contact_number}</span>}
                           </td>
                         </tr>
                         <tr>
@@ -1366,10 +1482,12 @@ const handleArchive = () => {
                                 name="mother_occupation"
                                 value={editStudentData ? editStudentData.mother_occupation || "" : ""}
                                 onChange={handleEditChange}
+                                className={errors.mother_occupation ? "error" : ""}
                               />
                             ) : (
                                       student.mother_occupation
                             )}
+                            {errors.mother_occupation && <span className="student-mgmt-error">{errors.mother_occupation}</span>}
                           </td>
                         </tr>
                         <tr>
@@ -1389,6 +1507,7 @@ const handleArchive = () => {
                             ) : (
                               student.mother_educ_lvl
                             )}
+                            {errors.mother_educ_lvl && <span className="student-mgmt-error">{errors.mother_educ_lvl}</span>}
                           </td>
                         </tr>
                         <tr>
@@ -1400,10 +1519,12 @@ const handleArchive = () => {
                                 name="father_name"
                                 value={editStudentData ? editStudentData.father_name || "" : ""}
                                 onChange={handleEditChange}
+                                className={errors.father_name ? "error" : ""}
                               />
                             ) : (
                                       student.father_name
                             )}
+                            {errors.father_name && <span className="student-mgmt-error">{errors.father_name}</span>}
                           </td>
                         </tr>
                         <tr>
@@ -1415,10 +1536,13 @@ const handleArchive = () => {
                                 name="father_contact_number"
                                 value={editStudentData ? editStudentData.father_contact_number || "" : ""}
                                 onChange={handleEditChange}
+                                className={errors.father_contact_number ? "error" : ""}
+                                maxLength={11}
                               />
                             ) : (
                               student.father_contact_number
                             )}
+                            {errors.father_contact_number && <span className="student-mgmt-error">{errors.father_contact_number}</span>}
                           </td>
                         </tr>
                         <tr>
@@ -1430,10 +1554,12 @@ const handleArchive = () => {
                                 name="father_occupation"
                                 value={editStudentData ? editStudentData.father_occupation || "" : ""}
                                 onChange={handleEditChange}
+                                className={errors.father_occupation ? "error" : ""}
                               />
                             ) : (
                               student.father_occupation
                             )}
+                            {errors.father_occupation && <span className="student-mgmt-error">{errors.father_occupation}</span>}
                           </td>
                         </tr>
                         <tr>
@@ -1453,6 +1579,7 @@ const handleArchive = () => {
                             ) : (
                               student.father_educ_lvl
                             )}
+                            {errors.father_educ_lvl && <span className="student-mgmt-error">{errors.father_educ_lvl}</span>}
                           </td>
                         </tr>
                         <tr>
@@ -1461,13 +1588,15 @@ const handleArchive = () => {
                             {isEditing ? (
                               <input
                                 type="text"
-                                name="annual_income"
+                                name="annual_hshld_income"
                                 value={editStudentData ? editStudentData.annual_hshld_income || "" : ""}
                                 onChange={handleEditChange}
+                                className={errors.annual_hshld_income ? "error" : ""}
                               />
                             ) : (
                               student.annual_hshld_income
                             )}
+                            {errors.annual_hshld_income && <span className="student-mgmt-error">{errors.annual_hshld_income}</span>}
                           </td>
                         </tr>
                         <tr>
@@ -1487,6 +1616,7 @@ const handleArchive = () => {
                             ) : (
                               student.number_of_siblings
                             )}
+                            {errors.number_of_siblings && <span className="student-mgmt-error">{errors.number_of_siblings}</span>}
                           </td>
                         </tr>
 
@@ -1502,10 +1632,12 @@ const handleArchive = () => {
                                 name="emergency_contactperson"
                                 value={editStudentData ? editStudentData.emergency_contactperson || "" : ""}
                                 onChange={handleEditChange}
+                                className={errors.emergency_contactperson ? "error" : ""}
                               />
                             ) : (
                               student.emergency_contactperson
                             )}
+                            {errors.emergency_contactperson && <span className="student-mgmt-error">{errors.emergency_contactperson}</span>}
                           </td>
                         </tr>
                         <tr>
@@ -1517,10 +1649,13 @@ const handleArchive = () => {
                                 name="emergency_number"
                                 value={editStudentData ? editStudentData.emergency_number || "" : ""}
                                 onChange={handleEditChange}
+                                className={errors.emergency_number ? "error" : ""}
+                                maxLength={11}
                               />
                             ) : (
                               student.emergency_number
                             )}
+                            {errors.emergency_number && <span className="student-mgmt-error">{errors.emergency_number}</span>}
                           </td>
                         </tr>
                               </tbody>
@@ -2013,12 +2148,12 @@ const handleArchive = () => {
                   <label>Annual Household Income:</label>
                   <input
                     type="text"
-                    name="annual_income"
-                    value={newStudentData.annual_income}
+                    name="annual_hshld_income"
+                    value={newStudentData.annual_hshld_income}
                     onChange={handleAddChange}
-                    className={errors.annual_income ? "error" : ""}
+                    className={errors.annual_hshld_income ? "error" : ""}
                   />
-                  {errors.annual_income && <span className="student-mgmt-error">{errors.annual_income}</span>}
+                  {errors.annual_hshld_income && <span className="student-mgmt-error">{errors.annual_hshld_income}</span>}
                 </div>
                 <div className="student-mgmt-form-group">
                   <label>Number of Siblings:</label>
