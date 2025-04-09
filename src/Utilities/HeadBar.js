@@ -1,14 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../CssFiles/headbar.css';
-import { FiMenu, FiUser, FiLogOut } from 'react-icons/fi';
+import { FiMenu, FiUser, FiLogOut, FiMoon, FiSun } from 'react-icons/fi';
 import defaultProfilePic from '../assets/user_pp.jpg'; // Import the default profile picture as fallback
 
 function HeaderBar({ showSidebar, toggleSidebar, onLogout, user }) {
   const [dropdownVisible, setDropdownVisible] = useState(false);
   const [profilePicture, setProfilePicture] = useState(defaultProfilePic);
+  const [isDarkMode, setIsDarkMode] = useState(() => localStorage.getItem('theme') === 'dark');
   const navigate = useNavigate();
   const userId = localStorage.getItem('userId');
+
+  // Theme toggle function
+  const toggleTheme = () => {
+    const newTheme = !isDarkMode;
+    setIsDarkMode(newTheme);
+    localStorage.setItem('theme', newTheme ? 'dark' : 'light');
+    document.body.setAttribute('data-theme', newTheme ? 'dark' : 'light');
+  };
+
+  // Initialize theme on component mount
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    setIsDarkMode(savedTheme === 'dark');
+    document.body.setAttribute('data-theme', savedTheme);
+  }, []);
 
   // Function to load the profile picture from localStorage or API
   const loadProfilePicture = async () => {
@@ -128,6 +144,9 @@ function HeaderBar({ showSidebar, toggleSidebar, onLogout, user }) {
             )}
             <button className="dropdown-item" onClick={handleViewProfile}>
               <FiUser /> My Profile
+            </button>
+            <button className="dropdown-item" onClick={toggleTheme}>
+              {isDarkMode ? <FiSun /> : <FiMoon />} {isDarkMode ? 'Light Mode' : 'Dark Mode'}
             </button>
             <button className="dropdown-item" onClick={handleLogout}>
               <FiLogOut /> Logout
