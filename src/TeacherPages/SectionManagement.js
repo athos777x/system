@@ -30,10 +30,12 @@ function SectionManagement() {
     archive_status: 'unarchive' // Default value
   });
   const [errors, setErrors] = useState({});
+  const [isInitialized, setIsInitialized] = useState(false);
 
   const fetchActiveSchoolYear = useCallback(async () => {
     try {
       const response = await axios.get('http://localhost:3001/school-years/active');
+      console.log('Active school year response:', response.data); // Log the response
       setActiveSchoolYear(response.data.school_year);
       return response.data;
     } catch (error) {
@@ -71,7 +73,8 @@ function SectionManagement() {
 
         const response = await axios.get(endpoint, { params });
         setSections(response.data);
-        setFilteredSections(response.data);
+        const unarchivedSections = response.data.filter(section => section.archive_status === 'unarchive');
+        setFilteredSections(unarchivedSections);
     } catch (error) {
         console.error("Error fetching sections:", error);
     }
@@ -97,22 +100,6 @@ function SectionManagement() {
     const grades = sections.map(section => section.grade_level);
     return [...new Set(grades)];
   };
-
-  useEffect(() => {
-    const loadSections = async () => {
-      const activeYear = await fetchActiveSchoolYear();
-      if (activeYear && roleName) {
-        fetchSections(activeYear.school_year_id, false);  // Fetch without filters initially
-      }
-    };
-  
-    loadSections();
-    fetchSchoolYears();
-  }, [fetchActiveSchoolYear, fetchSchoolYears, roleName, filters, fetchSections]); // Add roleName to dependency array
-  
-
-
-
 
   const applyFilters = (updatedFilters) => {
     console.log('Updated filters:', updatedFilters);
@@ -293,6 +280,25 @@ function SectionManagement() {
     if (!status) return 'Active';
     return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
   };
+
+  useEffect(() => {
+    if (!isInitialized) {
+      const initializeData = async () => {
+        await fetchSchoolYears(); // Fetch school years first
+        const activeYear = await fetchActiveSchoolYear();
+        if (activeYear && roleName) {
+          console.log('Active school year:', activeYear.school_year); // Log active school year
+          setFilters(prevFilters => ({ ...prevFilters, school_year: activeYear.school_year })); // Set default school year
+          await fetchSections(activeYear.school_year_id, false);  // Fetch sections without filters initially
+          console.log('Applying filters with:', { ...filters, school_year: activeYear.school_year }); // Log filters being applied
+          
+        }
+        setIsInitialized(true); // Mark as initialized
+      };
+
+      initializeData();
+    }
+  }, [fetchActiveSchoolYear, fetchSchoolYears, roleName, fetchSections, isInitialized]);
 
   useEffect(() => {
     const userId = localStorage.getItem('userId'); // Retrieve userId from localStorage
