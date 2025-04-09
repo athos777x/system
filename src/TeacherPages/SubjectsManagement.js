@@ -62,20 +62,42 @@ function SubjectsManagement() {
   }, []);
 
   const fetchSubjects = useCallback(async () => {
+    if (!roleName) {
+      console.error('Role name is not set');
+      return;
+    }
+  
     try {
-      await axios.put('http://localhost:3001/update-subjects-status');
-      const response = await axios.get('http://localhost:3001/subjects', { 
+      const userId = localStorage.getItem('userId');  // Get the user ID from localStorage
+      console.log('userId:', userId);  // Check if userId is available in the console
+  
+      if (!userId) {
+        console.error('User ID is missing');
+        return;  // Exit if no userId is available
+      }
+  
+      await axios.put('http://localhost:3001/update-subjects-status');  // Update subjects status
+  
+      const endpoint = roleName === 'subject_coordinator'
+        ? `http://localhost:3001/subjects/by-coordinator/${userId}`  // Pass userId in the URL
+        : `http://localhost:3001/subjects`;  // Regular subjects
+  
+      // Fetch subjects with parameters
+      const response = await axios.get(endpoint, {
         params: {
           ...filters,
-          searchTerm: filters.searchTerm.trim()
-        } 
+          searchTerm: filters.searchTerm.trim(),
+        },
       });
+  
       setSubjects(response.data);
       setFilteredSubjects(response.data);
     } catch (error) {
       console.error('Error fetching subjects:', error);
     }
-  }, [filters]);
+  }, [filters, roleName]);
+  
+  
   
   
   
@@ -108,8 +130,11 @@ function SubjectsManagement() {
   }, []);
 
   useEffect(() => {
+    if (roleName) {
       fetchSubjects();
-  }, [filters, fetchSubjects]);
+    }
+  }, [roleName, filters, fetchSubjects]);
+  
 
   useEffect(() => {
     fetchSchoolYears();

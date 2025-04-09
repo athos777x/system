@@ -46,6 +46,15 @@ function SectionManagement() {
     try {
         const params = { schoolYearId };
 
+        // Retrieve roleName and user_id from localStorage
+        const userId = localStorage.getItem('userId');  // Get the user ID from localStorage
+        console.log('userId:', userId);  // Check if userId is available in the console
+  
+      if (!userId) {
+        console.error('User ID is missing');
+        return;  // Exit if no userId is available
+      }
+
         // Only include filters if explicitly requested
         if (applyFilters) {
             params.searchTerm = filters.searchTerm || "";
@@ -53,18 +62,27 @@ function SectionManagement() {
             params.showArchive = filters.showArchive || "";
         }
 
-        console.log("Fetching sections with params:", params); // Debugging log
+        // Use a different endpoint based on roleName
+        const endpoint = roleName === 'class_adviser'
+            ? `http://localhost:3001/sections/by-adviser/${userId}` // Use the 'by-adviser' endpoint
+            : 'http://localhost:3001/sections'; // Default endpoint
 
-        const response = await axios.get('http://localhost:3001/sections', { params });
+        console.log("Fetching sections from:", endpoint); // Debugging log
+
+        const response = await axios.get(endpoint, { params });
         setSections(response.data);
         setFilteredSections(response.data);
     } catch (error) {
         console.error("Error fetching sections:", error);
     }
-}, []); // **Removed `filters` from dependencies** to prevent automatic re-fetching
+}, [filters, roleName]);
 
 
-  
+
+
+
+
+
 
   const fetchSchoolYears = useCallback(async () => {
     try {
@@ -81,15 +99,17 @@ function SectionManagement() {
   };
 
   useEffect(() => {
-    async function loadSections() {
-        const activeYear = await fetchActiveSchoolYear();
-        if (activeYear) {
-            fetchSections(activeYear.school_year_id, false); // Fetch without filters initially
-        }
-    }
+    const loadSections = async () => {
+      const activeYear = await fetchActiveSchoolYear();
+      if (activeYear && roleName) {
+        fetchSections(activeYear.school_year_id, false);  // Fetch without filters initially
+      }
+    };
+  
     loadSections();
     fetchSchoolYears();
-  }, [fetchActiveSchoolYear, fetchSections, fetchSchoolYears]);
+  }, [fetchActiveSchoolYear, fetchSchoolYears, roleName, filters, fetchSections]); // Add roleName to dependency array
+  
 
 
 

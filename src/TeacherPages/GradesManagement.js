@@ -19,7 +19,7 @@ function GradesManagement() {
   const [sections, setSections] = useState([]);
   const [filteredSections, setFilteredSections] = useState([]);
   const [roleName, setRoleName] = useState('');
-  const [selectedSchoolYear, setSelectedSchoolYear] = useState('');
+  const [selectedSchoolYear, setSelectedSchoolYear] = useState({});
   const [filters, setFilters] = useState({
     searchTerm: '',
     school_year: '',
@@ -28,12 +28,17 @@ function GradesManagement() {
     status: ''
   });
   const [selectedGradeLevel, setSelectedGradeLevel] = useState(null);
+  const [studentSchoolYears, setStudentSchoolYears] = useState({});
 
   useEffect(() => {
-    fetchSchoolYears();
+    fetchAllSchoolYears();
     fetchSections();
-    fetchStudents(); // Initial fetch of students
-  }, []);
+  
+    if (roleName) {
+      fetchStudents(roleName);
+    }
+  }, [roleName]);
+  
 
   useEffect(() => {
     if (students.length > 0) {
@@ -85,28 +90,56 @@ function GradesManagement() {
 
   const fetchStudents = async (appliedFilters = {}) => {
     try {
-      const response = await axios.get('http://localhost:3001/students', {
-        params: appliedFilters
+      const userId = localStorage.getItem('userId'); // Retrieve userId from localStorage
+      const filteredParams = { ...appliedFilters };
+  
+      if (userId) {
+        filteredParams.user_id = userId; // Add user_id to the request parameters
+      }
+  
+      // Correct the condition for roleName to use the appropriate endpoint
+      const endpoint = roleName === 'subject_teacher'
+        ? `http://localhost:3001/students/by-teacher`
+        : 'http://localhost:3001/students';  // Default endpoint
+  
+      const response = await axios.get(endpoint, {
+        params: filteredParams // Ensure you're passing filteredParams
       });
+  
+      // Sort students by last name (ascending order)
       const sortedStudents = response.data.sort((a, b) => b.lastName);
+  
       setStudents(sortedStudents);
       setFilteredStudents(sortedStudents);
     } catch (error) {
       console.error('Error fetching students:', error);
     }
   };
+  
+  const fetchAllSchoolYears = async () => {
+    try {
+      const response = await axios.get('http://localhost:3001/api/school_years');
+      setSchoolYears(response.data);
+    } catch (error) {
+      console.error('Error fetching school years:', error);
+    }
+  };
 
-  const fetchSchoolYears = async (studentId) => {
+  const fetchSchoolYearsGrades = async (studentId) => {
     try {
       const response = await axios.get(`http://localhost:3001/get-grade-level/${studentId}`);
       
       if (response.status === 200) {
-        // Assuming response.data contains an array with { grade_level, school_year, school_year_id }
-        setSchoolYears(response.data);
-        // Optionally, set the default selectedGradeLevel to the first item in the array if it's not already set
+        // Store student-specific school years in the new state
+        setStudentSchoolYears(prev => ({
+          ...prev,
+          [studentId]: response.data
+        }));
+        
+        // Set default selected grade level and school year if not already set
         if (!selectedGradeLevel && response.data.length > 0) {
-          setSelectedGradeLevel(response.data[0].grade_level); // Default to first grade level
-          setSelectedSchoolYear(response.data[0].school_year_id); // Default to first school year
+          setSelectedGradeLevel(response.data[0].grade_level);
+          setSelectedSchoolYear(response.data[0].school_year_id);
         }
       } else {
         console.error('Failed to fetch school years:', response.status);
@@ -156,7 +189,7 @@ function GradesManagement() {
     // Fetch subjects and grades with the correct school year
     const fetchedSubjects = await fetchSubjects(student.student_id, gradeLevel, schoolYearId);
     await fetchGrades(student.student_id, gradeLevel, fetchedSubjects, schoolYearId);
-    await fetchSchoolYears(student.student_id); // Pass studentId here
+    await fetchSchoolYearsGrades(student.student_id); // Pass studentId here
 };
 
 
@@ -422,16 +455,19 @@ function GradesManagement() {
   const indexOfFirstStudent = indexOfLastStudent - studentsPerPage;
   const currentStudents = filteredStudents.slice(indexOfFirstStudent, indexOfLastStudent);
 
-  const handleSchoolYearChange = async (event) => {
+  const handleSchoolYearChange = async (event, student) => {
     const newSchoolYearId = event.target.value;
-    setSelectedSchoolYear(newSchoolYearId); 
-
-    if (selectedStudent && selectedGradeLevel) {
-      const fetchedSubjects = await fetchSubjects(selectedStudent.student_id, selectedGradeLevel, newSchoolYearId);
-      await fetchGrades(selectedStudent.student_id, selectedGradeLevel, fetchedSubjects, newSchoolYearId);
-    }
-};
-
+    
+    // Update the selected school year for this specific student
+    setSelectedSchoolYear(prev => ({
+      ...prev,
+      [student.student_id]: newSchoolYearId
+    }));
+  
+    // Fetch the subjects and grades for the selected student and new school year
+    const fetchedSubjects = await fetchSubjects(student.student_id, student.current_yr_lvl, newSchoolYearId);
+    await fetchGrades(student.student_id, student.current_yr_lvl, fetchedSubjects, newSchoolYearId);
+  };
 
   return (
     <div className="grades-management-container">
@@ -508,18 +544,19 @@ function GradesManagement() {
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                           <h3 className="grades-details-title">Grades for {student.firstname} {student.lastname}</h3>
                           <div className="grade-level-school-year-container">
-                            {/* <div className="grade-level-indicator">
-                              Grade {selectedGradeLevel || student.grade_level}
-                            </div> */}
                             <select 
-                              value={selectedSchoolYear || student.school_year_id} 
-                              onChange={handleSchoolYearChange}
+                              value={selectedSchoolYear[student.student_id] || student.school_year_id} 
+                              onChange={(e) => handleSchoolYearChange(e, student)}
                               className="school-year-selector"
                               disabled={editingStudent !== null}
                             >
-                              {schoolYears.map((year) => (
+                              {studentSchoolYears[student.student_id]?.map((year) => (
                                 <option key={year.school_year_id} value={year.school_year_id}>
-                                  {`Grade ${year.grade_level} - SY ${year.school_year}`}  {/* Map grade_level with school_year */}
+                                  {`Grade ${year.grade_level} - SY ${year.school_year}`}
+                                </option>
+                              )) || schoolYears.map((year) => (
+                                <option key={year.school_year_id} value={year.school_year_id}>
+                                  {`Grade ${year.grade_level} - SY ${year.school_year}`}
                                 </option>
                               ))}
                             </select>

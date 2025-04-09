@@ -185,9 +185,20 @@ function StudentManagement() {
           return; // Stop execution if we can't get the active year
         }
       }
+
+      // Add user_id to the filteredParams
+      const userId = localStorage.getItem('userId'); // Retrieve userId from localStorage
+      if (userId) {
+        filteredParams.user_id = userId; // Add user_id to the request parameters
+      }
+  
+      // ✅ Determine the endpoint based on roleName
+      const endpoint = roleName === 'class_adviser' 
+        ? 'http://localhost:3001/students/by-adviser' 
+        : 'http://localhost:3001/students';
   
       // ✅ Make request with correct filters
-      const response = await axios.get('http://localhost:3001/students', { params: filteredParams });
+      const response = await axios.get(endpoint, { params: filteredParams });
   
       console.log('Response from server:', response.data);
   

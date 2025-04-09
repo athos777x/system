@@ -38,13 +38,31 @@ function Principal_SchedulePage() {
 
   const fetchSections = useCallback(async () => {
     try {
-      const response = await axios.get('http://localhost:3001/sections');
+      // Retrieve roleName and user_id from localStorage
+        const userId = localStorage.getItem('userId');  // Get the user ID from localStorage
+        console.log('userId:', userId);  // Check if userId is available in the console
+  
+      if (!userId) {
+        console.error('User ID is missing');
+        return;  // Exit if no userId is available
+      }
+  
+      // Determine the endpoint based on roleName
+      const endpoint = roleName === 'class_adviser' 
+        ? `http://localhost:3001/sections/by-adviser/${userId}`  // Use the 'by-adviser' endpoint for class advisers
+        : 'http://localhost:3001/sections';  // Default endpoint for other roles
+  
+      console.log("Fetching sections from:", endpoint); // Debugging log
+  
+      // Fetch the data from the determined endpoint
+      const response = await axios.get(endpoint);
       setSections(response.data);
       setFilteredSections(response.data);
     } catch (error) {
       console.error('There was an error fetching the sections!', error);
     }
-  }, []);
+  }, [roleName, filters]); 
+  
 
   const fetchSchoolYears = useCallback(async () => {
     try {
@@ -58,7 +76,7 @@ function Principal_SchedulePage() {
   useEffect(() => {
     fetchSections();
     fetchSchoolYears();
-  }, [fetchSections, fetchSchoolYears]);
+  }, [roleName, filters, fetchSections, fetchSchoolYears]);
 
   const applyFilters = (updatedFilters) => {
     setFilters(updatedFilters);
@@ -120,44 +138,72 @@ function Principal_SchedulePage() {
   const fetchSectionSchedules = async (sectionId) => {
     try {
       console.log('Fetching schedules for section:', sectionId);
-      const response = await axios.get(`http://localhost:3001/sections/${sectionId}/schedules`);
+  
+      const userId = localStorage.getItem('userId');
+  
+      if (!userId) {
+        console.error('userId not found in localStorage');
+        return;
+      }
+  
+      // Select endpoint based on role
+      const endpoint = roleName === 'class_adviser'
+        ? `http://localhost:3001/sections/${sectionId}/schedules/by-adviser`
+        : `http://localhost:3001/sections/${sectionId}/schedules`;
+  
+      // Attach user_id only if needed
+      const response = await axios.get(endpoint, {
+        params: roleName === 'class_adviser' ? { user_id: userId } : {},
+      });
+  
       console.log('Raw response data:', response.data);
-      
+  
       // Handle both single day and array formats
       const schedulesWithParsedDays = response.data.map(schedule => {
-        let parsedDay;
+        let parsedDay = [];
+  
         try {
-          // If the day is already a string and doesn't start with [, treat it as a single day
-          if (typeof schedule.day === 'string' && !schedule.day.startsWith('[')) {
+          if (schedule.day === undefined || schedule.day === null) {
+            // If day is undefined or null, initialize as empty array
+            console.warn('Day is undefined or null, initializing as empty array for schedule:', schedule);
+          } else if (typeof schedule.day === 'string' && !schedule.day.startsWith('[')) {
+            // If it's a single day string, convert it to an array
             parsedDay = [schedule.day];
           } else {
-            // Try to parse as JSON array
-            parsedDay = typeof schedule.day === 'string' ? 
-              JSON.parse(schedule.day) : 
-              Array.isArray(schedule.day) ? schedule.day : [schedule.day];
+            // Handle both array and stringified array cases
+            parsedDay = typeof schedule.day === 'string'
+              ? JSON.parse(schedule.day)
+              : Array.isArray(schedule.day) ? schedule.day : [schedule.day];
           }
-          // Sort days after parsing
-          parsedDay = sortDays([...parsedDay]);
+  
+          // Sort days only if parsedDay is an array and not empty
+          if (Array.isArray(parsedDay) && parsedDay.length > 0) {
+            parsedDay = sortDays([...parsedDay]);
+          }
+  
         } catch (error) {
           console.error('Error parsing day for schedule:', schedule);
           console.error('Parse error:', error);
-          // Fallback to single day if parsing fails
-          parsedDay = [schedule.day];
+          parsedDay = []; // Fallback to empty array if parsing fails
         }
-
+  
         return {
           ...schedule,
           day: parsedDay
         };
       });
-      
+  
       console.log('Processed schedules:', schedulesWithParsedDays);
       setSectionSchedules(schedulesWithParsedDays);
+  
     } catch (error) {
       console.error('Error fetching section schedules:', error);
       console.error('Error details:', error.response?.data);
     }
   };
+  
+  
+  
 
   const startAdding = async () => {
     try {
@@ -303,17 +349,16 @@ function Principal_SchedulePage() {
       // Handle checkbox selection
       const day = e.target.value;
       const isChecked = e.target.checked;
-      
+  
+      // Ensure day array is initialized
       setNewSchedule(prev => ({
         ...prev,
-        day: isChecked 
-          ? [...prev.day, day]  // Add day if checked
-          : prev.day.filter(d => d !== day)  // Remove day if unchecked
+        day: prev.day ? (isChecked ? [...prev.day, day] : prev.day.filter(d => d !== day)) : [day]
       }));
     } else {
       setNewSchedule({ ...newSchedule, [name]: value });
     }
-
+  
     // When section is selected, filter subjects by grade level
     if (name === 'section_id' && value) {
       const selectedSection = sections.find(section => section.section_id === Number(value));
@@ -328,6 +373,7 @@ function Principal_SchedulePage() {
       }
     }
   };
+  
 
   const handleAddSchedule = async () => {
     try {

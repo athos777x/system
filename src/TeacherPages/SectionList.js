@@ -8,6 +8,7 @@ function SectionList() {
   const [selectedSectionId, setSelectedSectionId] = useState(null);
   const [sectionDetails, setSectionDetails] = useState({});
   const [activeSchoolYear, setActiveSchoolYear] = useState(null);
+  const [roleName, setRoleName] = useState('');
   const [filters, setFilters] = useState({
     searchTerm: '',
     grade: '',
@@ -15,6 +16,38 @@ function SectionList() {
   });
   const [studentsByGender, setStudentsByGender] = useState({ boys: [], girls: [] });
   const [showStudents, setShowStudents] = useState(false);
+
+  useEffect(() => {
+    const userId = localStorage.getItem('userId'); // Retrieve userId from localStorage
+    if (userId) {
+      console.log(`Retrieved userId from localStorage: ${userId}`); // Debugging log
+      fetchUserRole(userId);
+    } else {
+      console.error('No userId found in localStorage');
+    }
+  }, []);
+
+  const fetchUserRole = async (userId) => {
+    try {
+      console.log(`Fetching role for user ID: ${userId}`); // Debugging log
+      const response = await axios.get(`http://localhost:3001/user-role/${userId}`);
+      if (response.status === 200) {
+        console.log('Response received:', response.data); // Debugging log
+        setRoleName(response.data.role_name);
+        console.log('Role name set to:', response.data.role_name); // Debugging log
+      } else {
+        console.error('Failed to fetch role name. Response status:', response.status);
+      }
+    } catch (error) {
+      if (error.response) {
+        console.error('Error response from server:', error.response.data);
+      } else if (error.request) {
+        console.error('No response received from server. Request:', error.request);
+      } else {
+        console.error('Error setting up request:', error.message);
+      }
+    }
+  };
 
   const fetchActiveSchoolYear = useCallback(async () => {
     try {
@@ -27,18 +60,49 @@ function SectionList() {
     }
   }, []);
 
-  const fetchSections = useCallback(async (schoolYearId) => {
+  const fetchSections = useCallback(async (schoolYearId, applyFilters = false) => {
     try {
-      const response = await axios.get('http://localhost:3001/sections', {
-        params: { schoolYearId }
-      });
-      console.log('Fetched sections:', response.data);
-      setSections(response.data);
-      setFilteredSections(response.data);
+        const params = { schoolYearId };
+
+        // Log the schoolYearId to ensure it is set
+        console.log("schoolYearId:", schoolYearId);  // This should not be undefined
+
+        if (applyFilters) {
+            params.searchTerm = filters.searchTerm || "";
+            params.grade = filters.grade || "";
+            params.showArchive = filters.showArchive || "";
+        }
+
+        // Ensure user_id is included
+        const userId = localStorage.getItem('userId'); 
+        if (userId) {
+            params.user_id = userId;  // Pass user_id directly
+        } else {
+            console.error('User ID is not available in localStorage');
+            return;
+        }
+
+        if (!roleName) {
+            console.error('roleName is undefined or null');
+            return;
+        }
+
+        const endpoint = roleName === 'class_adviser' 
+            ? 'http://localhost:3001/sections/by-adviser' 
+            : 'http://localhost:3001/sections';
+
+        console.log('Fetching from endpoint:', endpoint);
+        console.log("Request parameters:", params);  // Log all parameters
+
+        const response = await axios.get(endpoint, { params });
+
+        // Handle the response
+        setSections(response.data);
+        setFilteredSections(response.data);
     } catch (error) {
-      console.error('There was an error fetching the sections!', error);
+        console.error("Error fetching sections:", error);
     }
-  }, []);
+}, [roleName, filters]);
 
   const getUniqueGrades = (sections) => {
     const grades = sections.map(section => section.grade_level);
