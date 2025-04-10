@@ -35,7 +35,7 @@ function AcademicCoordinatorSideBar({ showSidebar, toggleSidebar, handleLogout }
     setShowClassesSubMenu(!showClassesSubMenu);
     setShowExperimentalsSubMenu(false);
     if (!showClassesSubMenu) {
-      navigate('/section');
+      navigate('/schedule');
     }
   };
 
@@ -76,12 +76,12 @@ function AcademicCoordinatorSideBar({ showSidebar, toggleSidebar, handleLogout }
           </button>
           {showClassesSubMenu && (
             <div className="submenu">
-              <button 
+              {/* <button 
                 onClick={() => handleNavigate('/section')}
                 className={location.pathname === '/section' ? 'active' : ''}
               >
                 <FiBook className="icon" /> Section
-              </button>
+              </button> */}
               <button 
                 onClick={() => handleNavigate('/schedule')}
                 className={location.pathname === '/schedule' ? 'active' : ''}
