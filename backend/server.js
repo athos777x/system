@@ -307,7 +307,7 @@ app.get('/students/pending-enrollment', (req, res) => {
       (SELECT ss.status FROM student_school_year ss
       JOIN school_year sy ON ss.school_year_id = sy.school_year_id
       WHERE ss.student_id = s.student_id AND sy.status = 'active') as active_status,
-      se.enrollment_status, se.student_elective_id
+      se.enrollment_status, se.student_elective_id, xx.school_year_id
       FROM student s
       LEFT JOIN student_elective se ON s.student_id = se.student_id 
       LEFT JOIN enrollment xx ON s.student_id=xx.student_id
