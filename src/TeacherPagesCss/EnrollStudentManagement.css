@@ -1,0 +1,1015 @@
+.enroll-student-container {
+    padding: 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+  
+  .enroll-student-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+  }
+  
+  .enroll-student-title {
+    font-size: 2rem;
+    color: #2e7d32;
+    margin: 0;
+  }
+  
+  .enroll-student-filters {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: #fff;
+    padding: 0.75rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(46, 125, 50, 0.1);
+    margin-bottom: 1.5rem;
+  }
+  
+  .enroll-student-search {
+    position: relative;
+    flex: 1;
+  }
+  
+  .enroll-student-search input {
+    width: 100%;
+    padding: 0.5rem 0.75rem 0.5rem 2rem;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    color: #1e293b;
+    background: #fff;
+    transition: all 0.2s ease;
+  }
+  
+  .enroll-student-search input:hover {
+    border-color: #81c784;
+  }
+  
+  .enroll-student-search input:focus {
+    outline: none;
+    border-color: #4CAF50;
+    box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+  }
+  
+  .enroll-student-search input::placeholder {
+    color: #90a4ae;
+  }
+  
+  .enroll-student-search::before {
+    content: "";
+    position: absolute;
+    left: 0.625rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 14px;
+    height: 14px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2390a4ae'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'%3E%3C/path%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    opacity: 0.7;
+  }
+  
+  .enroll-student-filters-group {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+  }
+  
+  .enroll-student-filters select {
+    padding: 0.5rem 2rem 0.5rem 0.75rem;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    color: #1e293b;
+    background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2390a4ae'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E") no-repeat right 0.5rem center;
+    background-size: 14px;
+    appearance: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 140px;
+  }
+  
+  .enroll-student-filters select:hover {
+    border-color: #81c784;
+  }
+  
+  .enroll-student-filters select:focus {
+    outline: none;
+    border-color: #4CAF50;
+    box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+  }
+  
+  .enroll-student-filters button {
+    padding: 0.5rem 1rem;
+    background: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: 500;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    white-space: nowrap;
+  }
+  
+  .enroll-student-filters button::before {
+    content: "";
+    width: 14px;
+    height: 14px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='white'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z'%3E%3C/path%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+  }
+  
+  .enroll-student-filters button:hover {
+    background: #388e3c;
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 1024px) {
+    .enroll-student-filters {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 1rem;
+    }
+  
+    .enroll-student-filters-group {
+      flex-direction: column;
+    }
+  
+    .enroll-student-filters select {
+      width: 100%;
+    }
+  
+    .enroll-student-filters button {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+  
+  .enroll-student-add-btn {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 0.875rem;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+    min-width: 80px;
+    background: #4CAF50;
+    color: white;
+  }
+  
+  .enroll-student-add-btn:hover {
+    background: #388e3c;
+  }
+  
+  .enroll-student-table-container {
+    overflow-x: auto !important;
+    background: #fff !important;
+    border-radius: 12px !important;
+    box-shadow: 0 2px 8px rgba(46, 125, 50, 0.1) !important;
+    margin-bottom: 1.5rem !important;
+    width: 100% !important;
+  }
+  
+  .enroll-student-table {
+    width: 100% !important;
+    min-width: 800px !important;
+    border-collapse: collapse !important;
+    background: #fff !important;
+    border-spacing: 0 !important;
+    table-layout: fixed !important;
+  }
+  
+  /* Column widths */
+  .enroll-student-table > thead > tr > th:nth-child(1) {
+    width: 5% !important;
+    min-width: 40px !important;
+  }
+  
+  .enroll-student-table > thead > tr > th:nth-child(2) {
+    width: 35% !important;
+    min-width: 200px !important;
+  }
+  
+  .enroll-student-table > thead > tr > th:nth-child(3) {
+    width: 15% !important;
+    min-width: 100px !important;
+  }
+  
+  .enroll-student-table > thead > tr > th:nth-child(4) {
+    width: 20% !important;
+    min-width: 120px !important;
+  }
+  
+  .enroll-student-table > thead > tr > th:nth-child(5) {
+    width: 25% !important;
+    min-width: 150px !important;
+  }
+  
+  .enroll-student-table > thead {
+    background: #e8f5e9 !important;
+    display: table-header-group !important;
+    width: 100% !important;
+  }
+  
+  .enroll-student-table > thead > tr {
+    display: table-row !important;
+    width: 100% !important;
+    background: #e8f5e9 !important;
+  }
+  
+  .enroll-student-table > thead > tr > th {
+    background: #e8f5e9 !important;
+    padding: 1rem !important;
+    text-align: center !important;
+    font-weight: 600 !important;
+    color: #2e7d32 !important;
+    border: none !important;
+    border-bottom: 2px solid #81c784 !important;
+    white-space: normal !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 10 !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    height: auto !important;
+    min-height: 3.5rem !important;
+    vertical-align: middle !important;
+    font-size: 0.9rem !important;
+    box-sizing: border-box !important;
+    display: table-cell !important;
+    width: auto !important;
+  }
+  
+  .enroll-student-table > tbody > tr > td {
+    padding: 1rem !important;
+    text-align: center !important;
+    border-bottom: 1px solid #c8e6c9 !important;
+    color: #1e293b !important;
+    background: #fff !important;
+  }
+  
+  .enroll-student-table > tbody > tr {
+    display: table-row !important;
+    transition: background-color 0.2s ease !important;
+  }
+  
+  .enroll-student-table > tbody > tr:hover {
+    background-color: #f1f8e9 !important;
+    cursor: pointer;
+  }
+  
+  .enroll-student-table > tbody > tr:hover td {
+    background-color: #f1f8e9 !important;
+  }
+  
+  .enroll-student-table > tbody > tr:last-child > td {
+    border-bottom: none !important;
+  }
+  
+  /* Actions column styling */
+  .enroll-student-actions {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 1024px) {
+    .enroll-student-table-container {
+      margin: 0 -1rem;
+      border-radius: 0;
+    }
+    
+    .enroll-student-table {
+      min-width: 650px;
+    }
+  }
+  
+  /* Expanded row styling */
+  .enroll-student-table tr.expanded td {
+    border-bottom: none;
+    background-color: #f8faf8;
+  }
+  
+  .enroll-student-details td {
+    padding: 0;
+  }
+  
+  .enroll-student-details-content {
+    padding: 1.5rem;
+    background: #fff;
+    border-top: 1px solid #c8e6c9;
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+  }
+  
+  .enroll-student-details-section {
+    flex: 1;
+    min-width: 300px;
+  }
+  
+  .enroll-student-details-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    margin-bottom: 1rem;
+  }
+  
+  .enroll-student-details-table th {
+    width: 40%;
+    padding: 0.75rem;
+    text-align: left;
+    color: #2e7d32;
+    background: #e8f5e9;
+    font-weight: 600;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    border: 1px solid #c8e6c9;
+  }
+  
+  .enroll-student-details-table td {
+    width: 60%;
+    padding: 0.75rem;
+    background: #fff;
+    font-size: 0.9rem;
+    border: 1px solid #c8e6c9;
+  }
+  
+  .enroll-student-details-table input,
+  .enroll-student-details-table select {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #81c784;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    background: #fff;
+  }
+  
+  .enroll-student-details-table input:focus,
+  .enroll-student-details-table select:focus {
+    outline: none;
+    border-color: #4CAF50;
+    box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+  }
+  
+  .enroll-student-details-actions {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #c8e6c9;
+  }
+  
+  .enroll-student-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    z-index: 1000;
+    padding: 2rem;
+    overflow-y: auto;
+  }
+  
+  .enroll-student-modal-content {
+    background: #fff;
+    padding: 2rem;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 800px;
+    position: relative;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    margin: 2rem auto;
+  }
+  
+  .enroll-student-modal-header {
+    margin-bottom: 1.5rem;
+  }
+  
+  .enroll-student-modal-header h2 {
+    color: #1e293b;
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0;
+  }
+  
+  .enroll-student-modal-header p {
+    color: #64748b;
+    font-size: 0.875rem;
+    margin: 0.5rem 0 0 0;
+  }
+  
+  .enroll-student-modal-select {
+    width: 100%;
+    padding: 0.625rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    color: #1e293b;
+    background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E") no-repeat right 0.5rem center;
+    background-size: 1rem;
+    appearance: none;
+    margin-bottom: 1.5rem;
+    transition: all 0.2s ease;
+  }
+  
+  .enroll-student-modal-select:hover {
+    border-color: #cbd5e1;
+  }
+  
+  .enroll-student-modal-select:focus {
+    outline: none;
+    border-color: #4CAF50;
+    box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+  }
+  
+  .enroll-student-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e0e0e0;
+  }
+  
+  .enroll-student-modal-btn {
+    padding: 0.625rem 1rem;
+    border: none;
+    border-radius: 6px;
+    font-weight: 500;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 5rem;
+  }
+  
+  .enroll-student-modal-btn-confirm {
+    background: #4CAF50;
+    color: white;
+  }
+  
+  .enroll-student-modal-btn-confirm:hover {
+    background: #388e3c;
+  }
+  
+  .enroll-student-modal-btn-confirm:disabled {
+    background: #a5d6a7;
+    cursor: not-allowed;
+  }
+  
+  .enroll-student-modal-btn-cancel {
+    background: #f44336;
+    color: white;
+  }
+  
+  .enroll-student-modal-btn-cancel:hover {
+    background: #d32f2f;
+  }
+  
+  @media (max-width: 768px) {
+    .enroll-student-form-grid {
+      grid-template-columns: 1fr;
+    }
+    
+    .enroll-student-modal {
+      padding: 1rem;
+    }
+    
+    .enroll-student-modal-content {
+      padding: 1.5rem;
+      margin: 1rem auto;
+    }
+    
+    .enroll-student-modal-actions {
+      flex-direction: column;
+    }
+    
+    .enroll-student-modal-actions button {
+      width: 100%;
+    }
+  }
+  
+  .enroll-student-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+  
+  @media (min-width: 768px) {
+    .enroll-student-form-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  
+  @media (min-width: 1024px) {
+    .enroll-student-form-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+  
+  .enroll-student-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  .enroll-student-form-group label {
+    font-weight: 500;
+    color: #2e7d32;
+    font-size: 0.9rem;
+  }
+  
+  .enroll-student-form-group input,
+  .enroll-student-form-group select {
+    padding: 0.75rem;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+  }
+  
+  .enroll-student-form-group input:hover,
+  .enroll-student-form-group select:hover {
+    border-color: #81c784;
+  }
+  
+  .enroll-student-form-group input:focus,
+  .enroll-student-form-group select:focus {
+    outline: none;
+    border-color: #4CAF50;
+    box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+  }
+  
+  .enroll-student-form-group input.error,
+  .enroll-student-form-group select.error {
+    border-color: #ef5350;
+  }
+  
+  .enroll-student-error {
+    color: #ef5350;
+    font-size: 0.8rem;
+    margin-top: 0.25rem;
+    display: block;
+    text-align: left;
+  }
+  
+  .enroll-student-pagination {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+    padding: 0.75rem;
+  }
+  
+  .enroll-student-pagination-nav-container {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+  
+  .enroll-student-pagination button {
+    min-width: 32px;
+    height: 32px;
+    padding: 0;
+    border: none;
+    border-radius: 4px;
+    background: transparent;
+    color: #64748b;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .enroll-student-pagination button.active {
+    background: #4CAF50;
+    color: white;
+  }
+  
+  .enroll-student-pagination button:hover:not(.active):not(:disabled) {
+    background: #f1f8e9;
+    color: #2e7d32;
+  }
+  
+  .enroll-student-pagination button:disabled {
+    color: #cbd5e1;
+    cursor: not-allowed;
+  }
+  
+  .enroll-student-pagination-nav {
+    color: #64748b;
+    font-size: 1.25rem;
+    padding: 0 0.25rem;
+  }
+  
+  .enroll-student-pagination-info {
+    color: #64748b;
+    font-size: 0.875rem;
+    font-weight: 400;
+    text-align: center;
+  }
+  
+  .enroll-student-pagination-dots {
+    color: #64748b;
+    padding: 0 0.25rem;
+    font-weight: 500;
+  }
+  
+  @media (max-width: 640px) {
+    .enroll-student-pagination {
+      gap: 0.5rem;
+    }
+    
+    .enroll-student-pagination-nav-container {
+      gap: 0.125rem;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .enroll-student-details-content {
+      flex-direction: column;
+    }
+    
+    .enroll-student-details-section {
+      width: 100%;
+    }
+    
+    .enroll-student-details-actions {
+      flex-direction: column;
+    }
+    
+    .enroll-student-details-actions button {
+      width: 100%;
+    }
+  }
+  
+  .enroll-student-btn {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 0.875rem;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+    min-width: 80px;
+  }
+  
+  .enroll-student-btn-view {
+    background: #4CAF50;
+    color: white;
+  }
+  
+  .enroll-student-btn-view:hover {
+    background: #388e3c;
+  }
+  
+  .enroll-student-btn-edit {
+    background: #4CAF50;
+    color: white;
+  }
+  
+  .enroll-student-btn-edit:hover {
+    background: #388e3c;
+  }
+  
+  .enroll-student-btn-register {
+    background: #4CAF50;
+    color: white;
+  }
+  
+  .enroll-student-btn-register:hover {
+    background: #388e3c;
+  }
+  
+  .enroll-student-btn-archive {
+    background: #ef5350;
+    color: white;
+  }
+  
+  .enroll-student-btn-archive:hover {
+    background: #e53935;
+  }
+  
+  @media (max-width: 1024px) {
+    .enroll-student-details-content {
+      flex-direction: column;
+    }
+    
+    .enroll-student-details-section {
+      width: 100%;
+    }
+    
+    .enroll-student-details-actions {
+      flex-direction: column;
+    }
+    
+    .enroll-student-details-actions button {
+      width: 100%;
+    }
+  }
+  
+  .enroll-student-details-view-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    margin-bottom: 1rem;
+    background: #fff;
+  }
+  
+  .enroll-student-details-view-table th {
+    width: 40%;
+    min-width: 200px;
+    padding: 0.75rem;
+    text-align: left;
+    color: #2e7d32;
+    background: #e8f5e9;
+    font-weight: 600;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    border: 1px solid #c8e6c9;
+  }
+  
+  .enroll-student-details-view-table td {
+    width: 60%;
+    padding: 0.75rem;
+    background: #fff;
+    font-size: 0.9rem;
+    border: 1px solid #c8e6c9;
+  }
+  
+  .enroll-student-details-view-table input,
+  .enroll-student-details-view-table select {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #81c784;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    background: #fff;
+  }
+  
+  .enroll-student-details-view-table input:focus,
+  .enroll-student-details-view-table select:focus {
+    outline: none;
+    border-color: #4CAF50;
+    box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+  }
+  
+  .enroll-student-details-view-table input.error,
+  .enroll-student-details-view-table select.error {
+    border-color: #ef5350 !important;
+  }
+  
+  /* Update print button styling */
+  .enroll-student-btn-print {
+    background: #78909c;
+    color: white;
+  }
+  
+  .enroll-student-btn-print:hover {
+    background: #546e7a;
+  }
+  
+  @media (max-width: 768px) {
+    .enroll-student-details-actions {
+      flex-direction: column;
+    }
+    
+    .enroll-student-details-actions-right {
+      width: 100%;
+    }
+    
+    .enroll-student-details-actions-right button {
+      flex: 1;
+    }
+  }
+  
+  /* Status indicators */
+  .status-active,
+  .status-inactive,
+  .status-pending,
+  .status-dropped {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-weight: 500;
+    font-size: 0.875rem;
+  }
+  
+  .status-active {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+  }
+  
+  .status-inactive {
+    background-color: #ffebee;
+    color: #c62828;
+  }
+  
+  .status-pending {
+    background-color: #fff3e0;
+    color: #ef6c00;
+  }
+  
+  .status-dropped {
+    background-color: #fafafa;
+    color: #616161;
+  }
+  
+  .enroll-student-modal-large {
+    width: 90%;
+    max-width: 900px;
+    max-height: 85vh;
+    overflow-y: auto;
+  }
+  
+  .enroll-student-tabs {
+    display: flex;
+    border-bottom: 1px solid #e0e0e0;
+    margin-bottom: 1.5rem;
+    gap: 0.5rem;
+  }
+  
+  .enroll-student-tab {
+    padding: 0.75rem 1.25rem;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: #64748b;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  
+  .enroll-student-tab:hover {
+    color: #4CAF50;
+  }
+  
+  .enroll-student-tab.active {
+    color: #2e7d32;
+    border-bottom: 2px solid #2e7d32;
+  }
+  
+  .enroll-student-tab-content {
+    display: none;
+  }
+  
+  .enroll-student-tab-content.active {
+    display: block;
+  }
+  
+  .enroll-student-tab-navigation {
+    display: flex;
+    gap: 0.75rem;
+  }
+  
+  .enroll-student-tab-navigation button {
+    background-color: #78909c;
+    color: white;
+  }
+  
+  .enroll-student-tab-navigation button:hover {
+    background-color: #546e7a;
+  }
+  
+  .enroll-student-form-actions {
+    display: flex;
+    gap: 0.75rem;
+  }
+  
+  .enroll-student-form-actions .enroll-student-btn-edit {
+    background-color: #4CAF50;
+    color: white;
+  }
+  
+  .enroll-student-form-actions .enroll-student-btn-edit:hover {
+    background-color: #388e3c;
+  }
+  
+  .enroll-student-form-actions .enroll-student-btn:not(.enroll-student-btn-edit) {
+    background-color: #f44336;
+    color: white;
+  }
+  
+  .enroll-student-form-actions .enroll-student-btn:not(.enroll-student-btn-edit):hover {
+    background-color: #d32f2f;
+  }
+  
+  .enroll-student-modal-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e0e0e0;
+  }
+  
+  @media (max-width: 768px) {
+    .enroll-student-tabs {
+      flex-direction: column;
+      gap: 0.25rem;
+      border-bottom: none;
+    }
+    
+    .enroll-student-tab {
+      text-align: left;
+      border-left: 2px solid transparent;
+      border-bottom: none;
+      padding: 0.5rem 0.75rem;
+    }
+    
+    .enroll-student-tab.active {
+      border-left: 2px solid #2e7d32;
+      border-bottom: none;
+      background-color: #e8f5e9;
+    }
+    
+    .enroll-student-modal-actions {
+      flex-direction: column;
+      gap: 1rem;
+    }
+    
+    .enroll-student-tab-navigation,
+    .enroll-student-form-actions {
+      width: 100%;
+      justify-content: space-between;
+    }
+  }
+  
+  .enroll-student-form-group .read-only {
+    background-color: #f5f5f5;
+    cursor: not-allowed;
+    border-color: #e0e0e0;
+  }
+  
+  .enroll-student-form-group .read-only:focus {
+    box-shadow: none;
+    border-color: #e0e0e0;
+  }
+  
+  .enroll-student-form-group .auto-calculated {
+    font-size: 0.75rem;
+    color: #78909c;
+    font-weight: normal;
+    font-style: italic;
+  }
+  
+  .enroll-student-details-view-table .category-header {
+    background-color: #f0f0f0;
+    font-weight: bold;
+    text-align: left;
+    padding: 10px;
+    border-bottom: 2px solid #ddd;
+  }
+  
+  .enroll-student-details-view-table .category-header th {
+    font-size: 1.1em;
+    color: #333;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  /* Add some spacing between categories */
+  .enroll-student-details-view-table .category-header:not(:first-child) {
+    margin-top: 20px;
+    border-top: 1px solid #ddd;
+  }
+  
+  /* Error styling for input fields in the edit view table */
+  .enroll-student-details-view-table input.error,
+  .enroll-student-details-view-table select.error {
+    border-color: #ef5350 !important;
+  } 

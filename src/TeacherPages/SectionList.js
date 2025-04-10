@@ -64,45 +64,37 @@ function SectionList() {
     try {
         const params = { schoolYearId };
 
-        // Log the schoolYearId to ensure it is set
-        console.log("schoolYearId:", schoolYearId);  // This should not be undefined
+        // Retrieve roleName and user_id from localStorage
+        const userId = localStorage.getItem('userId');  // Get the user ID from localStorage
+        console.log('userId:', userId);  // Check if userId is available in the console
+  
+      if (!userId) {
+        console.error('User ID is missing');
+        return;  // Exit if no userId is available
+      }
 
+        // Only include filters if explicitly requested
         if (applyFilters) {
             params.searchTerm = filters.searchTerm || "";
             params.grade = filters.grade || "";
             params.showArchive = filters.showArchive || "";
         }
 
-        // Ensure user_id is included
-        const userId = localStorage.getItem('userId'); 
-        if (userId) {
-            params.user_id = userId;  // Pass user_id directly
-        } else {
-            console.error('User ID is not available in localStorage');
-            return;
-        }
+        // Use a different endpoint based on roleName
+        const endpoint = roleName === 'class_adviser'
+            ? `http://localhost:3001/sections/by-adviser/${userId}` // Use the 'by-adviser' endpoint
+            : 'http://localhost:3001/sections'; // Default endpoint
 
-        if (!roleName) {
-            console.error('roleName is undefined or null');
-            return;
-        }
-
-        const endpoint = roleName === 'class_adviser' 
-            ? 'http://localhost:3001/sections/by-adviser' 
-            : 'http://localhost:3001/sections';
-
-        console.log('Fetching from endpoint:', endpoint);
-        console.log("Request parameters:", params);  // Log all parameters
+        console.log("Fetching sections from:", endpoint); // Debugging log
 
         const response = await axios.get(endpoint, { params });
-
-        // Handle the response
         setSections(response.data);
-        setFilteredSections(response.data);
+        const unarchivedSections = response.data.filter(section => section.archive_status === 'unarchive');
+        setFilteredSections(unarchivedSections);
     } catch (error) {
         console.error("Error fetching sections:", error);
     }
-}, [roleName, filters]);
+}, [filters, roleName]);
 
   const getUniqueGrades = (sections) => {
     const grades = sections.map(section => section.grade_level);
