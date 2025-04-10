@@ -28,7 +28,7 @@ function GradeLevelCoordinatorSideBar({ showSidebar, toggleSidebar, handleLogout
 
   // Check if current path is under a specific submenu
   const isRecordsPath = ['/attendance', '/new-grades', '/brigada-eskwela'].includes(location.pathname);
-  const isEnrollmentPath = ['/pending-enrollment', '/school-year', '/section-list', '/enrolled-students'].includes(location.pathname);
+  const isEnrollmentPath = ['/enroll-student', '/pending-enrollment', '/school-year', '/section-list', '/enrolled-students'].includes(location.pathname);
   const isClassesPath = ['/section', '/schedule'].includes(location.pathname);
   const isExperimentalsPath = ['/grades'].includes(location.pathname);
 
@@ -64,7 +64,7 @@ function GradeLevelCoordinatorSideBar({ showSidebar, toggleSidebar, handleLogout
     setShowRecordsSubMenu(false);
     setShowExperimentalsSubMenu(false);
     if (!showEnrollmentSubMenu) {
-      navigate('/pending-enrollment');
+      navigate('/enroll-student');
     }
   };
 
@@ -163,6 +163,12 @@ function GradeLevelCoordinatorSideBar({ showSidebar, toggleSidebar, handleLogout
           </button>
           {showEnrollmentSubMenu && (
             <div className="submenu">
+              <button 
+                onClick={() => handleNavigate('/enroll-student')}
+                className={location.pathname === '/enroll-student' ? 'active' : ''}
+              >
+                <FiUsers className="icon" /> Enroll Student
+              </button>
               <button 
                 onClick={() => handleNavigate('/pending-enrollment')}
                 className={location.pathname === '/pending-enrollment' ? 'active' : ''}
