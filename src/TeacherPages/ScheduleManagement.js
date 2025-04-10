@@ -293,7 +293,7 @@ function Principal_SchedulePage() {
 
   const saveChanges = async () => {
     try {
-      const { schedule_id, teacher_id, time_start, time_end, day } = editFormData;
+      const { schedule_id, teacher_id, time_start, time_end, day, schedule_status } = editFormData;
       
       // Sort days before storing
       const sortedDays = sortDays([...day]);
@@ -302,7 +302,8 @@ function Principal_SchedulePage() {
         teacher_id,
         time_start,
         time_end,
-        day: sortedDays.length === 1 ? sortedDays[0] : JSON.stringify(sortedDays)
+        day: sortedDays.length === 1 ? sortedDays[0] : JSON.stringify(sortedDays),
+        schedule_status
       });
       fetchSectionSchedules(selectedSectionId);
       setIsEditing(false);

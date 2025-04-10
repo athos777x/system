@@ -1094,14 +1094,14 @@ const handleArchive = () => {
                     >
                       View
                     </button>
-                    {(roleName !== 'principal') && (
+                    {/* {(roleName !== 'principal') && (
                       <button
                         className="enroll-student-btn enroll-student-btn-edit"
                         onClick={() => handleEditClick(student.student_id)}
                       >
                         Edit
                       </button>
-                    )}
+                    )} */}
                     {(roleName === 'registrar' && student.active_status === null) && (
                       <button 
                         className="enroll-student-btn enroll-student-btn-register"
@@ -1112,6 +1112,17 @@ const handleArchive = () => {
                       >
                         Register
                       </button> 
+                    )}
+                    {(roleName === 'registrar' && student.active_status === 'inactive') && (
+                      <button 
+                        className="enroll-student-btn enroll-student-btn-register"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          enrollStudent(student.student_id);
+                        }}
+                      >
+                        Request Enrollment
+                      </button>
                     )}
                   </td>
                 </tr>
