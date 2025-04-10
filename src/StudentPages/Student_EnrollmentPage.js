@@ -45,21 +45,6 @@ function Student_EnrollmentPage() {
     fetchData();
   }, [userId]);
 
-  const handleApplyEnrollment = async () => {
-    try {
-      const response = await axios.post('http://localhost:3001/apply-enrollment', { userId });
-      if (response.data.message) {
-        setEnrollmentStatus('pending');
-        alert(response.data.message);
-      } else {
-        alert('Failed to apply for enrollment. Please try again.');
-      }
-    } catch (error) {
-      console.error('Error applying for enrollment:', error);
-      alert('Failed to apply for enrollment. Please try again.');
-    }
-  };
-
   const handleAddElective = () => {
     setShowElectiveModal(true);
   };
@@ -174,13 +159,9 @@ function Student_EnrollmentPage() {
           </>
         ) : (
           enrollmentStatus === 'inactive' && (
-            <button 
-              type="button" 
-              className="student-enrollment-button" 
-              onClick={handleApplyEnrollment}
-            >
-              Apply for Enrollment
-            </button>
+            <div className="student-enrollment-message">
+              Please contact the registrar's office for enrollment.
+            </div>
           )
         )}
 
