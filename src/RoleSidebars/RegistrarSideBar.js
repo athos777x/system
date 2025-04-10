@@ -27,7 +27,7 @@ function RegistrarSideBar({ showSidebar, toggleSidebar, handleLogout }) {
 
   // Check if current path is under a specific submenu
   const isRecordsPath = ['/attendance', '/brigada-eskwela', '/new-grades'].includes(location.pathname);
-  const isEnrollmentPath = ['/pending-enrollment', '/pending-elective', '/school-year', '/section-list', '/enrolled-students'].includes(location.pathname);
+  const isEnrollmentPath = ['/pending-enrollment', '/enroll-student', '/pending-elective', '/school-year', '/section-list', '/enrolled-students'].includes(location.pathname);
   const isClassesPath = ['/section', '/schedule'].includes(location.pathname);
   const isExperimentalsPath = ['/subjects', '/grades'].includes(location.pathname);
 
@@ -53,7 +53,7 @@ function RegistrarSideBar({ showSidebar, toggleSidebar, handleLogout }) {
     setShowRecordsSubMenu(false);
     setShowExperimentalsSubMenu(false);
     if (!showEnrollmentSubMenu) {
-      navigate('/pending-enrollment');
+      navigate('/enroll-student');
     }
   };
 
@@ -146,11 +146,18 @@ function RegistrarSideBar({ showSidebar, toggleSidebar, handleLogout }) {
           {showEnrollmentSubMenu && (
             <div className="submenu">
               <button 
+                onClick={() => handleNavigate('/enroll-student')}
+                className={location.pathname === '/enroll-student' ? 'active' : ''}
+              >
+                <FiUsers className="icon" /> Enroll Student
+              </button>
+              <button 
                 onClick={() => handleNavigate('/pending-enrollment')}
                 className={location.pathname === '/pending-enrollment' ? 'active' : ''}
               >
                 <FiUsers className="icon" /> Pending Enrollment
               </button>
+              
               <button 
                 onClick={() => handleNavigate('/pending-elective')}
                 className={location.pathname === '/pending-elective' ? 'active' : ''}

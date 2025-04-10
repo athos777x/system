@@ -172,7 +172,7 @@ function BrigadaEskwela() {
         }
         return student;
       });
-  
+      fetchStudents();
       setStudents(updatedStudents);
       setFilteredStudents(updatedStudents);
     } catch (error) {

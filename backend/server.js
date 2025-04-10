@@ -202,7 +202,7 @@ app.get('/students', (req, res) => {
       s.father_educ_lvl, s.mother_educ_lvl, s.father_contact_number, 
       s.mother_contact_number, IF(s.brigada_eskwela=1,'Attended','Not Attended') AS brigada_eskwela,
       s.emergency_number, s.emergency_contactperson,
-      (SELECT ss.status FROM student_school_year ss
+      (SELECT ss.enrollment_status FROM enrollment ss
       JOIN school_year sy ON ss.school_year_id = sy.school_year_id
       WHERE ss.student_id = s.student_id AND sy.status = 'active') as active_status,
       se.enrollment_status, se.student_elective_id
@@ -3649,7 +3649,7 @@ app.get('/brigada-eskwela', (req, res) => {
       IF(a.brigada_eskwela = 1, 'Present', 'Absent') AS brigada_attendance,
       s.school_year, 
       a.lrn,
-      dd.remarks
+      IF(a.brigada_eskwela=1,'Attended',dd.remarks) AS remarks
     FROM student a 
     LEFT JOIN section b ON a.section_id = b.section_id 
     LEFT JOIN student_school_year c ON a.student_id=c.student_id
@@ -3934,7 +3934,7 @@ app.get('/user-id/convert/student-id', (req, res) => {
       FROM student a 
       LEFT JOIN enrollment b 
         ON a.student_id = b.student_id 
-      WHERE a.user_id = ? AND b.school_year_id = ?
+      WHERE a.user_id = ? AND b.school_year_id = ? AND b.enrollment_status = 'active'
     `;
 
     // Execute the query

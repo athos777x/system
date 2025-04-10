@@ -48,6 +48,7 @@ import ClassList from './reports/class_list';
 import ClassHonorRoll from './reports/class_honor_roll';
 import NutritionalReport from './reports/nutritional_report';
 import Roster from './reports/roster';
+import EnrollStudentManagement from './TeacherPages/EnrollStudentManagement';
 
 
 
@@ -125,6 +126,7 @@ function App() {
             <Route path="/summary-report-promotion" element={<PromotionReport />} />
             <Route path="/brigada-eskwela" element={<BrigadaEskwela />} />
             <Route path="/pending-enrollment" element={<EnrollmentRequests />} />
+            <Route path="/enroll-student" element={<EnrollStudentManagement />} />
             <Route path="/new-grades" element={<GradesManagement />} />
             <Route path="/pending-elective" element={<ElectiveRequest />} />    
 

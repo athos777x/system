@@ -236,17 +236,7 @@ function Student_GradesPage() {
     );
   }
 
-  if (error) {
-    return (
-      <div className="page-container">
-        <div className="student-grades-error-message">
-          {error}
-        </div>
-      </div>
-    );
-  }
-
-  if (subjects.length === 0) {
+  if (error || subjects.length === 0) {
     return (
       <div className="page-container">
         <div className="grades-card">
@@ -260,7 +250,7 @@ function Student_GradesPage() {
               <div className="student-info-divider" />
               <div className="student-info-item">
                 <span className="student-info-label">Section</span>
-                <span className="student-info-value">{studentInfo.section}</span>
+                <span className="student-info-value">{studentInfo.section || 'Not Available'}</span>
               </div>
               <div className="student-info-divider" />
               <div className="student-info-item">
@@ -300,7 +290,7 @@ function Student_GradesPage() {
               <tbody>
                 <tr>
                   <td colSpan="7" style={{ textAlign: 'center', padding: '2rem' }}>
-                    No grades available at this time.
+                    {error ? 'Unable to fetch student data at this time.' : 'No grades available at this time.'}
                   </td>
                 </tr>
                 <tr>
