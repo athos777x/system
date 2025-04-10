@@ -19,6 +19,7 @@ function EnrollmentRequests() {
   const [showRequirementsModal, setShowRequirementsModal] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [subjects, setSubjects] = useState([]);
+  
 
   const [filters, setFilters] = useState({
     searchTerm: '',
@@ -217,10 +218,8 @@ const approveElective = async (studentElectiveId) => {
   };
 
   const toggleStudentDetails = (studentId, editMode = false) => {
-    if (editMode) {
-      const student = currentStudents.find((s) => s.student_id === studentId);
-      setEditStudentData(student); // Load student data into edit mode
-    }
+    const student = currentStudents.find((s) => s.student_id === studentId);
+    setEditStudentData(student); // Always set the student data when toggling details
     setIsEditing(editMode);
     setSelectedStudentId(selectedStudentId === studentId ? null : studentId);
   };
@@ -341,75 +340,99 @@ const approveElective = async (studentElectiveId) => {
     setShowCancelModal(true);
   };
 
-  const fetchSubjectsAndGrades = async (studentId, gradeLevel, schoolYearId) => {
+  const fetchSubjectsAndGrades = async (studentId, current_yr_lvl, school_year_id) => {
     try {
-      const response = await axios.get('http://localhost:3001/api/subjects-card', {
-        params: { 
-          studentId, 
-          gradeLevel,
-          schoolYearId  
-        },
-      });
-      const subjectsData = response.data || [];
+      const [subjectsRes, gradesRes] = await Promise.all([
+        axios.get('http://localhost:3001/api/subjects-card', {
+          params: {
+            studentId,
+            gradeLevel: current_yr_lvl,
+            schoolYearId: school_year_id,
+          },
+        }),
+        axios.get('http://localhost:3001/api/grades', {
+          params: {
+            studentId,
+            gradeLevel: current_yr_lvl,
+            schoolYearId: school_year_id,
+          },
+        }),
+      ]);
 
-      // Fetch grades for these subjects
-      const gradesResponse = await axios.get('http://localhost:3001/api/grades', {
-        params: { 
-          studentId, 
-          gradeLevel,
-          schoolYearId 
-        },
-      });
+      console.log('Subjects Response:', subjectsRes.data);
+      console.log('Grades Response:', gradesRes.data);
 
-      if (gradesResponse.data && gradesResponse.data.grades) {
-        const gradesData = gradesResponse.data.grades;
-        const updatedSubjects = subjectsData.map(subject => {
-          const matchingGrade = gradesData.find(grade => 
-            grade.subject_name.toLowerCase().trim() === subject.subject_name.toLowerCase().trim()
-          );
+      // Extract grades array from the response
+      const grades = gradesRes.data.success ? gradesRes.data.grades : [];
 
-          if (matchingGrade) {
-            const q1 = parseFloat(matchingGrade.q1) || 0;
-            const q2 = parseFloat(matchingGrade.q2) || 0;
-            const q3 = parseFloat(matchingGrade.q3) || 0;
-            const q4 = parseFloat(matchingGrade.q4) || 0;
-            const final = ((q1 + q2 + q3 + q4) / 4).toFixed(0);
+      const subjectsWithGrades = subjectsRes.data.map(subject => {
+        // Normalize subject names for comparison
+        const normalizeName = (name) => {
+          if (!name) return '';
+          return name.toLowerCase().trim().replace(/\s+/g, ' ');
+        };
 
-            return {
-              ...subject,
-              q1: matchingGrade.q1,
-              q2: matchingGrade.q2,
-              q3: matchingGrade.q3,
-              q4: matchingGrade.q4,
-              final: final,
-              remarks: parseFloat(final) >= 75 ? "Passed" : "Failed"
-            };
-          }
-          return subject;
+        const subjectName = normalizeName(subject.subject_name);
+        
+        const matchingGrade = grades.find(grade => {
+          const gradeSubjectName = normalizeName(grade.subject_name);
+          return gradeSubjectName === subjectName;
         });
-        setSubjects(updatedSubjects);
-      }
+
+        const q1 = matchingGrade?.q1 || '';
+        const q2 = matchingGrade?.q2 || '';
+        const q3 = matchingGrade?.q3 || '';
+        const q4 = matchingGrade?.q4 || '';
+
+        const gradingList = [q1, q2, q3, q4].filter(val => val !== null && val !== '');
+        const final = gradingList.length > 0 ? Math.round(gradingList.reduce((a, b) => a + b, 0) / gradingList.length) : '';
+        const remarks = final !== '' ? (final >= 75 ? 'Passed' : 'Failed') : '';
+
+        return {
+          ...subject,
+          first_grading: q1,
+          second_grading: q2,
+          third_grading: q3,
+          fourth_grading: q4,
+          final,
+          remarks,
+        };
+      });
+
+      return subjectsWithGrades;
     } catch (error) {
       console.error('Error fetching subjects and grades:', error);
+      return [];
     }
   };
+
+
+  
 
   const EnrollmentModal = ({ student, onClose, onEnroll }) => {
     const [requirementsChecked, setRequirementsChecked] = useState(false);
     const [loading, setLoading] = useState(true);
     const [availableSections, setAvailableSections] = useState([]);
     const [selectedSection, setSelectedSection] = useState('');
+    const [subjectsData, setSubjectsData] = useState([]);
 
     useEffect(() => {
       const fetchData = async () => {
         setLoading(true);
-        await fetchSubjectsAndGrades(
-          student.student_id,
-          student.current_yr_lvl,
-          student.school_year_id
-        );
-        await fetchAvailableSections();
-        setLoading(false);
+        try {
+          const subjects = await fetchSubjectsAndGrades(
+            student.student_id,
+            student.current_yr_lvl,
+            student.school_year_id
+          );
+          console.log('Fetched subjects with grades:', subjects);
+          setSubjectsData(subjects);
+          await fetchAvailableSections();
+        } catch (error) {
+          console.error('Error fetching data:', error);
+        } finally {
+          setLoading(false);
+        }
       };
       fetchData();
     }, [student]);
@@ -512,14 +535,14 @@ const approveElective = async (studentElectiveId) => {
                   </tr>
                 </thead>
                 <tbody>
-                  {subjects.length > 0 ? (
-                    subjects.map((subject, index) => (
+                  {subjectsData.length > 0 ? (
+                    subjectsData.map((subject, index) => (
                       <tr key={index}>
                         <td>{subject.subject_name}</td>
-                        <td>{subject.q1 || "___"}</td>
-                        <td>{subject.q2 || "___"}</td>
-                        <td>{subject.q3 || "___"}</td>
-                        <td>{subject.q4 || "___"}</td>
+                        <td>{subject.first_grading || "___"}</td>
+                        <td>{subject.second_grading || "___"}</td>
+                        <td>{subject.third_grading || "___"}</td>
+                        <td>{subject.fourth_grading || "___"}</td>
                         <td>{subject.final || "___"}</td>
                         <td className={subject.remarks === "Passed" ? "passed" : subject.remarks === "Failed" ? "failed" : ""}>
                           {subject.remarks || "___"}
@@ -640,15 +663,17 @@ const approveElective = async (studentElectiveId) => {
                   <td>{student.current_yr_lvl}</td>
                   <td>{student.section_id}</td>
                   <td>
-                    <span className={`status-${student.enrollment_status ? student.enrollment_status.toLowerCase() : ''}`}>
-                      {student.enrollment_status}
+                    <span className={`status-${student.active_status ? student.active_status.toLowerCase() : ''}`}>
+                      {student.active_status}
                     </span>
                   </td>
                   <td>
                     <div className="pending-enrollment-actions">
                       <button
                         className="pending-enrollment-btn pending-enrollment-btn-view"
-                        onClick={() => toggleStudentDetails(student.student_id)}
+                        onClick={() => {
+                          toggleStudentDetails(student.student_id);
+                        }}
                       >
                         View
                       </button>
@@ -693,7 +718,7 @@ const approveElective = async (studentElectiveId) => {
       </div>
 
       {showRequirementsModal && selectedStudent && (
-        <EnrollmentModal
+        <EnrollmentModal  
           student={selectedStudent}
           onClose={() => {
             setShowRequirementsModal(false);
@@ -738,8 +763,8 @@ const approveElective = async (studentElectiveId) => {
               <tr>
                 <th>Status</th>
                 <td>
-                  <span className={`status-${editStudentData?.enrollment_status ? editStudentData.enrollment_status.toLowerCase() : ''}`}>
-                    {editStudentData?.enrollment_status || ''}
+                  <span className={`status-${editStudentData?.active_status ? editStudentData.active_status.toLowerCase() : ''}`}>
+                    {editStudentData?.active_status || ''}
                   </span>
                 </td>
               </tr>
