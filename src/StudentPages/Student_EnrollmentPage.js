@@ -125,8 +125,9 @@ function Student_EnrollmentPage() {
                 <thead>
                   <tr>
                     <th>Subject</th>
-                    <th>Teacher</th>
+                    <th>Day</th>
                     <th>Schedule</th>
+                    <th>Teacher</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -134,13 +135,14 @@ function Student_EnrollmentPage() {
                     enrollmentData.map((row, index) => (
                       <tr key={index}>
                         <td>{row.subject_name}</td>
-                        <td>{row.teacher_name}</td>
+                        <td>{row.day || 'N/A'}</td>
                         <td>{row.schedule}</td>
+                        <td>{row.teacher_name}</td>
                       </tr>
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="3">No enrollment data available</td>
+                      <td colSpan="4">No enrollment data available</td>
                     </tr>
                   )}
                 </tbody>
