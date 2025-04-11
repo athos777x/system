@@ -72,7 +72,8 @@ function Student_EnrollmentPage() {
       const { data } = await axios.post('http://localhost:3001/enroll-elective', {
         studentId: studentData.student_id,
         electiveId: electiveChoice,
-        grade_level: studentData.current_yr_lvl
+        grade_level: studentData.current_yr_lvl,
+        userId
       });
 
       alert(data.message);
