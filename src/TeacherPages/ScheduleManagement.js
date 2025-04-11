@@ -19,8 +19,8 @@ function Principal_SchedulePage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newSchedule, setNewSchedule] = useState({
     subject_id: '',
-    time_start: '',
-    time_end: '',
+    time_start: '07:00',
+    time_end: '18:00',
     day: [],
     teacher_id: '',
     section_id: ''
@@ -236,8 +236,8 @@ function Principal_SchedulePage() {
       // Reset the schedule form
       setNewSchedule({
         subject_id: '',
-        time_start: '',
-        time_end: '',
+        time_start: '07:00',
+        time_end: '18:00',
         day: [],
         teacher_id: '',
         section_id: ''
@@ -258,15 +258,86 @@ function Principal_SchedulePage() {
       });
       setTeachers(teachersResponse.data);
       setIsEditing(true);
-      // Make sure day is an array when starting to edit
+      // Make sure day is an array when starting to edit and set default time if not provided
       setEditFormData({
         ...schedule,
+        time_start: schedule.time_start || '07:00',
+        time_end: schedule.time_end || '07:00',
         day: Array.isArray(schedule.day) ? schedule.day : JSON.parse(schedule.day)
       });
     } catch (error) {
       console.error('Error fetching teachers:', error);
     }
   };
+
+  const validateTime = (timeValue) => {
+    // Convert time to 24-hour format for comparison
+    const [hours, minutes] = timeValue.split(':');
+    const time24 = `${hours.padStart(2, '0')}:${minutes}`;
+    return time24 >= '07:00' && time24 <= '18:00';
+  };
+
+  const handleTimeBlur = (e, isNewSchedule = true) => {
+    const { name, value } = e.target;
+    const startTime = isNewSchedule ? newSchedule.time_start : editFormData.time_start;
+    const endTime = isNewSchedule ? newSchedule.time_end : editFormData.time_end;
+
+    if (!validateTime(value)) {
+      alert('Please select a time between 7:00 AM and 6:00 PM');
+      // Reset to default value
+      const defaultValue = name === 'time_start' ? '07:00' : '18:00';
+      if (isNewSchedule) {
+        setNewSchedule(prev => ({ ...prev, [name]: defaultValue }));
+      } else {
+        setEditFormData(prev => ({ ...prev, [name]: defaultValue }));
+      }
+    } else if (name === 'time_end' && endTime < startTime) {
+      alert('End time cannot be earlier than start time');
+      // Reset end time to default
+      const defaultValue = '18:00';
+      if (isNewSchedule) {
+        setNewSchedule(prev => ({ ...prev, time_end: defaultValue }));
+      } else {
+        setEditFormData(prev => ({ ...prev, time_end: defaultValue }));
+      }
+    }
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    
+    if (name === 'day') {
+      // Handle checkbox selection
+      const day = e.target.value;
+      const isChecked = e.target.checked;
+  
+      // Ensure day array is initialized
+      setNewSchedule(prev => ({
+        ...prev,
+        day: prev.day ? (isChecked ? [...prev.day, day] : prev.day.filter(d => d !== day)) : [day]
+      }));
+    } else if (name === 'time_start' || name === 'time_end') {
+      // Update time without immediate validation
+      setNewSchedule(prev => ({ ...prev, [name]: value }));
+    } else {
+      setNewSchedule({ ...newSchedule, [name]: value });
+    }
+  
+    // When section is selected, filter subjects by grade level
+    if (name === 'section_id' && value) {
+      const selectedSection = sections.find(section => section.section_id === Number(value));
+      if (selectedSection) {
+        const sectionGrade = selectedSection.grade_level;
+        const filteredSubjects = subjects.filter(subject => 
+          String(subject.grade_level) === String(sectionGrade)
+        );
+        setFilteredSubjects(filteredSubjects);
+      } else {
+        setFilteredSubjects([]);
+      }
+    }
+  };
+  
 
   const handleEditChange = (event) => {
     const { name, value } = event.target;
@@ -283,6 +354,9 @@ function Principal_SchedulePage() {
           ? [...currentDays, day]
           : currentDays.filter(d => d !== day)
       }));
+    } else if (name === 'time_start' || name === 'time_end') {
+      // Update time without immediate validation
+      setEditFormData(prev => ({ ...prev, [name]: value }));
     } else {
       setEditFormData(prevFormData => ({
         ...prevFormData,
@@ -342,39 +416,6 @@ function Principal_SchedulePage() {
       alert(`Failed to delete schedule: ${error.response?.data?.message || error.message}`);
     }
   };
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    
-    if (name === 'day') {
-      // Handle checkbox selection
-      const day = e.target.value;
-      const isChecked = e.target.checked;
-  
-      // Ensure day array is initialized
-      setNewSchedule(prev => ({
-        ...prev,
-        day: prev.day ? (isChecked ? [...prev.day, day] : prev.day.filter(d => d !== day)) : [day]
-      }));
-    } else {
-      setNewSchedule({ ...newSchedule, [name]: value });
-    }
-  
-    // When section is selected, filter subjects by grade level
-    if (name === 'section_id' && value) {
-      const selectedSection = sections.find(section => section.section_id === Number(value));
-      if (selectedSection) {
-        const sectionGrade = selectedSection.grade_level;
-        const filteredSubjects = subjects.filter(subject => 
-          String(subject.grade_level) === String(sectionGrade)
-        );
-        setFilteredSubjects(filteredSubjects);
-      } else {
-        setFilteredSubjects([]);
-      }
-    }
-  };
-  
 
   const handleAddSchedule = async () => {
     try {
@@ -628,6 +669,9 @@ function Principal_SchedulePage() {
                                             name="time_start"
                                             value={editFormData.time_start}
                                             onChange={handleEditChange}
+                                            onBlur={(e) => handleTimeBlur(e, false)}
+                                            min="07:00"
+                                            max="18:00"
                                           />
                                         </td>
                                         <td>
@@ -636,6 +680,9 @@ function Principal_SchedulePage() {
                                             name="time_end"
                                             value={editFormData.time_end}
                                             onChange={handleEditChange}
+                                            onBlur={(e) => handleTimeBlur(e, false)}
+                                            min="07:00"
+                                            max="18:00"
                                           />
                                         </td>
                                         <td>
@@ -800,6 +847,9 @@ function Principal_SchedulePage() {
               placeholder="Start Time"
               value={newSchedule.time_start}
               onChange={handleInputChange}
+              onBlur={(e) => handleTimeBlur(e, true)}
+              min="07:00"
+              max="18:00"
             />
             <input
               type="time"
@@ -807,6 +857,9 @@ function Principal_SchedulePage() {
               placeholder="End Time"
               value={newSchedule.time_end}
               onChange={handleInputChange}
+              onBlur={(e) => handleTimeBlur(e, true)}
+              min="07:00"
+              max="18:00"
             />
 
             <div className="day-checkboxes">
