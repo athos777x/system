@@ -184,30 +184,48 @@ function Student_AttendancePage() {
       />
       <div className="attendance-details">
         <h2>Attendance for {formatDate(selectedDate)}</h2>
-        {attendanceData
-          .filter((entry) => new Date(entry.date).toDateString() === selectedDate.toDateString())
-          .map((entry, index) => (
-            <div key={index} className="attendance-entry">
-              <p>
-                <strong>{entry.subject_name}</strong>
-                <span className={`status-badge ${entry.status.toLowerCase()}`}>
-                  {entry.status}
-                </span>
-              </p>
-              {entry.remarks && (
-                <p className="remarks">
-                  Remarks: {entry.remarks}
-                </p>
-              )}
-            </div>
-          ))}
-        {attendanceData.filter((entry) => 
-          new Date(entry.date).toDateString() === selectedDate.toDateString()
-        ).length === 0 && (
-          <div className="attendance-entry">
-            <p>No attendance records for this date.</p>
-          </div>
-        )}
+        <table className="attendance-table">
+          <thead>
+            <tr>
+              <th>Subject</th>
+              <th>Day</th>
+              <th>Time Start</th>
+              <th>Time End</th>
+              <th>Teacher</th>
+              <th>Attendance</th>
+            </tr>
+          </thead>
+          <tbody>
+            {attendanceData
+              .filter((entry) => new Date(entry.date).toDateString() === selectedDate.toDateString())
+              .map((entry, index) => (
+                <tr key={index}>
+                  <td>{entry.subject_name}</td>
+                  <td>{new Date(entry.date).toLocaleDateString('en-US', { weekday: 'long' })}</td>
+                  <td>{entry.time_start || 'N/A'}</td>
+                  <td>{entry.time_end || 'N/A'}</td>
+                  <td>{entry.teacher_name || 'N/A'}</td>
+                  <td>
+                    <span className={`status-badge ${entry.status.toLowerCase()}`}>
+                      {entry.status}
+                    </span>
+                    {entry.remarks && (
+                      <div className="remarks-text">
+                        Remarks: {entry.remarks}
+                      </div>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            {attendanceData.filter((entry) => 
+              new Date(entry.date).toDateString() === selectedDate.toDateString()
+            ).length === 0 && (
+              <tr>
+                <td colSpan="6" className="no-records">No attendance records for this date.</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
     </div>
   );
