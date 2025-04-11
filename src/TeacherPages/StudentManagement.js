@@ -1083,8 +1083,8 @@ const handleArchive = () => {
                 <td>{student.student_id}</td>
                 <td>{student.stud_name}</td>
                 <td>
-                    <span className={`status-${student.active_status ? student.active_status.toLowerCase() : 'pending'}`}>
-                      {student.active_status ? student.active_status.toLowerCase() : 'pending'}
+                    <span className={`status-${student.active_status ? student.active_status.toLowerCase() : 'inactive'}`}>
+                      {student.active_status ? student.active_status.toLowerCase() : 'inactive'}
                     </span>
                   </td>
                   <td className="student-mgmt-actions">

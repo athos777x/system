@@ -15,6 +15,7 @@ function EnrollStudentManagement() {
   const [editStudentData, setEditStudentData] = useState(null); // Stores the editable student data
   const [showCancelModal, setShowCancelModal] = useState(false); // Tracks cancel confirmation modal
   const [errors, setErrors] = useState({});
+  const [enrollmentStatus, setEnrollmentStatus] = useState('Pending');
 
   const [schoolYears, setSchoolYears] = useState([]);
   const [sections, setSections] = useState([]);
@@ -195,7 +196,7 @@ function EnrollStudentManagement() {
       // ✅ Determine the endpoint based on roleName
       const endpoint = roleName === 'class_adviser' 
         ? 'http://localhost:3001/students/by-adviser' 
-        : 'http://localhost:3001/students';
+        : 'http://localhost:3001/students/apply-enrollment';
   
       // ✅ Make request with correct filters
       const response = await axios.get(endpoint, { params: filteredParams });
@@ -551,7 +552,7 @@ const enrollStudent = async (studentId) => {
     };
 
     // Send the PUT request to enroll the student
-    const response = await axios.put(`http://localhost:3001/students/${studentId}/enroll`, payload);
+    const response = await axios.put(`http://localhost:3001/students/${studentId}/enroll-student`, payload);
 
     // Log and check for successful response
     if (response.status === 200 || response.status === 201) {
@@ -575,6 +576,23 @@ const enrollStudent = async (studentId) => {
       alert('An error occurred: ' + error.message);
     }
   }
+};
+
+
+const handleApplyEnrollment = async (studentId) => {
+  try {
+    const response = await axios.post('http://localhost:3001/apply-enrollment', { studentId });
+    if (response.data.message) {
+      setEnrollmentStatus('pending');
+      alert(response.data.message);
+    } else {
+      alert('Failed to apply for enrollment. Please try again.');
+    }
+  } catch (error) {
+    console.error('Error applying for enrollment:', error);
+    alert('Failed to apply for enrollment. Please try again.');
+  }
+  fetchStudents();
 };
 
 const validateStudent = async (studentId) => {
@@ -1048,11 +1066,11 @@ const handleArchive = () => {
     <div className="enroll-student-container">
       <div className="enroll-student-header">
         <h1 className="enroll-student-title">Enroll Student Management</h1>
-        {(roleName === 'registrar' || roleName === 'subject_teacher' || roleName === 'class_adviser' || roleName === 'grade_level_coordinator') && (
+        {/* {(roleName === 'registrar' || roleName === 'subject_teacher' || roleName === 'class_adviser' || roleName === 'grade_level_coordinator') && (
           <button className="enroll-student-add-btn" onClick={startAdding}>
             Add New Student
           </button>
-        )}
+        )} */}
       </div>
 
       <StudentSearchFilter
@@ -1102,7 +1120,7 @@ const handleArchive = () => {
                         Edit
                       </button>
                     )} */}
-                    {(roleName === 'registrar' && student.active_status === null) && (
+                    {/* {(roleName === 'registrar' && student.active_status === null) && (
                       <button 
                         className="enroll-student-btn enroll-student-btn-register"
                         onClick={(e) => {
@@ -1112,13 +1130,13 @@ const handleArchive = () => {
                       >
                         Register
                       </button> 
-                    )}
+                    )} */}
                     {(roleName === 'registrar' && student.active_status === 'inactive') && (
                       <button 
                         className="enroll-student-btn enroll-student-btn-register"
                         onClick={(e) => {
                           e.stopPropagation();
-                          enrollStudent(student.student_id);
+                          handleApplyEnrollment(student.student_id);
                         }}
                       >
                         Request Enrollment
