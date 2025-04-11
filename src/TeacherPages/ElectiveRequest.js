@@ -15,6 +15,15 @@ function ElectiveRequest() {
   const [schoolYears, setSchoolYears] = useState([]);
   const [sections, setSections] = useState([]);
   const [filteredSections, setFilteredSections] = useState([]);
+  const [showElectiveModal, setShowElectiveModal] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState(null);
+  const mockElectiveDetails = {
+    subject_name: "Basic Web Development",
+    day: "Monday and Wednesday",
+    time: "9:00 AM - 10:30 AM",
+    teacher: "Dr. Jane Smith",
+    description: "An introductory course to web development covering HTML, CSS, and basic JavaScript."
+  };
 
   const [filters, setFilters] = useState({
     searchTerm: '',
@@ -153,30 +162,55 @@ const handleApplyFilters = () => {
 
 
 const approveElective = async (studentId, action) => {
-    try {
-      const response = await axios.post('http://localhost:3001/approve-elective', {
-        studentId,
-        action
-      });
-  
-      if (response.status === 200 && response.data.message) {
-        alert(response.data.message);
-        await fetchStudents(); // Refresh student list
-      } else {
-        alert(response.data.error || `Failed to ${action} elective.`);
-      }
-    } catch (error) {
-      console.error(`Error updating elective status to '${action}' for student ID: ${studentId}`, error);
-  
-      if (error.response) {
-        alert('Error: ' + (error.response.data.error || 'Unknown server error.'));
-      } else {
-        alert('Network error: Unable to reach the server.');
-      }
+  try {
+    if (action === 'approve') {
+      // Find the selected student
+      const student = students.find(s => s.student_id === studentId);
+      setSelectedStudent(student);
+      setShowElectiveModal(true);
+      return; // Don't proceed with the API call yet
     }
-  };
-  
 
+    const response = await axios.post('http://localhost:3001/approve-elective', {
+      studentId,
+      action
+    });
+
+    if (response.status === 200 && response.data.message) {
+      alert(response.data.message);
+      await fetchStudents();
+    } else {
+      alert(response.data.error || `Failed to ${action} elective.`);
+    }
+  } catch (error) {
+    console.error(`Error updating elective status to '${action}' for student ID: ${studentId}`, error);
+    if (error.response) {
+      alert('Error: ' + (error.response.data.error || 'Unknown server error.'));
+    } else {
+      alert('Network error: Unable to reach the server.');
+    }
+  }
+};
+
+const handleConfirmApproval = async () => {
+  try {
+    if (!selectedStudent) return;
+
+    const response = await axios.post('http://localhost:3001/approve-elective', {
+      studentId: selectedStudent.student_id,
+      action: 'approve'
+    });
+
+    if (response.status === 200) {
+      alert('Elective approved successfully');
+      setShowElectiveModal(false);
+      await fetchStudents();
+    }
+  } catch (error) {
+    console.error('Error approving elective:', error);
+    alert('Failed to approve elective');
+  }
+};
 
   const formatDate = (isoString) => {
     const date = new Date(isoString);
@@ -484,6 +518,76 @@ const approveElective = async (studentId, action) => {
         paginate={paginate}
         currentPage={currentPage}
       />
+
+      {showElectiveModal && selectedStudent && (
+        <div className="enrollment-modal">
+          <div className="enrollment-modal-content">
+            <h2>Elective Subject Details</h2>
+            
+            <div className="student-info">
+              <table>
+                <tbody>
+                  <tr>
+                    <th>Student Name</th>
+                    <td>{`${selectedStudent.firstname} ${selectedStudent.middlename ? selectedStudent.middlename[0] + '.' : ''} ${selectedStudent.lastname}`}</td>
+                  </tr>
+                  <tr>
+                    <th>Grade Level</th>
+                    <td>{selectedStudent.current_yr_lvl}</td>
+                  </tr>
+                  <tr>
+                    <th>Section</th>
+                    <td>{selectedStudent.section_id}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div className="requirements-section">
+              <h3>Elective Subject Information</h3>
+              <table className="grades-details-table">
+                <tbody>
+                  <tr>
+                    <th>Subject Name</th>
+                    <td>{mockElectiveDetails.subject_name}</td>
+                  </tr>
+                  <tr>
+                    <th>Day</th>
+                    <td>{mockElectiveDetails.day}</td>
+                  </tr>
+                  <tr>
+                    <th>Time</th>
+                    <td>{mockElectiveDetails.time}</td>
+                  </tr>
+                  <tr>
+                    <th>Teacher</th>
+                    <td>{mockElectiveDetails.teacher}</td>
+                  </tr>
+                  <tr>
+                    <th>Description</th>
+                    <td>{mockElectiveDetails.description}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div className="modal-actions">
+              <button
+                className="pending-enrollment-btn pending-enrollment-btn-approve"
+                onClick={handleConfirmApproval}
+              >
+                Confirm Approval
+              </button>
+              <button
+                className="pending-enrollment-btn pending-enrollment-btn-reject"
+                onClick={() => setShowElectiveModal(false)}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
