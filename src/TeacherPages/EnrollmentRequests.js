@@ -485,6 +485,10 @@ const approveElective = async (studentElectiveId) => {
                   <td>{`${student.firstname} ${student.middlename ? student.middlename + ' ' : ''}${student.lastname}`}</td>
                 </tr>
                 <tr>
+                  <th>Student Type:</th>
+                  <td>{student.is_new_student ? 'New Student' : 'Old Student'}</td>
+                </tr>
+                <tr>
                   <th>Grade Level:</th>
                   <td>{student.current_yr_lvl}</td>
                 </tr>
