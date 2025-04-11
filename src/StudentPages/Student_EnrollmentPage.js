@@ -118,7 +118,7 @@ function Student_EnrollmentPage() {
         
         <h1 className="student-enrollment-title">SY - {activeSchoolYear}</h1>
         
-        {enrollmentStatus === 'active' ? (
+        {enrollmentStatus === 'active' && (
           <>
             <div className="student-enrollment-table-container">
               <table className="student-enrollment-table">
@@ -149,7 +149,7 @@ function Student_EnrollmentPage() {
               </table>
             </div>
 
-            {electiveStatus !== 'approved' && (
+            {electiveStatus === '' && (
               <button 
                 type="button" 
                 className="student-enrollment-add-elective-button" 
@@ -158,13 +158,22 @@ function Student_EnrollmentPage() {
                 Add Elective
               </button>
             )}
+            {electiveStatus === 'pending' && (
+              <button 
+                type="button" 
+                className="student-enrollment-add-elective-button student-enrollment-add-elective-button-pending" 
+                disabled
+              >
+                Pending Elective Request
+              </button>
+            )}
           </>
-        ) : (
-          enrollmentStatus === 'inactive' && (
-            <div className="student-enrollment-message">
-              Please contact the registrar's office for enrollment.
-            </div>
-          )
+        )}
+
+        {enrollmentStatus === 'inactive' && (
+          <div className="student-enrollment-message">
+            Please contact the registrar's office for enrollment.
+          </div>
         )}
 
         {showElectiveModal && (

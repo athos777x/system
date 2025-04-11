@@ -201,6 +201,19 @@
   margin-left: auto;
 }
 
+.student-enrollment-add-elective-button-pending {
+  background: #f0f0f0;
+  color: #666;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.student-enrollment-add-elective-button-pending:hover {
+  background: #f0f0f0;
+  transform: none;
+  box-shadow: none;
+}
+
 .student-enrollment-add-elective-button:hover {
   background: var(--primary-dark);
   transform: translateY(-2px);
