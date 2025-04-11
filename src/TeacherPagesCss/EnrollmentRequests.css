@@ -466,10 +466,21 @@
   cursor: pointer;
 }
 
+/* Modal actions */
 .modal-actions {
   display: flex;
-  justify-content: center;
+  justify-content: flex-end;
   gap: 1rem;
+  margin-top: 1rem;
+}
+
+.modal-actions .pending-enrollment-btn {
+  height: 36px;
+  padding: 0.5rem 1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 80px;
 }
 
 @media (max-width: 768px) {
@@ -531,13 +542,6 @@
 .enrollment-modal-content {
   max-height: 90vh;
   overflow-y: auto;
-}
-
-/* Loading state */
-.enrollment-modal .grades-details-container p {
-  text-align: center;
-  padding: 1rem;
-  color: #666;
 }
 
 /* Adjust modal width for the grades table */
