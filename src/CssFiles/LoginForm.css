@@ -1,19 +1,49 @@
 /* LoginForm.css */
+:root {
+  --login-bg: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  --container-bg: #ffffff;
+  --container-shadow: rgba(0, 0, 0, 0.05);
+  --input-bg: #f8f9fa;
+  --input-border: #e9ecef;
+  --input-focus-shadow: rgba(40, 167, 69, 0.1);
+  --placeholder-color: #adb5bd;
+  --icon-color: #6c757d;
+  --primary-color: #28a745;
+  --primary-hover: #218838;
+  --text-primary: #333333;
+  --text-secondary: #6c757d;
+}
+
+[data-theme='dark'] {
+  --login-bg: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+  --container-bg: #2d2d2d;
+  --container-shadow: rgba(0, 0, 0, 0.2);
+  --input-bg: #1e1e1e;
+  --input-border: #404040;
+  --input-focus-shadow: rgba(102, 187, 106, 0.2);
+  --placeholder-color: #666666;
+  --icon-color: #b0b0b0;
+  --primary-color: #66bb6a;
+  --primary-hover: #4caf50;
+  --text-primary: #e0e0e0;
+  --text-secondary: #b0b0b0;
+}
+
 .login-wrapper {
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  background: var(--login-bg);
 }
 
 .login-container {
   width: 100%;
   max-width: 420px;
   padding: 2.5rem;
-  background-color: #ffffff;
+  background-color: var(--container-bg);
   border-radius: 1rem;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 10px 25px var(--container-shadow);
   text-align: center;
 }
 
@@ -52,13 +82,21 @@
   margin-bottom: 0.5rem;
 }
 
+.form-group input:-webkit-autofill,
+.form-group input:-webkit-autofill:hover,
+.form-group input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--text-primary);
+  -webkit-box-shadow: 0 0 0px 1000px var(--input-bg) inset;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
 .form-group input {
   width: 100%;
   padding: 0.75rem 1rem;
   font-size: 1rem;
   color: var(--text-primary);
-  background-color: #f8f9fa;
-  border: 2px solid #e9ecef;
+  background-color: var(--input-bg);
+  border: 2px solid var(--input-border);
   border-radius: 0.5rem;
   transition: all 0.2s ease;
 }
@@ -66,12 +104,12 @@
 .form-group input:focus {
   outline: none;
   border-color: var(--primary-color);
-  background-color: #ffffff;
-  box-shadow: 0 0 0 4px rgba(40, 167, 69, 0.1);
+  background-color: var(--input-bg);
+  box-shadow: 0 0 0 4px var(--input-focus-shadow);
 }
 
 .form-group input::placeholder {
-  color: #adb5bd;
+  color: var(--placeholder-color);
 }
 
 .password-wrapper {
@@ -91,7 +129,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #6c757d;
+  color: var(--icon-color);
   transition: color 0.2s ease;
 }
 
@@ -110,7 +148,7 @@
   margin-top: 1rem;
   font-size: 1rem;
   font-weight: 600;
-  color: #ffffff;
+  color: var(--container-bg);
   background-color: var(--primary-color);
   border: none;
   border-radius: 0.5rem;
