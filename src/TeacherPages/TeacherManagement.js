@@ -880,12 +880,14 @@ useEffect(() => {
                               Assign Section
                             </button>
                           )}
-                          {/* <button 
+                          {teacher.role_id === 8 && (
+                          <button 
                               className="teacher-mgmt-btn teacher-mgmt-btn-view"
                               onClick={() => handleAssignSubject(teacher.employee_id)}
                             >
                               Assign Subject
-                          </button> */}
+                          </button> 
+                          )}
                           <button 
                             className="teacher-mgmt-btn teacher-mgmt-btn-archive"
                             onClick={() => openArchiveModal(teacher.employee_id)}
@@ -1287,7 +1289,7 @@ useEffect(() => {
         </div>
       )}
 
-      {/* {showAssignSubjectModal && (
+      {showAssignSubjectModal && (
         <div className="teacher-mgmt-modal">
           <div className="teacher-mgmt-modal-content">
             <h2>Assign Subject</h2>
@@ -1357,7 +1359,7 @@ useEffect(() => {
             </div>
           </div>
         </div>
-      )} */}
+      )}
 
       {showEditModal && (
         <div className="teacher-mgmt-modal">

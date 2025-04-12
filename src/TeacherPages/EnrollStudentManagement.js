@@ -133,6 +133,7 @@ function EnrollStudentManagement() {
   useEffect(() => {
     fetchSchoolYears();
     fetchSections();
+    fetchStudents();
   }, []);
 
   useEffect(() => {
