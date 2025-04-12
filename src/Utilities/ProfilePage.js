@@ -306,7 +306,7 @@ const ProfilePage = () => {
               </div>
               <div className="user-profile-form-group">
                 <label>Email</label>
-                <div className="user-profile-info-value">{userInfo.email || '-'}</div>
+                <div className="user-profile-info-value">{userInfo.username || '-'}</div>
               </div>
             </div>
             
@@ -315,6 +315,13 @@ const ProfilePage = () => {
                 <label>Username</label>
                 <div className="user-profile-info-value">{userInfo.username}</div>
               </div>
+              <div className="user-profile-form-group">
+                <label>Contact No.</label>
+                <div className="user-profile-info-value">{userInfo.contact_number || '-'}</div>
+              </div>
+            </div>
+
+            <div className="user-profile-form-row">
               <div className="user-profile-form-group">
                 <label>Password</label>
                 {isEditing ? (
@@ -385,6 +392,7 @@ const ProfilePage = () => {
                 )}
               </div>
             </div>
+
             
             <div className="user-profile-form-actions">
               {!isEditing ? (

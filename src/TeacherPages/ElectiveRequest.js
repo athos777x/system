@@ -218,13 +218,12 @@ const handleConfirmApproval = async () => {
   };
 
   const toggleStudentDetails = (studentId, editMode = false) => {
-    if (editMode) {
-      const student = currentStudents.find((s) => s.student_id === studentId);
-      setEditStudentData(student); // Load student data into edit mode
-    }
+    const student = currentStudents.find((s) => s.student_id === studentId);
+    setEditStudentData(student); // Always set the student data when toggling details
     setIsEditing(editMode);
     setSelectedStudentId(selectedStudentId === studentId ? null : studentId);
   };
+  
 
   const paginate = (pageNumber) => {
     setCurrentPage(pageNumber);
@@ -549,23 +548,23 @@ const handleConfirmApproval = async () => {
                 <tbody>
                   <tr>
                     <th>Subject Name</th>
-                    <td>{mockElectiveDetails.subject_name}</td>
+                    <td>{selectedStudent.subject_name}</td>
                   </tr>
                   <tr>
                     <th>Day</th>
-                    <td>{mockElectiveDetails.day}</td>
+                    <td>{selectedStudent.day}</td>
                   </tr>
                   <tr>
                     <th>Time</th>
-                    <td>{mockElectiveDetails.time}</td>
+                    <td>{selectedStudent.time}</td>
                   </tr>
                   <tr>
                     <th>Teacher</th>
-                    <td>{mockElectiveDetails.teacher}</td>
+                    <td>{selectedStudent.teacher}</td>
                   </tr>
                   <tr>
                     <th>Description</th>
-                    <td>{mockElectiveDetails.description}</td>
+                    <td>{selectedStudent.description}</td>
                   </tr>
                 </tbody>
               </table>

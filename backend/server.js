@@ -204,7 +204,7 @@ app.get('/students', (req, res) => {
       s.emergency_number, s.emergency_contactperson,
       (SELECT ss.enrollment_status FROM enrollment ss
       JOIN school_year sy ON ss.school_year_id = sy.school_year_id
-      WHERE ss.student_id = s.student_id AND sy.status = 'active') as active_status,
+      WHERE ss.student_id = s.student_id AND sy.status = 'active' LIMIT 1) as active_status,
       se.enrollment_status, se.student_elective_id
       FROM student s
       LEFT JOIN student_elective se ON s.student_id = se.student_id
@@ -297,20 +297,20 @@ app.get('/students/pending-enrollment', (req, res) => {
     // Build the main query
     let query = `
       SELECT s.student_id, s.user_id, s.lastname, s.firstname, s.middlename, 
-      s.current_yr_lvl, s.birthdate, s.gender, s.age, 
+      xx.grade_level, s.birthdate, s.gender, s.age, 
       s.home_address, s.barangay, s.city_municipality, s.province, 
       s.contact_number, s.email_address, s.status as stud_status,
       s.mother_name, s.father_name, s.parent_address, s.father_occupation, 
       s.mother_occupation, s.annual_hshld_income, s.number_of_siblings, 
       s.father_educ_lvl, s.mother_educ_lvl, s.father_contact_number, 
       s.mother_contact_number, IF(s.brigada_eskwela=1,'Attended','Not Attended') AS brigada_eskwela,
-      (SELECT ss.status FROM student_school_year ss
-      JOIN school_year sy ON ss.school_year_id = sy.school_year_id
-      WHERE ss.student_id = s.student_id AND sy.status = 'active') as active_status,
-      se.enrollment_status, se.student_elective_id, xx.school_year_id
-      FROM student s
+      xx.enrollment_status as active_status,
+      se.enrollment_status, se.student_elective_id, xx.school_year_id,
+      (SELECT COUNT(en.student_id) FROM enrollment en WHERE en.student_id = s.student_id) 
+      AS enrollment_count
+      FROM enrollment xx
+      LEFT JOIN student s ON s.student_id=xx.student_id
       LEFT JOIN student_elective se ON s.student_id = se.student_id 
-      LEFT JOIN enrollment xx ON s.student_id=xx.student_id
       WHERE s.active_status = 'unarchive' AND xx.enrollment_status='pending'
     `;
 
@@ -1257,7 +1257,7 @@ app.get('/api/subjects-card', (req, res) => {
       s.subject_name,
       s.grade_level
     FROM SUBJECT s
-    INNER JOIN student st ON s.grade_level = st.current_yr_lvl 
+    LEFT JOIN enrollment st ON s.grade_level=st.grade_level
     WHERE st.student_id = ?
       AND s.status = 'active'
       AND s.grade_level = ?
@@ -1269,7 +1269,7 @@ app.get('/api/subjects-card', (req, res) => {
       e.name AS subject_name,
       se.grade_level
     FROM elective e 
-    INNER JOIN student_elective se ON se.elective_id = e.elective_id 
+    LEFT JOIN student_elective se ON se.elective_id = e.elective_id 
     WHERE se.student_id = ?
       AND se.enrollment_status = 'approved'
       AND se.grade_level = ?
@@ -2438,7 +2438,7 @@ app.get('/sections/:sectionId/schedules', (req, res) => {
     FROM schedule sc
     JOIN subject sb ON sc.subject_id = sb.subject_id
     LEFT JOIN employee e ON sc.teacher_id = e.employee_id
-    LEFT JOIN elective f ON sc.elective=f.elective_id
+    LEFT JOIN elective f ON sc.subject_id=f.elective_id
     WHERE sc.section_id = ?
     ORDER BY sc.time_start
   `;
@@ -2680,42 +2680,77 @@ app.put('/update-subjects-status', (req, res) => {
 // ENDPOINT USED:
 // SUBJECT PAGE
 app.post('/subjects', (req, res) => {
-  const { subject_name, grade_level, status, grading_criteria, description, school_year, archive_status } = req.body;
-  
-  // First check if subject name already exists
+  const {
+    subject_name,
+    grade_level,
+    status,
+    grading_criteria,
+    description,
+    school_year,
+    archive_status,
+    subject_type,       // <- include subject_type
+    max_capacity        // <- include max_capacity if needed for elective
+  } = req.body;
+
   const checkDuplicateQuery = `
     SELECT COUNT(*) as count 
     FROM subject 
     WHERE LOWER(subject_name) = LOWER(?)
   `;
-  
+
   db.query(checkDuplicateQuery, [subject_name], (checkErr, checkResults) => {
     if (checkErr) {
       console.error('Error checking for duplicate subject:', checkErr);
       return res.status(500).json({ error: 'Internal server error' });
     }
-    
+
     if (checkResults[0].count > 0) {
       return res.status(400).json({ error: 'Subject already exists' });
     }
-    
-    // If no duplicate, proceed with insertion
-    const query = `
+
+    const insertSubjectQuery = `
       INSERT INTO subject (subject_name, grade_level, status, grading_criteria, description, school_year_id, archive_status)
       VALUES (?, ?, ?, ?, ?, (SELECT school_year_id FROM school_year WHERE status='active'), 'unarchive')
     `;
-    const queryParams = [subject_name, grade_level, status, grading_criteria, description, school_year, archive_status];
+    const subjectParams = [subject_name, grade_level, status, grading_criteria, description, school_year, archive_status];
 
-    db.query(query, queryParams, (err, results) => {
+    db.query(insertSubjectQuery, subjectParams, (err, results) => {
       if (err) {
         console.error('Error adding subject:', err);
-        res.status(500).json({ error: 'Internal server error' });
-        return;
+        return res.status(500).json({ error: 'Internal server error' });
       }
-      res.status(201).json({ message: 'Subject added successfully', subjectId: results.insertId });
+
+      const insertedSubjectId = results.insertId;
+
+      // If subject_type is elective, insert into elective table too
+      if (subject_type === 'elective') {
+        const insertElectiveQuery = `
+          INSERT INTO elective (name, max_capacity, school_year_id, description)
+          VALUES (?, ?, (SELECT school_year_id FROM school_year WHERE status='active'), ?)
+        `;
+        const electiveParams = [subject_name, max_capacity || 30, description]; // default to 30 if not provided
+
+        db.query(insertElectiveQuery, electiveParams, (electiveErr) => {
+          if (electiveErr) {
+            console.error('Error inserting elective:', electiveErr);
+            return res.status(500).json({ error: 'Subject inserted but failed to insert elective data' });
+          }
+
+          res.status(201).json({
+            message: 'Subject and elective added successfully',
+            subjectId: insertedSubjectId
+          });
+        });
+      } else {
+        res.status(201).json({
+          message: 'Subject added successfully',
+          subjectId: insertedSubjectId
+        });
+      }
     });
   });
 });
+
 
 
 // ENDPOINT USED:
@@ -3325,12 +3360,6 @@ app.post('/submit-grade', (req, res) => {
       school_year_id
     ) 
     VALUES (?, ?, ?, ?, ?, ?, ?)
-    ON DUPLICATE KEY UPDATE
-      grade = VALUES(grade),
-      grade_level = VALUES(grade_level),
-      subject_name = VALUES(subject_name),
-      student_name = VALUES(student_name),
-      school_year_id = VALUES(school_year_id)
   `;
 
   db.query(
@@ -3548,7 +3577,8 @@ app.get('/api/user-info/:userId', (req, res) => {
     SELECT u.username, u.role_id, u.password,
     COALESCE(s.firstname, e.firstname) AS firstname, 
     COALESCE(s.lastname, e.lastname) AS lastname, 
-    COALESCE(s.middlename, e.middlename) AS middle_name
+    COALESCE(s.middlename, e.middlename) AS middle_name,
+    e.contact_number
     FROM users u
     LEFT JOIN student s ON u.user_id = s.user_id
     LEFT JOIN employee e ON u.user_id = e.user_id
@@ -4239,10 +4269,15 @@ app.get('/students/pending-elective', (req, res) => {
       (SELECT ss.status FROM student_school_year ss
       JOIN school_year sy ON ss.school_year_id = sy.school_year_id
       WHERE ss.student_id = s.student_id AND sy.status = 'active') as active_status,
-      se.enrollment_status, se.student_elective_id
+      se.enrollment_status, se.student_elective_id,
+      e.name as subject_name, e.description, CONCAT(f.time_start,' - ',f.time_end) AS time,
+      f.day, CONCAT(ee.firstname,' ',LEFT(IFNULL(ee.middlename,''),1),' ',ee.lastname) AS teacher
       FROM student s
       LEFT JOIN student_elective se ON s.student_id = se.student_id 
       LEFT JOIN enrollment xx ON s.student_id=xx.student_id
+      LEFT JOIN elective e on se.elective_id=e.elective_id
+      LEFT JOIN schedule f ON e.elective_id=f.subject_id AND f.elective=1
+      LEFT JOIN employee ee ON f.teacher_id=ee.employee_id
       WHERE se.enrollment_status='pending'
     `;
 
@@ -4358,7 +4393,7 @@ app.get('/get-grade-level/:student_id', (req, res) => {
     FROM enrollment a 
     LEFT JOIN school_year b 
     ON a.school_year_id = b.school_year_id 
-    WHERE a.student_id = ?
+    WHERE a.student_id = ? ORDER BY school_year_id DESC
   `;
 
   db.query(query, [student_id], (err, results) => {
@@ -4436,7 +4471,7 @@ app.get('/students/by-adviser', (req, res) => {
         s.emergency_number, s.emergency_contactperson,
           (SELECT ss.status FROM student_school_year ss
           JOIN school_year sy ON ss.school_year_id = sy.school_year_id
-          WHERE ss.student_id = s.student_id AND sy.status = 'active') as active_status,
+          WHERE ss.student_id = s.student_id AND sy.status = 'active' LIMIT 1) as active_status,
           se.enrollment_status, se.student_elective_id
         FROM student s
         LEFT JOIN student_elective se ON s.student_id = se.student_id
@@ -4882,7 +4917,7 @@ app.get('/students/by-teacher', (req, res) => {
         s.emergency_number, s.emergency_contactperson,
         (SELECT ss.status FROM student_school_year ss
         JOIN school_year sy ON ss.school_year_id = sy.school_year_id
-        WHERE ss.student_id = s.student_id AND sy.status = 'active') AS active_status,
+        WHERE ss.student_id = s.student_id AND sy.status = 'active' LIMIT 1) AS active_status,
         se.enrollment_status, se.student_elective_id
         FROM student s
         LEFT JOIN student_elective se ON s.student_id = se.student_id
@@ -5000,7 +5035,7 @@ app.get('/students/apply-enrollment', (req, res) => {
       s.emergency_number, s.emergency_contactperson,
       (SELECT ss.enrollment_status FROM enrollment ss
       JOIN school_year sy ON ss.school_year_id = sy.school_year_id
-      WHERE ss.student_id = s.student_id AND sy.status = 'active') as active_status,
+      WHERE ss.student_id = s.student_id AND sy.status = 'active' LIMIT 1) as active_status,
       se.enrollment_status, se.student_elective_id
       FROM student s
       LEFT JOIN student_elective se ON s.student_id = se.student_id

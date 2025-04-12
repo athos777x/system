@@ -434,6 +434,20 @@ function SubjectsManagement() {
                 </select>
               </div>
 
+              {newSubjectData.subject_type === 'elective' && (
+                <div className="subjects-management-form-group">
+                  <label>Capacity</label>
+                  <input
+                    name="max_capacity"
+                    type="number"
+                    value={newSubjectData.max_capacity}
+                    onChange={handleAddChange}
+                    required={newSubjectData.subject_type === 'elective'}
+                  >
+                  </input>
+                </div>
+              )}
+
               {newSubjectData.subject_type === 'regular' && (
                 <div className="subjects-management-form-group">
                   <label>Grade Level</label>

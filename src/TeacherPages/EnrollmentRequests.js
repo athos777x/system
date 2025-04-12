@@ -129,7 +129,7 @@ const applyFilters = () => {
         filtered = filtered.filter(student => String(student.school_year) === filters.school_year);
     }
     if (filters.grade) {
-        filtered = filtered.filter(student => student.current_yr_lvl === filters.grade);
+        filtered = filtered.filter(student => student.grade_level === filters.grade);
     }
     if (filters.section) {
         filtered = filtered.filter(student => String(student.section_id) === filters.section);
@@ -340,21 +340,21 @@ const approveElective = async (studentElectiveId) => {
     setShowCancelModal(true);
   };
 
-  const fetchSubjectsAndGrades = async (studentId, current_yr_lvl, school_year_id) => {
+  const fetchSubjectsAndGrades = async (studentId, grade_level, school_year_id) => {
     try {
       const [subjectsRes, gradesRes] = await Promise.all([
         axios.get('http://localhost:3001/api/subjects-card', {
           params: {
             studentId,
-            gradeLevel: current_yr_lvl,
-            schoolYearId: school_year_id,
+            gradeLevel: grade_level - 1,
+            schoolYearId: school_year_id - 1,
           },
         }),
         axios.get('http://localhost:3001/api/grades', {
           params: {
             studentId,
-            gradeLevel: current_yr_lvl,
-            schoolYearId: school_year_id,
+            gradeLevel: grade_level - 1,
+            schoolYearId: school_year_id - 1,
           },
         }),
       ]);
@@ -422,7 +422,7 @@ const approveElective = async (studentElectiveId) => {
         try {
           const subjects = await fetchSubjectsAndGrades(
             student.student_id,
-            student.current_yr_lvl,
+            student.grade_level,
             student.school_year_id
           );
           console.log('Fetched subjects with grades:', subjects);
@@ -443,7 +443,7 @@ const approveElective = async (studentElectiveId) => {
         const response = await axios.get('http://localhost:3001/sections');
         // Filter sections to only include those matching the student's grade level
         const filteredSections = response.data.filter(
-          section => section.grade_level === student.current_yr_lvl
+          section => section.grade_level === student.grade_level
         );
         setAvailableSections(filteredSections);
         
@@ -486,11 +486,11 @@ const approveElective = async (studentElectiveId) => {
                 </tr>
                 <tr>
                   <th>Student Type:</th>
-                  <td>{student.is_new_student ? 'New Student' : 'Old Student'}</td>
+                  <td>{student.enrollment_count===1 ? 'New Student' : 'Old Student'}</td>
                 </tr>
                 <tr>
                   <th>Grade Level:</th>
-                  <td>{student.current_yr_lvl}</td>
+                  <td>{student.grade_level}</td>
                 </tr>
                 <tr>
                   <th>Section:</th>
@@ -510,7 +510,7 @@ const approveElective = async (studentElectiveId) => {
                         </option>
                       ))}
                     </select>
-                    {availableSections.length === 0 && (
+                    {availableSections.length != 0 && (
                       <div className="section-info-message">
                         Section will be automatically assigned based on grade level and gender distribution
                       </div>
@@ -520,7 +520,8 @@ const approveElective = async (studentElectiveId) => {
               </tbody>
             </table>
           </div>
-
+          
+          {student.enrollment_count !=1 && (
           <div className="grades-details-container">
             <h3>Previous School Year Grades</h3>
             {loading ? (
@@ -562,6 +563,7 @@ const approveElective = async (studentElectiveId) => {
               </table>
             )}
           </div>
+          )}
 
           <div className="requirements-section">
             <label className="requirements-checkbox">
@@ -664,7 +666,7 @@ const approveElective = async (studentElectiveId) => {
                 <tr key={student.student_id}>
                   <td>{indexOfFirstStudent + index + 1}</td>
                   <td>{student.firstname} {student.middlename && `${student.middlename[0]}.`} {student.lastname}</td>
-                  <td>{student.current_yr_lvl}</td>
+                  <td>{student.grade_level}</td>
                   <td>{student.section_id}</td>
                   <td>
                     <span className={`status-${student.active_status ? student.active_status.toLowerCase() : ''}`}>
@@ -758,7 +760,7 @@ const approveElective = async (studentElectiveId) => {
               </tr>
               <tr>
                 <th>Grade</th>
-                <td>{editStudentData?.current_yr_lvl || ''}</td>
+                <td>{editStudentData?.grade_level || ''}</td>
               </tr>
               <tr>
                 <th>Section</th>
