@@ -1,8 +1,34 @@
 /* dashboard.css */
+:root {
+  --sidebar-bg: #ffffff;
+  --sidebar-text: #333333;
+  --sidebar-shadow: rgba(0, 0, 0, 0.05);
+  --sidebar-hover: #f5f5f5;
+  --active-bg: #e8f5e9;
+  --active-text: #2e7d32;
+  --icon-color: #444444;
+  --logout-hover-bg: #ffebee;
+  --logout-hover-text: #d32f2f;
+  --content-bg: #fafafa;
+}
+
+[data-theme='dark'] {
+  --sidebar-bg: #1e1e1e;
+  --sidebar-text: #e0e0e0;
+  --sidebar-shadow: rgba(0, 0, 0, 0.2);
+  --sidebar-hover: #2d2d2d;
+  --active-bg: #1b4620;
+  --active-text: #66bb6a;
+  --icon-color: #b0b0b0;
+  --logout-hover-bg: #3d2525;
+  --logout-hover-text: #ff5252;
+  --content-bg: #121212;
+}
+
 .sidebar {
   width: 280px; /* Increased from 260px to prevent text wrapping */
-  background-color: #ffffff;
-  color: #333333;
+  background-color: var(--sidebar-bg);
+  color: var(--sidebar-text);
   transition: all 0.3s ease;
   padding: 0;
   height: 100vh;
@@ -10,7 +36,7 @@
   top: 0;
   left: 0;
   z-index: 900;
-  box-shadow: 0 0 15px rgba(0, 0, 0, 0.05); /* Softer shadow */
+  box-shadow: 0 0 15px var(--sidebar-shadow); /* Softer shadow */
   display: flex;
   flex-direction: column;
 }
@@ -34,7 +60,7 @@
 
 .sidebar .buttons button {
   background-color: transparent;
-  color: #333333; /* Darker text color (changed from #555555) */
+  color: var(--sidebar-text);
   border: none;
   padding: 12px 16px;
   width: 100%;
@@ -54,23 +80,23 @@
 }
 
 .sidebar .buttons button.active {
-  background-color: #e8f5e9; /* Lighter green background */
-  color: #2e7d32; /* Darker green text */
+  background-color: var(--active-bg);
+  color: var(--active-text);
   font-weight: 500; /* Medium weight for active item */
 }
 
 .sidebar .buttons button.active .icon {
-  color: #2e7d32;
+  color: var(--active-text);
 }
 
 .sidebar .buttons button:hover {
-  background-color: #f5f5f5;
-  color: #333333;
+  background-color: var(--sidebar-hover);
+  color: var(--sidebar-text);
 }
 
 .sidebar .buttons button.active:hover {
-  background-color: #e8f5e9;
-  color: #2e7d32;
+  background-color: var(--active-bg);
+  color: var(--active-text);
 }
 
 .sidebar .buttons .submenu {
@@ -85,30 +111,30 @@
   padding: 10px 16px;
   font-size: 13px; /* Even smaller font for submenu */
   opacity: 1;
-  color: #333333; /* Darker text color (changed from #555555) */
+  color: var(--sidebar-text);
   margin-bottom: 2px;
 }
 
 .sidebar .buttons .submenu button:not(.active):hover {
-  background-color: #f5f5f5;
-  color: #333333;
+  background-color: var(--sidebar-hover);
+  color: var(--sidebar-text);
 }
 
 .sidebar .buttons .submenu button.active {
-  background-color: #e8f5e9;
-  color: #2e7d32;
+  background-color: var(--active-bg);
+  color: var(--active-text);
   font-weight: 500;
 }
 
 .sidebar .buttons .submenu button.active:hover {
-  background-color: #e8f5e9;
-  color: #2e7d32;
+  background-color: var(--active-bg);
+  color: var(--active-text);
 }
 
 .sidebar .buttons button .icon {
   margin-right: 12px;
   font-size: 18px;
-  color: #444444; /* Darker icon color (changed from #757575) */
+  color: var(--icon-color);
   min-width: 18px; /* Ensure consistent width */
 }
 
@@ -117,7 +143,7 @@
   margin-left: 0;
   padding-top: 64px; /* Match header height */
   min-height: 100vh;
-  background-color: #fafafa; /* Light gray background for content area */
+  background-color: var(--content-bg); /* Light gray background for content area */
 }
 
 .content-shift {
@@ -126,7 +152,7 @@
 
 .logout-btn {
   background-color: transparent;
-  color: #333333; /* Darker text color (changed from #555555) */
+  color: var(--sidebar-text);
   border: none;
   padding: 12px 16px;
   width: 100%;
@@ -142,24 +168,24 @@
 }
 
 .logout-btn:hover {
-  background-color: #ffebee; /* Very light red background */
-  color: #d32f2f; /* Red text */
+  background-color: var(--logout-hover-bg);
+  color: var(--logout-hover-text);
 }
 
 .logout-btn .icon {
   margin-right: 12px;
   font-size: 18px;
-  color: #444444; /* Darker icon color (changed from #757575) */
+  color: var(--icon-color);
   min-width: 18px;
 }
 
 .logout-btn:hover .icon {
-  color: #d32f2f; /* Red icon on hover */
+  color: var(--logout-hover-text);
 }
 
 .sidebar .buttons .menu-with-submenu button {
   background-color: transparent;
-  color: #333333; /* Darker text color (changed from #555555) */
+  color: var(--sidebar-text);
   border: none;
   padding: 12px 16px;
   width: 100%;
@@ -175,21 +201,21 @@
 }
 
 .sidebar .buttons .menu-with-submenu.active > button {
-  background-color: #e8f5e9;
-  color: #2e7d32;
+  background-color: var(--active-bg);
+  color: var(--active-text);
   font-weight: 500;
 }
 
 .sidebar .buttons .menu-with-submenu.active > button .icon {
-  color: #2e7d32;
+  color: var(--active-text);
 }
 
 .sidebar .buttons .menu-with-submenu button:hover {
-  background-color: #f5f5f5;
-  color: #333333;
+  background-color: var(--sidebar-hover);
+  color: var(--sidebar-text);
 }
 
 .sidebar .buttons .menu-with-submenu.active > button:hover {
-  background-color: #e8f5e9;
-  color: #2e7d32;
+  background-color: var(--active-bg);
+  color: var(--active-text);
 }
