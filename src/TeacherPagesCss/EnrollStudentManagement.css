@@ -19,18 +19,26 @@
   
   .enroll-student-filters {
     display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
     align-items: center;
-    gap: 0.75rem;
-    background: #fff;
-    padding: 0.75rem;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(46, 125, 50, 0.1);
-    margin-bottom: 1.5rem;
   }
   
   .enroll-student-search {
-    position: relative;
+    flex: 2;
+  }
+  
+  .enroll-student-grade-filter {
     flex: 1;
+  }
+  
+  .enroll-student-grade-select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 16px;
+    color: #333;
   }
   
   .enroll-student-search input {
@@ -450,6 +458,7 @@
     display: flex;
     justify-content: flex-end;
     gap: 1rem;
+    margin-top: 1.5rem;
     padding-top: 1.5rem;
     border-top: 1px solid #e0e0e0;
   }
@@ -851,8 +860,8 @@
   }
   
   .enroll-student-modal-large {
-    width: 90%;
-    max-width: 900px;
+    width: 85%;
+    max-width: 1100px;
     max-height: 85vh;
     overflow-y: auto;
   }
@@ -929,46 +938,6 @@
     background-color: #d32f2f;
   }
   
-  .enroll-student-modal-actions {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 1.5rem;
-    padding-top: 1.5rem;
-    border-top: 1px solid #e0e0e0;
-  }
-  
-  @media (max-width: 768px) {
-    .enroll-student-tabs {
-      flex-direction: column;
-      gap: 0.25rem;
-      border-bottom: none;
-    }
-    
-    .enroll-student-tab {
-      text-align: left;
-      border-left: 2px solid transparent;
-      border-bottom: none;
-      padding: 0.5rem 0.75rem;
-    }
-    
-    .enroll-student-tab.active {
-      border-left: 2px solid #2e7d32;
-      border-bottom: none;
-      background-color: #e8f5e9;
-    }
-    
-    .enroll-student-modal-actions {
-      flex-direction: column;
-      gap: 1rem;
-    }
-    
-    .enroll-student-tab-navigation,
-    .enroll-student-form-actions {
-      width: 100%;
-      justify-content: space-between;
-    }
-  }
-  
   .enroll-student-form-group .read-only {
     background-color: #f5f5f5;
     cursor: not-allowed;
@@ -1012,4 +981,171 @@
   .enroll-student-details-view-table input.error,
   .enroll-student-details-view-table select.error {
     border-color: #ef5350 !important;
+  }
+  
+  /* Enrollment modal specific styles */
+  .enroll-student-search-input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 16px;
+  }
+  
+  .enroll-student-list {
+    max-height: 400px;
+    overflow-y: auto;
+    margin-bottom: 20px;
+    border: 1px solid #eee;
+    border-radius: 4px;
+  }
+  
+  .selected-row {
+    background-color: #f0f7ff;
+  }
+  
+  .enroll-student-select-btn {
+    padding: 6px 12px;
+    border: 1px solid #2c5c2c;
+    background-color: white;
+    color: #2c5c2c;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+  
+  .enroll-student-select-btn:hover {
+    background-color: #e6f0e6;
+  }
+  
+  .enroll-student-select-btn.selected {
+    background-color: #2c5c2c;
+    color: white;
+  }
+  
+  .no-results {
+    padding: 20px;
+    text-align: center;
+    color: #666;
+  }
+  
+  /* New styles for multiple selection */
+  .enrollment-summary {
+    background-color: #f0f7f0;
+    padding: 10px 15px;
+    border-radius: 4px;
+    margin-bottom: 15px;
+    font-weight: 500;
+    color: #2c5c2c;
+    border-left: 4px solid #4CAF50;
+    text-align: right;
+  }
+  
+  .enroll-student-table input[type="checkbox"] {
+    cursor: pointer;
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    padding: 0;
+    accent-color: #4CAF50;
+  }
+  
+  .enroll-student-table tbody tr:hover {
+    background-color: #f5f9f5;
+    cursor: pointer;
+  }
+  
+  /* Update selectors to target the last column instead of first */
+  .enroll-student-modal .enroll-student-table th:last-child,
+  .enroll-student-modal .enroll-student-table td:last-child {
+    text-align: center;
+    width: 50px;
+  }
+  
+  /* Add styles for the checkbox column in enrollment modal */
+  .enroll-student-modal .enroll-student-table th:last-child {
+    background-color: #e8f5e9 !important;
+  }
+  
+  .enroll-student-modal .enroll-student-table td:last-child {
+    vertical-align: middle;
+  }
+  
+  /* Specific styles for the enrollment modal table */
+  .enroll-student-modal .enroll-student-table {
+    width: 100%;
+    table-layout: fixed;
+  }
+  
+  .enroll-student-modal .enroll-student-table th:first-child {
+    width: 8%; /* ID column */
+  }
+  
+  .enroll-student-modal .enroll-student-table th:nth-child(2) {
+    width: 40%; /* Name column */
+  }
+  
+  .enroll-student-modal .enroll-student-table th:nth-child(3),
+  .enroll-student-modal .enroll-student-table th:nth-child(4) {
+    width: 15%; /* Current Level and Enroll to Grade columns */
+  }
+  
+  .enroll-student-modal .enroll-student-table td {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  /* Remove duplicate styling for modal actions */
+  .enroll-student-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e0e0e0;
+  }
+  
+  @media (max-width: 768px) {
+    .enroll-student-tabs {
+      flex-direction: column;
+      gap: 0.25rem;
+      border-bottom: none;
+    }
+    
+    .enroll-student-tab {
+      text-align: left;
+      border-left: 2px solid transparent;
+      border-bottom: none;
+      padding: 0.5rem 0.75rem;
+    }
+    
+    .enroll-student-tab.active {
+      border-left: 2px solid #2e7d32;
+      border-bottom: none;
+      background-color: #e8f5e9;
+    }
+    
+    .enroll-student-modal-actions {
+      flex-direction: column;
+      gap: 1rem;
+    }
+    
+    .enroll-student-tab-navigation,
+    .enroll-student-form-actions {
+      width: 100%;
+      justify-content: space-between;
+    }
+  }
+  
+  .enrollment-actions-right {
+    display: flex;
+    justify-content: flex-end !important;
+    gap: 1rem !important;
+  }
+  
+  @media (max-width: 768px) {
+    .enrollment-actions-right {
+      flex-direction: column-reverse; /* Reverse order so the primary action is on top on mobile */
+    }
   } 

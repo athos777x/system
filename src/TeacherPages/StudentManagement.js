@@ -496,6 +496,10 @@ function StudentManagement() {
         if (response.ok) {
           console.log('Student added successfully:', responseData);
           await fetchStudents(); // Refresh student list
+        // Enroll the student right after saving
+          if (responseData && responseData.studentId) {
+            await enrollStudent(responseData.studentId); 
+          }
           setIsAdding(false);
           setShowModal(false); // Close the modal
           alert('Student added successfully!');
@@ -1102,7 +1106,7 @@ const handleArchive = () => {
                     Edit
                   </button>
                   )}
-                    {(roleName === 'registrar' && student.active_status === null) && (
+                    {/* {(roleName === 'registrar' && student.active_status === null) && (
                     <button 
                         className="student-mgmt-btn student-mgmt-btn-register"
                       onClick={(e) => {
@@ -1112,7 +1116,7 @@ const handleArchive = () => {
                     >
                       Register
                     </button> 
-                  )}
+                  )} */}
                 </td>
               </tr>
 
