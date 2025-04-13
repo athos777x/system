@@ -227,7 +227,6 @@ function EnrollStudentManagement() {
     }
     
   };
-  
 
   const startAdding = () => {
     setIsAdding(true);
@@ -544,19 +543,20 @@ const cancelAdding = () => {
   setErrors({}); // Reset errors when closing the add new student modal
 };
 
-const enrollStudent = async (studentId) => {
+const enrollStudent = async (studentId, gradeLevel) => {
   try {
     // Log the attempt to enroll a student
-    console.log('Attempting to enroll student with ID:', studentId);
+    console.log('Attempting to enroll student with ID:', studentId, 'to grade level:', gradeLevel);
 
     // Get active school year from server
     const schoolYearResponse = await axios.get('http://localhost:3001/active-school-year');
     const activeSchoolYear = schoolYearResponse.data.school_year;
     
-    // Define the payload with status 'active'
+    // Define the payload with status 'active' and the next grade level
     const payload = {
       school_year: activeSchoolYear,
-      status: 'active'
+      status: 'active',
+      grade_level: gradeLevel
     };
 
     // Send the PUT request to enroll the student
@@ -603,53 +603,54 @@ const handleApplyEnrollment = async (studentId) => {
   fetchStudents();
 };
 
-const validateStudent = async (studentId) => {
-  try {
-    console.log('Validating enrollment for student ID:', studentId);
+// const validateStudent = async (studentId) => {
+//   try {
+//     console.log('Validating enrollment for student ID:', studentId);
 
-    // Send the POST request to validate the enrollment
-    const response = await axios.post('http://localhost:3001/validate-enrollment', { studentId });
+//     // Send the POST request to validate the enrollment
+//     const response = await axios.post('http://localhost:3001/validate-enrollment', { studentId });
 
-    // Log and check for successful response
-    if (response.status === 200) {
-      console.log('Validation successful:', response.data);
-      alert('Enrollment validated successfully');
-      await fetchStudents(); // Refresh the student list after validating
-    } else {
-      console.warn('Failed to validate enrollment, non-200 response:', response);
-      alert('Failed to validate enrollment.');
-    }
-  } catch (error) {
-    if (error.response) {
-      console.error('Error response:', error.response.data);
-      alert('Error validating the enrollment: ' + (error.response.data.error || 'Unknown error'));
-    } else if (error.request) {
-      console.error('No response from server:', error.request);
-      alert('No response from the server. Please check your connection.');
-    } else {
-      console.error('Error setting up request:', error.message);
-      alert('An error occurred: ' + error.message);
-    }
-  }
-};
+//     // Log and check for successful response
+//     if (response.status === 200) {
+//       console.log('Validation successful:', response.data);
+//       alert('Enrollment validated successfully');
+//       await fetchStudents(); // Refresh the student list after validating
+//     } else {
+//       console.warn('Failed to validate enrollment, non-200 response:', response);
+//       alert('Failed to validate enrollment.');
+//     }
+//   } catch (error) {
+//     if (error.response) {
+//       console.error('Error response:', error.response.data);
+//       alert('Error validating the enrollment: ' + (error.response.data.error || 'Unknown error'));
+//     } else if (error.request) {
+//       console.error('No response from server:', error.request);
+//       alert('No response from the server. Please check your connection.');
+//     } else {
+//       console.error('Error setting up request:', error.message);
+//       alert('An error occurred: ' + error.message);
+//     }
+//   }
+// };
 
-const approveElective = async (studentElectiveId) => {
-  try {
-      const response = await axios.post('http://localhost:3001/approve-elective', {
-          studentElectiveId
-      });
+// const approveElective = async (studentElectiveId) => {
+//   try {
+//       const response = await axios.post('http://localhost:3001/approve-elective', {
+//           studentElectiveId
+//       });
 
-      if (response.data.message) {
-          alert(response.data.message);
-          await fetchStudents(); // Refresh student list after approval
-      } else {
-          alert('Failed to approve elective.');
-      }
-  } catch (error) {
-      console.error('Error approving elective:', error);
-      alert('An error occurred while approving the elective.');
-  }
-};
+//       if (response.data.message) {
+//           alert(response.data.message);
+//           await fetchStudents(); // Refresh student list after approval
+//       } else {
+//           alert('Failed to approve elective.');
+//       }
+//   } catch (error) {
+//       console.error('Error approving elective:', error);
+//       alert('An error occurred while approving the elective.');
+//   }
+// };
+
 const archiveStudent = async (studentId, status) => {
   try {
     console.log('Archiving student ID:', studentId, 'with status:', status);
@@ -1074,18 +1075,12 @@ const handleArchive = () => {
   const fetchAvailableStudents = async () => {
     try {
       const response = await axios.get('http://localhost:3001/students/available-for-enrollment');
-      
-      // Filter out students who are already in grade 10
-      const filteredStudents = response.data.filter(student => 
-        parseInt(student.current_yr_lvl) < 10
+  
+      // Sort students alphabetically by student_name
+      const sortedStudents = response.data.sort((a, b) =>
+        a.student_name.localeCompare(b.student_name)
       );
-      
-      // Sort the students alphabetically by last name
-      const sortedStudents = filteredStudents.sort((a, b) => {
-        return a.lastname.localeCompare(b.lastname) || 
-               a.firstname.localeCompare(b.firstname);
-      });
-      
+  
       setAvailableStudents(sortedStudents);
       setFilteredAvailableStudents(sortedStudents);
     } catch (error) {
@@ -1093,6 +1088,7 @@ const handleArchive = () => {
       alert('Error fetching available students for enrollment');
     }
   };
+  
 
   // Function to filter available students based on search term and grade level
   const filterAvailableStudents = (searchTerm, gradeLevel) => {
@@ -1178,9 +1174,12 @@ const handleArchive = () => {
       // Show confirmation dialog
       if (window.confirm(`Are you sure you want to enroll ${selectedStudentsToEnroll.length} student(s)?`)) {
         // Use Promise.all to enroll all selected students in parallel
-        const enrollmentPromises = selectedStudentsToEnroll.map(studentId => 
-          enrollStudent(studentId)
-        );
+        const enrollmentPromises = selectedStudentsToEnroll.map(studentId => {
+          // Find the student to get their current grade level
+          const student = filteredAvailableStudents.find(s => s.student_id === studentId);
+          const nextGradeLevel = parseInt(student.grade_level) + 1;
+          return enrollStudent(studentId, nextGradeLevel);
+        });
         
         await Promise.all(enrollmentPromises);
         alert(`Successfully enrolled ${selectedStudentsToEnroll.length} student(s)`);
@@ -2007,9 +2006,9 @@ const handleArchive = () => {
                         onClick={() => handleStudentSelection(student.student_id)}
                       >
                         <td>{student.student_id}</td>
-                        <td>{`${student.lastname}, ${student.firstname} ${student.middlename || ''}`}</td>
-                        <td>{student.current_yr_lvl}</td>
-                        <td>{parseInt(student.current_yr_lvl) + 1}</td>
+                        <td>{student.student_name}</td>
+                        <td>{student.grade_level}</td>
+                        <td>{parseInt(student.grade_level) + 1}</td>
                         <td>
                           <input
                             type="checkbox"

@@ -28,6 +28,7 @@ function Principal_SchedulePage() {
   const [subjects, setSubjects] = useState([]);
   const [filteredSubjects, setFilteredSubjects] = useState([]);
   const [teachers, setTeachers] = useState([]);
+  const [subjectteachers, setSubjectTeachers] = useState([]);
   const [roleName, setRoleName] = useState('');
 
   // Helper function to sort days in chronological order
@@ -76,6 +77,7 @@ function Principal_SchedulePage() {
   useEffect(() => {
     fetchSections();
     fetchSchoolYears();
+    getSubjectTeachers();
   }, [roleName, filters, fetchSections, fetchSchoolYears]);
 
   const applyFilters = (updatedFilters) => {
@@ -249,6 +251,16 @@ function Principal_SchedulePage() {
       console.error('Error fetching data:', error);
     }
   };
+
+  const getSubjectTeachers = async () => {
+    try {
+      const response = await axios.get('http://localhost:3001/list-subject-teacher');
+      setSubjectTeachers(response.data); 
+    } catch (error) {
+      console.error('Error fetching subject teachers:', error);
+    }
+  };
+  
   
 
   const startEditing = async (schedule) => {
@@ -884,9 +896,9 @@ function Principal_SchedulePage() {
               required
             >
               <option value="">Select Teacher</option>
-              {teachers.map((teacher) => (
-                <option key={teacher.employee_id} value={teacher.employee_id}>
-                  {teacher.firstname} {teacher.middlename ? `${teacher.middlename[0]}.` : ''} {teacher.lastname}
+              {subjectteachers.map((teacherObj) => (
+                <option key={teacherObj.employee_id} value={teacherObj.employee_id}>
+                  {teacherObj.teacher}
                 </option>
               ))}
             </select>
