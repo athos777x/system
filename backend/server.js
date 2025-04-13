@@ -993,11 +993,16 @@ SELECT
       e.name AS subject_name, 
       REPLACE(REPLACE(REPLACE(REPLACE(ss.day, '[', ''), ']', ''), '"', ''), ',', ', ') AS day,
       CONCAT(emp.lastname, ', ', emp.firstname, ' ', IFNULL(emp.middlename, '')) AS teacher, 
-      '' AS schedule
+      CASE 
+        WHEN ss.time_start IS NOT NULL AND ss.time_end IS NOT NULL 
+        THEN CONCAT(ss.time_start, ' - ', ss.time_end)
+        ELSE ''
+      END AS schedule
+      
     FROM elective e 
     INNER JOIN student_elective se ON se.elective_id = e.elective_id 
     LEFT JOIN SCHEDULE ss ON e.elective_id = ss.subject_id AND ss.elective = 1
-    LEFT JOIN employee emp ON e.employee_id = emp.employee_id
+    LEFT JOIN employee emp ON ss.teacher_id = emp.employee_id
     WHERE se.user_id = ?
     AND se.enrollment_status = 'approved'
     ORDER BY subject_name;
@@ -4410,13 +4415,15 @@ app.get('/students/pending-elective', (req, res) => {
       WHERE ss.student_id = s.student_id AND sy.status = 'active') as active_status,
       se.enrollment_status, se.student_elective_id,
       e.name as subject_name, e.description, CONCAT(f.time_start,' - ',f.time_end) AS time,
-      f.day, CONCAT(ee.firstname,' ',LEFT(IFNULL(ee.middlename,''),1),' ',ee.lastname) AS teacher
+      f.day, CONCAT(ee.firstname,' ',LEFT(IFNULL(ee.middlename,''),1),' ',ee.lastname) AS teacher,
+      sa.section_name
       FROM student s
       LEFT JOIN student_elective se ON s.student_id = se.student_id 
       LEFT JOIN enrollment xx ON s.student_id=xx.student_id
       LEFT JOIN elective e on se.elective_id=e.elective_id
       LEFT JOIN schedule f ON e.elective_id=f.subject_id AND f.elective=1
       LEFT JOIN employee ee ON f.teacher_id=ee.employee_id
+      LEFT JOIN section sa ON s.section_id=sa.section_id
       WHERE se.enrollment_status='pending'
     `;
 

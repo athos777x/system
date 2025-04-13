@@ -417,7 +417,7 @@ const handleConfirmApproval = async () => {
                   <td>{indexOfFirstStudent + index + 1}</td>
                   <td>{student.firstname} {student.middlename && `${student.middlename[0]}.`} {student.lastname}</td>
                   <td>{student.current_yr_lvl}</td>
-                  <td>{student.section_id}</td>
+                  <td>{student.section_name}</td>
                   <td>
                     <span className={`status-${student.enrollment_status ? student.enrollment_status.toLowerCase() : ''}`}>
                       {student.enrollment_status}
@@ -536,7 +536,7 @@ const handleConfirmApproval = async () => {
                   </tr>
                   <tr>
                     <th>Section</th>
-                    <td>{selectedStudent.section_id}</td>
+                    <td>{selectedStudent.section_name}</td>
                   </tr>
                 </tbody>
               </table>
