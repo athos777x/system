@@ -139,12 +139,12 @@ function PrincipalSideBar({ showSidebar, toggleSidebar, handleLogout }) {
         >
           <FiUsers className="icon" /> Employees
         </button>
-        <button 
+        {/* <button 
           onClick={() => handleNavigate('/teacher-schedule')}
           className={location.pathname === '/teacher-schedule' ? 'active' : ''}
         >
           <FiClock className="icon" /> My Schedule
-        </button>
+        </button> */}
         <div className={`menu-with-submenu ${showEnrollmentSubMenu || isEnrollmentPath ? 'active' : ''}`}>
           <button onClick={toggleEnrollmentSubMenu}>
             <FiCalendar className="icon" /> Enrollment
