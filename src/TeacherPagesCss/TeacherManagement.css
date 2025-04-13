@@ -419,6 +419,117 @@
   box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
 }
 
+/* Enhanced modal styles */
+.teacher-mgmt-modal-content.compact {
+  max-width: 600px;
+}
+
+.teacher-mgmt-modal-header {
+  margin-bottom: 20px;
+}
+
+.teacher-mgmt-modal-title {
+  margin: 0;
+  color: #2e7d32;
+}
+
+.teacher-mgmt-form-field {
+  margin-bottom: 20px;
+}
+
+.teacher-mgmt-form-label {
+  font-weight: bold;
+  margin-bottom: 8px;
+  display: block;
+  color: #2e7d32;
+}
+
+.teacher-mgmt-form-select {
+  width: 100%;
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #1e293b;
+  background-color: #fff;
+}
+
+.teacher-mgmt-form-select:hover {
+  border-color: #81c784;
+}
+
+.teacher-mgmt-form-select:focus {
+  outline: none;
+  border-color: #4CAF50;
+  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+}
+
+.teacher-mgmt-button-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.teacher-mgmt-item-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 10px;
+  max-height: 200px;
+  overflow-y: auto;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: #fff;
+}
+
+.teacher-mgmt-grid-button {
+  padding: 10px;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
+
+.teacher-mgmt-grid-button:hover {
+  border-color: #81c784;
+  background-color: #f1f8e9;
+}
+
+.teacher-mgmt-grid-button.selected {
+  background: #4CAF50;
+  color: white;
+}
+
+.teacher-mgmt-grid-empty {
+  grid-column: 1/-1;
+  text-align: center;
+  padding: 20px;
+  color: #666;
+}
+
+.teacher-mgmt-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+  border-top: 1px solid #ddd;
+  padding-top: 20px;
+}
+
+.teacher-mgmt-modal-button {
+  padding: 10px 20px;
+  min-width: 100px;
+  transition: all 0.2s ease;
+}
+
+.teacher-mgmt-modal-button.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 /* Status indicators */
 .status-active,
 .status-inactive,
@@ -500,4 +611,36 @@
     padding: 1.5rem;
     margin: 1rem auto;
   }
+}
+
+/* Assign Section Modal styles */
+.teacher-mgmt-section-modal .teacher-mgmt-modal-title {
+  color: #2e7d32;
+}
+
+.teacher-mgmt-section-modal .teacher-mgmt-grid-button.selected {
+  background: #4CAF50;
+  color: white;
+}
+
+/* Assign Subject Modal styles */
+.teacher-mgmt-subject-modal .teacher-mgmt-modal-title {
+  color: #2e7d32;
+}
+
+.teacher-mgmt-subject-modal .teacher-mgmt-form-label {
+  color: #2e7d32;
+}
+
+.teacher-mgmt-subject-modal .teacher-mgmt-grid-button.selected {
+  background: #4CAF50;
+  color: white;
+}
+
+.teacher-mgmt-subject-modal .teacher-mgmt-modal-button.teacher-mgmt-btn-view {
+  background: #4CAF50;
+}
+
+.teacher-mgmt-subject-modal .teacher-mgmt-modal-button.teacher-mgmt-btn-view:hover {
+  background: #388e3c;
 } 
