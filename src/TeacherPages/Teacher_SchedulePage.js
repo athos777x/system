@@ -9,7 +9,10 @@ function Teacher_SchedulePage() {
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const [teacherName, setTeacherName] = useState('');
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [userRole, setUserRole] = useState('');
+  const [sectionSchedule, setSectionSchedule] = useState([]);
+  const [assignedSection, setAssignedSection] = useState(null);
+  const [scheduleTab, setScheduleTab] = useState('my_schedule');
   
   const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
   const timeSlots = [
@@ -20,58 +23,128 @@ function Teacher_SchedulePage() {
   ];
 
   useEffect(() => {
-    const fetchTeacherSchedule = async () => {
+    const fetchUserRole = async () => {
       try {
-        setIsLoading(true);
-        setError(null);
-        
         const userId = localStorage.getItem('userId');
-        // First, get the teacher's information
-        // const teacherResponse = await axios.get(`http://localhost:3001/user/${userId}`);
-        // setTeacherName(`${teacherResponse.data.first_name} ${teacherResponse.data.last_name}`);
-        
-        // Then, get the teacher's schedule
-        const response = await axios.get(`http://localhost:3001/teacher/${userId}/schedule`);
-        console.log('Fetched teacher schedule:', response.data);
-        
-        // Process the schedule data to handle multiple days
-        const processedSchedule = response.data.map(item => {
-          // Parse the day field if it's a JSON string
-          let days = [];
-          try {
-            if (typeof item.day === 'string') {
-              if (item.day.startsWith('[')) {
-                days = JSON.parse(item.day);
-              } else {
-                days = [item.day];
-              }
-            } else if (Array.isArray(item.day)) {
-              days = item.day;
-            } else {
-              days = [item.day];
-            }
-          } catch (error) {
-            console.error('Error parsing days:', error);
-            days = [item.day];
-          }
+        if (userId) {
+          const roleResponse = await axios.get(`http://localhost:3001/user-role/${userId}`);
+          setUserRole(roleResponse.data.role_name);
           
-          return {
-            ...item,
-            days: days
-          };
-        });
-        
-        setSchedule(processedSchedule);
+          // If user is a class adviser, fetch their assigned section
+          if (roleResponse.data.role_name === 'class_adviser') {
+            fetchAssignedSection(userId);
+          }
+        }
       } catch (error) {
-        console.error('Error fetching teacher schedule:', error);
-        setError('Failed to load schedule. Please try again later.');
-      } finally {
-        setIsLoading(false);
+        console.error('Error fetching user role:', error);
       }
     };
 
+    fetchUserRole();
     fetchTeacherSchedule();
   }, []);
+
+  const fetchAssignedSection = async (userId) => {
+    try {
+      const response = await axios.get(`http://localhost:3001/sections/by-adviser/${userId}`);
+      if (response.data && response.data.length > 0) {
+        setAssignedSection(response.data[0]);
+        fetchSectionSchedule(response.data[0].section_id);
+      }
+    } catch (error) {
+      console.error('Error fetching assigned section:', error);
+    }
+  };
+
+  const fetchSectionSchedule = async (sectionId) => {
+    try {
+      const response = await axios.get(`http://localhost:3001/sections/${sectionId}/schedules`);
+      console.log('Fetched section schedule:', response.data);
+      
+      // Process the section schedule data to handle multiple days
+      const processedSchedule = response.data.map(item => {
+        // Parse the day field if it's a JSON string
+        let days = [];
+        try {
+          if (typeof item.day === 'string') {
+            if (item.day.startsWith('[')) {
+              days = JSON.parse(item.day);
+            } else {
+              days = [item.day];
+            }
+          } else if (Array.isArray(item.day)) {
+            days = item.day;
+          } else {
+            days = [item.day];
+          }
+        } catch (error) {
+          console.error('Error parsing days:', error);
+          days = [item.day];
+        }
+        
+        return {
+          ...item,
+          days: days
+        };
+      });
+      
+      setSectionSchedule(processedSchedule);
+    } catch (error) {
+      console.error('Error fetching section schedule:', error);
+      // Just set an empty array instead of showing an error
+      setSectionSchedule([]);
+    }
+  };
+
+  const fetchTeacherSchedule = async () => {
+    try {
+      setIsLoading(true);
+      
+      const userId = localStorage.getItem('userId');
+      // First, get the teacher's information
+      // const teacherResponse = await axios.get(`http://localhost:3001/user/${userId}`);
+      // setTeacherName(`${teacherResponse.data.first_name} ${teacherResponse.data.last_name}`);
+      
+      // Then, get the teacher's schedule
+      const response = await axios.get(`http://localhost:3001/teacher/${userId}/schedule`);
+      console.log('Fetched teacher schedule:', response.data);
+      
+      // Process the schedule data to handle multiple days
+      const processedSchedule = response.data.map(item => {
+        // Parse the day field if it's a JSON string
+        let days = [];
+        try {
+          if (typeof item.day === 'string') {
+            if (item.day.startsWith('[')) {
+              days = JSON.parse(item.day);
+            } else {
+              days = [item.day];
+            }
+          } else if (Array.isArray(item.day)) {
+            days = item.day;
+          } else {
+            days = [item.day];
+          }
+        } catch (error) {
+          console.error('Error parsing days:', error);
+          days = [item.day];
+        }
+        
+        return {
+          ...item,
+          days: days
+        };
+      });
+      
+      setSchedule(processedSchedule);
+    } catch (error) {
+      console.error('Error fetching teacher schedule:', error);
+      // Just set an empty array instead of showing an error
+      setSchedule([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const getTimeSlotIndex = (time) => {
     const [hours, minutes] = time.split(':');
@@ -80,20 +153,20 @@ function Teacher_SchedulePage() {
     return Math.floor((hourInt - 7) + (minuteInt / 60));
   };
 
-  const renderSchedule = () => {
+  const renderSchedule = (scheduleData = schedule) => {
     // Initialize schedule grid
     const scheduleGrid = timeSlots.map(() =>
       daysOfWeek.map(() => ({ content: null, isOccupied: false }))
     );
   
     // Fill in the schedule grid if there's data
-    if (schedule && schedule.length > 0) {
-      schedule.forEach(item => {
+    if (scheduleData && scheduleData.length > 0) {
+      scheduleData.forEach(item => {
         const startIndex = getTimeSlotIndex(item.time_start);
         const endIndex = getTimeSlotIndex(item.time_end);
         const duration = endIndex - startIndex;
   
-        item.days.forEach(day => {
+        (item.days || []).forEach(day => {
           const dayIndex = daysOfWeek.indexOf(day);
   
           if (dayIndex !== -1) {
@@ -114,6 +187,7 @@ function Teacher_SchedulePage() {
                   subject: item.subject_name,
                   section: item.section_name,
                   grade: item.grade_level,
+                  teacher: item.teacher_name,
                   span: duration
                 },
                 isOccupied: true
@@ -166,8 +240,13 @@ function Teacher_SchedulePage() {
                     >
                       <div className="subject-name">{cell.content.subject}</div>
                       <div className="section-info">
-                        Grade {cell.content.grade} - {cell.content.section}
+                        {cell.content.section}
                       </div>
+                      {scheduleTab === 'section_schedule' && cell.content.teacher && (
+                        <div className="teacher-info">
+                          {cell.content.teacher}
+                        </div>
+                      )}
                     </td>
                   );
                 }
@@ -202,7 +281,13 @@ function Teacher_SchedulePage() {
       });
       
       pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
-      pdf.save(`${teacherName}_schedule.pdf`);
+      
+      // Set the name of the PDF based on the active tab
+      const pdfName = scheduleTab === 'my_schedule' 
+        ? `${teacherName || 'Teacher'}_schedule.pdf` 
+        : `${assignedSection?.section_name || 'Section'}_schedule.pdf`;
+      
+      pdf.save(pdfName);
     } catch (error) {
       console.error('Error generating PDF:', error);
       alert('Failed to generate PDF. Please try again.');
@@ -228,33 +313,42 @@ function Teacher_SchedulePage() {
       <h1 className="teacher-schedule-title">My Schedule</h1>
       {teacherName && <h2 className="teacher-name-header">{teacherName}</h2>}
       
+      {userRole === 'class_adviser' && assignedSection && (
+        <div className="schedule-tabs">
+          <button 
+            className={`tab-button ${scheduleTab === 'my_schedule' ? 'active' : ''}`}
+            onClick={() => setScheduleTab('my_schedule')}
+          >
+            My Schedule
+          </button>
+          <button 
+            className={`tab-button ${scheduleTab === 'section_schedule' ? 'active' : ''}`}
+            onClick={() => setScheduleTab('section_schedule')}
+          >
+            {assignedSection.section_name} Schedule
+          </button>
+        </div>
+      )}
+      
       <div className="teacher-schedule-table-container">
-        {error && (
-          <div className="error-overlay">
-            <p className="error-message">Failed to load schedule.</p>
-            <button 
-              onClick={() => window.location.reload()} 
-              className="retry-button"
-            >
-              Retry
-            </button>
-          </div>
-        )}
+        {scheduleTab === 'my_schedule' && renderSchedule(schedule)}
+        {scheduleTab === 'section_schedule' && renderSchedule(sectionSchedule)}
         
-        {renderSchedule()}
-        
-        {!error && schedule.length === 0 && (
+        {(scheduleTab === 'my_schedule' && schedule.length === 0) || 
+         (scheduleTab === 'section_schedule' && sectionSchedule.length === 0) ? (
           <div className="empty-schedule-notice">
             <p>No classes have been assigned yet.</p>
           </div>
-        )}
+        ) : null}
       </div>
       
       <div className="print-button-container">
         <button 
           onClick={generatePDF} 
           className="print-button"
-          disabled={isGeneratingPDF}
+          disabled={isGeneratingPDF || 
+            (scheduleTab === 'my_schedule' && schedule.length === 0) ||
+            (scheduleTab === 'section_schedule' && sectionSchedule.length === 0)}
         >
           {isGeneratingPDF ? 'Generating PDF...' : 'Download PDF'}
         </button>

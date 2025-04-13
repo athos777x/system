@@ -23,6 +23,36 @@
   font-weight: 400;
 }
 
+/* Schedule tabs styling */
+.schedule-tabs {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+  gap: 1rem;
+}
+
+.tab-button {
+  padding: 0.6rem 1.2rem;
+  background-color: #e8f5e9;
+  color: #2e7d32;
+  border: 1px solid #c8e6c9;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tab-button:hover {
+  background-color: #c8e6c9;
+}
+
+.tab-button.active {
+  background-color: #2e7d32;
+  color: white;
+  border-color: #2e7d32;
+}
+
 /* Loading styles */
 .loading-container {
   display: flex;
@@ -243,6 +273,14 @@
 .section-info {
   font-size: 0.75rem;
   color: #4b7b4d; /* Muted green text */
+  margin-bottom: 2px;
+}
+
+.teacher-info {
+  font-size: 0.75rem;
+  color: #616161;
+  font-style: italic;
+  margin-top: 4px;
 }
 
 /* Empty cell styling */
