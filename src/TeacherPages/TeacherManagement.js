@@ -513,6 +513,7 @@ function TeacherManagement() {
         setSelectedSection('');
         setSelectedGradeLevelForSection('7');
         setSectionsByGrade([]);
+        fetchTeacherSection(currentTeacherId,selectedSchoolYear);
       }
     } catch (error) {
       console.error('Error assigning section:', error);
@@ -571,7 +572,7 @@ function TeacherManagement() {
         fetchTeacherSubjects(teacherId,roleId); 
       }
       if (roleId === 4) {
-        fetchTeacherSection(teacherId);
+        fetchTeacherSection(teacherId,activeYear.school_year_id);
       }
     }
   };
@@ -719,6 +720,7 @@ useEffect(() => {
   const handleSubjectsSchoolYearChange = (schoolYearId) => {
     setSelectedSubjectsSchoolYear(schoolYearId);
     fetchTeacherSubjects(selectedTeacherId, schoolYearId);
+    fetchTeacherSection(selectedTeacherId, schoolYearId);
   };
 
   return (
@@ -815,20 +817,25 @@ useEffect(() => {
                           </table>
                         </div>
 
+                        
                         <div className="teacher-mgmt-details-section">
-                          <div style={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            marginBottom: '1rem'
-                          }}>
+                        {teacher.role_id === 3 && (
+                        <div className="teacher-mgmt-details-section">
+                          <div
+                            style={{
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'center',
+                              marginBottom: '1rem',
+                            }}
+                          >
                             <h3 style={{ margin: 0 }}>Assigned Subjects</h3>
                             <select
                               value={selectedSubjectsSchoolYear}
                               onChange={(e) => handleSubjectsSchoolYearChange(e.target.value)}
                               style={{
                                 padding: '5px',
-                                width: '150px'
+                                width: '150px',
                               }}
                             >
                               {schoolYears.map((year) => (
@@ -838,6 +845,7 @@ useEffect(() => {
                               ))}
                             </select>
                           </div>
+
                           {teacherSubjects.length > 0 ? (
                             <table className="teacher-mgmt-details-table">
                               <thead>
@@ -845,7 +853,7 @@ useEffect(() => {
                                   <th>Grade Level</th>
                                   <th>Subject Name</th>
                                   <th>Section</th>
-                                  {/* Conditionally render Day and Time columns based on student role */}
+                                  {/* Show Day and Time if teacher is not role 8 */}
                                   {teacher.role_id !== 8 && (
                                     <>
                                       <th>Day</th>
@@ -860,7 +868,6 @@ useEffect(() => {
                                     <td>{subject.grade_level}</td>
                                     <td>{subject.subject_name}</td>
                                     <td>{subject.section_name}</td>
-                                    {/* Conditionally render day and time columns based on student role */}
                                     {teacher.role_id !== 8 && (
                                       <>
                                         <td>{subject.day || 'Not set'}</td>
@@ -874,12 +881,29 @@ useEffect(() => {
                           ) : (
                             <p>No subjects assigned yet</p>
                           )}
+                        </div>
+                      )}
+
 
 
 
                           {teacher.role_id === 4 && (
                             <>
                               <h3>Assigned Section</h3>
+                              <select
+                              value={selectedSubjectsSchoolYear}
+                              onChange={(e) => handleSubjectsSchoolYearChange(e.target.value)}
+                              style={{
+                                padding: '5px',
+                                width: '150px',
+                              }}
+                            >
+                              {schoolYears.map((year) => (
+                                <option key={year.school_year_id} value={year.school_year_id}>
+                                  {year.school_year}
+                                </option>
+                              ))}
+                            </select>
                               {teacherSection && teacherSection.length > 0 ? (
                                 <table className="teacher-mgmt-details-table">
                                   <thead>
