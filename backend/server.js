@@ -4578,7 +4578,8 @@ app.get('/students/by-adviser', (req, res) => {
         LEFT JOIN section z ON s.section_id = z.section_id
         LEFT JOIN student_school_year ss ON s.student_id = ss.student_id
         LEFT JOIN school_year sy ON ss.school_year_id = sy.school_year_id
-        WHERE s.active_status = 'unarchive' AND z.section_adviser = ?
+        LEFT JOIN section_assigned zz on z.section_id = zz.section_id
+        WHERE s.active_status = 'unarchive' AND zz.employee_id = ?
       `;
 
       const queryParams = [employee_id];
@@ -4747,20 +4748,18 @@ app.get('/sections/:sectionId/schedules/by-adviser', (req, res) => {
     console.log('✅ Found employee_id:', employee_id);
 
     const scheduleQuery = `
-      SELECT sc.schedule_id, sc.teacher_id,
-           IF(sc.elective='0',sb.subject_name,f.name) AS subject_name, 
-           TIME_FORMAT(sc.time_start, '%h:%i %p') AS time_start, 
-           TIME_FORMAT(sc.time_end, '%h:%i %p') AS time_end, 
-           sc.day, sc.section_id, sc.schedule_status,
-           CONCAT(e.firstname, ' ', IF(e.middlename IS NOT NULL AND e.middlename != '', CONCAT(LEFT(e.middlename, 1), '. '), ''), e.lastname) AS teacher_name
-    FROM SCHEDULE sc
-    JOIN SUBJECT sb ON sc.subject_id = sb.subject_id
-    LEFT JOIN employee e ON sc.teacher_id = e.employee_id
-    LEFT JOIN elective f ON sc.elective=f.elective_id
-    LEFT JOIN section_assigned g ON sc.section_id=g.section_id AND sc.teacher_id=g.employee_id
-    WHERE g.employee_id= ? and sc.section_id = ?
-    ORDER BY sc.time_start
-    `;
+    SELECT 
+    sc.schedule_id, sc.teacher_id, IF(sc.elective = '0', sb.subject_name, f.name) AS subject_name, 
+    TIME_FORMAT(sc.time_start, '%h:%i %p') AS time_start, TIME_FORMAT(sc.time_end, '%h:%i %p') AS time_end, 
+    sc.day, sc.section_id, s.section_name, sc.schedule_status,
+    CONCAT(e.firstname, ' ', IF(e.middlename IS NOT NULL AND e.middlename != '', CONCAT(LEFT(e.middlename, 1), '. '), ''), 
+    e.lastname) AS teacher_name
+    FROM section_assigned sa JOIN schedule sc  ON sa.section_id = sc.section_id AND sa.school_year_id = sc.school_year_id
+    LEFT JOIN subject sb ON sc.subject_id = sb.subject_id LEFT JOIN elective f ON sc.elective = f.elective_id
+    LEFT JOIN employee e ON sc.teacher_id = e.employee_id LEFT JOIN section s ON sa.section_id = s.section_id
+    WHERE sa.employee_id = ? 
+    ORDER BY s.section_name, sc.time_start`;
+
 
     db.query(scheduleQuery, [employee_id, sectionId], (err, schedules) => {
       if (err) {
