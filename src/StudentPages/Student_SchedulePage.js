@@ -159,39 +159,47 @@ function Student_SchedulePage() {
     );
   
     // Fill in the schedule grid
-    schedule.forEach((item, index) => {
-      // Convert single 'day' property to 'days' array
-      if (!item.days && item.day) {
-        item.days = [item.day]; // Wrap single day in an array
+    schedule.forEach((item) => {
+      // Skip invalid items
+      if (!item) return;
+      
+      // Convert days to array if needed
+      let days = [];
+      try {
+        if (typeof item.day === 'string') {
+          days = item.day.startsWith('[') ? JSON.parse(item.day) : [item.day];
+        } else if (Array.isArray(item.day)) {
+          days = item.day;
+        } else if (item.days && Array.isArray(item.days)) {
+          days = item.days;
+        } else {
+          days = [item.day];
+        }
+      } catch (error) {
+        console.error('Error parsing days:', error);
+        days = [item.day];
       }
-    
-      if (!item || !item.days || !Array.isArray(item.days)) {
-        console.warn(`Skipping entry at index ${index}: Invalid days format`, item);
-        return;
-      }
-    
-      item.days.forEach(day => {
+      
+      // Process each day
+      days.forEach(day => {
         const dayIndex = daysOfWeek.indexOf(day);
         if (dayIndex === -1) {
-          console.warn(`Skipping invalid day "${day}" at index ${index}.`);
+          console.warn(`Skipping invalid day "${day}"`);
           return;
         }
-    
+        
+        // Calculate time slot indices
         const startIndex = getTimeSlotIndex(item.time_start);
         const endIndex = getTimeSlotIndex(item.time_end);
-    
-        if (startIndex < 0 || endIndex < 0 || startIndex >= timeSlots.length || endIndex > timeSlots.length) {
-          console.error(`Invalid time slot range at index ${index}: start ${startIndex}, end ${endIndex}`);
+        
+        if (startIndex < 0 || endIndex <= 0 || startIndex >= timeSlots.length || endIndex > timeSlots.length) {
+          console.error(`Invalid time slot range: start ${startIndex}, end ${endIndex}`);
           return;
         }
-    
-        if (!scheduleGrid[startIndex]) {
-          console.error(`Invalid time slot index: ${startIndex} at index ${index}`);
-          return;
-        }
-    
+        
         const duration = endIndex - startIndex;
-    
+        
+        // Set the first cell with subject info
         scheduleGrid[startIndex][dayIndex] = {
           content: {
             subject: item.subject_name,
@@ -200,14 +208,13 @@ function Student_SchedulePage() {
           },
           isOccupied: true
         };
-    
+        
+        // Mark subsequent cells as occupied
         for (let i = startIndex + 1; i < endIndex && i < timeSlots.length; i++) {
           scheduleGrid[i][dayIndex] = { content: null, isOccupied: true };
         }
       });
     });
-    
-    
   
     return (
       <table className="schedule-table">
@@ -225,11 +232,13 @@ function Student_SchedulePage() {
               <td>{timeSlot}</td>
               {daysOfWeek.map((day, colIndex) => {
                 const cell = scheduleGrid[rowIndex][colIndex];
-  
+                
+                // Skip occupied cells that don't have content (handled by rowSpan)
                 if (cell.isOccupied && !cell.content) {
                   return null;
                 }
-  
+                
+                // Render cells with content
                 if (cell.content) {
                   return (
                     <td 
@@ -244,7 +253,8 @@ function Student_SchedulePage() {
                     </td>
                   );
                 }
-  
+                
+                // Render empty cell
                 return <td key={`${day}-${rowIndex}`}></td>;
               })}
             </tr>
