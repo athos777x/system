@@ -296,15 +296,19 @@ function TeacherManagement() {
     }
 
     try {
-      const teacherData = {
+      // Apply proper capitalization to name fields
+      const capitalizedData = {
         ...newTeacherData,
+        firstname: newTeacherData.firstname.trim().charAt(0).toUpperCase() + newTeacherData.firstname.trim().slice(1).toLowerCase(),
+        lastname: newTeacherData.lastname.trim().charAt(0).toUpperCase() + newTeacherData.lastname.trim().slice(1).toLowerCase(),
+        middlename: newTeacherData.middlename.trim() ? newTeacherData.middlename.trim().charAt(0).toUpperCase() + newTeacherData.middlename.trim().slice(1).toLowerCase() : '',
         status: 'active',
         role_id: roles.find(role => role.role_name === newTeacherData.role_name)?.role_id
       };
 
-      console.log('Sending teacher data:', teacherData);
+      console.log('Sending teacher data:', capitalizedData);
 
-      const response = await axios.post('http://localhost:3001/employees', teacherData);
+      const response = await axios.post('http://localhost:3001/employees', capitalizedData);
       if (response.status === 201) {
         alert('Teacher added successfully!');
         await fetchTeachers();
@@ -687,8 +691,16 @@ useEffect(() => {
         return;
       }
 
-      // Create a copy of editTeacherData without emp_name
-      const { emp_name, ...updateData } = editTeacherData;
+      // Create a copy of editTeacherData without emp_name and apply capitalization
+      const { emp_name, ...updateDataRaw } = editTeacherData;
+      
+      // Apply proper capitalization to name fields
+      const updateData = {
+        ...updateDataRaw,
+        firstname: updateDataRaw.firstname.trim().charAt(0).toUpperCase() + updateDataRaw.firstname.trim().slice(1).toLowerCase(),
+        lastname: updateDataRaw.lastname.trim().charAt(0).toUpperCase() + updateDataRaw.lastname.trim().slice(1).toLowerCase(),
+        middlename: updateDataRaw.middlename.trim() ? updateDataRaw.middlename.trim().charAt(0).toUpperCase() + updateDataRaw.middlename.trim().slice(1).toLowerCase() : ''
+      };
       
       const response = await axios.put(`http://localhost:3001/employees/${editTeacherData.employee_id}`, updateData);
       if (response.status === 200) {
