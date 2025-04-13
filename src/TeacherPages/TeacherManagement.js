@@ -517,16 +517,25 @@ function TeacherManagement() {
   };
   
 
-  const fetchTeacherSubjects = async (teacherId, schoolYearId) => {
+  const fetchTeacherSubjects = async (teacherId, schoolYearId, roleId) => {
     try {
-      const response = await axios.get(`http://localhost:3001/teacher-subjects/${teacherId}`, {
+      // Check if roleId is 8, then use the /subject-assigned endpoint
+      const endpoint = roleId === 8
+        ? `http://localhost:3001/subject-assigned/${teacherId}`
+        : `http://localhost:3001/teacher-subjects/${teacherId}`;
+        
+      const response = await axios.get(endpoint, {
         params: { school_year_id: schoolYearId }
       });
+      
+      // Update the state with the response data
       setTeacherSubjects(response.data);
     } catch (error) {
       console.error('Error fetching teacher subjects:', error);
     }
-  };
+};
+
+  
   
   const fetchTeacherSection = async (teacherId, schoolYearId) => {
     try {
@@ -553,9 +562,9 @@ function TeacherManagement() {
       const activeYear = schoolYears.find(year => year.status === 'active');
       if (activeYear) {
         setSelectedSubjectsSchoolYear(activeYear.school_year_id);
-        fetchTeacherSubjects(teacherId, activeYear.school_year_id);
+        fetchTeacherSubjects(teacherId, activeYear.school_year_id,roleId);
       } else {
-        fetchTeacherSubjects(teacherId);
+        fetchTeacherSubjects(teacherId,roleId); 
       }
       if (roleId === 4) {
         fetchTeacherSection(teacherId);
@@ -824,8 +833,13 @@ useEffect(() => {
                                   <th>Grade Level</th>
                                   <th>Subject Name</th>
                                   <th>Section</th>
-                                  <th>Day</th>
-                                  <th>Time</th>
+                                  {/* Conditionally render Day and Time columns based on student role */}
+                                  {teacher.role_id !== 8 && (
+                                    <>
+                                      <th>Day</th>
+                                      <th>Time</th>
+                                    </>
+                                  )}
                                 </tr>
                               </thead>
                               <tbody>
@@ -834,8 +848,13 @@ useEffect(() => {
                                     <td>{subject.grade_level}</td>
                                     <td>{subject.subject_name}</td>
                                     <td>{subject.section_name}</td>
-                                    <td>{subject.day || 'Not set'}</td>
-                                    <td>{subject.time || 'Not set'}</td>
+                                    {/* Conditionally render day and time columns based on student role */}
+                                    {teacher.role_id !== 8 && (
+                                      <>
+                                        <td>{subject.day || 'Not set'}</td>
+                                        <td>{subject.time || 'Not set'}</td>
+                                      </>
+                                    )}
                                   </tr>
                                 ))}
                               </tbody>
@@ -843,6 +862,8 @@ useEffect(() => {
                           ) : (
                             <p>No subjects assigned yet</p>
                           )}
+
+
 
                           {teacher.role_id === 4 && (
                             <>

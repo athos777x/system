@@ -1092,7 +1092,7 @@
   
   .enroll-student-modal .enroll-student-table td {
     white-space: nowrap;
-    overflow: hidden;
+    /* overflow: hidden; */
     text-overflow: ellipsis;
   }
   

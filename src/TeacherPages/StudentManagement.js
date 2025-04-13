@@ -163,6 +163,20 @@ function StudentManagement() {
     }
   };
 
+  const triggerCronJob = async () => {
+    try {
+      const response = await axios.put('http://localhost:3001/cron/level-up-students');
+      
+      if (response.status === 200) {
+        console.log('Cron job triggered successfully:', response.data);
+      } else {
+        console.warn('Failed to trigger cron job:', response);
+      }
+    } catch (error) {
+      console.error('Error triggering cron job:', error);
+    }
+  };
+
   const fetchStudents = async (appliedFilters = {}) => {
     try {
       console.log('Original filters:', appliedFilters);
@@ -206,6 +220,7 @@ function StudentManagement() {
       const sortedStudents = response.data.sort((a, b) => b.lastname);
       setStudents(sortedStudents);
       setFilteredStudents(sortedStudents);
+      await triggerCronJob();
     } catch (error) {
       if (error.response) {
         console.error('Server responded with an error:', error.response.data);
