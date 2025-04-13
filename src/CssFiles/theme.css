@@ -2,16 +2,61 @@
   /* Colors */
   --primary-color: #28a745;
   --primary-hover: #218838;
+  --primary-light: #e8f5e9;
+  --primary-dark: #1b4620;
+  --primary-text: #2e7d32;
+  --primary-text-dark: #66bb6a;
+  
   --secondary-color: #6c757d;
   --secondary-hover: #5a6268;
-  --background-light: #f8f9fa;
-  --background-white: #ffffff;
+  
+  /* Backgrounds */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8f9fa;
+  --bg-tertiary: #f1f8e9;
+  --bg-accent: #e8f5e9;
+  --bg-content: #fafafa;
+  --bg-hover: #f5f5f5;
+  --bg-danger-light: #ffebee;
+  --bg-warning-light: #fff8e1;
+  --bg-success-light: #e8f5e9;
+  --bg-info-light: #e3f2fd;
+  
+  /* Text colors */
   --text-primary: #212529;
   --text-secondary: #6c757d;
+  --text-tertiary: #adb5bd;
+  --text-accent: #2e7d32;
+  --text-light: #f8f9fa;
+  --text-dark: #333333;
+  --text-danger: #d32f2f;
+  --text-warning: #f57c00;
+  --text-success: #2e7d32;
+  --text-info: #0288d1;
+  
+  /* Border colors */
   --border-color: #dee2e6;
+  --border-light: #e9ecef;
+  --border-dark: #adb5bd;
+  
+  /* Status colors */
   --error-color: #dc3545;
+  --danger-color: #dc3545;
+  --danger-hover: #c82333;
+  --warning-color: #ffc107;
+  --warning-hover: #e0a800;
   --success-color: #28a745;
-
+  --success-hover: #218838;
+  --info-color: #17a2b8;
+  --info-hover: #138496;
+  
+  /* Shadow */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+  --shadow-color: rgba(0, 0, 0, 0.08);
+  --dropdown-shadow: rgba(0, 0, 0, 0.08);
+  
   /* Typography */
   --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
@@ -36,12 +81,71 @@
   --border-radius-md: 0.5rem;
   --border-radius-lg: 1rem;
 
-  /* Shadows */
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
-  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
-
   /* Transitions */
   --transition-fast: 150ms ease-in-out;
   --transition-normal: 250ms ease-in-out;
+  
+  /* Icon colors */
+  --icon-color: #444444;
+}
+
+/* Dark theme variables */
+[data-theme='dark'] {
+  /* Colors */
+  --primary-color: #66bb6a;
+  --primary-hover: #4caf50;
+  --primary-light: #1b4620;
+  --primary-dark: #1b4620;
+  --primary-text: #66bb6a;
+  --primary-text-dark: #66bb6a;
+  
+  /* Backgrounds */
+  --bg-primary: #1e1e1e;
+  --bg-secondary: #2d2d2d;
+  --bg-tertiary: #3d3d3d;
+  --bg-accent: #1b4620;
+  --bg-content: #1b1b1b;
+  --bg-hover: #2d2d2d;
+  --bg-danger-light: #3d2525;
+  --bg-warning-light: #3d3525;
+  --bg-success-light: #1b4620;
+  --bg-info-light: #1e3a4a;
+  
+  /* Text colors */
+  --text-primary: #e0e0e0;
+  --text-secondary: #b0b0b0;
+  --text-tertiary: #808080;
+  --text-accent: #66bb6a;
+  --text-light: #e0e0e0;
+  --text-dark: #e0e0e0;
+  --text-danger: #ff5252;
+  --text-warning: #ffb74d;
+  --text-success: #66bb6a;
+  --text-info: #4fc3f7;
+  
+  /* Border colors */
+  --border-color: #404040;
+  --border-light: #404040;
+  --border-dark: #606060;
+  
+  /* Status colors */
+  --error-color: #f44336;
+  --danger-color: #f44336;
+  --danger-hover: #d32f2f;
+  --warning-color: #ffa726;
+  --warning-hover: #fb8c00;
+  --success-color: #66bb6a;
+  --success-hover: #4caf50;
+  --info-color: #29b6f6;
+  --info-hover: #0288d1;
+  
+  /* Shadow */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.3);
+  --shadow-color: rgba(0, 0, 0, 0.3);
+  --dropdown-shadow: rgba(0, 0, 0, 0.3);
+  
+  /* Icon colors */
+  --icon-color: #b0b0b0;
 }
