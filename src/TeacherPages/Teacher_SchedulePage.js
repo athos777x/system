@@ -315,12 +315,12 @@ function Teacher_SchedulePage() {
       
       {userRole === 'class_adviser' && assignedSection && (
         <div className="schedule-tabs">
-          <button 
+          {/* <button 
             className={`tab-button ${scheduleTab === 'my_schedule' ? 'active' : ''}`}
             onClick={() => setScheduleTab('my_schedule')}
           >
             My Schedule
-          </button>
+          </button> */}
           <button 
             className={`tab-button ${scheduleTab === 'section_schedule' ? 'active' : ''}`}
             onClick={() => setScheduleTab('section_schedule')}
