@@ -857,15 +857,13 @@ const handleArchive = () => {
         return;
     }
 
-    // Required fields
+    // Only basic information fields are required
     const requiredFields = [
-        "lastname", "firstname", "current_yr_lvl", "birthdate", "gender",
-        "age", "home_address", "barangay", "city_municipality", "province",
-        "contact_number", "email_address", "father_contact_number", 
-        "mother_contact_number", "emergency_number"
+        "lrn", "lastname", "firstname", "current_yr_lvl", 
+        "birthdate", "gender", "age"
     ];
 
-    // Check for missing fields
+    // Check for missing required fields
     let newErrors = {};
     requiredFields.forEach(field => {
         if (!editStudentData[field]) {
@@ -873,7 +871,7 @@ const handleArchive = () => {
         }
     });
 
-    // Run specific validations
+    // Run specific validations for all fields - required or not
     if (editStudentData.lrn) newErrors.lrn = validateLRN(editStudentData.lrn);
     if (editStudentData.lastname) newErrors.lastname = validateName(editStudentData.lastname, 'Last name');
     if (editStudentData.firstname) newErrors.firstname = validateName(editStudentData.firstname, 'First name');
@@ -902,6 +900,9 @@ const handleArchive = () => {
     }
     if (editStudentData.annual_hshld_income) {
       newErrors.annual_hshld_income = validateIncome(editStudentData.annual_hshld_income);
+    }
+    if (editStudentData.number_of_siblings) {
+      newErrors.number_of_siblings = validateSiblings(editStudentData.number_of_siblings);
     }
 
     // Filter out empty error messages
@@ -940,8 +941,8 @@ const handleArchive = () => {
     const updatedStudentData = { 
       ...formattedData, 
       birthdate: formattedBirthdate,
-      annual_hshld_income: parseFloat(formattedData.annual_hshld_income.replace(/,/g, '')) || 0, // Format income to remove commas
-      brigada_eskwela: '0' // Default value for brigada_eskwela
+      annual_hshld_income: parseFloat(formattedData.annual_hshld_income?.replace(/,/g, '') || 0), // Format income to remove commas
+      brigada_eskwela: formattedData.brigada_eskwela || '0' // Default value for brigada_eskwela
     };
 
     try {
@@ -969,17 +970,18 @@ const handleArchive = () => {
             )
         );
 
-        // Reset the form only after saving is successful
-        // setEditStudentData(null);
-
         // Refresh the student list
         await fetchStudents();
 
-        // Untoggle the student detail view to return to the list of students
-        toggleStudentDetails(); // Hide student detail view
+        // Exit edit mode
+        setIsEditing(false);
+
+        // Show success message
+        alert('Student information updated successfully!');
 
     } catch (error) {
         console.error('Error saving student data:', error);
+        alert('Failed to update student information. Please try again.');
     }
 };
 
@@ -1219,18 +1221,13 @@ const handleArchive = () => {
                         <th>Grade Level:</th>
                         <td>
                           {isEditing ? (
-                            <select
+                            <input
+                              type="text"
                               name="current_yr_lvl"
                               value={editStudentData ? editStudentData.current_yr_lvl || "" : ""}
-                              onChange={handleEditChange}
-                              className={errors.current_yr_lvl ? "error" : ""}
-                            >
-                              <option value="">Select Year Level</option>
-                              <option value="7">7</option>
-                              <option value="8">8</option>
-                              <option value="9">9</option>
-                              <option value="10">10</option>
-                            </select>
+                              readOnly
+                              className="read-only"
+                            />
                           ) : (
                             student.current_yr_lvl
                           )}
