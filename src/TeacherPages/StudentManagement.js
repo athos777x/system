@@ -296,6 +296,15 @@ function StudentManagement() {
     const { name, value } = e.target;
     let newErrors = { ...errors };
 
+    // Add this case for section_id
+    if (name === 'section_id') {
+      setNewStudentData(prevData => ({
+        ...prevData,
+        section_id: value
+      }));
+      return;
+    }
+
     // Validate based on field name
     switch (name) {
       case 'lrn':
@@ -904,6 +913,7 @@ const handleArchive = () => {
     if (editStudentData.number_of_siblings) {
       newErrors.number_of_siblings = validateSiblings(editStudentData.number_of_siblings);
     }
+    
 
     // Filter out empty error messages
     newErrors = Object.fromEntries(
@@ -937,10 +947,18 @@ const handleArchive = () => {
     // Format the birthdate before sending it to the backend
     const formattedBirthdate = new Date(formattedData.birthdate).toISOString().split('T')[0];
 
+    if (formattedData.section_id) {
+      formattedData.section_id = parseInt(formattedData.section_id, 10);
+    }
+    
+
+    
+
     // Update the student data with the formatted birthdate
     const updatedStudentData = { 
       ...formattedData, 
       birthdate: formattedBirthdate,
+      section_id: formattedData.section_id, // now an int
       annual_hshld_income: parseFloat(formattedData.annual_hshld_income?.replace(/,/g, '') || 0), // Format income to remove commas
       brigada_eskwela: formattedData.brigada_eskwela || '0' // Default value for brigada_eskwela
     };

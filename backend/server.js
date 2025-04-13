@@ -204,7 +204,7 @@ app.get('/students', (req, res) => {
       s.emergency_number, s.emergency_contactperson,
       (SELECT ss.enrollment_status FROM enrollment ss
       JOIN school_year sy ON ss.school_year_id = sy.school_year_id
-      WHERE ss.student_id = s.student_id AND sy.status = 'active' ) as active_status,
+      WHERE ss.student_id = s.student_id AND sy.status = 'active' LIMIT 1) as active_status,
       se.enrollment_status, se.student_elective_id
       FROM student s
       LEFT JOIN student_elective se ON s.student_id = se.student_id
@@ -390,7 +390,8 @@ app.put('/students/:id', (req, res) => {
         annual_hshld_income = ?, number_of_siblings = ?, 
         father_educ_lvl = ?, mother_educ_lvl = ?, 
         father_contact_number = ?, mother_contact_number = ?,
-        emergency_number = ?, emergency_contactperson = ?, section_id = ?
+        emergency_number = ?, emergency_contactperson = ?, section_id = ?,
+        lrn = ?
     WHERE student_id = ?
   `;
 
@@ -405,7 +406,7 @@ app.put('/students/:id', (req, res) => {
     updatedData.father_educ_lvl, updatedData.mother_educ_lvl,
     updatedData.father_contact_number, updatedData.mother_contact_number,
     updatedData.emergency_number, updatedData.emergency_contactperson,
-    updatedData.section_id,
+    updatedData.section_id, updatedData.lrn,
     studentId
   ];
 
@@ -4096,24 +4097,20 @@ app.post('/api/schedules', (req, res) => {
     elective = 0, // Default to 0 if not provided
   } = req.body;
 
-  // First, get the active school year ID
   const getActiveSchoolYearQuery = `SELECT school_year_id FROM school_year WHERE status = 'active' LIMIT 1`;
 
   db.query(getActiveSchoolYearQuery, (err, schoolYearResult) => {
     if (err) {
       console.error('Error fetching active school year:', err);
-      res.status(500).json({ error: 'Failed to fetch active school year', details: err.message });
-      return;
+      return res.status(500).json({ error: 'Failed to fetch active school year', details: err.message });
     }
 
     if (schoolYearResult.length === 0) {
-      res.status(400).json({ error: 'No active school year found' });
-      return;
+      return res.status(400).json({ error: 'No active school year found' });
     }
 
     const school_year_id = schoolYearResult[0].school_year_id;
 
-    // Insert the schedule with elective status
     const insertScheduleQuery = `
       INSERT INTO schedule 
       (subject_id, teacher_id, time_start, time_end, day, section_id, schedule_status, grade_level, school_year_id, elective)
@@ -4132,19 +4129,54 @@ app.post('/api/schedules', (req, res) => {
         schedule_status,
         grade_level,
         school_year_id,
-        elective, // Insert elective flag
+        elective,
       ],
       (err, result) => {
         if (err) {
           console.error('Error adding schedule:', err);
-          res.status(500).json({ error: 'Internal server error', details: err.message });
-          return;
+          return res.status(500).json({ error: 'Failed to insert schedule', details: err.message });
         }
-        res.status(201).json({ message: 'Schedule added successfully', scheduleId: result.insertId });
+
+        const scheduleId = result.insertId;
+
+        const insertOrUpdateTeacherSubjectQuery = `
+          INSERT INTO teacher_subject 
+          (subject_id, LEVEL, section_id, employee_id, elective, school_year_id)
+          VALUES (?, ?, ?, ?, ?, ?)
+          ON DUPLICATE KEY UPDATE
+            subject_id = VALUES(subject_id),
+            LEVEL = VALUES(LEVEL),
+            section_id = VALUES(section_id),
+            employee_id = VALUES(employee_id),
+            elective = VALUES(elective),
+            school_year_id = VALUES(school_year_id)
+        `;
+
+        db.query(
+          insertOrUpdateTeacherSubjectQuery,
+          [
+            subject_id,
+            grade_level,
+            section_id,
+            teacher_id,
+            elective,
+            school_year_id,
+          ],
+          (err2) => {
+            if (err2) {
+              console.error('Error inserting/updating teacher_subject:', err2);
+              return res.status(500).json({ error: 'Schedule inserted but failed to link teacher and subject', details: err2.message });
+            }
+
+            res.status(201).json({ message: 'Schedule and teacher-subject entry added/updated successfully', scheduleId });
+          }
+        );
       }
     );
   });
 });
+
+
 
 app.post("/api/save-grade", (req, res) => {
   const { student_id, student_name, grade_level, school_year_id, subjects } = req.body;
@@ -4992,7 +5024,7 @@ app.get('/students/by-teacher', (req, res) => {
         LEFT JOIN section z ON s.section_id = z.section_id
         LEFT JOIN student_school_year ss ON s.student_id = ss.student_id
         LEFT JOIN school_year sy ON ss.school_year_id = sy.school_year_id
-        LEFT JOIN subject_assigned d ON z.grade_level=d.level AND z.section_id=d.section_id AND d.school_year_id=z.school_year_id
+        LEFT JOIN teacher_subject d ON z.grade_level=d.level AND z.section_id=d.section_id AND d.school_year_id=z.school_year_id
         WHERE s.active_status = 'unarchive' AND d.employee_id = ?
       `;
 
