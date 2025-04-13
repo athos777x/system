@@ -454,12 +454,14 @@ function TeacherManagement() {
   
       if (response.status === 200) {
         alert(response.data.message || 'Subject assigned successfully');
+        fetchTeacherSubjects(currentTeacherId, selectedSchoolYear);
+
         setShowAssignSubjectModal(false);
         setSelectedSubject('');
         setSelectedGradeLevelForSection('7');
         setSectionsByGrade([]);
       }
-    } catch (error) {
+    } catch (error) { 
       console.error('Error assigning subject:', error);
       alert('Error assigning subject: ' + (error.response?.data?.error || error.message));
     }
@@ -513,7 +515,7 @@ function TeacherManagement() {
         setSelectedSection('');
         setSelectedGradeLevelForSection('7');
         setSectionsByGrade([]);
-        fetchTeacherSection(currentTeacherId,selectedSchoolYear);
+        fetchTeacherSection(currentTeacherId,selectedSection,selectedGradeLevelForSection,selectedSchoolYear);
       }
     } catch (error) {
       console.error('Error assigning section:', error);
@@ -559,7 +561,7 @@ function TeacherManagement() {
   const handleViewDetails = (teacherId, roleId) => {
     if (selectedTeacherId === teacherId) {
       setSelectedTeacherId(null);
-      setTeacherSubjects([]);
+      setTeacherSubjects();
       setTeacherSection(null);
     } else {
       setSelectedTeacherId(teacherId);
@@ -574,6 +576,7 @@ function TeacherManagement() {
       if (roleId === 4) {
         fetchTeacherSection(teacherId,activeYear.school_year_id);
       }
+
     }
   };
 
@@ -819,7 +822,7 @@ useEffect(() => {
 
                         
                         <div className="teacher-mgmt-details-section">
-                        {teacher.role_id === 3 && (
+                        {teacher.role_id === 8 && (
                         <div className="teacher-mgmt-details-section">
                           <div
                             style={{
@@ -846,7 +849,7 @@ useEffect(() => {
                             </select>
                           </div>
 
-                          {teacherSubjects.length > 0 ? (
+                          {teacherSubjects && teacherSubjects.length > 0 ? (
                             <table className="teacher-mgmt-details-table">
                               <thead>
                                 <tr>

@@ -12,6 +12,7 @@ function Student_EnrollmentPage() {
   const [showElectiveModal, setShowElectiveModal] = useState(false);
   const [electiveChoice, setElectiveChoice] = useState('');
   const [electiveStatus, setElectiveStatus] = useState('');
+  const [electives, setElectives] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -34,6 +35,10 @@ function Student_EnrollmentPage() {
           const electiveResponse = await axios.get(`http://localhost:3001/elective-status/${userId}`);
           setElectiveStatus(electiveResponse.data?.status || '');
         }
+
+        const electivesResponse = await axios.get('http://localhost:3001/list-elective');  // Your new endpoint
+        setElectives(electivesResponse.data);
+
       } catch (error) {
         console.error('Error fetching data:', error);
         setError('Failed to load enrollment information. Please try again later.');
@@ -137,8 +142,8 @@ function Student_EnrollmentPage() {
                       <tr key={index}>
                         <td>{row.subject_name}</td>
                         <td>{row.day || 'N/A'}</td>
-                        <td>{row.schedule}</td>
-                        <td>{row.teacher_name}</td>
+                        <td>{row.schedule}</td> 
+                        <td>{row.teacher}</td>
                       </tr>
                     ))
                   ) : (
@@ -194,15 +199,18 @@ function Student_EnrollmentPage() {
               <div className="student-enrollment-form">
                 <div className="student-enrollment-form-group">
                   <label htmlFor="electiveChoice">Choose an Elective:</label>
-                  <select
+                <select
                     id="electiveChoice"
                     value={electiveChoice}
                     onChange={(e) => setElectiveChoice(e.target.value)}
                   >
                     <option value="">Select an elective</option>
-                    <option value="1">Elective 1</option>
-                    <option value="2">Elective 2</option>
-                  </select>
+                    {electives.map((elective) => (
+                      <option key={elective.elective_id} value={elective.elective_id}>
+                        {elective.elective_name}
+                      </option>
+                    ))}
+                </select>
                 </div>
                 <div className="student-enrollment-button-container">
                   <button type="button" className="student-enrollment-confirm-button" onClick={handleElectiveSubmit}>

@@ -970,33 +970,38 @@ app.get('/enrollment/:user_id', (req, res) => {
   console.log(`Fetching enrollment data for user_id: ${userId}`);
 
   const query = `
-    SELECT DISTINCT 
+SELECT DISTINCT 
       a.subject_name, 
+      REPLACE(REPLACE(REPLACE(REPLACE(d.day, '[', ''), ']', ''), '"', ''), ',', ', ') AS day,
       CONCAT(c.lastname, ', ', c.firstname, ' ', IFNULL(c.middlename, '')) AS teacher, 
       CASE 
         WHEN d.time_start IS NOT NULL AND d.time_end IS NOT NULL 
         THEN CONCAT(d.time_start, ' - ', d.time_end)
         ELSE ''
       END AS schedule
-    FROM subject a 
+    FROM SUBJECT a 
     INNER JOIN student b ON a.grade_level = b.current_yr_lvl 
-    LEFT JOIN employee c ON a.employee_id = c.employee_id 
-    LEFT JOIN schedule d ON a.subject_id = d.subject_id
-    WHERE b.user_id = ? 
-      AND a.status = 'active'
+    LEFT JOIN SCHEDULE d ON a.subject_id = d.subject_id AND d.elective = 0 
+    LEFT JOIN employee c ON d.teacher_id = c.employee_id 
 
-    UNION 
+    WHERE b.user_id = ?
+    AND a.status = 'active'
 
-    SELECT 
+UNION 
+
+SELECT 
       e.name AS subject_name, 
+      REPLACE(REPLACE(REPLACE(REPLACE(ss.day, '[', ''), ']', ''), '"', ''), ',', ', ') AS day,
       CONCAT(emp.lastname, ', ', emp.firstname, ' ', IFNULL(emp.middlename, '')) AS teacher, 
       '' AS schedule
     FROM elective e 
     INNER JOIN student_elective se ON se.elective_id = e.elective_id 
+    LEFT JOIN SCHEDULE ss ON e.elective_id = ss.subject_id AND ss.elective = 1
     LEFT JOIN employee emp ON e.employee_id = emp.employee_id
-    WHERE se.user_id = ? 
-      AND se.enrollment_status = 'approved'
+    WHERE se.user_id = ?
+    AND se.enrollment_status = 'approved'
     ORDER BY subject_name;
+
   `;
 
   db.query(query, [userId, userId], (err, results) => {
@@ -2663,6 +2668,7 @@ app.get('/subjects', (req, res) => {
           sy.school_year,
           sy.status AS sy_status,
           0 AS elective_id,
+          'regular' as subject_type,
           MAX(CASE WHEN sch.subject_id IS NOT NULL THEN '1' ELSE '0' END) AS hasSched
       FROM SUBJECT s
       LEFT JOIN school_year sy ON s.school_year_id = sy.school_year_id
@@ -2691,6 +2697,7 @@ app.get('/subjects', (req, res) => {
           NULL AS school_year,
           e.status AS sy_status,
           e.elective_id,
+          'elective' as subject_type,
           MAX(CASE WHEN sch.subject_id IS NOT NULL THEN '1' ELSE '0' END) AS hasSched
       FROM elective e
       LEFT JOIN (
@@ -2755,21 +2762,24 @@ app.post('/subjects', (req, res) => {
     status,
     grading_criteria,
     description,
-    school_year,
     archive_status,
-    subject_type,       // <- include subject_type
-    max_capacity        // <- include max_capacity if needed for elective
+    subject_type,       // "elective" or "regular"
+    max_capacity        // only for elective
   } = req.body;
 
+  const lowerName = subject_name.toLowerCase();
+
+  // Decide target table and column names based on subject_type
+  const isElective = subject_type === 'elective';
   const checkDuplicateQuery = `
-    SELECT COUNT(*) as count 
-    FROM subject 
-    WHERE LOWER(subject_name) = LOWER(?)
+    SELECT COUNT(*) AS count 
+    FROM ${isElective ? 'elective' : 'subject'} 
+    WHERE LOWER(${isElective ? 'name' : 'subject_name'}) = ?
   `;
 
-  db.query(checkDuplicateQuery, [subject_name], (checkErr, checkResults) => {
+  db.query(checkDuplicateQuery, [lowerName], (checkErr, checkResults) => {
     if (checkErr) {
-      console.error('Error checking for duplicate subject:', checkErr);
+      console.error('Error checking for duplicate:', checkErr);
       return res.status(500).json({ error: 'Internal server error' });
     }
 
@@ -2777,48 +2787,69 @@ app.post('/subjects', (req, res) => {
       return res.status(400).json({ error: 'Subject already exists' });
     }
 
-    const insertSubjectQuery = `
-      INSERT INTO subject (subject_name, grade_level, status, grading_criteria, description, school_year_id, archive_status)
-      VALUES (?, ?, ?, ?, ?, (SELECT school_year_id FROM school_year WHERE status='active'), 'unarchive')
-    `;
-    const subjectParams = [subject_name, grade_level, status, grading_criteria, description, school_year, archive_status];
+    // 👉 Insert into ELECTIVE table
+    if (isElective) {
+      const insertElectiveQuery = `
+        INSERT INTO elective (name, max_capacity, school_year_id, description)
+        VALUES (?, ?, (SELECT school_year_id FROM school_year WHERE status = 'active'), ?)
+      `;
 
-    db.query(insertSubjectQuery, subjectParams, (err, results) => {
-      if (err) {
-        console.error('Error adding subject:', err);
-        return res.status(500).json({ error: 'Internal server error' });
-      }
+      const electiveParams = [
+        subject_name,
+        max_capacity || 30,
+        description
+      ];
 
-      const insertedSubjectId = results.insertId;
+      db.query(insertElectiveQuery, electiveParams, (electiveErr, electiveResult) => {
+        if (electiveErr) {
+          console.error('Error inserting elective:', electiveErr);
+          return res.status(500).json({ error: 'Failed to insert elective' });
+        }
 
-      // If subject_type is elective, insert into elective table too
-      if (subject_type === 'elective') {
-        const insertElectiveQuery = `
-          INSERT INTO elective (name, max_capacity, school_year_id, description)
-          VALUES (?, ?, (SELECT school_year_id FROM school_year WHERE status='active'), ?)
-        `;
-        const electiveParams = [subject_name, max_capacity || 30, description]; // default to 30 if not provided
-
-        db.query(insertElectiveQuery, electiveParams, (electiveErr) => {
-          if (electiveErr) {
-            console.error('Error inserting elective:', electiveErr);
-            return res.status(500).json({ error: 'Subject inserted but failed to insert elective data' });
-          }
-
-          res.status(201).json({
-            message: 'Subject and elective added successfully',
-            subjectId: insertedSubjectId
-          });
+        return res.status(201).json({
+          message: 'Elective added successfully',
+          electiveId: electiveResult.insertId
         });
-      } else {
-        res.status(201).json({
+      });
+
+    } else {
+      // 👉 Insert into SUBJECT table for "regular"
+      const insertSubjectQuery = `
+        INSERT INTO subject (
+          subject_name, grade_level, status, grading_criteria,
+          description, school_year_id, archive_status
+        )
+        VALUES (?, ?, ?, ?, ?, 
+          (SELECT school_year_id FROM school_year WHERE status = 'active'), 
+          ?
+        )
+      `;
+
+      const subjectParams = [
+        subject_name,
+        grade_level,
+        status,
+        grading_criteria,
+        description,
+        archive_status || 'unarchive'
+      ];
+
+      db.query(insertSubjectQuery, subjectParams, (subjectErr, subjectResult) => {
+        if (subjectErr) {
+          console.error('Error inserting subject:', subjectErr);
+          return res.status(500).json({ error: 'Failed to insert subject' });
+        }
+
+        return res.status(201).json({
           message: 'Subject added successfully',
-          subjectId: insertedSubjectId
+          subjectId: subjectResult.insertId
         });
-      }
-    });
+      });
+    }
   });
 });
+
+
 
 
 
@@ -4906,20 +4937,19 @@ app.get('/subjects/by-coordinator/:user_id', (req, res) => {
             sy.school_year,
             sy.status AS sy_status,
             0 AS elective_id,
-            sch.teacher_id, 
-            sch.schedule_status,
+            sch.employee_id, 
             MAX(CASE WHEN sch.subject_id IS NOT NULL THEN '1' ELSE '0' END) AS hasSched
         FROM SUBJECT s
         LEFT JOIN school_year sy ON s.school_year_id = sy.school_year_id
         LEFT JOIN (
-            SELECT DISTINCT subject_id, teacher_id, schedule_status
-            FROM SCHEDULE
+            SELECT DISTINCT subject_id, employee_id
+            FROM subject_assigned
             WHERE elective = 0
         ) sch ON s.subject_id = sch.subject_id
         ${whereClause}  -- Filters for regular subject
         GROUP BY 
             s.subject_id, s.grade_level, s.subject_name, s.status, s.grading_criteria,
-            s.description, s.archive_status, s.school_year_id, sy.school_year, sy.status, sch.teacher_id
+            s.description, s.archive_status, s.school_year_id, sy.school_year, sy.status, sch.employee_id
 
         UNION
 
@@ -4936,20 +4966,19 @@ app.get('/subjects/by-coordinator/:user_id', (req, res) => {
             NULL AS school_year,
             e.status AS sy_status,
             e.elective_id,
-            sch.teacher_id,
-            sch.schedule_status,
+            sch.employee_id,
             MAX(CASE WHEN sch.subject_id IS NOT NULL THEN '1' ELSE '0' END) AS hasSched
         FROM elective e
         LEFT JOIN (
-            SELECT DISTINCT subject_id, teacher_id, schedule_status
-            FROM SCHEDULE
+            SELECT DISTINCT subject_id, employee_id
+            FROM subject_assigned
             WHERE elective = 1
         ) sch ON e.elective_id = sch.subject_id
         WHERE e.archive_status = 'unarchive'  -- Filter for elective subjects
         GROUP BY 
-            e.elective_id, e.name, e.status, e.archive_status, sch.teacher_id
+            e.elective_id, e.name, e.status, e.archive_status, sch.employee_id
       ) combined
-      WHERE teacher_id = ? AND schedule_status='Approved'
+      WHERE employee_id = ? 
       ORDER BY grade_level DESC, subject_name ASC;
     `;
 
@@ -5412,5 +5441,26 @@ app.put('/cron/level-up-students', (req, res) => {
         }
       });
     });
+  });
+});
+
+app.get('/list-elective', (req, res) => {
+  const query = `
+    SELECT elective_id, NAME AS elective_name 
+    FROM elective 
+    WHERE STATUS = 'active' 
+    AND school_year_id IN (
+      SELECT school_year_id 
+      FROM school_year 
+      WHERE STATUS = 'active'
+    )
+  `;
+
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error('Error fetching active electives:', err);
+      return res.status(500).json({ error: 'Database error' });
+    }
+    res.json(results);
   });
 });
