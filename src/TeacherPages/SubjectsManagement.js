@@ -181,34 +181,45 @@ function SubjectsManagement() {
     }));
   };
 
+  const [isSaving, setIsSaving] = useState(false);
+
   const saveNewSubject = async () => {
+    if (isSaving) return; // prevent double click
+    setIsSaving(true);
+  
     try {
-      // Prepare the data to be sent
       const subjectData = {
         ...newSubjectData,
-        // Set grade_level to null for elective subjects
         grade_level: newSubjectData.subject_type === 'elective' ? null : newSubjectData.grade_level
       };
-
+  
+      console.log('Subject data being sent:', subjectData); // Check the data here
+  
       if (isEditing) {
         await axios.put(`http://localhost:3001/subjects/${selectedSubject.subject_id}`, subjectData);
       } else {
         await axios.post('http://localhost:3001/subjects', subjectData);
       }
+  
       fetchSubjects();
       setShowModal(false);
       setSelectedSubject(null);
       setShowDetails(false);
       setErrors({});
     } catch (error) {
-      console.error(`Error ${isEditing ? 'updating' : 'adding'} subject:`, error);
+      console.error('Error saving subject:', error);
       if (error.response?.data?.error === 'Subject already exists') {
-        setErrors({ subject_name: `Subject already exists${isEditing ? ' in another record' : ''}` });
+        setErrors({ subject_name: 'Subject already exists' });
       } else {
-        setErrors({ subject_name: `Error ${isEditing ? 'updating' : 'adding'} subject` });
+        setErrors({ subject_name: 'Error saving subject' });
       }
+    } finally {
+      setIsSaving(false);
     }
   };
+  
+  
+
 
   const handleEdit = (subject) => {
     setSelectedSubject(subject);
