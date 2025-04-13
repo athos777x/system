@@ -66,6 +66,14 @@ function EnrollStudentManagement() {
   // Add this state for tab management
   const [activeTab, setActiveTab] = useState('basic');
 
+  // Add state for student enrollment modal
+  const [showEnrollModal, setShowEnrollModal] = useState(false);
+  const [availableStudents, setAvailableStudents] = useState([]);
+  const [selectedStudentsToEnroll, setSelectedStudentsToEnroll] = useState([]);
+  const [enrollStudentSearchTerm, setEnrollStudentSearchTerm] = useState('');
+  const [filteredAvailableStudents, setFilteredAvailableStudents] = useState([]);
+  const [selectedGradeLevel, setSelectedGradeLevel] = useState('');
+
   const navigate = useNavigate();
 
   // Add this constant for education levels near the top of the file, after the imports
@@ -541,14 +549,13 @@ const enrollStudent = async (studentId) => {
     // Log the attempt to enroll a student
     console.log('Attempting to enroll student with ID:', studentId);
 
-    const getCurrentSchoolYear = () => {
-      const currentYear = new Date().getFullYear();
-      const nextYear = currentYear + 1;
-      return `${currentYear}-${nextYear}`;
-    };
+    // Get active school year from server
+    const schoolYearResponse = await axios.get('http://localhost:3001/active-school-year');
+    const activeSchoolYear = schoolYearResponse.data.school_year;
+    
     // Define the payload with status 'active'
     const payload = {
-      school_year: getCurrentSchoolYear(), // Adjust this value to the current school year
+      school_year: activeSchoolYear,
       status: 'active'
     };
 
@@ -1063,15 +1070,138 @@ const handleArchive = () => {
     };
   };
 
+  // Add function to fetch available students for enrollment
+  const fetchAvailableStudents = async () => {
+    try {
+      const response = await axios.get('http://localhost:3001/students/available-for-enrollment');
+      
+      // Filter out students who are already in grade 10
+      const filteredStudents = response.data.filter(student => 
+        parseInt(student.current_yr_lvl) < 10
+      );
+      
+      // Sort the students alphabetically by last name
+      const sortedStudents = filteredStudents.sort((a, b) => {
+        return a.lastname.localeCompare(b.lastname) || 
+               a.firstname.localeCompare(b.firstname);
+      });
+      
+      setAvailableStudents(sortedStudents);
+      setFilteredAvailableStudents(sortedStudents);
+    } catch (error) {
+      console.error('Error fetching available students:', error);
+      alert('Error fetching available students for enrollment');
+    }
+  };
+
+  // Function to filter available students based on search term and grade level
+  const filterAvailableStudents = (searchTerm, gradeLevel) => {
+    let filtered = availableStudents;
+    
+    // Apply search term filter if it exists
+    if (searchTerm) {
+      filtered = filtered.filter(student => 
+        student.lastname.toLowerCase().includes(searchTerm) || 
+        student.firstname.toLowerCase().includes(searchTerm) ||
+        (student.student_id && student.student_id.toString().includes(searchTerm))
+      );
+    }
+    
+    // Apply grade level filter if selected
+    if (gradeLevel) {
+      filtered = filtered.filter(student => 
+        student.current_yr_lvl.toString() === gradeLevel
+      );
+    }
+    
+    // Sort alphabetically by last name
+    filtered.sort((a, b) => {
+      return a.lastname.localeCompare(b.lastname) || 
+             a.firstname.localeCompare(b.firstname);
+    });
+    
+    setFilteredAvailableStudents(filtered);
+  };
+
+  // Function to handle the search in enrollment modal
+  const handleEnrollmentSearch = (e) => {
+    const searchTerm = e.target.value.toLowerCase();
+    setEnrollStudentSearchTerm(searchTerm);
+    
+    filterAvailableStudents(searchTerm, selectedGradeLevel);
+  };
+
+  // Function to handle grade level filter change
+  const handleGradeLevelChange = (e) => {
+    const gradeLevel = e.target.value;
+    setSelectedGradeLevel(gradeLevel);
+    
+    filterAvailableStudents(enrollStudentSearchTerm, gradeLevel);
+  };
+
+  // Function to open the enrollment modal
+  const openEnrollModal = () => {
+    fetchAvailableStudents();
+    setShowEnrollModal(true);
+    setSelectedStudentsToEnroll([]);
+    setEnrollStudentSearchTerm('');
+    setSelectedGradeLevel('');
+  };
+
+  // Function to close the enrollment modal
+  const closeEnrollModal = () => {
+    setShowEnrollModal(false);
+    setSelectedStudentsToEnroll([]);
+    setEnrollStudentSearchTerm('');
+    setSelectedGradeLevel('');
+  };
+
+  // Function to handle student selection for enrollment
+  const handleStudentSelection = (studentId) => {
+    setSelectedStudentsToEnroll(prevSelected => {
+      if (prevSelected.includes(studentId)) {
+        return prevSelected.filter(id => id !== studentId);
+      } else {
+        return [...prevSelected, studentId];
+      }
+    });
+  };
+
+  // Function to execute the enrollment of the selected students
+  const executeEnrollment = async () => {
+    if (selectedStudentsToEnroll.length === 0) {
+      alert('Please select at least one student to enroll');
+      return;
+    }
+    
+    try {
+      // Show confirmation dialog
+      if (window.confirm(`Are you sure you want to enroll ${selectedStudentsToEnroll.length} student(s)?`)) {
+        // Use Promise.all to enroll all selected students in parallel
+        const enrollmentPromises = selectedStudentsToEnroll.map(studentId => 
+          enrollStudent(studentId)
+        );
+        
+        await Promise.all(enrollmentPromises);
+        alert(`Successfully enrolled ${selectedStudentsToEnroll.length} student(s)`);
+        closeEnrollModal();
+        await fetchStudents(); // Refresh the list
+      }
+    } catch (error) {
+      console.error('Error enrolling students:', error);
+      alert('Error enrolling students. Please try again.');
+    }
+  };
+
   return (
     <div className="enroll-student-container">
       <div className="enroll-student-header">
         <h1 className="enroll-student-title">Enroll Student Management</h1>
-        {/* {(roleName === 'registrar' || roleName === 'subject_teacher' || roleName === 'class_adviser' || roleName === 'grade_level_coordinator') && (
-          <button className="enroll-student-add-btn" onClick={startAdding}>
-            Add New Student
+        {(roleName === 'registrar' || roleName === 'subject_teacher' || roleName === 'class_adviser' || roleName === 'grade_level_coordinator') && (
+          <button className="enroll-student-add-btn" onClick={openEnrollModal}>
+            Request Enrollment for Old Student
           </button>
-        )} */}
+        )}
       </div>
 
       <StudentSearchFilter
@@ -1236,11 +1366,10 @@ const handleArchive = () => {
                                         onChange={handleEditChange}
                                         className={errors.current_yr_lvl ? "error" : ""}
                                       >
-                                        <option value="">Select Year Level</option>
-                                        <option value="7">7</option>
-                                        <option value="8">8</option>
-                                        <option value="9">9</option>
-                                        <option value="10">10</option>
+                                        <option value="">All Grade Levels</option>
+                                        <option value="7">Grade 7</option>
+                                        <option value="8">Grade 8</option>
+                                        <option value="9">Grade 9</option>
                                       </select>
                                     ) : (
                                       student.current_yr_lvl
@@ -1809,428 +1938,110 @@ const handleArchive = () => {
         </div>
       )}
 
-      {showModal && (
+      {/* Enroll Student Modal */}
+      {showEnrollModal && (
         <div className="enroll-student-modal">
           <div className="enroll-student-modal-content enroll-student-modal-large">
-            <h2>Add New Student</h2>
+            <h2>Enroll Students</h2>
+            <p>Select students from the list below to enroll</p>
             
-            <div className="enroll-student-tabs">
-              <button 
-                className={`enroll-student-tab ${activeTab === 'basic' ? 'active' : ''}`}
-                onClick={() => setActiveTab('basic')}
-              >
-                Basic Information
-              </button>
-              <button 
-                className={`enroll-student-tab ${activeTab === 'contact' ? 'active' : ''}`}
-                onClick={() => setActiveTab('contact')}
-              >
-                Contact Information
-              </button>
-              <button 
-                className={`enroll-student-tab ${activeTab === 'family' ? 'active' : ''}`}
-                onClick={() => setActiveTab('family')}
-              >
-                Family Information
-              </button>
-            </div>
-
-            {/* Basic Information Tab */}
-            <div className={`enroll-student-tab-content ${activeTab === 'basic' ? 'active' : ''}`}>
-              <div className="enroll-student-form-grid">
-                <div className="enroll-student-form-group">
-                  <label>LRN:</label>
-                  <input
-                    type="text"
-                    name="lrn"
-                    value={newStudentData.lrn}
-                    onChange={handleAddChange}
-                    className={errors.lrn ? "error" : ""}
-                  />
-                  {errors.lrn && <span className="student-mgmt-error">{errors.lrn}</span>}
-                </div>
-                <div className="enroll-student-form-group">
-                  <label>Lastname:</label>
-                  <input
-                    type="text"
-                    name="lastname"
-                    value={newStudentData.lastname}
-                    onChange={handleAddChange}
-                    className={errors.lastname ? "error" : ""}
-                  />
-                  {errors.lastname && <span className="student-mgmt-error">{errors.lastname}</span>}
-                </div>
-                <div className="enroll-student-form-group">
-                  <label>Middlename:</label>
-                  <input
-                    type="text"
-                    name="middlename"
-                    value={newStudentData.middlename}
-                    onChange={handleAddChange}
-                    className={errors.middlename ? "error" : ""}
-                  />
-                  {errors.middlename && <span className="student-mgmt-error">{errors.middlename}</span>}
-                </div>
-                <div className="enroll-student-form-group">
-                  <label>Firstname:</label>
-                  <input
-                    type="text"
-                    name="firstname"
-                    value={newStudentData.firstname}
-                    onChange={handleAddChange}
-                    className={errors.firstname ? "error" : ""}
-                  />
-                  {errors.firstname && <span className="student-mgmt-error">{errors.firstname}</span>}
-                </div>
-                <div className="enroll-student-form-group">
-                  <label>Year Level:</label>
-                  <select
-                    name="current_yr_lvl"
-                    value={newStudentData.current_yr_lvl}
-                    onChange={handleAddChange}
-                    className={errors.current_yr_lvl ? "error" : ""}
-                  >
-                    <option value="">Select Year Level</option>
-                    <option value="7">7</option>
-                    <option value="8">8</option>
-                    <option value="9">9</option>
-                    <option value="10">10</option>
-                  </select>
-                  {errors.current_yr_lvl && <span className="student-mgmt-error">{errors.current_yr_lvl}</span>}
-                </div>
-                <div className="enroll-student-form-group">
-                  <label>Birthdate:</label>
-                  <input
-                    type="date"
-                    name="birthdate"
-                    value={newStudentData.birthdate}
-                    onChange={handleAddChange}
-                    min={calculateDateRange().min}
-                    max={calculateDateRange().max}
-                    className={errors.birthdate ? "error" : ""}
-                  />
-                  {errors.birthdate && <span className="student-mgmt-error">{errors.birthdate}</span>}
-                </div>
-                <div className="enroll-student-form-group">
-                  <label>Gender:</label>
-                  <select
-                    name="gender"
-                    value={newStudentData.gender}
-                    onChange={handleAddChange}
-                    className={errors.gender ? "error" : ""}
-                  >
-                    <option value="">Select Gender</option>
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                  </select>
-                  {errors.gender && <span className="student-mgmt-error">{errors.gender}</span>}
-                </div>
-                <div className="enroll-student-form-group">
-                  <label>Age: <span className="auto-calculated">(Auto-calculated)</span></label>
-                  <input
-                    type="text"
-                    name="age"
-                    value={newStudentData.age}
-                    readOnly
-                    className={errors.age ? "error read-only" : "read-only"}
-                  />
-                  {errors.age && <span className="student-mgmt-error">{errors.age}</span>}
-                </div>
-                <div className="enroll-student-form-group">
-                  <label>Brigada Eskwela Attendance:</label>
-                  <select
-                    name="brigada_eskwela"
-                    value={newStudentData.brigada_eskwela}
-                    onChange={handleAddChange}
-                    className={errors.brigada_eskwela ? "error" : ""}
-                  >
-                    <option value="0">No</option>
-                    <option value="1">Yes</option>
-                  </select>
-                  {errors.brigada_eskwela && <span className="student-mgmt-error">{errors.brigada_eskwela}</span>}
-                </div>
-                {(newStudentData.brigada_eskwela === '0' || newStudentData.brigada_eskwela === 0) && (
-                  <div className="enroll-student-form-group">
-                    <label>Remarks:</label>
-                    <textarea
-                      name="brigada_remarks"
-                      value={newStudentData.brigada_remarks}
-                      onChange={handleAddChange}
-                      className={errors.brigada_remarks ? "error" : ""}
-                      placeholder="Please provide reason for not attending Brigada Eskwela"
-                      rows="3"
-                    />
-                    {errors.brigada_remarks && <span className="student-mgmt-error">{errors.brigada_remarks}</span>}
-                  </div>
-                )}
+            <div className="enroll-student-filters">
+              <div className="enroll-student-search">
+                <input
+                  type="text"
+                  placeholder="Search by name or ID..."
+                  value={enrollStudentSearchTerm}
+                  onChange={handleEnrollmentSearch}
+                  className="enroll-student-search-input"
+                />
+              </div>
+              
+              <div className="enroll-student-grade-filter">
+                <select
+                  value={selectedGradeLevel}
+                  onChange={handleGradeLevelChange}
+                  className="enroll-student-grade-select"
+                >
+                  <option value="">All Grade Levels</option>
+                  <option value="7">Grade 7</option>
+                  <option value="8">Grade 8</option>
+                  <option value="9">Grade 9</option>
+                </select>
               </div>
             </div>
-
-            {/* Contact Information Tab */}
-            <div className={`enroll-student-tab-content ${activeTab === 'contact' ? 'active' : ''}`}>
-              <div className="enroll-student-form-grid">
-                <div className="enroll-student-form-group">
-                  <label>Home Address:</label>
-                  <input
-                    type="text"
-                    name="home_address"
-                    value={newStudentData.home_address}
-                    onChange={handleAddChange}
-                    className={errors.home_address ? "error" : ""}
-                  />
-                  {errors.home_address && <span className="student-mgmt-error">{errors.home_address}</span>}
-                </div>
-                <div className="enroll-student-form-group">
-                  <label>Barangay:</label>
-                  <input
-                    type="text"
-                    name="barangay"
-                    value={newStudentData.barangay}
-                    onChange={handleAddChange}
-                    className={errors.barangay ? "error" : ""}
-                  />
-                  {errors.barangay && <span className="student-mgmt-error">{errors.barangay}</span>}
-                </div>
-                <div className="enroll-student-form-group">
-                  <label>City Municipality:</label>
-                  <input
-                    type="text"
-                    name="city_municipality"
-                    value={newStudentData.city_municipality}
-                    onChange={handleAddChange}
-                    className={errors.city_municipality ? "error" : ""}
-                  />
-                  {errors.city_municipality && <span className="student-mgmt-error">{errors.city_municipality}</span>}
-                </div>
-                <div className="enroll-student-form-group">
-                  <label>Province:</label>
-                  <input
-                    type="text"
-                    name="province"
-                    value={newStudentData.province}
-                    onChange={handleAddChange}
-                    className={errors.province ? "error" : ""}
-                  />
-                  {errors.province && <span className="student-mgmt-error">{errors.province}</span>}
-                </div>
-                <div className="enroll-student-form-group">
-                  <label>Contact Number:</label>
-                  <input
-                    type="text"
-                    name="contact_number"
-                    value={newStudentData.contact_number}
-                    onChange={handleAddChange}
-                    className={errors.contact_number ? "error" : ""}
-                    maxLength={11}
-                  />
-                  {errors.contact_number && <span className="student-mgmt-error">{errors.contact_number}</span>}
-                </div>
-                <div className="enroll-student-form-group">
-                  <label>Email Address:</label>
-                  <input
-                    type="email"
-                    name="email_address"
-                    value={newStudentData.email_address}
-                    onChange={handleAddChange}
-                    className={errors.email_address ? "error" : ""}
-                  />
-                  {errors.email_address && <span className="student-mgmt-error">{errors.email_address}</span>}
-                </div>
-                <div className="enroll-student-form-group">
-                  <label>Emergency Contact Person:</label>
-                  <input
-                    type="text"
-                    name="emergency_contactperson"
-                    value={newStudentData.emergency_contactperson}
-                    onChange={handleAddChange}
-                    className={errors.emergency_contactperson ? "error" : ""}
-                  />
-                  {errors.emergency_contactperson && <span className="student-mgmt-error">{errors.emergency_contactperson}</span>}
-                </div>
-                <div className="enroll-student-form-group">
-                  <label>Emergency Contact Number:</label>
-                  <input
-                    type="text"
-                    name="emergency_number"
-                    value={newStudentData.emergency_number}
-                    onChange={handleAddChange}
-                    className={errors.emergency_number ? "error" : ""}
-                    maxLength={11}
-                  />
-                  {errors.emergency_number && <span className="student-mgmt-error">{errors.emergency_number}</span>}
-                </div>
-              </div>
-            </div>
-
-            {/* Family Information Tab */}
-            <div className={`enroll-student-tab-content ${activeTab === 'family' ? 'active' : ''}`}>
-              <div className="enroll-student-form-grid">
-                <div className="enroll-student-form-group">
-                  <label>Mother's Name:</label>
-                  <input
-                    type="text"
-                    name="mother_name"
-                    value={newStudentData.mother_name}
-                    onChange={handleAddChange}
-                    className={errors.mother_name ? "error" : ""}
-                  />
-                  {errors.mother_name && <span className="student-mgmt-error">{errors.mother_name}</span>}
-                </div>
-                <div className="enroll-student-form-group">
-                  <label>Mother's Contact Number:</label>
-                  <input
-                    type="text"
-                    name="mother_contact_number"
-                    value={newStudentData.mother_contact_number}
-                    onChange={handleAddChange}
-                    className={errors.mother_contact_number ? "error" : ""}
-                    maxLength={11}
-                  />
-                  {errors.mother_contact_number && <span className="student-mgmt-error">{errors.mother_contact_number}</span>}
-                </div>
-                <div className="enroll-student-form-group">
-                  <label>Mother's Occupation:</label>
-                  <input
-                    type="text"
-                    name="mother_occupation"
-                    value={newStudentData.mother_occupation}
-                    onChange={handleAddChange}
-                    className={errors.mother_occupation ? "error" : ""}
-                  />
-                  {errors.mother_occupation && <span className="student-mgmt-error">{errors.mother_occupation}</span>}
-                </div>
-                <div className="enroll-student-form-group">
-                  <label>Mother's Education Level:</label>
-                  <select
-                    name="mother_educ_lvl"
-                    value={newStudentData.mother_educ_lvl}
-                    onChange={handleAddChange}
-                    className={errors.mother_educ_lvl ? "error" : ""}
-                  >
-                    <option value="">Select Education Level</option>
-                    {EDUCATION_LEVELS.map((level) => (
-                      <option key={level} value={level}>{level}</option>
+            
+            <div className="enroll-student-list">
+              {filteredAvailableStudents.length > 0 ? (
+                <table className="enroll-student-table">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Name</th>
+                      <th>Current Level</th>
+                      <th>Enroll to Grade</th>
+                      <th width="50px">
+                        <input 
+                          type="checkbox" 
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              // Select all students
+                              setSelectedStudentsToEnroll(filteredAvailableStudents.map(s => s.student_id));
+                            } else {
+                              // Deselect all
+                              setSelectedStudentsToEnroll([]);
+                            }
+                          }}
+                          checked={
+                            filteredAvailableStudents.length > 0 && 
+                            selectedStudentsToEnroll.length === filteredAvailableStudents.length
+                          }
+                        />
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredAvailableStudents.map((student) => (
+                      <tr 
+                        key={student.student_id}
+                        className={selectedStudentsToEnroll.includes(student.student_id) ? 'selected-row' : ''}
+                        onClick={() => handleStudentSelection(student.student_id)}
+                      >
+                        <td>{student.student_id}</td>
+                        <td>{`${student.lastname}, ${student.firstname} ${student.middlename || ''}`}</td>
+                        <td>{student.current_yr_lvl}</td>
+                        <td>{parseInt(student.current_yr_lvl) + 1}</td>
+                        <td>
+                          <input
+                            type="checkbox"
+                            checked={selectedStudentsToEnroll.includes(student.student_id)}
+                            onChange={() => handleStudentSelection(student.student_id)}
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        </td>
+                      </tr>
                     ))}
-                  </select>
-                  {errors.mother_educ_lvl && <span className="student-mgmt-error">{errors.mother_educ_lvl}</span>}
-                </div>
-                <div className="enroll-student-form-group">
-                  <label>Father's Name:</label>
-                  <input
-                    type="text"
-                    name="father_name"
-                    value={newStudentData.father_name}
-                    onChange={handleAddChange}
-                    className={errors.father_name ? "error" : ""}
-                  />
-                  {errors.father_name && <span className="student-mgmt-error">{errors.father_name}</span>}
-                </div>
-                <div className="enroll-student-form-group">
-                  <label>Father's Contact Number:</label>
-                  <input
-                    type="text"
-                    name="father_contact_number"
-                    value={newStudentData.father_contact_number}
-                    onChange={handleAddChange}
-                    className={errors.father_contact_number ? "error" : ""}
-                    maxLength={11}
-                  />
-                  {errors.father_contact_number && <span className="student-mgmt-error">{errors.father_contact_number}</span>}
-                </div>
-                <div className="enroll-student-form-group">
-                  <label>Father's Occupation:</label>
-                  <input
-                    type="text"
-                    name="father_occupation"
-                    value={newStudentData.father_occupation}
-                    onChange={handleAddChange}
-                    className={errors.father_occupation ? "error" : ""}
-                  />
-                  {errors.father_occupation && <span className="student-mgmt-error">{errors.father_occupation}</span>}
-                </div>
-                <div className="enroll-student-form-group">
-                  <label>Father's Education Level:</label>
-                  <select
-                    name="father_educ_lvl"
-                    value={newStudentData.father_educ_lvl}
-                    onChange={handleAddChange}
-                    className={errors.father_educ_lvl ? "error" : ""}
-                  >
-                    <option value="">Select Education Level</option>
-                    {EDUCATION_LEVELS.map((level) => (
-                      <option key={level} value={level}>{level}</option>
-                    ))}
-                  </select>
-                  {errors.father_educ_lvl && <span className="student-mgmt-error">{errors.father_educ_lvl}</span>}
-                </div>
-                <div className="enroll-student-form-group">
-                  <label>Parent Address:</label>
-                  <input
-                    type="text"
-                    name="parent_address"
-                    value={newStudentData.parent_address}
-                    onChange={handleAddChange}
-                    className={errors.parent_address ? "error" : ""}
-                  />
-                  {errors.parent_address && <span className="student-mgmt-error">{errors.parent_address}</span>}
-                </div>
-                <div className="enroll-student-form-group">
-                  <label>Annual Household Income:</label>
-                  <input
-                    type="text"
-                    name="annual_hshld_income"
-                    value={newStudentData.annual_hshld_income}
-                    onChange={handleAddChange}
-                    className={errors.annual_hshld_income ? "error" : ""}
-                  />
-                  {errors.annual_hshld_income && <span className="student-mgmt-error">{errors.annual_hshld_income}</span>}
-                </div>
-                <div className="enroll-student-form-group">
-                  <label>Number of Siblings:</label>
-                  <input
-                    type="number"
-                    name="number_of_siblings"
-                    value={newStudentData.number_of_siblings}
-                    onChange={handleAddChange}
-                    min="0"
-                    max="20"
-                    step="1"
-                    className={errors.number_of_siblings ? "error" : ""}
-                  />
-                  {errors.number_of_siblings && <span className="student-mgmt-error">{errors.number_of_siblings}</span>}
-                </div>
-              </div>
+                  </tbody>
+                </table>
+              ) : (
+                <p className="no-results">No students available for enrollment or matching your search.</p>
+              )}
             </div>
-
-            <div className="enroll-student-modal-actions">
-              <div className="enroll-student-tab-navigation">
-                {activeTab !== 'basic' && (
-                  <button 
-                    type="button" 
-                    className="enroll-student-btn" 
-                    onClick={() => setActiveTab(activeTab === 'family' ? 'contact' : 'basic')}
-                  >
-                    Previous
-                  </button>
-                )}
-                {activeTab !== 'family' && (
-                  <button 
-                    type="button" 
-                    className="enroll-student-btn" 
-                    onClick={() => setActiveTab(activeTab === 'basic' ? 'contact' : 'family')}
-                  >
-                    Next
-                  </button>
-                )}
-              </div>
-              <div className="enroll-student-form-actions">
-                <button className="enroll-student-btn enroll-student-btn-edit" onClick={saveNewStudent}>
-                  Save
-                </button>
-                <button className="enroll-student-btn" onClick={cancelAdding}>
-                  Cancel
-                </button>
-              </div>
+            
+            <div className="enrollment-summary">
+              <p>{selectedStudentsToEnroll.length} student(s) selected for enrollment</p>
+            </div>
+            
+            <div className="enroll-student-modal-actions enrollment-actions-right">
+              <button className="enroll-student-modal-btn enroll-student-modal-btn-cancel" onClick={closeEnrollModal}>
+                Cancel
+              </button>
+              <button 
+                className="enroll-student-modal-btn enroll-student-modal-btn-confirm" 
+                onClick={executeEnrollment}
+                disabled={selectedStudentsToEnroll.length === 0}
+              >
+                Enroll Selected Students
+              </button>
             </div>
           </div>
         </div>

@@ -5094,4 +5094,102 @@ app.get('/students/apply-enrollment', (req, res) => {
   }
 });
 
+// Endpoint to get students available for enrollment
+// Function: Fetches students who are registered but not actively enrolled
+// Pages: EnrollStudentManagement.js
+app.get('/students/available-for-enrollment', (req, res) => {
+  console.log('Fetching students available for enrollment');
+  
+  const query = `
+    SELECT s.student_id, s.lrn, s.lastname, s.firstname, s.middlename, s.current_yr_lvl
+    FROM student s
+    LEFT JOIN enrollment e ON s.student_id = e.student_id
+    LEFT JOIN school_year sy ON e.school_year_id = sy.school_year_id AND sy.status = 'active'
+    WHERE (e.enrollment_status IS NULL OR e.enrollment_status = 'inactive')
+    AND s.active_status = 'unarchive'
+    ORDER BY s.student_id ASC, s.lastname ASC, s.firstname ASC
+  `;
+  
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error('Error fetching available students:', err);
+      res.status(500).json({ error: 'Database error' });
+      return;
+    }
+    
+    console.log(`Found ${results.length} students available for enrollment`);
+    res.json(results);
+  });
+});
+
+// Endpoint to enroll a student
+// Function: Updates a student's enrollment status to 'active' for the current school year
+// Pages: EnrollStudentManagement.js
+app.put('/students/:studentId/enroll-student', (req, res) => {
+  const studentId = req.params.studentId;
+  const { school_year, status } = req.body;
+  
+  console.log(`Enrolling student ID: ${studentId} for school year: ${school_year} with status: ${status}`);
+  
+  // First, get the school year ID
+  const getSchoolYearQuery = 'SELECT school_year_id FROM school_year WHERE school_year = ? AND status = "active"';
+  
+  db.query(getSchoolYearQuery, [school_year], (err, schoolYearResults) => {
+    if (err) {
+      console.error('Error fetching school year ID:', err);
+      res.status(500).json({ error: 'Database error' });
+      return;
+    }
+    
+    if (schoolYearResults.length === 0) {
+      console.error(`School year '${school_year}' not found or not active`);
+      res.status(404).json({ error: 'School year not found or not active' });
+      return;
+    }
+    
+    const schoolYearId = schoolYearResults[0].school_year_id;
+    
+    // Check if enrollment record exists
+    const checkEnrollmentQuery = 'SELECT * FROM enrollment WHERE student_id = ? AND school_year_id = ?';
+    
+    db.query(checkEnrollmentQuery, [studentId, schoolYearId], (err, enrollmentResults) => {
+      if (err) {
+        console.error('Error checking enrollment:', err);
+        res.status(500).json({ error: 'Database error' });
+        return;
+      }
+      
+      if (enrollmentResults.length > 0) {
+        // Update existing enrollment
+        const updateEnrollmentQuery = 'UPDATE enrollment SET enrollment_status = ? WHERE student_id = ? AND school_year_id = ?';
+        
+        db.query(updateEnrollmentQuery, [status, studentId, schoolYearId], (err, updateResults) => {
+          if (err) {
+            console.error('Error updating enrollment:', err);
+            res.status(500).json({ error: 'Database error' });
+            return;
+          }
+          
+          console.log(`Successfully updated enrollment for student ID: ${studentId}`);
+          res.json({ message: 'Student enrollment updated successfully' });
+        });
+      } else {
+        // Create new enrollment
+        const insertEnrollmentQuery = 'INSERT INTO enrollment (student_id, school_year_id, enrollment_status) VALUES (?, ?, ?)';
+        
+        db.query(insertEnrollmentQuery, [studentId, schoolYearId, status], (err, insertResults) => {
+          if (err) {
+            console.error('Error creating enrollment:', err);
+            res.status(500).json({ error: 'Database error' });
+            return;
+          }
+          
+          console.log(`Successfully enrolled student ID: ${studentId}`);
+          res.json({ message: 'Student enrolled successfully' });
+        });
+      }
+    });
+  });
+});
+
 
