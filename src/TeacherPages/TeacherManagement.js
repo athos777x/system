@@ -299,9 +299,9 @@ function TeacherManagement() {
       // Apply proper capitalization to name fields
       const capitalizedData = {
         ...newTeacherData,
-        firstname: newTeacherData.firstname.trim().charAt(0).toUpperCase() + newTeacherData.firstname.trim().slice(1).toLowerCase(),
-        lastname: newTeacherData.lastname.trim().charAt(0).toUpperCase() + newTeacherData.lastname.trim().slice(1).toLowerCase(),
-        middlename: newTeacherData.middlename.trim() ? newTeacherData.middlename.trim().charAt(0).toUpperCase() + newTeacherData.middlename.trim().slice(1).toLowerCase() : '',
+        firstname: formatCapitalization(newTeacherData.firstname.trim()),
+        lastname: formatCapitalization(newTeacherData.lastname.trim()),
+        middlename: newTeacherData.middlename.trim() ? formatCapitalization(newTeacherData.middlename.trim()) : '',
         status: 'active',
         role_id: roles.find(role => role.role_name === newTeacherData.role_name)?.role_id
       };
@@ -339,17 +339,17 @@ function TeacherManagement() {
     setShowModal(false);
   };
 
-  // const toggleTeacherDetails = (teacherId) => {
-  //   setSelectedTeacherId(selectedTeacherId === teacherId ? null : teacherId);
-  // };
-
-  // const formatDate = (isoString) => {
-  //   const date = new Date(isoString);
-  //   return date.toLocaleDateString();
-  // };
-
   const formatRoleName = (roleName) => {
     return roleName.replace(/_/g, ' ').toUpperCase();
+  };
+
+  const formatCapitalization = (text) => {
+    if (!text) return text;
+    
+    // For names and places - capitalize first letter of each word
+    return text.split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');
   };
 
   const archiveEmployee = async (employeeId, status) => {
@@ -701,9 +701,9 @@ useEffect(() => {
       // Apply proper capitalization to name fields
       const updateData = {
         ...updateDataRaw,
-        firstname: updateDataRaw.firstname.trim().charAt(0).toUpperCase() + updateDataRaw.firstname.trim().slice(1).toLowerCase(),
-        lastname: updateDataRaw.lastname.trim().charAt(0).toUpperCase() + updateDataRaw.lastname.trim().slice(1).toLowerCase(),
-        middlename: updateDataRaw.middlename.trim() ? updateDataRaw.middlename.trim().charAt(0).toUpperCase() + updateDataRaw.middlename.trim().slice(1).toLowerCase() : ''
+        firstname: formatCapitalization(updateDataRaw.firstname.trim()),
+        lastname: formatCapitalization(updateDataRaw.lastname.trim()),
+        middlename: updateDataRaw.middlename.trim() ? formatCapitalization(updateDataRaw.middlename.trim()) : ''
       };
       
       const response = await axios.put(`http://localhost:3001/employees/${editTeacherData.employee_id}`, updateData);
