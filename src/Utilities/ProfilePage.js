@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FiEye, FiEyeOff } from 'react-icons/fi';
+import { FiEye, FiEyeOff, FiEdit2 } from 'react-icons/fi';
 import '../CssFiles/profile.css';
 import axios from 'axios'; // For API calls
 import { useNavigate } from 'react-router-dom'; // For navigation
@@ -14,16 +14,20 @@ const ProfilePage = () => {
     email: '',
     username: '',
     password: '',
+    contact_number: '',
   });
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [originalPassword, setOriginalPassword] = useState('');
   const [isEditing, setIsEditing] = useState(false);
+  const [isEditingContact, setIsEditingContact] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(true);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [error, setError] = useState(null);
+  const [contactNumberError, setContactNumberError] = useState('');
+  const [originalContactNumber, setOriginalContactNumber] = useState('');
 
   useEffect(() => {
     // Fetch user information from API
@@ -92,6 +96,9 @@ const ProfilePage = () => {
             // Keep the default profile picture
           }
         }
+        
+        // Save original contact number
+        setOriginalContactNumber(userData.contact_number || '');
         
         setLoading(false);
       } catch (err) {
@@ -178,6 +185,10 @@ const ProfilePage = () => {
     setIsEditing(true);
   };
 
+  const handleEditContactClick = () => {
+    setIsEditingContact(true);
+  };
+
   const handleCancelClick = () => {
     // Reset password to original value
     setUserInfo(prev => ({
@@ -189,6 +200,16 @@ const ProfilePage = () => {
     setIsEditing(false);
     setShowPassword(false);
     setShowConfirmPassword(false);
+  };
+
+  const handleCancelContactClick = () => {
+    // Reset contact number to original value
+    setUserInfo(prev => ({
+      ...prev,
+      contact_number: originalContactNumber
+    }));
+    setContactNumberError('');
+    setIsEditingContact(false);
   };
 
   const handleSaveClick = async () => {
@@ -230,6 +251,42 @@ const ProfilePage = () => {
       setConfirmPassword('');
     } catch (error) {
       console.error('Error saving user info:', error.response?.data || error.message);
+    }
+  };
+
+  const handleSaveContactClick = async () => {
+    // Validate contact number (must start with 09 and have exactly 11 digits)
+    if (!userInfo.contact_number) {
+      setContactNumberError('Contact number is required');
+      return;
+    }
+    
+    const contactRegex = /^09\d{9}$/;
+    if (!contactRegex.test(userInfo.contact_number)) {
+      setContactNumberError('Contact number must start with 09 and have exactly 11 digits');
+      return;
+    }
+
+    const userId = localStorage.getItem('userId');
+
+    if (!userId) {
+      console.error('User ID not found. Please log in again.');
+      return;
+    }
+
+    const payload = {
+      contact_number: userInfo.contact_number
+    };
+
+    try {
+      const response = await axios.put(`http://localhost:3001/api/update-contact/${userId}`, payload);
+      console.log('Contact info saved successfully:', response.data);
+      setOriginalContactNumber(userInfo.contact_number);
+      setIsEditingContact(false);
+      setContactNumberError('');
+    } catch (error) {
+      console.error('Error saving contact info:', error.response?.data || error.message);
+      setContactNumberError('Failed to update contact number. Please try again.');
     }
   };
 
@@ -317,7 +374,52 @@ const ProfilePage = () => {
               </div>
               <div className="user-profile-form-group">
                 <label>Contact No.</label>
-                <div className="user-profile-info-value">{userInfo.contact_number || '-'}</div>
+                {isEditingContact ? (
+                  <div className="user-profile-edit-field">
+                    <input
+                      type="text"
+                      className="user-profile-form-control"
+                      value={userInfo.contact_number || ''}
+                      onChange={(e) => {
+                        setUserInfo({...userInfo, contact_number: e.target.value});
+                        setContactNumberError('');
+                      }}
+                      placeholder="09XXXXXXXXX (11 digits)"
+                      maxLength={11}
+                    />
+                    {contactNumberError && (
+                      <div className="user-profile-error-message">
+                        {contactNumberError}
+                      </div>
+                    )}
+                    <div className="user-profile-small-edit-buttons">
+                      <button
+                        type="button"
+                        className="user-profile-save-btn"
+                        onClick={handleSaveContactClick}
+                      >
+                        Save
+                      </button>
+                      <button
+                        type="button"
+                        className="user-profile-cancel-btn"
+                        onClick={handleCancelContactClick}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="user-profile-info-value-with-edit">
+                    <span>{userInfo.contact_number || '-'}</span>
+                    <button 
+                      className="user-profile-edit-icon-btn"
+                      onClick={handleEditContactClick}
+                    >
+                      <FiEdit2 />
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -325,8 +427,8 @@ const ProfilePage = () => {
               <div className="user-profile-form-group">
                 <label>Password</label>
                 {isEditing ? (
-                  <>
-                    <div className="user-profile-password-field" style={{ position: 'relative', marginBottom: '10px' }}>
+                  <div className="user-profile-passwords-container">
+                    <div className="user-profile-password-field">
                       <input
                         type={showPassword ? 'text' : 'password'}
                         className="user-profile-form-control"
@@ -335,60 +437,43 @@ const ProfilePage = () => {
                           setUserInfo({...userInfo, password: e.target.value});
                           setPasswordError('');
                         }}
-                        style={{ paddingRight: '40px' }}
                       />
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        style={{
-                          position: 'absolute',
-                          right: '10px',
-                          top: '50%',
-                          transform: 'translateY(-50%)',
-                          background: 'none',
-                          border: 'none',
-                          cursor: 'pointer'
-                        }}
+                        className="user-profile-password-toggle"
                       >
                         {showPassword ? <FiEyeOff /> : <FiEye />}
                       </button>
                     </div>
-                    <label style={{ fontSize: '0.9em' }}>Confirm Password</label>
-                    <div className="user-profile-password-field" style={{ position: 'relative' }}>
+                    
+                    <div className="user-profile-password-field">
                       <input
                         type={showConfirmPassword ? 'text' : 'password'}
                         className="user-profile-form-control"
                         value={confirmPassword}
+                        placeholder="Confirm Password"
                         onChange={(e) => {
                           setConfirmPassword(e.target.value);
                           setPasswordError('');
                         }}
-                        style={{ paddingRight: '40px' }}
                       />
                       <button
                         type="button"
                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        style={{
-                          position: 'absolute',
-                          right: '10px',
-                          top: '50%',
-                          transform: 'translateY(-50%)',
-                          background: 'none',
-                          border: 'none',
-                          cursor: 'pointer'
-                        }}
+                        className="user-profile-password-toggle"
                       >
                         {showConfirmPassword ? <FiEyeOff /> : <FiEye />}
                       </button>
                     </div>
-                    {passwordError && (
-                      <div className="user-profile-error-message" style={{ color: 'red', fontSize: '0.8em', marginTop: '5px' }}>
-                        {passwordError}
-                      </div>
-                    )}
-                  </>
+                  </div>
                 ) : (
                   <div className="user-profile-info-value">••••••••</div>
+                )}
+                {passwordError && (
+                  <div className="user-profile-error-message">
+                    {passwordError}
+                  </div>
                 )}
               </div>
             </div>
