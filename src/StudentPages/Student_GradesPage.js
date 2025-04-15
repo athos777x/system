@@ -180,8 +180,9 @@ function Student_GradesPage() {
     if (isIncomplete) return 'grade-indicator incomplete';
     
     const numGrade = parseFloat(grade);
-    if (numGrade >= 90) return 'grade-indicator high';
+    if (numGrade >= 80) return 'grade-indicator high';
     if (numGrade >= 75) return 'grade-indicator medium';
+    if (numGrade >= 70) return 'grade-indicator low';
     return 'grade-indicator low';
   };
 
