@@ -447,8 +447,8 @@ const approveElective = async (studentElectiveId) => {
         );
         setAvailableSections(filteredSections);
         
-        // Set to empty string for auto-assign as default
-        setSelectedSection('');
+        // Set to empty string for auto-assign as default only if sections are available
+        setSelectedSection(filteredSections.length > 0 ? '' : null);
       } catch (error) {
         console.error('Error fetching sections:', error);
       }
@@ -457,6 +457,12 @@ const approveElective = async (studentElectiveId) => {
     const handleEnroll = () => {
       if (!requirementsChecked) {
         alert('Please check the requirements box before enrolling.');
+        return;
+      }
+
+      // Prevent enrollment if no sections are available
+      if (availableSections.length === 0) {
+        alert('Cannot enroll student. No sections are available for this grade level.');
         return;
       }
 
@@ -496,23 +502,33 @@ const approveElective = async (studentElectiveId) => {
                   <th>Section:</th>
                   <td>
                     <select 
-                      value={selectedSection}
+                      value={selectedSection === null ? '' : selectedSection}
                       onChange={(e) => setSelectedSection(e.target.value)}
                       className="section-selector"
                     >
-                      <option value="">Auto-assign section</option>
-                      {availableSections.map((section) => (
-                        <option 
-                          key={section.section_id} 
-                          value={section.section_id}
-                        >
-                          {section.section_name} (Grade {section.grade_level})
-                        </option>
-                      ))}
+                      {availableSections.length > 0 ? (
+                        <>
+                          <option value="">Auto-assign section</option>
+                          {availableSections.map((section) => (
+                            <option 
+                              key={section.section_id} 
+                              value={section.section_id}
+                            >
+                              {section.section_name} (Grade {section.grade_level})
+                            </option>
+                          ))}
+                        </>
+                      ) : (
+                        <option value="" disabled>No sections available</option>
+                      )}
                     </select>
-                    {availableSections.length != 0 && (
+                    {availableSections.length > 0 ? (
                       <div className="section-info-message">
                         Section will be automatically assigned based on grade level and gender distribution
+                      </div>
+                    ) : (
+                      <div className="section-info-message" style={{ color: 'red' }}>
+                        No sections available for this grade level. Please create sections before enrolling.
                       </div>
                     )}
                   </td>
