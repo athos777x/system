@@ -562,7 +562,7 @@ app.put('/students/:id/enroll', (req, res) => {
     console.log('Student found:', student);
 
     // Step 2: Insert into the `users` table with generated username and default password
-    const username = `${student.lastname}.${student.firstname}@lnhs.com`.toLowerCase(); // Generate username
+    const username = `${student.lastname}.${student.firstname.replace(/ /g, '_')}@lnhs.com`.toLowerCase(); // Generate username
     const password = '1234'; // Default password
     const role_id = 2; // Role ID for students
     const role_name = 'student'; // Role name
@@ -1717,7 +1717,7 @@ app.post('/employees', (req, res) => {
       }
 
       const employeeId = employeeResult.insertId;
-      const username = `${lastname.toLowerCase()}.${firstname.toLowerCase()}@lnhs.com`;
+      const username = `${lastname.toLowerCase()}.${firstname.toLowerCase().replace(/ /g, '_')}@lnhs.com`;
       const defaultPassword = '1234'; // Default password
       const encryptedPassword = `SHA1('${defaultPassword}')`; // SHA1 encryption (consider bcrypt for security)
 
