@@ -124,7 +124,7 @@ function BrigadaEskwela() {
   };
 
   const handleToggleAttendance = (student) => {
-    if (student.brigada_attendance === 'Present') {
+    if (student.brigada_attendance === 'Attended') {
       // If student is present, show modal for marking absent
       setSelectedStudent(student);
       setShowModal(true);
@@ -167,7 +167,7 @@ function BrigadaEskwela() {
         if (student.student_id === studentId) {
           return {
             ...student,
-            brigada_attendance: status ? 'Present' : 'No',
+            brigada_attendance: status ? 'Attended' : 'No',
           };
         }
         return student;
@@ -262,14 +262,14 @@ function BrigadaEskwela() {
                   <td>{student.stud_name}</td>
                   <td>
                     <span
-                      className={student.brigada_attendance === 'Present' ? 'status-yes' : 'status-no'}
+                      className={student.brigada_attendance === 'Attended' ? 'status-yes' : 'status-no'}
                     >
-                      {student.brigada_attendance === 'Present' ? 'Yes' : 'No'}
+                      {student.brigada_attendance === 'Attended' ? 'Yes' : 'No'}
                     </span>
                   </td>
                   <td>{student.remarks || '-'}</td>
                   <td>
-                    {student.brigada_attendance !== 'Present' && (
+                    {student.brigada_attendance !== 'Attended' && (
                       <div className="button-group">
                         <button
                           className="toggle-attendance-btn"
@@ -277,6 +277,7 @@ function BrigadaEskwela() {
                         >
                           Mark as Present
                         </button>
+                        {!student.remarks && (
                         <button
                           className="add-remarks-btn"
                           onClick={() => {
@@ -287,6 +288,7 @@ function BrigadaEskwela() {
                         >
                           Add Remarks
                         </button>
+                      )}
                       </div>
                     )}
                   </td>

@@ -440,7 +440,7 @@ const approveElective = async (studentElectiveId) => {
     const fetchAvailableSections = async () => {
       try {
         // Fetch sections for the student's grade level
-        const response = await axios.get('http://localhost:3001/sections');
+        const response = await axios.get('http://localhost:3001/sections/active');
         // Filter sections to only include those matching the student's grade level
         const filteredSections = response.data.filter(
           section => section.grade_level === student.grade_level

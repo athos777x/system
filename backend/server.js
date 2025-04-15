@@ -200,7 +200,7 @@ app.get('/students', (req, res) => {
       s.mother_name, s.father_name, s.parent_address, s.father_occupation, 
       s.mother_occupation, FORMAT(s.annual_hshld_income,2) AS annual_hshld_income, s.number_of_siblings, 
       s.father_educ_lvl, s.mother_educ_lvl, s.father_contact_number, 
-      s.mother_contact_number, IF(s.brigada_eskwela=1,'Attended','Not Attended') AS brigada_eskwela,
+      s.mother_contact_number, bd.brigada_status AS brigada_eskwela, s.brigada_id,
       s.emergency_number, s.emergency_contactperson,
       (SELECT ss.enrollment_status FROM enrollment ss
       JOIN school_year sy ON ss.school_year_id = sy.school_year_id
@@ -211,6 +211,7 @@ app.get('/students', (req, res) => {
       LEFT JOIN section z ON s.section_id=z.section_id
       LEFT JOIN student_school_year ss ON s.student_id = ss.student_id
       LEFT JOIN school_year sy ON ss.school_year_id = sy.school_year_id
+      LEFT JOIN brigada_details bd ON s.brigada_id=bd.brigada_id
       WHERE s.active_status = 'unarchive'
     `;
 
@@ -263,6 +264,111 @@ app.get('/students', (req, res) => {
   }
 });
 
+app.get('/students/active', (req, res) => {
+  const { searchID, searchTerm, grade, section, school_year } = req.query;
+
+  console.log('Received filters:', { searchID, searchTerm, grade, section, school_year });
+
+  // Query to fetch the active school year (ONLY IF school_year is not provided AND searchID is also not provided)
+  let latestSchoolYear = school_year; // Default to user-provided school_year
+  if (!school_year && !searchID) { // Only fetch active year if no school_year is selected AND no searchID
+    const getActiveSchoolYearQuery = `SELECT school_year FROM school_year WHERE status = 'active' LIMIT 1`;
+
+    db.query(getActiveSchoolYearQuery, (err, results) => {
+      if (err) {
+        console.error('Error fetching active school year:', err);
+        res.status(500).json({ error: 'Failed to fetch active school year' });
+        return;
+      }
+
+      latestSchoolYear = results[0]?.school_year;
+      if (!latestSchoolYear) {
+        console.error('No active school year found');
+        res.status(404).json({ error: 'No active school year found' });
+        return;
+      }
+      console.log('Using active school year:', latestSchoolYear);
+      fetchStudents();
+    });
+  } else {
+    fetchStudents();
+  }
+
+  function fetchStudents() {
+    let query = `
+      SELECT s.student_id, s.user_id, s.lrn, s.section_id,
+      CONCAT(s.lastname, ', ', s.firstname, ' ', 
+      IF(s.middlename IS NOT NULL AND s.middlename != '', CONCAT(LEFT(s.middlename, 1), '.'), '')) AS stud_name,
+      s.lastname, s.firstname, s.middlename, 
+      s.current_yr_lvl, DATE_FORMAT(s.birthdate, '%M %e, %Y') AS birthdate, s.gender, s.age, 
+      s.home_address, s.barangay, s.city_municipality, s.province, 
+      s.contact_number, s.email_address, z.section_name, sy.school_year, sy.school_year_id,
+      s.mother_name, s.father_name, s.parent_address, s.father_occupation, 
+      s.mother_occupation, FORMAT(s.annual_hshld_income,2) AS annual_hshld_income, s.number_of_siblings, 
+      s.father_educ_lvl, s.mother_educ_lvl, s.father_contact_number, 
+      s.mother_contact_number, bd.brigada_status AS brigada_eskwela, s.brigada_id,
+      s.emergency_number, s.emergency_contactperson,
+      (SELECT ss.enrollment_status FROM enrollment ss
+      JOIN school_year sy ON ss.school_year_id = sy.school_year_id
+      WHERE ss.student_id = s.student_id AND sy.status = 'active' LIMIT 1) as active_status,
+      se.enrollment_status, se.student_elective_id
+      FROM student s
+      LEFT JOIN student_elective se ON s.student_id = se.student_id
+      LEFT JOIN section z ON s.section_id=z.section_id
+      LEFT JOIN student_school_year ss ON s.student_id = ss.student_id
+      LEFT JOIN school_year sy ON ss.school_year_id = sy.school_year_id
+      LEFT JOIN brigada_details bd ON s.brigada_id=bd.brigada_id
+      WHERE s.active_status = 'unarchive' and ss.status='active'
+    `;
+
+    const queryParams = [];
+    const conditions = [];
+
+    // ✅ If searchID is used, it should work independently
+    if (searchID) {
+      conditions.push(`s.student_id = ?`);
+      queryParams.push(searchID);
+    } else {
+      // ✅ Apply filters only if searchID is NOT used
+      if (searchTerm) {
+        conditions.push(`(s.firstname LIKE ? OR s.lastname LIKE ? OR s.student_id LIKE ? )`);
+        queryParams.push(`%${searchTerm}%`, `%${searchTerm}%`, `%${searchTerm}%`);
+      }
+      if (grade) {
+        conditions.push(`s.current_yr_lvl = ?`);
+        queryParams.push(grade);
+      }
+      if (section) {
+        conditions.push(`z.section_name = ?`);
+        queryParams.push(section);
+      }
+      if (latestSchoolYear) {
+        conditions.push(`sy.school_year = ?`);
+        queryParams.push(latestSchoolYear);
+      }
+    }
+
+    if (conditions.length > 0) {
+      query += ' AND ' + conditions.join(' AND ');
+    }
+
+    // ✅ Move GROUP BY to the end before ORDER BY
+    query += ' GROUP BY s.student_id ORDER BY s.lastname ASC';
+
+    console.log('Final SQL Query:', query);
+    console.log('With parameters:', queryParams);
+
+    // ✅ Execute the main query
+    db.query(query, queryParams, (err, results) => {
+      if (err) {
+        console.error('Error fetching students:', err);
+        res.status(500).json({ error: 'Internal server error' });
+        return;
+      }
+      res.json(results);
+    });
+  }
+});
 
 app.get('/students/pending-enrollment', (req, res) => {
   const { searchTerm, grade, section, school_year } = req.query;
@@ -303,7 +409,7 @@ app.get('/students/pending-enrollment', (req, res) => {
       s.mother_name, s.father_name, s.parent_address, s.father_occupation, 
       s.mother_occupation, s.annual_hshld_income, s.number_of_siblings, 
       s.father_educ_lvl, s.mother_educ_lvl, s.father_contact_number, 
-      s.mother_contact_number, IF(s.brigada_eskwela=1,'Attended','Not Attended') AS brigada_eskwela,
+      s.mother_contact_number, bd.brigada_status AS brigada_eskwela,
       xx.enrollment_status as active_status,
       se.enrollment_status, se.student_elective_id, xx.school_year_id,
       (SELECT COUNT(en.student_id) FROM enrollment en WHERE en.student_id = s.student_id) 
@@ -311,6 +417,7 @@ app.get('/students/pending-enrollment', (req, res) => {
       FROM enrollment xx
       LEFT JOIN student s ON s.student_id=xx.student_id
       LEFT JOIN student_elective se ON s.student_id = se.student_id 
+      LEFT JOIN brigada_details bd ON s.brigada_id=bd.brigada_id
       WHERE s.active_status = 'unarchive' AND xx.enrollment_status='pending'
     `;
 
@@ -438,7 +545,7 @@ app.post('/students', (req, res) => {
     email_address, mother_name, father_name, parent_address, father_occupation,
     mother_occupation, annual_hshld_income, number_of_siblings, father_educ_lvl,
     mother_educ_lvl, father_contact_number, mother_contact_number, emergency_number,
-    emergency_contactperson, status, active_status, brigada_eskwela = '0', brigada_remarks, lrn
+    emergency_contactperson, STATUS, active_status, brigada_eskwela = '0', brigada_remarks, lrn
   } = req.body;
 
   const brigada_eskwela_value = brigada_eskwela || '0';
@@ -456,16 +563,15 @@ app.post('/students', (req, res) => {
       nextStudentId = result[0].student_id + 1;
     }
 
-    const query = `
+    const QUERY = `
       INSERT INTO student (
         student_id, lrn, lastname, firstname, middlename, current_yr_lvl,
         birthdate, gender, age, home_address, barangay, city_municipality,
         province, contact_number, email_address, mother_name, father_name,
         parent_address, father_occupation, mother_occupation, annual_hshld_income,
         number_of_siblings, father_educ_lvl, mother_educ_lvl, father_contact_number,
-        mother_contact_number, emergency_number, emergency_contactperson, status, active_status,
-        brigada_id
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        mother_contact_number, emergency_number, emergency_contactperson, status, active_status
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const studentData = [
@@ -497,39 +603,73 @@ app.post('/students', (req, res) => {
       mother_contact_number,
       emergency_number,
       emergency_contactperson || '',
-      status || 'active',
-      active_status || 'unarchive',
-      brigada_eskwela_value
+      STATUS || 'active',
+      active_status || 'unarchive'
     ];
 
-    db.query(query, studentData, (error, result) => {
+    db.query(QUERY, studentData, (error, result) => {
       if (error) {
         console.error('Failed to add student:', error);
         return res.status(500).json({ error: 'Failed to add student' });
       }
 
-      // Proceed with brigada_details insert if brigada_eskwela is '0'
-      if (brigada_eskwela === '0') {
-        const brigada_id = brigada_eskwela; // assume same as student_id
+        const getSchoolYearQuery = `SELECT school_year_id FROM school_year WHERE status = 'active' LIMIT 1`;
 
-        const insertBrigadaDetailsQuery = `
-          INSERT INTO brigada_details (student_id, brigada_id, remarks)
-          VALUES (?, ?, ?)
-        `;
-        db.query(insertBrigadaDetailsQuery, [nextStudentId, brigada_id, brigada_remarks || ''], (err3) => {
-          if (err3) {
-            console.error('Failed to insert brigada_remarks:', err3);
-            return res.status(500).json({ error: 'Failed to insert brigada remarks' });
+        db.query(getSchoolYearQuery, (err2, syResult) => {
+          if (err2) {
+            console.error('Failed to get school year ID:', err2);
+            return res.status(500).json({ error: 'Failed to get school year ID' });
           }
 
-          res.status(201).json({
-            message: 'Student and brigada details added successfully',
-            studentId: nextStudentId
+          if (syResult.length === 0) {
+            return res.status(404).json({ error: 'No active school year found' });
+          }
+
+          const schoolYearId = syResult[0].school_year_id;
+          const brigadaStatus = brigada_eskwela === 0 ? 'Not Attended' : 'Attended';
+
+
+          const insertBrigadaDetailsQuery = `
+            INSERT INTO brigada_details (student_id, remarks, school_year_id, brigada_status)
+            VALUES (?, ?, ?, ?)
+          `;
+
+          db.query(insertBrigadaDetailsQuery, [nextStudentId, brigada_remarks || '', schoolYearId, brigadaStatus], (err3) => {
+            if (err3) {
+              console.error('Failed to insert brigada details:', err3);
+              return res.status(500).json({ error: 'Failed to insert brigada details' });
+            }
+
+            const selectBrigadaIdQuery = `SELECT brigada_id FROM brigada_details WHERE student_id = ?`;
+
+            db.query(selectBrigadaIdQuery, [nextStudentId], (err4, brigadaResult) => {
+              if (err4) {
+                console.error('Failed to fetch brigada_id:', err4);
+                return res.status(500).json({ error: 'Failed to fetch brigada_id' });
+              }
+
+              if (brigadaResult.length === 0) {
+                return res.status(404).json({ error: 'Brigada ID not found' });
+              }
+
+              const brigadaId = brigadaResult[0].brigada_id;
+
+              const updateStudentQuery = `UPDATE student SET brigada_id = ? WHERE student_id = ?`;
+
+              db.query(updateStudentQuery, [brigadaId, nextStudentId], (err5) => {
+                if (err5) {
+                  console.error('Failed to update student with brigada_id:', err5);
+                  return res.status(500).json({ error: 'Failed to update student with brigada_id' });
+                }
+
+                return res.status(201).json({
+                  message: 'Student and brigada details added successfully',
+                  studentId: nextStudentId
+                });
+              });
+            });
           });
         });
-      } else {
-        res.status(201).json({ message: 'Student added successfully', studentId: nextStudentId });
-      }
     });
   });
 });
@@ -537,15 +677,16 @@ app.post('/students', (req, res) => {
 
 
 
+
+
 // ENDPOINT USED:
 // STUDENTS PAGE
 app.put('/students/:id/enroll', (req, res) => {
-  const studentId = req.params.id; // Get student_id from the URL
-  const { school_year, status } = req.body; // Get school_year and status from the request body
+  const studentId = req.params.id;
+  const { school_year, status } = req.body;
 
   console.log(`Enrolling student with ID: ${studentId}, School Year: ${school_year}, Status: ${status}`);
 
-  // Step 1: Check if the student exists in the student table
   const checkStudentQuery = 'SELECT * FROM student WHERE student_id = ?';
   db.query(checkStudentQuery, [studentId], (err, studentResult) => {
     if (err) {
@@ -561,11 +702,10 @@ app.put('/students/:id/enroll', (req, res) => {
     const student = studentResult[0];
     console.log('Student found:', student);
 
-    // Step 2: Insert into the `users` table with generated username and default password
-    const username = `${student.lastname}.${student.firstname.replace(/ /g, '_')}@lnhs.com`.toLowerCase(); // Generate username
-    const password = '1234'; // Default password
-    const role_id = 2; // Role ID for students
-    const role_name = 'student'; // Role name
+    const username = `${student.lastname}.${student.firstname.replace(/ /g, '_')}@lnhs.com`.toLowerCase();
+    const password = '1234';
+    const role_id = 2;
+    const role_name = 'student';
 
     const userInsertQuery = `
       INSERT INTO users (username, password, role_id, role_name)
@@ -575,18 +715,15 @@ app.put('/students/:id/enroll', (req, res) => {
 
     console.log('Inserting into users table:', userInsertValues);
 
-    // Insert into users table
     db.query(userInsertQuery, userInsertValues, (userInsertErr, userInsertResult) => {
       if (userInsertErr) {
         console.error('Error inserting user:', userInsertErr.sqlMessage || userInsertErr);
         return res.status(500).json({ error: 'Failed to insert user', details: userInsertErr.message });
       }
 
-      console.log('User inserted successfully with user_id:', userInsertResult.insertId);
-
       const newUserId = userInsertResult.insertId;
+      console.log('User inserted successfully with user_id:', newUserId);
 
-      // Step 3: Update the `student` table with the new `user_id`
       const updateStudentQuery = `
         UPDATE student
         SET user_id = ?, enroll_date = CURRENT_DATE()
@@ -594,17 +731,12 @@ app.put('/students/:id/enroll', (req, res) => {
       `;
       const updateStudentValues = [newUserId, studentId];
 
-      console.log('Updating student with user_id and setting enroll_date:', newUserId);
-
       db.query(updateStudentQuery, updateStudentValues, (updateStudentErr) => {
         if (updateStudentErr) {
           console.error('Error updating student:', updateStudentErr);
           return res.status(500).json({ error: 'Failed to update student with user_id', details: updateStudentErr.message });
         }
 
-        console.log(`Student with ID: ${studentId} updated successfully with user_id: ${newUserId}`);
-
-        // Step 4: Get the school_year_id based on the provided school_year
         const schoolYearQuery = 'SELECT school_year_id FROM school_year WHERE school_year = ?';
         db.query(schoolYearQuery, [school_year], (schoolYearErr, schoolYearResult) => {
           if (schoolYearErr) {
@@ -616,57 +748,64 @@ app.put('/students/:id/enroll', (req, res) => {
             console.error('No school year found:', school_year);
             return res.status(404).json({ error: `No school year found for: ${school_year}` });
           }
-          
+
           const schoolYearId = schoolYearResult[0].school_year_id;
 
-          // Step 5: Insert the enrollment record
-          const enrollmentInsertQuery = `
-            INSERT INTO enrollment (student_id, school_year_id, enrollee_type, enrollment_status, enrollment_date, grade_level, student_name, brigada_attendance)
-            VALUES (?, ?, 'Regular', 'inactive', NOW(), ?, ?, 1);
-          `;
-          const middleInitial = student.middlename ? student.middlename.charAt(0).toLowerCase() + '.' : '';
-          const studentName = `${student.firstname.toLowerCase()} ${middleInitial} ${student.lastname.toLowerCase()}`.trim();
-          const enrollmentInsertValues = [
-            student.student_id,
-            schoolYearId,
-            student.current_yr_lvl,
-            studentName
-          ];
-
-          console.log('Attempting to insert enrollment record with values:', enrollmentInsertValues);
-
-          db.query(enrollmentInsertQuery, enrollmentInsertValues, (enrollmentErr, enrollmentResult) => {
-            if (enrollmentErr) {
-              console.error('Error inserting student enrollment:', enrollmentErr);
-              return res.status(500).json({ error: 'Failed to enroll student', details: enrollmentErr.message });
+          const selectBrigadaIdQuery = 'SELECT brigada_id FROM brigada_details WHERE student_id = ?';
+          db.query(selectBrigadaIdQuery, [student.student_id], (brigadaErr, brigadaResult) => {
+            if (brigadaErr) {
+              console.error('Failed to fetch brigada_id:', brigadaErr);
+              return res.status(500).json({ error: 'Failed to fetch brigada_id' });
             }
 
-            console.log(`Student enrolled successfully with enrollment ID: ${enrollmentResult.insertId}`);
+            if (brigadaResult.length === 0) {
+              return res.status(404).json({ error: 'Brigada ID not found' });
+            }
 
-            // Step 6: Insert into the student_school_year table
-            const studentSchoolYearInsertQuery = `
-              INSERT INTO student_school_year (student_school_year_id, student_id, school_year_id, status, student_name, grade_level)
-              VALUES (NULL, ?, ?, 'inactive', ?, ?);
-            `;
+            const brigada_id = brigadaResult[0].brigada_id;
             const middleInitial = student.middlename ? student.middlename.charAt(0).toLowerCase() + '.' : '';
             const studentName = `${student.firstname.toLowerCase()} ${middleInitial} ${student.lastname.toLowerCase()}`.trim();
-            const studentSchoolYearValues = [
+
+            const enrollmentInsertQuery = `
+              INSERT INTO enrollment (student_id, school_year_id, enrollee_type, enrollment_status, enrollment_date, grade_level, student_name, brigada_id)
+              VALUES (?, ?, 'Regular', 'inactive', NOW(), ?, ?, ?)
+            `;
+            const enrollmentInsertValues = [
               student.student_id,
               schoolYearId,
+              student.current_yr_lvl,
               studentName,
-              student.current_yr_lvl
+              brigada_id
             ];
 
-            console.log('Attempting to insert record into student_school_year with values:', studentSchoolYearValues);
-
-            db.query(studentSchoolYearInsertQuery, studentSchoolYearValues, (studentSchoolYearErr, studentSchoolYearResult) => {
-              if (studentSchoolYearErr) {
-                console.error('Error inserting into student_school_year:', studentSchoolYearErr);
-                return res.status(500).json({ error: 'Failed to insert into student_school_year', details: studentSchoolYearErr.message });
+            db.query(enrollmentInsertQuery, enrollmentInsertValues, (enrollmentErr, enrollmentResult) => {
+              if (enrollmentErr) {
+                console.error('Error inserting student enrollment:', enrollmentErr);
+                return res.status(500).json({ error: 'Failed to enroll student', details: enrollmentErr.message });
               }
 
-              console.log(`Record inserted into student_school_year with ID: ${studentSchoolYearResult.insertId}`);
-              res.status(200).json({ message: 'Student enrolled, enrollment record, and student_school_year record created successfully' });
+              const studentSchoolYearInsertQuery = `
+                INSERT INTO student_school_year (student_school_year_id, student_id, school_year_id, status, student_name, grade_level)
+                VALUES (NULL, ?, ?, ?, ?, ?)
+              `;
+              const studentSchoolYearValues = [
+                student.student_id,
+                schoolYearId,
+                status || 'inactive',
+                studentName,
+                student.current_yr_lvl
+              ];
+
+              db.query(studentSchoolYearInsertQuery, studentSchoolYearValues, (studentSchoolYearErr, studentSchoolYearResult) => {
+                if (studentSchoolYearErr) {
+                  console.error('Error inserting into student_school_year:', studentSchoolYearErr);
+                  return res.status(500).json({ error: 'Failed to insert into student_school_year', details: studentSchoolYearErr.message });
+                }
+
+                res.status(200).json({
+                  message: 'Student enrolled successfully. Enrollment and student_school_year records created.'
+                });
+              });
             });
           });
         });
@@ -674,6 +813,7 @@ app.put('/students/:id/enroll', (req, res) => {
     });
   });
 });
+
 
 
 
@@ -1172,11 +1312,12 @@ app.get('/unregistered-students', (req, res) => {
     s.home_address, s.barangay, s.city_municipality, s.province, s.contact_number, s.email_address, 
     s.mother_name, s.father_name, s.parent_address, s.father_occupation, s.mother_occupation, 
     s.annual_hshld_income, s.number_of_siblings, s.father_educ_lvl, s.mother_educ_lvl, 
-    s.father_contact_number, s.mother_contact_number, IF(s.brigada_id=1,'Attended','Not Attended') AS brigada_eskwela
+    s.father_contact_number, s.mother_contact_number, bd.brigada_status AS brigada_eskwela,
     FROM student s 
     LEFT JOIN student_school_year ss ON s.student_id = ss.student_id 
     LEFT JOIN enrollment b ON s.student_id = b.student_id
     LEFT JOIN school_year sy ON ss.school_year_id = sy.school_year_id 
+    LEFT JOIN brigada_details bd ON s.brigada_id=bd.brigada_id
     WHERE b.enrollment_status IS NULL
   `;
 
@@ -2229,6 +2370,43 @@ app.get('/sections', (req, res) => {
     JOIN school_year sy ON s.school_year_id = sy.school_year_id
     LEFT JOIN schedule b on s.section_id=b.section_id and s.grade_level=b.grade_level
     WHERE sy.status = 'active' GROUP BY s.section_name, s.grade_level
+  `;
+  const queryParams = [];
+
+  if (searchTerm) {
+    query += ' AND s.section_name LIKE ?';
+    queryParams.push(`%${searchTerm}%`);
+  }
+
+  if (grade) {
+    query += ' AND s.grade_level = ?';
+    queryParams.push(grade);
+  }
+
+  if (showArchive) {
+    query += ' AND s.archive_status = ?';
+    queryParams.push(showArchive);
+  }
+
+  db.query(query, queryParams, (err, results) => {
+    if (err) {
+      console.error('Error fetching sections:', err);
+      res.status(500).json({ error: 'Internal server error' });
+      return;
+    }
+    res.json(results);
+  });
+});
+
+app.get('/sections/active', (req, res) => {
+  const { searchTerm, grade, showArchive } = req.query;
+  let query = `
+    SELECT s.section_id, s.section_name, s.grade_level, s.status, s.max_capacity, sy.school_year, s.archive_status, s.room_number,
+    MAX(CASE WHEN b.section_id IS NOT NULL THEN '1' ELSE '0' END) AS hasSched
+    FROM section s
+    JOIN school_year sy ON s.school_year_id = sy.school_year_id
+    LEFT JOIN schedule b on s.section_id=b.section_id and s.grade_level=b.grade_level
+    WHERE sy.status = 'active' and s.status='active' GROUP BY s.section_name, s.grade_level
   `;
   const queryParams = [];
 
@@ -3789,10 +3967,10 @@ app.get('/brigada-eskwela', (req, res) => {
       a.current_yr_lvl AS grade_lvl, 
       b.section_name as section_name, 
       b.section_id as section_id,
-      IF(a.brigada_id = 1, 'Present', 'Absent') AS brigada_attendance,
+      dd.brigada_status AS brigada_attendance,
       s.school_year, 
       a.lrn,
-      IF(a.brigada_eskwela=1,'Attended',dd.remarks) AS remarks
+      IF(dd.brigada_status='Attended','Attended',dd.remarks) AS remarks
     FROM student a 
     LEFT JOIN section b ON a.section_id = b.section_id 
     LEFT JOIN student_school_year c ON a.student_id=c.student_id
@@ -3847,11 +4025,10 @@ app.post('/brigada-eskwela/remarks', (req, res) => {
   }
 
   const query = `
-    INSERT INTO brigada_details (student_id, remarks)
-    VALUES (?, ?)
+    UPDATE brigada_details SET remarks = ? WHERE student_id = ?
   `;
 
-  const queryParams = [studentId, remarks];
+  const queryParams = [remarks, studentId];
 
   db.query(query, queryParams, (err, results) => {
     if (err) {
@@ -3874,12 +4051,12 @@ app.put('/brigada-eskwela/:studentId', (req, res) => {
 
   // Update the brigada_eskwela value in the student table
   const query = `
-    UPDATE student
-    SET brigada_eskwela = ?
+    UPDATE brigada_details
+    SET brigada_status = ?
     WHERE student_id = ?
   `;
 
-  const queryParams = [brigada_attendance ? 1 : 0, studentId]; // Set brigada_eskwela to 1 for "Present" or 0 for "No"
+  const queryParams = [brigada_attendance ? 'Attended' : 'Not Attended', studentId]; // Set brigada_eskwela to 1 for "Present" or 0 for "No"
 
   db.query(query, queryParams, (err, results) => {
     if (err) {
@@ -4409,7 +4586,7 @@ app.get('/students/pending-elective', (req, res) => {
       s.mother_name, s.father_name, s.parent_address, s.father_occupation, 
       s.mother_occupation, s.annual_hshld_income, s.number_of_siblings, 
       s.father_educ_lvl, s.mother_educ_lvl, s.father_contact_number, 
-      s.mother_contact_number, IF(s.brigada_eskwela=1,'Attended','Not Attended') AS brigada_eskwela,
+      s.mother_contact_number, bd.brigada_status AS brigada_eskwela,
       (SELECT ss.status FROM student_school_year ss
       JOIN school_year sy ON ss.school_year_id = sy.school_year_id
       WHERE ss.student_id = s.student_id AND sy.status = 'active') as active_status,
@@ -4424,6 +4601,7 @@ app.get('/students/pending-elective', (req, res) => {
       LEFT JOIN schedule f ON e.elective_id=f.subject_id AND f.elective=1
       LEFT JOIN employee ee ON f.teacher_id=ee.employee_id
       LEFT JOIN section sa ON s.section_id=sa.section_id
+      LEFT JOIN brigada_details bd ON s.brigada_id=bd.brigada_id
       WHERE se.enrollment_status='pending'
     `;
 
@@ -4613,7 +4791,7 @@ app.get('/students/by-adviser', (req, res) => {
         s.mother_name, s.father_name, s.parent_address, s.father_occupation, 
         s.mother_occupation, FORMAT(s.annual_hshld_income,2) AS annual_hshld_income, s.number_of_siblings, 
         s.father_educ_lvl, s.mother_educ_lvl, s.father_contact_number, 
-        s.mother_contact_number, IF(s.brigada_eskwela=1,'Attended','Not Attended') AS brigada_eskwela,
+        s.mother_contact_number, bd.brigada_status AS brigada_eskwela,
         s.emergency_number, s.emergency_contactperson,
           (SELECT ss.status FROM student_school_year ss
           JOIN school_year sy ON ss.school_year_id = sy.school_year_id
@@ -4625,6 +4803,7 @@ app.get('/students/by-adviser', (req, res) => {
         LEFT JOIN student_school_year ss ON s.student_id = ss.student_id
         LEFT JOIN school_year sy ON ss.school_year_id = sy.school_year_id
         LEFT JOIN section_assigned zz on z.section_id = zz.section_id
+        LEFT JOIN brigada_details bd ON s.brigada_id=bd.brigada_id
         WHERE s.active_status = 'unarchive' AND zz.employee_id = ?
       `;
 
@@ -5056,7 +5235,7 @@ app.get('/students/by-teacher', (req, res) => {
         s.mother_name, s.father_name, s.parent_address, s.father_occupation, 
         s.mother_occupation, FORMAT(s.annual_hshld_income,2) AS annual_hshld_income, s.number_of_siblings, 
         s.father_educ_lvl, s.mother_educ_lvl, s.father_contact_number, 
-        s.mother_contact_number, IF(s.brigada_eskwela=1,'Attended','Not Attended') AS brigada_eskwela,
+        s.mother_contact_number, bd.brigada_status AS brigada_eskwela,
         s.emergency_number, s.emergency_contactperson,
         (SELECT ss.status FROM student_school_year ss
         JOIN school_year sy ON ss.school_year_id = sy.school_year_id
@@ -5068,6 +5247,7 @@ app.get('/students/by-teacher', (req, res) => {
         LEFT JOIN student_school_year ss ON s.student_id = ss.student_id
         LEFT JOIN school_year sy ON ss.school_year_id = sy.school_year_id
         LEFT JOIN teacher_subject d ON z.grade_level=d.level AND z.section_id=d.section_id AND d.school_year_id=z.school_year_id
+        LEFT JOIN brigada_details bd ON s.brigada_id=bd.brigada_id
         WHERE s.active_status = 'unarchive' AND d.employee_id = ?
       `;
 
@@ -5174,7 +5354,7 @@ app.get('/students/apply-enrollment', (req, res) => {
       s.mother_name, s.father_name, s.parent_address, s.father_occupation, 
       s.mother_occupation, FORMAT(s.annual_hshld_income,2) AS annual_hshld_income, s.number_of_siblings, 
       s.father_educ_lvl, s.mother_educ_lvl, s.father_contact_number, 
-      s.mother_contact_number, IF(s.brigada_eskwela=1,'Attended','Not Attended') AS brigada_eskwela,
+      s.mother_contact_number, bd.brigada_status AS brigada_eskwela,
       s.emergency_number, s.emergency_contactperson,
       (SELECT ss.enrollment_status FROM enrollment ss
       JOIN school_year sy ON ss.school_year_id = sy.school_year_id
@@ -5185,6 +5365,7 @@ app.get('/students/apply-enrollment', (req, res) => {
       LEFT JOIN section z ON s.section_id=z.section_id
       LEFT JOIN student_school_year ss ON s.student_id = ss.student_id
       LEFT JOIN school_year sy ON ss.school_year_id = sy.school_year_id
+      LEFT JOIN brigada_details bd ON s.brigada_id=bd.brigada_id
       WHERE s.active_status = 'unarchive' ) a WHERE active_status = 'inactive'
     `;
 
@@ -5306,7 +5487,8 @@ app.put('/students/:studentId/enroll-student', (req, res) => {
 
     // Now, fetch the student_name using the student_id
     const getStudentNameQuery = `
-      SELECT CONCAT(firstname, ' ', LEFT(IFNULL(middlename, ''), 1), '.', ' ', lastname) AS student_name 
+      SELECT CONCAT(firstname, ' ', LEFT(IFNULL(middlename, ''), 1), '.', ' ', lastname) AS student_name,
+      brigada_id 
       FROM student 
       WHERE student_id = ?
     `;
@@ -5323,14 +5505,15 @@ app.put('/students/:studentId/enroll-student', (req, res) => {
       }
 
       const student_name = studentResults[0].student_name;
+      const brigada_id= studentResults[0].brigada_id;
 
       // First, insert into `enrollment`
       const insertEnrollmentQuery = `
-        INSERT INTO enrollment (student_id, school_year_id, enrollee_type, enrollment_status, enrollment_date, grade_level, student_name, brigada_attendance)
+        INSERT INTO enrollment (student_id, school_year_id, enrollee_type, enrollment_status, enrollment_date, grade_level, student_name, brigada_id)
         VALUES (?, ?, 'Regular', 'pending', NOW(), ?, ?, 1)
       `;
 
-      db.query(insertEnrollmentQuery, [studentId, schoolYearId, grade_level, student_name], (err) => {
+      db.query(insertEnrollmentQuery, [studentId, schoolYearId, grade_level, student_name, brigada_id], (err) => {
         if (err) {
           console.error('Error creating enrollment:', err);
           return res.status(500).json({ error: 'Database error during enrollment' });
@@ -5404,7 +5587,6 @@ app.put('/cron/level-up-students', (req, res) => {
       const updateStudentQuery = `
         UPDATE student 
         SET current_yr_lvl = ?, 
-            brigada_eskwela = 0, 
             section_id = ?, 
             status = ?
         WHERE student_id = ?
