@@ -76,7 +76,7 @@ function AttendanceManagement() {
   
       const endpoint = roleName === 'subject_teacher'
         ? 'http://localhost:3001/students/by-teacher'
-        : 'http://localhost:3001/students';
+        : 'http://localhost:3001/students/active';
   
       const response = await axios.get(endpoint, {
         params: filteredParams,
