@@ -363,7 +363,7 @@ const ProfilePage = () => {
               </div>
               <div className="user-profile-form-group">
                 <label>Email</label>
-                <div className="user-profile-info-value">{userInfo.username || '-'}</div>
+                <div className="user-profile-info-value">{userInfo.email_address || '-'}</div>
               </div>
             </div>
             

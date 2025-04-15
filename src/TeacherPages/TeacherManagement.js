@@ -27,7 +27,8 @@ function TeacherManagement() {
     year_started: '',
     role_name: '',
     role_id: '',
-    archive_status: 'unarchive'
+    archive_status: 'unarchive',
+    email_address: ''
   });
   const [roles, setRoles] = useState([]);
   const [isLoadingRoles, setIsLoadingRoles] = useState(true);
@@ -185,7 +186,8 @@ function TeacherManagement() {
       year_started: '',
       role_name: '',
       role_id: '',
-      archive_status: 'unarchive'
+      archive_status: 'unarchive',
+      email_address: ''
     });
     setShowModal(true);
   };
@@ -271,6 +273,10 @@ function TeacherManagement() {
       alert('Please enter address');
       return false;
     }
+    if (!newTeacherData.email_address) {
+      alert('Please enter email');
+      return false;
+    }
 
     // Calculate age
     const today = new Date();
@@ -334,7 +340,8 @@ function TeacherManagement() {
       year_started: '',
       role_name: '',
       role_id: '',
-      archive_status: 'unarchive'
+      archive_status: 'unarchive',
+      email_address:''
     });
     setShowModal(false);
   };
@@ -1109,6 +1116,16 @@ useEffect(() => {
                   pattern="[0-9]{4}"
                   title={`Please enter a year between 1962 and ${new Date().getFullYear()}`}
                   maxLength="4"
+                  required
+                />
+              </div>
+              <div className="teacher-mgmt-form-group">
+                <label>Email Address: <span style={{ color: 'red' }}>*</span></label>
+                <input
+                  type="email"
+                  name="email_address"
+                  value={newTeacherData.email_address}
+                  onChange={handleAddChange}
                   required
                 />
               </div>
