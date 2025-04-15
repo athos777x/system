@@ -123,10 +123,6 @@ function Student_ProfilePage() {
               <strong>Last Name</strong>
               <span>{studentData.lastname}</span>
             </p>
-            <p data-type="email">
-              <strong>Email Address</strong>
-              <span>{studentData.email_address}</span>
-            </p>
           </div>
         </div>
 
