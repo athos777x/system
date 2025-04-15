@@ -464,7 +464,7 @@ app.post('/students', (req, res) => {
         parent_address, father_occupation, mother_occupation, annual_hshld_income,
         number_of_siblings, father_educ_lvl, mother_educ_lvl, father_contact_number,
         mother_contact_number, emergency_number, emergency_contactperson, status, active_status,
-        brigada_eskwela
+        brigada_id
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
@@ -1172,7 +1172,7 @@ app.get('/unregistered-students', (req, res) => {
     s.home_address, s.barangay, s.city_municipality, s.province, s.contact_number, s.email_address, 
     s.mother_name, s.father_name, s.parent_address, s.father_occupation, s.mother_occupation, 
     s.annual_hshld_income, s.number_of_siblings, s.father_educ_lvl, s.mother_educ_lvl, 
-    s.father_contact_number, s.mother_contact_number, IF(s.brigada_eskwela=1,'Attended','Not Attended') AS brigada_eskwela
+    s.father_contact_number, s.mother_contact_number, IF(s.brigada_id=1,'Attended','Not Attended') AS brigada_eskwela
     FROM student s 
     LEFT JOIN student_school_year ss ON s.student_id = ss.student_id 
     LEFT JOIN enrollment b ON s.student_id = b.student_id
@@ -3789,7 +3789,7 @@ app.get('/brigada-eskwela', (req, res) => {
       a.current_yr_lvl AS grade_lvl, 
       b.section_name as section_name, 
       b.section_id as section_id,
-      IF(a.brigada_eskwela = 1, 'Present', 'Absent') AS brigada_attendance,
+      IF(a.brigada_id = 1, 'Present', 'Absent') AS brigada_attendance,
       s.school_year, 
       a.lrn,
       IF(a.brigada_eskwela=1,'Attended',dd.remarks) AS remarks
