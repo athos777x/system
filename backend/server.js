@@ -502,7 +502,7 @@ app.put('/students/:id', (req, res) => {
     WHERE student_id = ?
   `;
 
-  const values = [
+  const VALUES = [
     updatedData.firstname, updatedData.lastname, updatedData.middlename,
     updatedData.current_yr_lvl, updatedData.birthdate, updatedData.gender,
     updatedData.age, updatedData.home_address, updatedData.barangay, updatedData.city_municipality,
@@ -517,19 +517,48 @@ app.put('/students/:id', (req, res) => {
     studentId
   ];
 
-  db.query(updateQuery, values, (err, result) => {
+  // Update student information first
+  db.query(updateQuery, VALUES, (err, result) => {
     if (err) {
       console.error('Error updating student:', err);
-      res.status(500).json({ error: 'Failed to update student' });
-      return;
+      return res.status(500).json({ error: 'Failed to update student' });
     }
 
     if (result.affectedRows === 0) {
-      res.status(404).json({ error: 'Student not found' });
-      return;
+      return res.status(404).json({ error: 'Student not found' });
     }
 
-    res.json({ message: 'Student updated successfully' });
+    // Get active school year
+    const getSchoolYearQuery = `SELECT school_year_id FROM school_year WHERE status = 'active' LIMIT 1`;
+
+    db.query(getSchoolYearQuery, (err, schoolYearResult) => {
+      if (err) {
+        console.error('Error getting active school year:', err);
+        return res.status(500).json({ error: 'Failed to retrieve school year' });
+      }
+
+      if (schoolYearResult.length === 0) {
+        return res.status(400).json({ error: 'No active school year found' });
+      }
+
+      const school_year_id = schoolYearResult[0].school_year_id;
+
+      // Update the section_id in the enrollment table
+      const updateEnrollmentQuery = `
+        UPDATE enrollment 
+        SET section_id = ? 
+        WHERE student_id = ? AND school_year_id = ?
+      `;
+
+      db.query(updateEnrollmentQuery, [updatedData.section_id, studentId, school_year_id], (err, enrollResult) => {
+        if (err) {
+          console.error('Error updating enrollment section:', err);
+          return res.status(500).json({ error: 'Failed to update section in enrollment' });
+        }
+
+        res.json({ message: 'Student and enrollment section updated successfully' });
+      });
+    });
   });
 });
 
@@ -1120,8 +1149,8 @@ SELECT DISTINCT
         ELSE ''
       END AS schedule
     FROM SUBJECT a 
-    INNER JOIN student b ON a.grade_level = b.current_yr_lvl 
     LEFT JOIN SCHEDULE d ON a.subject_id = d.subject_id AND d.elective = 0 
+    INNER JOIN student b ON a.grade_level = b.current_yr_lvl AND b.section_id=d.section_id
     LEFT JOIN employee c ON d.teacher_id = c.employee_id 
 
     WHERE b.user_id = ?
@@ -1140,10 +1169,11 @@ SELECT
       END AS schedule
       
     FROM elective e 
-    INNER JOIN student_elective se ON se.elective_id = e.elective_id 
-    LEFT JOIN SCHEDULE ss ON e.elective_id = ss.subject_id AND ss.elective = 1
+    LEFT JOIN SCHEDULE ss ON e.elective_id = ss.subject_id AND ss.elective = 1 
+    INNER JOIN student st ON ss.grade_level= st.current_yr_lvl AND ss.section_id=st.section_id
+    LEFT JOIN student_elective se ON se.elective_id = e.elective_id
     LEFT JOIN employee emp ON ss.teacher_id = emp.employee_id
-    WHERE se.user_id = ?
+    WHERE st.user_id = ?
     AND se.enrollment_status = 'approved'
     ORDER BY subject_name;
 
@@ -1264,41 +1294,59 @@ app.post('/apply-enrollment', (req, res) => {
 // ENDPOINT USED:
 // STUDENT ENROLLMENT PAGE
 app.post('/enroll-elective', (req, res) => {
-  const { userId, studentId, electiveId, grade_level } = req.body;
+  const { userId, studentId, electiveId, grade_level, section_id } = req.body;
 
   // Validate required fields
   if (!studentId || !electiveId || !grade_level) {
     return res.status(400).json({ error: 'Missing required fields.' });
   }
 
-  // Check if the student is already enrolled in the elective
-  const checkEnrollmentQuery = `SELECT * FROM student_elective WHERE student_id = ? AND elective_id = ?`;
+  const getActiveSchoolYearQuery = `SELECT school_year_id FROM school_year WHERE status = 'active' LIMIT 1`;
 
-  db.query(checkEnrollmentQuery, [studentId, electiveId], (err, existing) => {
+  db.query(getActiveSchoolYearQuery, (err, schoolYearResult) => {
     if (err) {
-      console.error('Error checking existing enrollment:', err);
-      return res.status(500).json({ error: 'Database error' });
+      console.error('Error fetching active school year:', err);
+      return res.status(500).json({ error: 'Failed to fetch active school year', details: err.message });
     }
 
-    if (existing.length > 0) {
-      return res.status(400).json({ error: 'Student is already enrolled in this elective.' });
+    if (schoolYearResult.length === 0) {
+      return res.status(400).json({ error: 'No active school year found' });
     }
 
-    // Insert the elective enrollment
-    const enrollQuery = `
-      INSERT INTO student_elective (user_id, student_id, elective_id, enrollment_status, grade_level)
-      VALUES (?, ?, ?, 'pending', ?);
-    `;
+    const school_year_id = schoolYearResult[0].school_year_id;
 
-    db.query(enrollQuery, [userId, studentId, electiveId, grade_level], (err, result) => {
+    // Check if the student is already enrolled in the elective
+    const checkEnrollmentQuery = `SELECT * FROM student_elective WHERE student_id = ? AND elective_id = ?`;
+
+    db.query(checkEnrollmentQuery, [studentId, electiveId], (err, existing) => {
       if (err) {
-        console.error('Error enrolling in elective:', err);
+        console.error('Error checking existing enrollment:', err);
         return res.status(500).json({ error: 'Database error' });
       }
-      res.status(200).json({ message: 'Elective enrollment request submitted successfully.' });
+
+      if (existing.length > 0) {
+        return res.status(400).json({ error: 'Student is already enrolled in this elective.' });
+      }
+
+      // Insert the elective enrollment
+      const enrollQuery = `
+        INSERT INTO student_elective 
+        (user_id, student_id, elective_id, enrollment_status, grade_level, school_year_id, section_id)
+        VALUES (?, ?, ?, 'pending', ?, ?, ?);
+      `;
+
+      db.query(enrollQuery, [userId, studentId, electiveId, grade_level, school_year_id, section_id], (err, result) => {
+        if (err) {
+          console.error('Error enrolling in elective:', err);
+          return res.status(500).json({ error: 'Database error' });
+        }
+
+        res.status(200).json({ message: 'Elective enrollment request submitted successfully.' });
+      });
     });
   });
 });
+
 
 
 
@@ -1444,53 +1492,75 @@ app.get(`/api/student/details`, (req, res) => {
 });
 
 app.get('/api/subjects-card', (req, res) => {
-  const { studentId, gradeLevel, schoolYearId } = req.query; // Extract schoolYearId
+  const { studentId, gradeLevel, schoolYearId } = req.query;
 
-  // Validate that all required parameters are provided
   if (!studentId || !gradeLevel || !schoolYearId) {
     return res.status(400).json({ error: 'Student ID, Grade Level, and School Year ID are required' });
   }
 
-  const query = `
-    SELECT DISTINCT 
-      s.subject_name,
-      s.grade_level
-    FROM SUBJECT s
-    LEFT JOIN enrollment st ON s.grade_level=st.grade_level
-    WHERE st.student_id = ?
-      AND s.status = 'active'
-      AND s.grade_level = ?
-      AND s.school_year_id = ? 
+  // First get section_id for the student
+  const getSectionQuery = `SELECT section_id FROM student WHERE student_id = ?`;
 
-    UNION 
-
-    SELECT 
-      e.name AS subject_name,
-      se.grade_level
-    FROM elective e 
-    LEFT JOIN student_elective se ON se.elective_id = e.elective_id 
-    WHERE se.student_id = ?
-      AND se.enrollment_status = 'approved'
-      AND se.grade_level = ?
-      AND e.school_year_id = ? 
-
-    ORDER BY subject_name;
-  `;
-
-  // Execute the query with correctly ordered parameters
-  db.query(query, [studentId, gradeLevel, schoolYearId, studentId, gradeLevel, schoolYearId], (err, results) => {
+  db.query(getSectionQuery, [studentId], (err, sectionResult) => {
     if (err) {
-      console.error('Error querying the database:', err);
-      return res.status(500).json({ error: 'Database query error' });
+      console.error('Error fetching section_id:', err);
+      return res.status(500).json({ error: 'Failed to get student section_id' });
     }
 
-    res.json(results);
+    if (sectionResult.length === 0) {
+      return res.status(404).json({ error: 'Student not found or no section assigned' });
+    }
+
+    const sectionId = sectionResult[0].section_id;
+
+    const QUERY = `
+      SELECT DISTINCT 
+        s.subject_name,
+        s.grade_level
+      FROM subject s
+      LEFT JOIN enrollment st ON s.grade_level = st.grade_level
+      WHERE st.student_id = ?
+        AND s.status = 'active'
+        AND s.grade_level = ?
+        AND s.school_year_id = ? 
+        AND st.section_id = ?
+
+      UNION 
+
+      SELECT 
+        e.name AS subject_name,
+        se.grade_level
+      FROM elective e 
+      LEFT JOIN student_elective se ON se.elective_id = e.elective_id 
+      LEFT JOIN enrollment zz ON se.section_id = zz.section_id
+      WHERE se.student_id = ?
+        AND se.enrollment_status = 'approved'
+        AND se.grade_level = ?
+        AND e.school_year_id = ? 
+        AND zz.section_id = ?
+
+      ORDER BY subject_name;
+    `;
+
+    db.query(
+      QUERY,
+      [studentId, gradeLevel, schoolYearId, sectionId, studentId, gradeLevel, schoolYearId, sectionId],
+      (err, results) => {
+        if (err) {
+          console.error('Error querying the database:', err);
+          return res.status(500).json({ error: 'Database query error' });
+        }
+
+        res.json(results);
+      }
+    );
   });
 });
 
+
 // Backend: Fetch grades for all subjects and periods for a student
 app.get('/api/grades', (req, res) => {
-  const { studentId, gradeLevel, schoolYearId } = req.query; // Extract schoolYearId
+  const { studentId, gradeLevel, schoolYearId, section_id } = req.query; // Extract schoolYearId
 
   const query = `
     SELECT subject_name, 
@@ -1499,11 +1569,11 @@ app.get('/api/grades', (req, res) => {
       MAX(CASE WHEN period = 3 THEN grade ELSE NULL END) AS q3,
       MAX(CASE WHEN period = 4 THEN grade ELSE NULL END) AS q4
     FROM grades
-    WHERE student_id = ? AND grade_level = ? AND school_year_id = ?
+    WHERE student_id = ? AND grade_level = ? AND school_year_id = ? AND section_id = ?
     GROUP BY subject_name;
   `;
 
-  db.query(query, [studentId, gradeLevel, schoolYearId], (err, results) => {
+  db.query(query, [studentId, gradeLevel, schoolYearId, section_id], (err, results) => {
     if (err) {
       console.error('Error fetching grades:', err);
       return res.status(500).json({ success: false, message: 'Failed to fetch grades.' });
@@ -1802,7 +1872,8 @@ app.post('/employees', (req, res) => {
     contact_number,
     address,
     year_started,
-    role_name
+    role_name,
+    email_address
   } = req.body;
 
   // First, get the role_id based on the role_name
@@ -1834,8 +1905,9 @@ app.post('/employees', (req, res) => {
         role_id,
         role_name,
         status,
-        archive_status
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', 'unarchive')
+        archive_status,
+        email_address
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', 'unarchive',?)
     `;
 
     const employeeValues = [
@@ -1848,7 +1920,8 @@ app.post('/employees', (req, res) => {
       address,
       year_started,
       role_id,
-      role_name
+      role_name,
+      email_address
     ];
 
     db.query(employeeQuery, employeeValues, (employeeError, employeeResult) => {
@@ -3239,11 +3312,12 @@ app.get('/user/:userId/schedule', (req, res) => {
   }
 
   const query = `
-    SELECT s.subject_name, sc.day, 
+    SELECT IF(sc.elective=1,el.name,s.subject_name) AS subject_name, sc.day, 
     TIME_FORMAT(sc.time_start, '%H:%i:%s') as time_start, 
     TIME_FORMAT(sc.time_end, '%h:%i %p') as time_end
     FROM schedule sc
-    JOIN subject s ON sc.subject_id = s.subject_id
+    LEFT JOIN subject s ON sc.subject_id = s.subject_id AND sc.elective = 0
+    LEFT JOIN elective el ON sc.subject_id = el.elective_id AND sc.elective = 1
     JOIN section sec ON sc.section_id = sec.section_id
     JOIN enrollment e ON e.section_id = sec.section_id
     JOIN student st ON st.student_id = e.student_id
@@ -3869,7 +3943,8 @@ app.get('/api/user-info/:userId', (req, res) => {
     COALESCE(s.firstname, e.firstname) AS firstname, 
     COALESCE(s.lastname, e.lastname) AS lastname, 
     COALESCE(s.middlename, e.middlename) AS middle_name,
-    e.contact_number
+    IF(u.role_id=2,s.contact_number,e.contact_number) AS contact_number,
+    IF(u.role_id=2,s.email_address,e.email_address) AS email_address
     FROM users u
     LEFT JOIN student s ON u.user_id = s.user_id
     LEFT JOIN employee e ON u.user_id = e.user_id
@@ -4400,7 +4475,7 @@ app.post('/api/schedules', (req, res) => {
 
 
 app.post("/api/save-grade", (req, res) => {
-  const { student_id, student_name, grade_level, school_year_id, subjects } = req.body;
+  const { student_id, student_name, grade_level, school_year_id, subjects, section_id } = req.body;
 
   if (!student_id || !subjects || subjects.length === 0) {
     return res.status(400).json({ success: false, message: "Invalid request data." });
@@ -4415,7 +4490,8 @@ app.post("/api/save-grade", (req, res) => {
       period,
       student_id,
       student_name,
-      school_year_id
+      school_year_id,
+      section_id
     ) 
     VALUES ?
     ON DUPLICATE KEY UPDATE 
@@ -4423,17 +4499,18 @@ app.post("/api/save-grade", (req, res) => {
       grade_level = VALUES(grade_level),
       subject_name = VALUES(subject_name),
       student_name = VALUES(student_name),
-      school_year_id = VALUES(school_year_id)
+      school_year_id = VALUES(school_year_id),
+      section_id = VALUES(section_id)
   `;
 
   // Prepare the values array
   let values = [];
 
   subjects.forEach(subject => {
-    if (subject.q1 !== null) values.push([grade_level, subject.subject_name, subject.q1, 1, student_id, student_name, school_year_id]);
-    if (subject.q2 !== null) values.push([grade_level, subject.subject_name, subject.q2, 2, student_id, student_name, school_year_id]);
-    if (subject.q3 !== null) values.push([grade_level, subject.subject_name, subject.q3, 3, student_id, student_name, school_year_id]);
-    if (subject.q4 !== null) values.push([grade_level, subject.subject_name, subject.q4, 4, student_id, student_name, school_year_id]);
+    if (subject.q1 !== null) values.push([grade_level, subject.subject_name, subject.q1, 1, student_id, student_name, school_year_id,section_id]);
+    if (subject.q2 !== null) values.push([grade_level, subject.subject_name, subject.q2, 2, student_id, student_name, school_year_id,section_id]);
+    if (subject.q3 !== null) values.push([grade_level, subject.subject_name, subject.q3, 3, student_id, student_name, school_year_id,section_id]);
+    if (subject.q4 !== null) values.push([grade_level, subject.subject_name, subject.q4, 4, student_id, student_name, school_year_id,section_id]);
   });
 
   if (values.length === 0) {
@@ -4546,6 +4623,44 @@ app.get('/api/profile-picture/:userId', (req, res) => {
     res.status(200).json({ imageUrl: profilePictureUrl });
   });
 });
+
+app.put('/api/update-contact/:userId', (req, res) => {
+  const { userId } = req.params;
+  const { contact_number } = req.body;
+
+  if (!contact_number) {
+    return res.status(400).json({ error: 'Contact number is required' });
+  }
+
+  // First, get the role_id of the user
+  const getUserRoleQuery = `SELECT role_id FROM users WHERE user_id = ?`;
+
+  db.query(getUserRoleQuery, [userId], (err, result) => {
+    if (err) {
+      console.error('Error fetching role:', err);
+      return res.status(500).json({ error: 'Failed to fetch user role' });
+    }
+
+    if (result.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const roleId = result[0].role_id;
+    const table = roleId === 2 ? 'student' : 'employee';
+
+    const updateQuery = `UPDATE ${table} SET contact_number = ? WHERE user_id = ?`;
+
+    db.query(updateQuery, [contact_number, userId], (err2, result2) => {
+      if (err2) {
+        console.error(`Error updating contact number in ${table}:`, err2);
+        return res.status(500).json({ error: 'Failed to update contact number' });
+      }
+
+      return res.status(200).json({ message: 'Contact number updated successfully' });
+    });
+  });
+});
+
 
 app.get('/students/pending-elective', (req, res) => {
   const { searchTerm, grade, section, school_year } = req.query;

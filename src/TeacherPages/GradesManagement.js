@@ -177,6 +177,7 @@ function GradesManagement() {
     
     const gradeLevel = student.current_yr_lvl;
     const schoolYearId = student.school_year_id; // Ensure schoolYearId is retrieved
+    const section_id = student.section_id
 
     setSelectedGradeLevel(gradeLevel);
     setSelectedSchoolYear(schoolYearId); // Set the selected school year
@@ -187,13 +188,13 @@ function GradesManagement() {
     }
 
     // Fetch subjects and grades with the correct school year
-    const fetchedSubjects = await fetchSubjects(student.student_id, gradeLevel, schoolYearId);
-    await fetchGrades(student.student_id, gradeLevel, fetchedSubjects, schoolYearId);
+    const fetchedSubjects = await fetchSubjects(student.student_id, gradeLevel, schoolYearId,section_id);
+    await fetchGrades(student.student_id, gradeLevel, fetchedSubjects, schoolYearId,section_id);
     await fetchSchoolYearsGrades(student.student_id); // Pass studentId here
 };
 
 
-  const fetchSubjects = async (studentId, gradeLevel, schoolYearId) => {
+  const fetchSubjects = async (studentId, gradeLevel, schoolYearId, section_id) => {
     if (!studentId || !gradeLevel || !schoolYearId) return [];
 
     try {
@@ -201,7 +202,8 @@ function GradesManagement() {
         params: { 
           studentId, 
           gradeLevel,
-          schoolYearId  
+          schoolYearId,
+          section_id
         },
       });
       const subjectsData = response.data || [];
@@ -295,7 +297,8 @@ function GradesManagement() {
         student_name: `${selectedStudent.firstname} ${selectedStudent.lastname}`,
         grade_level: selectedStudent.current_yr_lvl,
         school_year_id: selectedStudent.school_year_id,
-        subjects: formattedSubjects
+        subjects: formattedSubjects,
+        section_id: selectedStudent.section_id
       });
 
       if (response.data.success) {
@@ -330,6 +333,7 @@ function GradesManagement() {
     
     const gradeLevel = student.current_yr_lvl;
     const schoolYearId = student.school_year_id; // Ensure schoolYearId is retrieved
+    const section_id = student.section_id;
 
     setSelectedGradeLevel(gradeLevel);
     setSelectedSchoolYear(schoolYearId); // Set the selected school year
@@ -340,22 +344,23 @@ function GradesManagement() {
     }
 
     // Fetch subjects and grades with the correct school year
-    const fetchedSubjects = await fetchSubjects(student.student_id, gradeLevel, schoolYearId);
-    await fetchGrades(student.student_id, gradeLevel, fetchedSubjects, schoolYearId);
+    const fetchedSubjects = await fetchSubjects(student.student_id, gradeLevel, schoolYearId, section_id);
+    await fetchGrades(student.student_id, gradeLevel, fetchedSubjects, schoolYearId, section_id);
   };
 
 
-  const fetchGrades = async (studentId, gradeLevel, existingSubjects, schoolYearId ) => {
+  const fetchGrades = async (studentId, gradeLevel, existingSubjects, schoolYearId, section_id) => {
     if (!studentId || !gradeLevel || !schoolYearId ) return;
 
     try {
-      console.log('Fetching grades for:', { studentId, gradeLevel, schoolYearId  });
+      console.log('Fetching grades for:', { studentId, gradeLevel, schoolYearId, section_id  });
 
       const response = await axios.get('http://localhost:3001/api/grades', {
         params: { 
           studentId, 
           gradeLevel,
-          schoolYearId 
+          schoolYearId,
+          section_id
         },
       });
 

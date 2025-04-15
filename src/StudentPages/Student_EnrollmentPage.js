@@ -78,7 +78,8 @@ function Student_EnrollmentPage() {
         studentId: studentData.student_id,
         electiveId: electiveChoice,
         grade_level: studentData.current_yr_lvl,
-        userId
+        userId,
+        section_id: studentData.section_id
       });
 
       // Update electiveStatus state to reflect the pending status immediately
