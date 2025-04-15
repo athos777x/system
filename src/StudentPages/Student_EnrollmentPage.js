@@ -81,6 +81,9 @@ function Student_EnrollmentPage() {
         userId
       });
 
+      // Update electiveStatus state to reflect the pending status immediately
+      setElectiveStatus('pending');
+      
       alert(data.message);
       handleCloseModal();
     } catch (error) {

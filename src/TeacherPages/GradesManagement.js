@@ -469,6 +469,106 @@ function GradesManagement() {
     await fetchGrades(student.student_id, student.current_yr_lvl, fetchedSubjects, newSchoolYearId);
   };
 
+  const calculateQuarterAverage = (quarter) => {
+    if (!subjects || subjects.length === 0) return "___";
+    
+    let total = 0;
+    let count = 0;
+    
+    subjects.forEach(subject => {
+      if (subject[quarter] && subject[quarter] !== "___") {
+        const grade = parseFloat(subject[quarter]);
+        if (!isNaN(grade)) {
+          total += grade;
+          count++;
+        }
+      }
+    });
+    
+    if (count === 0) return "___";
+    return (total / count).toFixed(0);
+  };
+
+  const calculateFinalAverage = () => {
+    if (!subjects || subjects.length === 0) return "___";
+    
+    // Method 1: Use the calculated final grade from each subject
+    let totalFinal = 0;
+    let countFinal = 0;
+    
+    subjects.forEach(subject => {
+      if (subject.final && subject.final !== "___") {
+        const grade = parseFloat(subject.final);
+        if (!isNaN(grade)) {
+          totalFinal += grade;
+          countFinal++;
+        }
+      }
+    });
+    
+    // If we have final grades, use those
+    if (countFinal > 0) {
+      return (totalFinal / countFinal).toFixed(0);
+    }
+    
+    // Method 2: Calculate based on quarter averages
+    const q1Avg = calculateQuarterAverage("q1");
+    const q2Avg = calculateQuarterAverage("q2");
+    const q3Avg = calculateQuarterAverage("q3");
+    const q4Avg = calculateQuarterAverage("q4");
+    
+    const quarterAverages = [q1Avg, q2Avg, q3Avg, q4Avg].filter(avg => avg !== "___");
+    
+    if (quarterAverages.length > 0) {
+      const total = quarterAverages.reduce((sum, avg) => sum + parseFloat(avg), 0);
+      return (total / quarterAverages.length).toFixed(0);
+    }
+    
+    return "___";
+  };
+
+  const getFinalRemarksClass = () => {
+    const finalAverage = calculateFinalAverage();
+    if (finalAverage === "___") return "";
+    
+    // Check if all quarters have valid averages
+    const hasAllQuarters = 
+      calculateQuarterAverage("q1") !== "___" && 
+      calculateQuarterAverage("q2") !== "___" && 
+      calculateQuarterAverage("q3") !== "___" && 
+      calculateQuarterAverage("q4") !== "___";
+    
+    const average = parseFloat(finalAverage);
+    
+    // If not all quarters have grades and current average is below passing
+    if (!hasAllQuarters && average < 75) {
+      return "incomplete";
+    }
+    
+    return average >= 75 ? "passed" : "failed";
+  };
+
+  const getFinalRemarks = () => {
+    const finalAverage = calculateFinalAverage();
+    if (finalAverage === "___") return "___";
+    
+    // Check if all quarters have valid averages
+    const hasAllQuarters = 
+      calculateQuarterAverage("q1") !== "___" && 
+      calculateQuarterAverage("q2") !== "___" && 
+      calculateQuarterAverage("q3") !== "___" && 
+      calculateQuarterAverage("q4") !== "___";
+    
+    const average = parseFloat(finalAverage);
+    
+    // If not all quarters have grades and current average is below passing
+    if (!hasAllQuarters && average < 75) {
+      return "Incomplete";
+    }
+    
+    return average >= 75 ? "Passed" : "Failed";
+  };
+
   return (
     <div className="grades-management-container">
       <div className="grades-management-header">
@@ -658,6 +758,29 @@ function GradesManagement() {
                             ) : (
                               <tr>
                                 <td colSpan="7" style={{ textAlign: "center" }}>No academic records available.</td>
+                              </tr>
+                            )}
+                            {subjects?.length > 0 && (
+                              <tr>
+                                <td><strong>General Average</strong></td>
+                                <td>
+                                  {calculateQuarterAverage("q1")}
+                                </td>
+                                <td>
+                                  {calculateQuarterAverage("q2")}
+                                </td>
+                                <td>
+                                  {calculateQuarterAverage("q3")}
+                                </td>
+                                <td>
+                                  {calculateQuarterAverage("q4")}
+                                </td>
+                                <td>
+                                  {calculateFinalAverage()}
+                                </td>
+                                <td className={getFinalRemarksClass()}>
+                                  {getFinalRemarks()}
+                                </td>
                               </tr>
                             )}
                           </tbody>
