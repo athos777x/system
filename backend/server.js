@@ -1084,23 +1084,39 @@ app.post('/approve-elective', (req, res) => {
 // STUDENT ENROLLMENT PAGE
 app.get('/elective-status/:user_id', (req, res) => {
   const userId = req.params.user_id;
-  const query = `
-    SELECT enrollment_status 
-    FROM student_elective 
-    WHERE user_id = ? 
-    LIMIT 1;  -- Assuming you only want to check if there's one active elective
-  `;
 
-  db.query(query, [userId], (err, results) => {
+  // First, get the student's section_id based on user_id
+  const getSectionQuery = `SELECT section_id FROM student WHERE user_id = ?`;
+
+  db.query(getSectionQuery, [userId], (err, sectionResult) => {
     if (err) {
-      console.error('Error fetching elective status:', err);
+      console.error('Error fetching section_id:', err);
       return res.status(500).json({ error: 'Database error' });
     }
-    if (results.length > 0) {
-      res.json({ status: results[0].enrollment_status });
-    } else {
-      res.json({ status: '' }); // No active elective
+
+    if (sectionResult.length === 0) {
+      return res.json({ status: '' }); // No student found
     }
+
+    const sectionId = sectionResult[0].section_id;
+
+    // Now, check if the student has any elective for that section
+    const checkElectiveQuery = `
+      SELECT COUNT(*) AS hasElective, enrollment_status
+      FROM student_elective 
+      WHERE user_id = ? 
+        AND section_id = ?
+    `;
+
+    db.query(checkElectiveQuery, [userId, sectionId], (err, electiveResult) => {
+      if (err) {
+        console.error('Error checking elective status:', err);
+        return res.status(500).json({ error: 'Database error' });
+      }
+
+      const hasElective = electiveResult[0].hasElective > 0;
+      res.json({ status: hasElective ? 'existing' : '' });
+    });
   });
 });
 
@@ -1136,67 +1152,76 @@ app.get('/enrollment-status/:user_id', (req, res) => {
 // STUDENT ENROLLMENT PAGE
 app.get('/enrollment/:user_id', (req, res) => {
   const userId = req.params.user_id;
-  console.log(`Fetching enrollment data for user_id: ${userId}`);
 
-  const query = `
-SELECT DISTINCT 
-      a.subject_name, 
-      REPLACE(REPLACE(REPLACE(REPLACE(d.day, '[', ''), ']', ''), '"', ''), ',', ', ') AS day,
-      CONCAT(c.lastname, ', ', c.firstname, ' ', IFNULL(c.middlename, '')) AS teacher, 
-      CASE 
-        WHEN d.time_start IS NOT NULL AND d.time_end IS NOT NULL 
-        THEN CONCAT(d.time_start, ' - ', d.time_end)
-        ELSE ''
-      END AS schedule
-    FROM SUBJECT a 
-    LEFT JOIN SCHEDULE d ON a.subject_id = d.subject_id AND d.elective = 0 
-    INNER JOIN student b ON a.grade_level = b.current_yr_lvl AND b.section_id=d.section_id
-    LEFT JOIN employee c ON d.teacher_id = c.employee_id 
+  // Step 1: Get section_id from student
+  const getSectionQuery = 'SELECT section_id FROM student WHERE user_id = ? LIMIT 1';
 
-    WHERE b.user_id = ?
-    AND a.status = 'active'
-
-UNION 
-
-SELECT 
-      e.name AS subject_name, 
-      REPLACE(REPLACE(REPLACE(REPLACE(ss.day, '[', ''), ']', ''), '"', ''), ',', ', ') AS day,
-      CONCAT(emp.lastname, ', ', emp.firstname, ' ', IFNULL(emp.middlename, '')) AS teacher, 
-      CASE 
-        WHEN ss.time_start IS NOT NULL AND ss.time_end IS NOT NULL 
-        THEN CONCAT(ss.time_start, ' - ', ss.time_end)
-        ELSE ''
-      END AS schedule
-      
-    FROM elective e 
-    LEFT JOIN SCHEDULE ss ON e.elective_id = ss.subject_id AND ss.elective = 1 
-    INNER JOIN student st ON ss.grade_level= st.current_yr_lvl AND ss.section_id=st.section_id
-    LEFT JOIN student_elective se ON se.elective_id = e.elective_id
-    LEFT JOIN employee emp ON ss.teacher_id = emp.employee_id
-    WHERE st.user_id = ?
-    AND se.enrollment_status = 'approved'
-    ORDER BY subject_name;
-
-  `;
-
-  db.query(query, [userId, userId], (err, results) => {
+  db.query(getSectionQuery, [userId], (err, sectionResult) => {
     if (err) {
-      console.error('Error executing enrollment query:', {
-        error: err.message,
-        userId: userId,
-        sqlState: err.sqlState,
-        sqlMessage: err.sqlMessage
-      });
-      return res.status(500).json({ 
-        error: 'Failed to fetch enrollment data',
-        details: err.message 
-      });
+      console.error('Error fetching section_id:', err.message);
+      return res.status(500).json({ error: 'Failed to fetch section_id' });
     }
 
-    // Return empty array instead of 404 if no results
-    res.json(results || []);
+    if (sectionResult.length === 0) {
+      return res.status(404).json({ error: 'Student not found' });
+    }
+
+    const sectionId = sectionResult[0].section_id;
+
+    // Step 2: Use user_id and section_id in the subject query
+    const subjectQuery = `
+      SELECT DISTINCT 
+        a.subject_name, 
+        REPLACE(REPLACE(REPLACE(REPLACE(d.day, '[', ''), ']', ''), '"', ''), ',', ', ') AS day,
+        CONCAT(c.lastname, ', ', c.firstname, ' ', IFNULL(c.middlename, '')) AS teacher, 
+        CASE 
+          WHEN d.time_start IS NOT NULL AND d.time_end IS NOT NULL 
+          THEN CONCAT(d.time_start, ' - ', d.time_end)
+          ELSE ''
+        END AS schedule
+      FROM subject a 
+      LEFT JOIN schedule d ON a.subject_id = d.subject_id 
+      INNER JOIN student b ON b.section_id = d.section_id
+      LEFT JOIN employee c ON d.teacher_id = c.employee_id 
+      WHERE b.user_id = ? 
+        AND b.section_id = ?
+        AND a.status = 'active' 
+        AND a.elective = 'N'
+
+      UNION
+
+      SELECT DISTINCT 
+        b.subject_name,
+        REPLACE(REPLACE(REPLACE(REPLACE(d.day, '[', ''), ']', ''), '"', ''), ',', ', ') AS day,
+        CONCAT(e.lastname, ', ', e.firstname, ' ', IFNULL(e.middlename, '')) AS teacher, 
+        CASE 
+          WHEN d.time_start IS NOT NULL AND d.time_end IS NOT NULL 
+          THEN CONCAT(d.time_start, ' - ', d.time_end)
+          ELSE ''
+        END AS schedule
+      FROM student_elective a
+      LEFT JOIN subject b ON a.elective_id = b.subject_id
+      LEFT JOIN schedule d ON b.subject_id = d.subject_id
+      LEFT JOIN employee e ON d.teacher_id = e.employee_id
+      WHERE a.user_id = ?
+        AND a.section_id = ?
+        AND b.status = 'active'
+        AND a.enrollment_status = 'approved'
+
+      ORDER BY subject_name
+    `;
+
+    db.query(subjectQuery, [userId, sectionId, userId, sectionId], (err, results) => {
+      if (err) {
+        console.error('Error executing enrollment query:', err.message);
+        return res.status(500).json({ error: 'Failed to fetch enrollment data' });
+      }
+
+      res.json(results || []);
+    });
   });
 });
+
 
 // ENDPOINT USED:
 // STUDENT ENROLLMENT PAGE
@@ -1498,7 +1523,6 @@ app.get('/api/subjects-card', (req, res) => {
     return res.status(400).json({ error: 'Student ID, Grade Level, and School Year ID are required' });
   }
 
-  // First get section_id for the student
   const getSectionQuery = `SELECT section_id FROM student WHERE student_id = ?`;
 
   db.query(getSectionQuery, [studentId], (err, sectionResult) => {
@@ -1514,48 +1538,52 @@ app.get('/api/subjects-card', (req, res) => {
     const sectionId = sectionResult[0].section_id;
 
     const QUERY = `
-      SELECT DISTINCT 
+      SELECT 
         s.subject_name,
         s.grade_level
       FROM subject s
-      LEFT JOIN enrollment st ON s.grade_level = st.grade_level
-      WHERE st.student_id = ?
-        AND s.status = 'active'
+      JOIN enrollment st ON s.grade_level = st.grade_level 
+                        AND s.school_year_id = st.school_year_id
+                        AND st.student_id = ?
+                        AND st.section_id = ?
+      WHERE s.status = 'active'
+        AND s.elective = 'N'
         AND s.grade_level = ?
-        AND s.school_year_id = ? 
-        AND st.section_id = ?
+        AND s.school_year_id = ?
 
-      UNION 
+      UNION
 
       SELECT 
-        e.name AS subject_name,
-        se.grade_level
-      FROM elective e 
-      LEFT JOIN student_elective se ON se.elective_id = e.elective_id 
-      LEFT JOIN enrollment zz ON se.section_id = zz.section_id
-      WHERE se.student_id = ?
+        s.subject_name,
+        s.grade_level
+      FROM subject s
+      JOIN student_elective se ON s.subject_id = se.elective_id
+      JOIN enrollment st ON se.section_id = st.section_id
+      WHERE s.status = 'active'
+        AND s.elective = 'Y'
+        AND se.student_id = ?
         AND se.enrollment_status = 'approved'
-        AND se.grade_level = ?
-        AND e.school_year_id = ? 
-        AND zz.section_id = ?
-
+        AND s.school_year_id = ?
+        AND st.section_id = ?
       ORDER BY subject_name;
     `;
 
-    db.query(
-      QUERY,
-      [studentId, gradeLevel, schoolYearId, sectionId, studentId, gradeLevel, schoolYearId, sectionId],
-      (err, results) => {
-        if (err) {
-          console.error('Error querying the database:', err);
-          return res.status(500).json({ error: 'Database query error' });
-        }
+    const params = [
+      studentId, sectionId, gradeLevel, schoolYearId,  // For regular subjects
+      studentId, schoolYearId, sectionId               // For electives
+    ];
 
-        res.json(results);
+    db.query(QUERY, params, (err, results) => {
+      if (err) {
+        console.error('Error querying the database:', err);
+        return res.status(500).json({ error: 'Database query error' });
       }
-    );
+
+      res.json(results);
+    });
   });
 });
+
 
 
 // Backend: Fetch grades for all subjects and periods for a student
@@ -2762,7 +2790,7 @@ app.get('/sections/:sectionId/schedules', (req, res) => {
     SELECT 
     sc.schedule_id, 
     sc.teacher_id,
-    COALESCE(sb.subject_name, f.name) AS subject_name,
+    sb.subject_name AS subject_name,
     TIME_FORMAT(sc.time_start, '%h:%i %p') AS time_start, 
     TIME_FORMAT(sc.time_end, '%h:%i %p') AS time_end, 
     sc.day, 
@@ -2774,8 +2802,7 @@ app.get('/sections/:sectionId/schedules', (req, res) => {
         e.lastname
     ) AS teacher_name
 FROM SCHEDULE sc
-LEFT JOIN SUBJECT sb ON sc.subject_id = sb.subject_id AND sc.elective = 0
-LEFT JOIN elective f ON sc.subject_id = f.elective_id AND sc.elective = 1
+LEFT JOIN SUBJECT sb ON sc.subject_id = sb.subject_id 
 LEFT JOIN employee e ON sc.teacher_id = e.employee_id
 WHERE sc.section_id = ?
 ORDER BY sc.time_start;
@@ -2919,7 +2946,6 @@ app.get('/subjects', (req, res) => {
   }
 
   const mainQuery = `
-    SELECT * FROM (
       SELECT DISTINCT
           s.subject_id,
           s.grade_level,
@@ -2929,52 +2955,18 @@ app.get('/subjects', (req, res) => {
           s.description,
           s.archive_status,
           s.school_year_id,
+          s.elective,
           sy.school_year,
           sy.status AS sy_status,
-          0 AS elective_id,
-          'regular' as subject_type,
+          IF(s.elective='Y','elective','regular') AS subject_type,
           MAX(CASE WHEN sch.subject_id IS NOT NULL THEN '1' ELSE '0' END) AS hasSched
       FROM SUBJECT s
       LEFT JOIN school_year sy ON s.school_year_id = sy.school_year_id
-      LEFT JOIN (
-          SELECT DISTINCT subject_id 
-          FROM SCHEDULE 
-          WHERE elective = 0
-      ) sch ON s.subject_id = sch.subject_id
-      ${whereClause}
-      ${searchCondition}
-      ${gradeCondition}
-      ${schoolYearCondition}
+      LEFT JOIN SCHEDULE sch ON s.subject_id=sch.subject_id
+      WHERE s.archive_status = 'unarchive'
       GROUP BY s.subject_id
 
-      UNION
-
-      SELECT DISTINCT
-          e.elective_id AS subject_id,
-          NULL AS grade_level,
-          e.name AS subject_name,
-          e.status,
-          NULL AS grading_criteria,
-          NULL AS description,
-          e.archive_status,
-          NULL AS school_year_id,
-          NULL AS school_year,
-          e.status AS sy_status,
-          e.elective_id,
-          'elective' as subject_type,
-          MAX(CASE WHEN sch.subject_id IS NOT NULL THEN '1' ELSE '0' END) AS hasSched
-      FROM elective e
-      LEFT JOIN (
-          SELECT DISTINCT subject_id 
-          FROM SCHEDULE 
-          WHERE elective = 1
-      ) sch ON e.elective_id = sch.subject_id
-      WHERE 1=1
-      ${archive_status ? ' AND e.archive_status = ?' : ''}
-      ${searchTerm && searchTerm.trim() !== '' ? ' AND LOWER(e.name) LIKE LOWER(?)' : ''}
-      GROUP BY e.elective_id
-    ) combined
-    ORDER BY grade_level DESC, subject_name ASC
+      
   `;
 
   // Add parameters for electives section if needed
@@ -3054,8 +3046,8 @@ app.post('/subjects', (req, res) => {
     // 👉 Insert into ELECTIVE table
     if (isElective) {
       const insertElectiveQuery = `
-        INSERT INTO elective (name, max_capacity, school_year_id, description)
-        VALUES (?, ?, (SELECT school_year_id FROM school_year WHERE status = 'active'), ?)
+        INSERT INTO subject (subject_name, max_capacity, school_year_id, description, elective)
+        VALUES (?, ?, (SELECT school_year_id FROM school_year WHERE status = 'active'), ?, 'Y')
       `;
 
       const electiveParams = [
@@ -3178,7 +3170,7 @@ app.put('/subjects/:subjectId/archive', (req, res) => {
 
   if (elective_id > 0) {
     // If elective_id is greater than 0, update the elective table
-    const electiveQuery = 'UPDATE elective SET status = ?, archive_status = ? WHERE elective_id = ?';
+    const electiveQuery = 'UPDATE subject SET status = ?, archive_status = ? WHERE subject_id = ?';
     db.query(electiveQuery, [status, archive_status, elective_id], (err, results) => {
       if (err) {
         console.error(`Error ${action}ing elective:`, err);
@@ -3312,12 +3304,11 @@ app.get('/user/:userId/schedule', (req, res) => {
   }
 
   const query = `
-    SELECT IF(sc.elective=1,el.name,s.subject_name) AS subject_name, sc.day, 
+    SELECT s.subject_name AS subject_name, sc.day, 
     TIME_FORMAT(sc.time_start, '%H:%i:%s') as time_start, 
     TIME_FORMAT(sc.time_end, '%h:%i %p') as time_end
     FROM schedule sc
-    LEFT JOIN subject s ON sc.subject_id = s.subject_id AND sc.elective = 0
-    LEFT JOIN elective el ON sc.subject_id = el.elective_id AND sc.elective = 1
+    LEFT JOIN subject s ON sc.subject_id = s.subject_id 
     JOIN section sec ON sc.section_id = sec.section_id
     JOIN enrollment e ON e.section_id = sec.section_id
     JOIN student st ON st.student_id = e.student_id
@@ -3517,16 +3508,12 @@ app.get('/subjects-for-assignment/:gradeLevel', (req, res) => {
   const query = `
     SELECT 
       a.subject_name,
-      'subject' as type,
+      IF(a.elective='Y','elective','subject') as type,
       a.subject_id
     FROM subject a  
-    WHERE a.grade_level = ? 
-    UNION 
-    SELECT 
-      b.name as subject_name,
-      'elective' as type,
-      b.elective_id as id
-    FROM elective b 
+    WHERE 
+    (a.elective = 'N' AND a.grade_level = ?) 
+    OR a.elective = 'Y'
     ORDER BY subject_name ASC
   `;
 
@@ -4706,14 +4693,14 @@ app.get('/students/pending-elective', (req, res) => {
       JOIN school_year sy ON ss.school_year_id = sy.school_year_id
       WHERE ss.student_id = s.student_id AND sy.status = 'active') as active_status,
       se.enrollment_status, se.student_elective_id,
-      e.name as subject_name, e.description, CONCAT(f.time_start,' - ',f.time_end) AS time,
+      e.subject_name as subject_name, e.description, CONCAT(f.time_start,' - ',f.time_end) AS time,
       f.day, CONCAT(ee.firstname,' ',LEFT(IFNULL(ee.middlename,''),1),' ',ee.lastname) AS teacher,
       sa.section_name
       FROM student s
       LEFT JOIN student_elective se ON s.student_id = se.student_id 
       LEFT JOIN enrollment xx ON s.student_id=xx.student_id
-      LEFT JOIN elective e on se.elective_id=e.elective_id
-      LEFT JOIN schedule f ON e.elective_id=f.subject_id AND f.elective=1
+      LEFT JOIN subject e on se.elective_id=e.subject_id
+      LEFT JOIN schedule f ON e.subject_id=f.subject_id AND f.elective=1
       LEFT JOIN employee ee ON f.teacher_id=ee.employee_id
       LEFT JOIN section sa ON s.section_id=sa.section_id
       LEFT JOIN brigada_details bd ON s.brigada_id=bd.brigada_id
@@ -5758,9 +5745,9 @@ app.put('/cron/level-up-students', (req, res) => {
 
 app.get('/list-elective', (req, res) => {
   const query = `
-    SELECT elective_id, NAME AS elective_name 
-    FROM elective 
-    WHERE STATUS = 'active' 
+    SELECT subject_id as elective_id,  subject_name AS elective_name 
+    FROM subject 
+    WHERE STATUS = 'active' AND elective='Y' 
     AND school_year_id IN (
       SELECT school_year_id 
       FROM school_year 

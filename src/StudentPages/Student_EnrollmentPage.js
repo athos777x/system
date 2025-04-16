@@ -33,7 +33,11 @@ function Student_EnrollmentPage() {
 
           // Fetch elective status
           const electiveResponse = await axios.get(`http://localhost:3001/elective-status/${userId}`);
-          setElectiveStatus(electiveResponse.data?.status || '');
+          setElectiveStatus({
+            enrollment_status: electiveResponse.data?.status || '',
+            hasElective: electiveResponse.data?.hasElective || 0,
+          });
+          
         }
 
         const electivesResponse = await axios.get('http://localhost:3001/list-elective');  // Your new endpoint
@@ -159,24 +163,25 @@ function Student_EnrollmentPage() {
               </table>
             </div>
 
-            {electiveStatus === '' && (
-              <button 
-                type="button" 
-                className="student-enrollment-add-elective-button" 
-                onClick={handleAddElective}
-              >
-                Add Elective
-              </button>
-            )}
-            {electiveStatus === 'pending' && (
-              <button 
-                type="button" 
-                className="student-enrollment-add-elective-button student-enrollment-add-elective-button-pending" 
-                disabled
-              >
-                Pending Elective Request
-              </button>
-            )}
+            {electiveStatus.hasElective === 0 && electiveStatus.enrollment_status === '' && (
+            <button 
+              type="button" 
+              className="student-enrollment-add-elective-button" 
+              onClick={handleAddElective}
+            >
+              Add Elective
+            </button>
+          )}
+
+          {electiveStatus.enrollment_status === 'pending' && electiveStatus.hasElective === 1 && (
+            <button 
+              type="button" 
+              className="student-enrollment-add-elective-button student-enrollment-add-elective-button-pending" 
+              disabled
+            >
+              Pending Elective Request
+            </button>
+          )}
           </>
         )}
 
