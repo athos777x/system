@@ -1,122 +1,125 @@
 import React, { useState, useEffect } from 'react';
 import { jsPDF } from 'jspdf';
 import axios from 'axios';
+import { useLocation } from 'react-router-dom';
 import '../CssFiles/nutritional_report.css';
 
+// Calculate age from birthdate
+function calculateAge(birthdate) {
+  const birth = new Date(birthdate);
+  const now = new Date();
+  let age = now.getFullYear() - birth.getFullYear();
+  const monthDiff = now.getMonth() - birth.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && now.getDate() < birth.getDate())) {
+    age--;
+  }
+  return age;
+}
+
 function NutritionalReport() {
+  const location = useLocation();
+  const { schoolYear, grade, section } = location.state || {};
+
   const [schoolData, setSchoolData] = useState({
     schoolName: "Lourdes National High School",
     schoolId: "123456",
     district: "Dauis",
     division: "Bohol",
     region: "VII",
-    schoolYear: "2023-2024",
+    schoolYear: "",
     quarter: "1st",
-    grade: "9",
-    section: "Rizal",
-    adviser: "Maria Santos"
+    grade: grade || "",
+    section: section || "",
+    adviser: "",
+    dateGenerated: ""
   });
 
-  const [nutritionalData, setNutritionalData] = useState([
-    {
-      lrn: "123456789012",
-      name: "Dela Cruz, Juan A.",
-      sex: "M",
-      age: "15",
-      height: "170",
-      weight: "55",
-      bmi: "19.0",
-      bmiCategory: "Normal",
-      nutritionalStatus: "Normal",
-      remarks: "Maintain healthy diet"
-    },
-    {
-      lrn: "123456789013",
-      name: "Santos, Maria B.",
-      sex: "F",
-      age: "15",
-      height: "165",
-      weight: "45",
-      bmi: "16.5",
-      bmiCategory: "Underweight",
-      nutritionalStatus: "Underweight",
-      remarks: "Increase food intake"
-    },
-    {
-      lrn: "123456789014",
-      name: "Reyes, Pedro C.",
-      sex: "M",
-      age: "15",
-      height: "175",
-      weight: "70",
-      bmi: "22.9",
-      bmiCategory: "Normal",
-      nutritionalStatus: "Normal",
-      remarks: "Maintain healthy diet"
-    },
-    {
-      lrn: "123456789015",
-      name: "Garcia, Ana D.",
-      sex: "F",
-      age: "15",
-      height: "160",
-      weight: "65",
-      bmi: "25.4",
-      bmiCategory: "Overweight",
-      nutritionalStatus: "Overweight",
-      remarks: "Reduce calorie intake"
-    },
-    {
-      lrn: "123456789016",
-      name: "Torres, Jose E.",
-      sex: "M",
-      age: "15",
-      height: "172",
-      weight: "58",
-      bmi: "19.6",
-      bmiCategory: "Normal",
-      nutritionalStatus: "Normal",
-      remarks: "Maintain healthy diet"
-    }
-  ]);
-
+  const [nutritionalData, setNutritionalData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    // In a real application, you would fetch the data from your API
-    // fetchNutritionalData();
-  }, []);
+    const fetchData = async () => {
+      if (!schoolYear || !grade || !section) {
+        setError("Missing parameters for nutritional report.");
+        return;
+      }
 
-  const fetchNutritionalData = async () => {
-    setLoading(true);
-    try {
-      // This would be replaced with your actual API endpoint
-      // const response = await axios.get(`http://localhost:3001/api/nutritional-report`, {
-      //   params: {
-      //     schoolYear: schoolData.schoolYear,
-      //     quarter: schoolData.quarter,
-      //     grade: schoolData.grade,
-      //     section: schoolData.section
-      //   }
-      // });
-      // setNutritionalData(response.data);
-      setLoading(false);
-    } catch (error) {
-      console.error("Error fetching nutritional data:", error);
-      setError("Failed to fetch nutritional data");
-      setLoading(false);
-    }
-  };
+      setLoading(true);
+      try {
+        const response = await axios.get("http://localhost:3001/api/class_list", {
+          params: { school_year_id: schoolYear, grade_level: grade, section_id: section }
+        });
+
+        const { classInfo, students } = response.data;
+
+        if (!Array.isArray(students) || !classInfo) {
+          throw new Error("Invalid data format from server.");
+        }
+
+        const transformedData = students.map((student) => {
+          const height = Math.floor(Math.random() * 41) + 140;
+          const weight = Math.floor(Math.random() * 41) + 40;
+          const heightInMeters = height / 100;
+          const bmi = (weight / (heightInMeters ** 2)).toFixed(1);
+          const age = calculateAge(student.birthdate);
+
+          let category = "";
+          let remarks = "";
+
+          const bmiVal = parseFloat(bmi);
+          if (bmiVal < 18.5) {
+            category = "Underweight";
+            remarks = "Increase food intake";
+          } else if (bmiVal < 24.9) {
+            category = "Normal";
+            remarks = "Maintain healthy diet";
+          } else if (bmiVal < 29.9) {
+            category = "Overweight";
+            remarks = "Reduce calorie intake";
+          } else {
+            category = "Obese";
+            remarks = "Consult a health professional";
+          }
+
+          return {
+            lrn: student.lrn,
+            name: student.student_name,
+            sex: student.gender,
+            age,
+            height,
+            weight,
+            bmi,
+            bmiCategory: category,
+            nutritionalStatus: category,
+            remarks
+          };
+        });
+
+        setNutritionalData(transformedData);
+        setSchoolData((prev) => ({
+          ...prev,
+          schoolYear: classInfo.school_year,
+          adviser: classInfo.class_adviser,
+          dateGenerated: classInfo.date_generated || new Date().toLocaleDateString(),
+          grade_section: classInfo.grade_section
+        }));
+        setError(null);
+      } catch (err) {
+        console.error(err);
+        setError("Failed to fetch nutritional data.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [schoolYear, grade, section]);
 
   const handleConvertToPdf = () => {
-    const doc = new jsPDF({
-      orientation: "portrait",
-      unit: "mm",
-      format: "a4"
-    });
-
+    const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
     const content = document.querySelector(".nutritional-report-container");
+
     if (content) {
       doc.html(content, {
         callback: function (doc) {
@@ -132,18 +135,12 @@ function NutritionalReport() {
 
   const calculateSummary = () => {
     const total = nutritionalData.length;
-    const underweight = nutritionalData.filter(student => student.nutritionalStatus === "Underweight").length;
-    const normal = nutritionalData.filter(student => student.nutritionalStatus === "Normal").length;
-    const overweight = nutritionalData.filter(student => student.nutritionalStatus === "Overweight").length;
-    const obese = nutritionalData.filter(student => student.nutritionalStatus === "Obese").length;
+    const underweight = nutritionalData.filter(s => s.nutritionalStatus === "Underweight").length;
+    const normal = nutritionalData.filter(s => s.nutritionalStatus === "Normal").length;
+    const overweight = nutritionalData.filter(s => s.nutritionalStatus === "Overweight").length;
+    const obese = nutritionalData.filter(s => s.nutritionalStatus === "Obese").length;
 
-    return {
-      total,
-      underweight,
-      normal,
-      overweight,
-      obese
-    };
+    return { total, underweight, normal, overweight, obese };
   };
 
   const summary = calculateSummary();
@@ -168,84 +165,60 @@ function NutritionalReport() {
         </div>
 
         <div className="nutritional-report-school-info">
-          <div className="nutritional-report-info-item">
-            <span className="nutritional-report-info-label">School Year:</span>
-            <span>{schoolData.schoolYear}</span>
-          </div>
-          <div className="nutritional-report-info-item">
-            <span className="nutritional-report-info-label">Quarter:</span>
-            <span>{schoolData.quarter}</span>
-          </div>
-          <div className="nutritional-report-info-item">
-            <span className="nutritional-report-info-label">Grade & Section:</span>
-            <span>Grade {schoolData.grade} - {schoolData.section}</span>
-          </div>
-          <div className="nutritional-report-info-item">
-            <span className="nutritional-report-info-label">Class Adviser:</span>
-            <span>{schoolData.adviser}</span>
-          </div>
-          <div className="nutritional-report-info-item">
-            <span className="nutritional-report-info-label">Date Generated:</span>
-            <span>{new Date().toLocaleDateString()}</span>
-          </div>
+          <div><span>School Year:</span><span> {schoolData.schoolYear}</span></div>
+          <div><span>Quarter:</span><span> {schoolData.quarter}</span></div>
+          <div><span>Grade & Section:</span><span> {schoolData.grade_section}</span></div>
+          <div><span>Class Adviser:</span><span> {schoolData.adviser}</span></div>
+          <div><span>Date Generated:</span><span> {schoolData.dateGenerated}</span></div>
         </div>
 
         <div className="nutritional-report-table-container">
-          <table className="nutritional-report-table">
-            <thead>
-              <tr>
-                <th>LRN</th>
-                <th>Name</th>
-                <th>Sex</th>
-                <th>Age</th>
-                <th>Height (cm)</th>
-                <th>Weight (kg)</th>
-                <th>BMI</th>
-                <th>BMI Category</th>
-                <th>Nutritional Status</th>
-                <th>Remarks</th>
-              </tr>
-            </thead>
-            <tbody>
-              {nutritionalData.map((student) => (
-                <tr key={student.lrn}>
-                  <td>{student.lrn}</td>
-                  <td>{student.name}</td>
-                  <td>{student.sex}</td>
-                  <td>{student.age}</td>
-                  <td>{student.height}</td>
-                  <td>{student.weight}</td>
-                  <td>{student.bmi}</td>
-                  <td>{student.bmiCategory}</td>
-                  <td>{student.nutritionalStatus}</td>
-                  <td>{student.remarks}</td>
+          {loading ? (
+            <p>Loading data...</p>
+          ) : error ? (
+            <p>{error}</p>
+          ) : (
+            <table className="nutritional-report-table">
+              <thead>
+                <tr>
+                  <th>LRN</th>
+                  <th>Name</th>
+                  <th>Sex</th>
+                  <th>Age</th>
+                  <th>Height (cm)</th>
+                  <th>Weight (kg)</th>
+                  <th>BMI</th>
+                  <th>BMI Category</th>
+                  <th>Nutritional Status</th>
+                  <th>Remarks</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {nutritionalData.map((student, i) => (
+                  <tr key={i}>
+                    <td>{student.lrn}</td>
+                    <td>{student.name}</td>
+                    <td>{student.sex}</td>
+                    <td>{student.age}</td>
+                    <td>{student.height}</td>
+                    <td>{student.weight}</td>
+                    <td>{student.bmi}</td>
+                    <td>{student.bmiCategory}</td>
+                    <td>{student.nutritionalStatus}</td>
+                    <td>{student.remarks}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
 
         <div className="nutritional-report-summary">
-          <div className="nutritional-report-summary-item">
-            <span className="nutritional-report-summary-label">Total Students:</span>
-            <span>{summary.total}</span>
-          </div>
-          <div className="nutritional-report-summary-item">
-            <span className="nutritional-report-summary-label">Underweight:</span>
-            <span>{summary.underweight}</span>
-          </div>
-          <div className="nutritional-report-summary-item">
-            <span className="nutritional-report-summary-label">Normal:</span>
-            <span>{summary.normal}</span>
-          </div>
-          <div className="nutritional-report-summary-item">
-            <span className="nutritional-report-summary-label">Overweight:</span>
-            <span>{summary.overweight}</span>
-          </div>
-          <div className="nutritional-report-summary-item">
-            <span className="nutritional-report-summary-label">Obese:</span>
-            <span>{summary.obese}</span>
-          </div>
+          <div><span>Total Students:</span><span>{summary.total}</span></div>
+          <div><span>Underweight:</span><span>{summary.underweight}</span></div>
+          <div><span>Normal:</span><span>{summary.normal}</span></div>
+          <div><span>Overweight:</span><span>{summary.overweight}</span></div>
+          <div><span>Obese:</span><span>{summary.obese}</span></div>
         </div>
 
         <div className="nutritional-report-footer">
@@ -271,4 +244,4 @@ function NutritionalReport() {
   );
 }
 
-export default NutritionalReport; 
+export default NutritionalReport;
