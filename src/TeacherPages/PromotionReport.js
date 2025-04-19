@@ -27,7 +27,7 @@ function PromotionReport() {
           throw new Error("Failed to fetch school years");
         }
         const data = await response.json();
-        setSchoolYears(data.map(sy => sy.school_year)); // Store school years
+        setSchoolYears(data); // Not .map(sy => sy.school_year)
       } catch (error) {
         console.error("Error fetching school years:", error);
       }
@@ -205,8 +205,10 @@ function PromotionReport() {
       alert('Please select a school year before generating.');
       return;
     }
-    navigate('/sf2', { state: { schoolYear: selectedSchoolYear } });
+  
+    navigate('/sf2', { state: { schoolYearId: selectedSchoolYear } });
   };
+  
 
   const handleGenerateSF4 = () => {
     if (!selectedSchoolYear || !grade || !section) {
@@ -417,7 +419,9 @@ function PromotionReport() {
                   <select value={selectedSchoolYear} onChange={(e) => setSelectedSchoolYear(e.target.value)} required>
                     <option value="">--Select One--</option>
                     {schoolYears.map((year, index) => (
-                      <option key={index} value={year}>{year}</option>
+                      <option key={index} value={year.school_year_id}>
+                        {year.school_year}
+                      </option>
                     ))}
                   </select>
                   {/* <label>Grade:</label>
@@ -474,7 +478,9 @@ function PromotionReport() {
                   <select value={selectedSchoolYear} onChange={(e) => setSelectedSchoolYear(e.target.value)} required>
                     <option value="">--Select One--</option>
                     {schoolYears.map((year, index) => (
-                      <option key={index} value={year}>{year}</option>
+                      <option key={index} value={year.school_year_id}>
+                        {year.school_year}
+                      </option>
                     ))}
                   </select>
                   <label>Grade:</label>
@@ -520,10 +526,12 @@ function PromotionReport() {
                 <h3>Generate Good Moral Certificate</h3>
                 <form onSubmit={(e) => e.preventDefault()}>
                 <label>School Year:</label>
-                  <select value={selectedSchoolYear} onChange={(e) => setSelectedSchoolYear(e.target.value)} required>
+                <select value={selectedSchoolYear} onChange={(e) => setSelectedSchoolYear(e.target.value)} required>
                     <option value="">--Select One--</option>
                     {schoolYears.map((year, index) => (
-                      <option key={index} value={year}>{year}</option>
+                      <option key={index} value={year.school_year_id}>
+                        {year.school_year}
+                      </option>
                     ))}
                   </select>
                   {/* <label>Grade:</label>
@@ -580,7 +588,9 @@ function PromotionReport() {
                   <select value={selectedSchoolYear} onChange={(e) => setSelectedSchoolYear(e.target.value)} required>
                     <option value="">--Select One--</option>
                     {schoolYears.map((year, index) => (
-                      <option key={index} value={year}>{year}</option>
+                      <option key={index} value={year.school_year_id}>
+                        {year.school_year}
+                      </option>
                     ))}
                   </select>
                   <label>Grade:</label>
@@ -612,7 +622,9 @@ function PromotionReport() {
                   <select value={selectedSchoolYear} onChange={(e) => setSelectedSchoolYear(e.target.value)} required>
                     <option value="">--Select One--</option>
                     {schoolYears.map((year, index) => (
-                      <option key={index} value={year}>{year}</option>
+                      <option key={index} value={year.school_year_id}>
+                        {year.school_year}
+                      </option>
                     ))}
                   </select>
                   <label>Grade:</label>
@@ -644,7 +656,9 @@ function PromotionReport() {
                   <select value={selectedSchoolYear} onChange={(e) => setSelectedSchoolYear(e.target.value)} required>
                     <option value="">--Select One--</option>
                     {schoolYears.map((year, index) => (
-                      <option key={index} value={year}>{year}</option>
+                      <option key={index} value={year.school_year_id}>
+                        {year.school_year}
+                      </option>
                     ))}
                   </select>
                   <button type="button" onClick={handleGenerateSF2}>Generate Report</button>
@@ -659,7 +673,9 @@ function PromotionReport() {
                   <select value={selectedSchoolYear} onChange={(e) => setSelectedSchoolYear(e.target.value)} required>
                     <option value="">--Select One--</option>
                     {schoolYears.map((year, index) => (
-                      <option key={index} value={year}>{year}</option>
+                      <option key={index} value={year.school_year_id}>
+                        {year.school_year}
+                      </option>
                     ))}
                   </select>
                   <label>Grade:</label>
@@ -691,7 +707,9 @@ function PromotionReport() {
                   <select value={selectedSchoolYear} onChange={(e) => setSelectedSchoolYear(e.target.value)} required>
                     <option value="">--Select One--</option>
                     {schoolYears.map((year, index) => (
-                      <option key={index} value={year}>{year}</option>
+                      <option key={index} value={year.school_year_id}>
+                        {year.school_year}
+                      </option>
                     ))}
                   </select>
                   <label>Grade:</label>
@@ -723,7 +741,9 @@ function PromotionReport() {
                   <select value={selectedSchoolYear} onChange={(e) => setSelectedSchoolYear(e.target.value)} required>
                     <option value="">--Select One--</option>
                     {schoolYears.map((year, index) => (
-                      <option key={index} value={year}>{year}</option>
+                      <option key={index} value={year.school_year_id}>
+                        {year.school_year}
+                      </option>
                     ))}
                   </select>
                   <label>Grade:</label>
@@ -746,7 +766,9 @@ function PromotionReport() {
                   <select value={selectedSchoolYear} onChange={(e) => setSelectedSchoolYear(e.target.value)} required>
                     <option value="">--Select One--</option>
                     {schoolYears.map((year, index) => (
-                      <option key={index} value={year}>{year}</option>
+                      <option key={index} value={year.school_year_id}>
+                        {year.school_year}
+                      </option>
                     ))}
                   </select>
                   <label>Grade:</label>
@@ -778,7 +800,9 @@ function PromotionReport() {
                   <select value={selectedSchoolYear} onChange={(e) => setSelectedSchoolYear(e.target.value)} required>
                     <option value="">--Select One--</option>
                     {schoolYears.map((year, index) => (
-                      <option key={index} value={year}>{year}</option>
+                      <option key={index} value={year.school_year_id}>
+                        {year.school_year}
+                      </option>
                     ))}
                   </select>
                   <label>Grade:</label>
@@ -818,7 +842,9 @@ function PromotionReport() {
                   <select value={selectedSchoolYear} onChange={(e) => setSelectedSchoolYear(e.target.value)} required>
                     <option value="">--Select One--</option>
                     {schoolYears.map((year, index) => (
-                      <option key={index} value={year}>{year}</option>
+                      <option key={index} value={year.school_year_id}>
+                        {year.school_year}
+                      </option>
                     ))}
                   </select>
                   <label>Grade:</label>
@@ -833,11 +859,12 @@ function PromotionReport() {
                   <select value={section} onChange={(e) => setSection(e.target.value)} required>
                     <option value="">--Select One--</option>
                     {sections.map((sec) => (
-                      <option key={sec.section_name} value={sec.section_name}>
+                      <option key={sec.section_id} value={sec.section_id}>
                         {sec.section_name}
                       </option>
                     ))}
                   </select>
+
                   <button type="button" onClick={() => navigate('/class-list', { state: { schoolYear: selectedSchoolYear, grade, section } })}>Generate Report</button>
                 </form>
               </div>
@@ -850,7 +877,9 @@ function PromotionReport() {
                   <select value={selectedSchoolYear} onChange={(e) => setSelectedSchoolYear(e.target.value)} required>
                     <option value="">--Select One--</option>
                     {schoolYears.map((year, index) => (
-                      <option key={index} value={year}>{year}</option>
+                      <option key={index} value={year.school_year_id}>
+                        {year.school_year}
+                      </option>
                     ))}
                   </select>
                   <label>Grade:</label>
@@ -890,7 +919,9 @@ function PromotionReport() {
                   <select value={selectedSchoolYear} onChange={(e) => setSelectedSchoolYear(e.target.value)} required>
                     <option value="">--Select One--</option>
                     {schoolYears.map((year, index) => (
-                      <option key={index} value={year}>{year}</option>
+                      <option key={index} value={year.school_year_id}>
+                        {year.school_year}
+                      </option>
                     ))}
                   </select>
                   <label>Grade:</label>
@@ -905,7 +936,7 @@ function PromotionReport() {
                   <select value={section} onChange={(e) => setSection(e.target.value)} required>
                     <option value="">--Select One--</option>
                     {sections.map((sec) => (
-                      <option key={sec.section_name} value={sec.section_name}>
+                      <option key={sec.section_id} value={sec.section_id}>
                         {sec.section_name}
                       </option>
                     ))}
@@ -922,7 +953,9 @@ function PromotionReport() {
                   <select value={selectedSchoolYear} onChange={(e) => setSelectedSchoolYear(e.target.value)} required>
                     <option value="">--Select One--</option>
                     {schoolYears.map((year, index) => (
-                      <option key={index} value={year}>{year}</option>
+                      <option key={index} value={year.school_year_id}>
+                        {year.school_year}
+                      </option>
                     ))}
                   </select>
                   <label>Grade:</label>

@@ -5763,3 +5763,113 @@ app.get('/list-elective', (req, res) => {
     res.json(results);
   });
 });
+
+//REPORTS
+//SF 2
+app.get('/api/sf2-enrollment', (req, res) => {
+  const schoolYearId = req.query.school_year_id;
+
+  const query = `
+    SELECT 
+      CONCAT('Grade',' ',e.grade_level) as grade_level,
+      COUNT(CASE WHEN s.gender = 'Male' THEN 1 END) AS male_count,
+      COUNT(CASE WHEN s.gender = 'Female' THEN 1 END) AS female_count,
+      COUNT(*) AS total,
+      sy.school_year
+    FROM enrollment e
+    LEFT JOIN student s ON e.student_id = s.student_id
+    LEFT JOIN school_year sy ON e.school_year_id=sy.school_year_id
+    WHERE e.school_year_id = ?
+    GROUP BY e.grade_level
+    ORDER BY e.grade_level
+  `;
+
+  db.query(query, [schoolYearId], (err, results) => {
+    if (err) {
+      console.error('Error fetching SF2 data:', err);
+      return res.status(500).send('Error fetching data');
+    }
+
+    let totalMale = 0;
+    let totalFemale = 0;
+    const grades = {};
+
+    results.forEach(row => {
+      grades[row.grade_level] = {
+        male: row.male_count,
+        female: row.female_count
+      };
+      totalMale += row.male_count;
+      totalFemale += row.female_count;
+    });
+
+    res.json({
+      grades,
+      totalMale,
+      totalFemale,
+      grandTotal: totalMale + totalFemale,
+      schoolYear: results[0]?.school_year // Assume school_year is the same for all grades
+    });
+  });
+});
+
+app.get('/api/class_list', (req, res) => {
+  const { school_year_id, grade_level, section_id } = req.query;
+
+  if (!school_year_id || !grade_level || !section_id) {
+    return res.status(400).json({ message: 'Missing required query parameters.' });
+  }
+
+  // First query - class info
+  db.query(
+    `SELECT 
+      sy.school_year, 
+      CONCAT(em.firstname, ' ', LEFT(IFNULL(em.middlename, ''), 1), '.', em.lastname) AS class_adviser, 
+      CONCAT('Grade ', e.grade_level, ' - ', s.section_name) AS grade_section, 
+      DATE_FORMAT(CURDATE(), '%m/%d/%Y') AS date_generated
+    FROM enrollment e 
+    LEFT JOIN section s ON e.section_id = s.section_id 
+    LEFT JOIN employee em ON s.section_adviser = em.employee_id 
+    LEFT JOIN school_year sy ON e.school_year_id = sy.school_year_id 
+    WHERE e.school_year_id = ? AND e.grade_level = ? AND e.section_id = ?
+    LIMIT 1`,
+    [school_year_id, grade_level, section_id],
+    (error, classInfo) => {
+      if (error) {
+        console.error('Error in /api/class_list (classInfo query):', error);
+        return res.status(500).json({ message: 'Server error', error });
+      }
+
+      // Second query - student list
+      db.query(
+        `SELECT 
+          s.lrn, 
+          CONCAT(s.lastname, ', ', s.firstname, ' ', LEFT(IFNULL(s.middlename, ''), 1), '.') AS student_name, 
+          s.gender, 
+          s.home_address, 
+          s.contact_number,
+          s.age,
+          DATE_FORMAT(s.birthdate, '%Y-%m-%d') AS birthdate, 
+          IF(s.father_name = '', s.mother_name, s.father_name) AS parent_name, 
+          IF(s.father_contact_number = '', s.mother_contact_number, s.father_contact_number) AS parent_contact_no 
+        FROM enrollment e 
+        LEFT JOIN student s ON e.student_id = s.student_id 
+        WHERE e.grade_level = ? AND e.section_id = ? AND e.school_year_id = ?`,
+        [grade_level, section_id, school_year_id],
+        (error, students) => {
+          if (error) {
+            console.error('Error in /api/class_list (students query):', error);
+            return res.status(500).json({ message: 'Server error', error });
+          }
+
+          res.json({
+            classInfo: classInfo[0] || null,
+            students
+          });
+        }
+      );
+    }
+  );
+});
+
+

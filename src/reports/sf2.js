@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import { useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
 import { jsPDF } from 'jspdf';
+import axios from 'axios';
 import '../CssFiles/sf2.css';
 
 function SF2() {
@@ -9,21 +11,28 @@ function SF2() {
     district: "Dauis",
     division: "Bohol",
     region: "VII",
-    schoolYear: "2023-2024",
     month: "June"
   });
 
-  const [enrollmentData] = useState({
-    grades: {
-      "Grade 7": { male: 150, female: 160 },
-      "Grade 8": { male: 145, female: 155 },
-      "Grade 9": { male: 140, female: 150 },
-      "Grade 10": { male: 135, female: 145 }
-    },
-    totalMale: 570,
-    totalFemale: 610,
-    grandTotal: 1180
-  });
+  const location = useLocation();
+  const schoolYearId = location.state?.schoolYearId;
+  const [enrollmentData, setEnrollmentData] = useState(null);
+
+  useEffect(() => {
+    if (!schoolYearId) return;
+  
+    const fetchEnrollment = async () => {
+      try {
+        const res = await fetch(`http://localhost:3001/api/sf2-enrollment?school_year_id=${schoolYearId}`);
+        const data = await res.json();
+        setEnrollmentData(data);
+      } catch (err) {
+        console.error("Error fetching SF2 enrollment data:", err);
+      }
+    };
+  
+    fetchEnrollment();
+  }, [schoolYearId]);
 
   const handleConvertToPdf = () => {
     const doc = new jsPDF({
@@ -49,7 +58,7 @@ function SF2() {
   return (
     <div className="sf2-page">
       <div className="sf2-container">
-        <div className="sf2-header">
+      <div className="sf2-header">
           <div className="sf2-header-logos">
             <img src="/deped-logo.png" alt="DepEd Logo" className="sf2-logo" />
           </div>
@@ -88,14 +97,13 @@ function SF2() {
           </div>
           <div className="sf2-info-item">
             <span className="sf2-info-label">School Year:</span>
-            <span>{schoolData.schoolYear}</span>
+            <span>{enrollmentData ? enrollmentData.schoolYear : "Loading..."}</span>
           </div>
           <div className="sf2-info-item">
             <span className="sf2-info-label">Month:</span>
             <span>{schoolData.month}</span>
           </div>
         </div>
-
         <div className="sf2-table-container">
           <table className="sf2-table">
             <thead>
@@ -110,48 +118,38 @@ function SF2() {
               </tr>
             </thead>
             <tbody>
-              {Object.entries(enrollmentData.grades).map(([grade, data]) => (
-                <tr key={grade}>
-                  <td>{grade}</td>
-                  <td>{data.male}</td>
-                  <td>{data.female}</td>
-                  <td>{data.male + data.female}</td>
-                </tr>
-              ))}
-              <tr className="sf2-total-row">
-                <td>TOTAL</td>
-                <td>{enrollmentData.totalMale}</td>
-                <td>{enrollmentData.totalFemale}</td>
-                <td>{enrollmentData.grandTotal}</td>
-              </tr>
+              {enrollmentData ? (
+                <>
+                  {Object.entries(enrollmentData.grades).map(([grade, data]) => (
+                    <tr key={grade}>
+                      <td>{grade}</td>
+                      <td>{data.male}</td>
+                      <td>{data.female}</td>
+                      <td>{data.male + data.female}</td>
+                    </tr>
+                  ))}
+                  <tr className="sf2-total-row">
+                    <td>TOTAL</td>
+                    <td>{enrollmentData.totalMale}</td>
+                    <td>{enrollmentData.totalFemale}</td>
+                    <td>{enrollmentData.grandTotal}</td>
+                  </tr>
+                </>
+              ) : (
+                <tr><td colSpan="4">Loading enrollment data...</td></tr>
+              )}
             </tbody>
           </table>
         </div>
 
-        <div className="sf2-footer">
-          <div className="sf2-signature-section">
-            <div className="sf2-signature">
-              <div className="sf2-signature-line">Prepared by:</div>
-              <div className="sf2-signature-name">REGISTRAR'S NAME</div>
-              <div className="sf2-signature-title">School Registrar</div>
-            </div>
-            <div className="sf2-signature">
-              <div className="sf2-signature-line">Certified Correct:</div>
-              <div className="sf2-signature-name">PRINCIPAL'S NAME</div>
-              <div className="sf2-signature-title">School Principal</div>
-            </div>
-          </div>
-          <div className="sf2-date">
-            <p>Date: {new Date().toLocaleDateString()}</p>
-          </div>
+        {/* ... (unchanged footer code) */}
+
+        <div className="sf2-buttons">
+          <button onClick={handleConvertToPdf}>Convert to PDF</button>
         </div>
-      </div>
-      
-      <div className="sf2-buttons">
-        <button onClick={handleConvertToPdf}>Convert to PDF</button>
       </div>
     </div>
   );
 }
 
-export default SF2; 
+export default SF2;

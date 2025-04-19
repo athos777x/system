@@ -1,99 +1,75 @@
 import React, { useState, useEffect } from 'react';
 import { jsPDF } from 'jspdf';
 import axios from 'axios';
+import { useLocation, useNavigate } from 'react-router-dom';
 import '../CssFiles/class_list.css';
 
 function ClassList() {
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const { schoolYear, grade, section } = location.state || {};
+
   const [schoolData, setSchoolData] = useState({
     schoolName: "Lourdes National High School",
     schoolId: "123456",
     district: "Dauis",
     division: "Bohol",
     region: "VII",
-    schoolYear: "2023-2024",
-    grade: "9",
-    section: "Rizal",
-    adviser: "Maria Santos"
+    schoolYear: "",
+    grade: "",
+    section: "",
+    adviser: ""
   });
 
-  const [students, setStudents] = useState([
-    {
-      lrn: "123456789012",
-      name: "Dela Cruz, Juan A.",
-      sex: "M",
-      birthDate: "2008-05-15",
-      age: "15",
-      address: "Dauis, Bohol",
-      contact: "09123456789",
-      parentName: "Dela Cruz, Pedro",
-      parentContact: "09123456788"
-    },
-    {
-      lrn: "123456789013",
-      name: "Santos, Maria B.",
-      sex: "F",
-      birthDate: "2008-07-22",
-      age: "15",
-      address: "Panglao, Bohol",
-      contact: "09123456790",
-      parentName: "Santos, Jose",
-      parentContact: "09123456791"
-    },
-    {
-      lrn: "123456789014",
-      name: "Reyes, Pedro C.",
-      sex: "M",
-      birthDate: "2008-03-10",
-      age: "15",
-      address: "Tagbilaran City, Bohol",
-      contact: "09123456792",
-      parentName: "Reyes, Juan",
-      parentContact: "09123456793"
-    },
-    {
-      lrn: "123456789015",
-      name: "Garcia, Ana D.",
-      sex: "F",
-      birthDate: "2008-11-30",
-      age: "15",
-      address: "Dauis, Bohol",
-      contact: "09123456794",
-      parentName: "Garcia, Jose",
-      parentContact: "09123456795"
-    },
-    {
-      lrn: "123456789016",
-      name: "Torres, Jose E.",
-      sex: "M",
-      birthDate: "2008-09-18",
-      age: "15",
-      address: "Panglao, Bohol",
-      contact: "09123456796",
-      parentName: "Torres, Pedro",
-      parentContact: "09123456797"
-    }
-  ]);
-
+  const [students, setStudents] = useState([]);
+  const [maleCount, setMaleCount] = useState(0);
+  const [femaleCount, setFemaleCount] = useState(0);
+  const [totalStudents, setTotalStudents] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    // In a real application, you would fetch the data from your API
-    // fetchClassListData();
-  }, []);
+    if (schoolYear && grade && section) {
+      fetchClassListData(schoolYear, grade, section);
+    }
+  }, [schoolYear, grade, section]);
 
-  const fetchClassListData = async () => {
+  const fetchClassListData = async (schoolYearId, gradeLevel, sectionId) => {
     setLoading(true);
     try {
-      // This would be replaced with your actual API endpoint
-      // const response = await axios.get(`http://localhost:3001/api/class-list`, {
-      //   params: {
-      //     schoolYear: schoolData.schoolYear,
-      //     grade: schoolData.grade,
-      //     section: schoolData.section
-      //   }
-      // });
-      // setStudents(response.data);
+      const response = await axios.get('http://localhost:3001/api/class_list', {
+        params: {
+          school_year_id: schoolYearId,
+          grade_level: gradeLevel,
+          section_id: sectionId
+        }
+      });
+  
+      const { students, classInfo } = response.data;
+  
+      const formattedStudents = students.map((student) => ({
+        ...student,
+        birthdate: student.birthdate ? new Date(student.birthdate).toLocaleDateString() : "—"
+      }));
+  
+      setStudents(formattedStudents);
+  
+      const male = formattedStudents.filter(s => s.gender === 'Male').length;
+      const female = formattedStudents.filter(s => s.gender === 'Female').length;
+  
+      setMaleCount(male);
+      setFemaleCount(female);
+      setTotalStudents(formattedStudents.length);
+  
+      setSchoolData((prevData) => ({
+        ...prevData,
+        schoolYear: classInfo?.school_year || "",
+        adviser: classInfo?.class_adviser || "",
+        grade: gradeLevel,
+        section: classInfo?.grade_section?.split(' - ')[1] || prevData.section
+      }));
+  
       setLoading(false);
     } catch (error) {
       console.error("Error fetching class list data:", error);
@@ -101,6 +77,7 @@ function ClassList() {
       setLoading(false);
     }
   };
+  
 
   const handleConvertToPdf = () => {
     const doc = new jsPDF({
@@ -123,6 +100,14 @@ function ClassList() {
     }
   };
 
+  if (loading) {
+    return <div>Loading class list...</div>;
+  }
+
+  if (error) {
+    return <div>{error}</div>;
+  }
+
   return (
     <div className="class-list-page">
       <div className="class-list-container">
@@ -133,7 +118,7 @@ function ClassList() {
           <div className="class-list-header-text">
             <h1>Republic of the Philippines • Department of Education</h1>
             <h2>Region VII Central Visayas • Division of Bohol • District of Dauis</h2>
-            <h2>LOURDES NATIONAL HIGH SCHOOL</h2>
+            <h2>{schoolData.schoolName}</h2>
             <h3>Dauis - Panglao Rd, Dauis, Bohol</h3>
             <h3>CLASS LIST</h3>
           </div>
@@ -179,17 +164,17 @@ function ClassList() {
             </thead>
             <tbody>
               {students.map((student, index) => (
-                <tr key={student.lrn}>
+                <tr key={student.lrn || index}>
                   <td>{index + 1}</td>
                   <td>{student.lrn}</td>
-                  <td>{student.name}</td>
-                  <td>{student.sex}</td>
-                  <td>{student.birthDate}</td>
+                  <td>{student.student_name}</td>
+                  <td>{student.gender}</td>
+                  <td>{student.birthdate}</td>
                   <td>{student.age}</td>
-                  <td>{student.address}</td>
-                  <td>{student.contact}</td>
-                  <td>{student.parentName}</td>
-                  <td>{student.parentContact}</td>
+                  <td>{student.home_address}</td>
+                  <td>{student.contact_number}</td>
+                  <td>{student.parent_name}</td>
+                  <td>{student.parent_contact_no}</td>
                 </tr>
               ))}
             </tbody>
@@ -199,15 +184,15 @@ function ClassList() {
         <div className="class-list-summary">
           <div className="class-list-summary-item">
             <span className="class-list-summary-label">Total Students:</span>
-            <span>{students.length}</span>
+            <span>{totalStudents}</span>
           </div>
           <div className="class-list-summary-item">
             <span className="class-list-summary-label">Male:</span>
-            <span>{students.filter(student => student.sex === 'M').length}</span>
+            <span>{maleCount}</span>
           </div>
           <div className="class-list-summary-item">
             <span className="class-list-summary-label">Female:</span>
-            <span>{students.filter(student => student.sex === 'F').length}</span>
+            <span>{femaleCount}</span>
           </div>
         </div>
 
@@ -234,4 +219,4 @@ function ClassList() {
   );
 }
 
-export default ClassList; 
+export default ClassList;
