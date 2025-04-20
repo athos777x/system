@@ -75,7 +75,9 @@ function Student_AttendancePage() {
     const fetchAttendance = async () => {
       try {
         if (!userId || !selectedSchoolYear) return;
+        console.log(`Fetching attendance data for userId: ${userId}, schoolYearId: ${selectedSchoolYear}`);
         const response = await axios.get(`http://localhost:3001/attendance/${userId}?schoolYearId=${selectedSchoolYear}`);
+        console.log('Attendance data received:', response.data);
         setAttendanceData(response.data);
       } catch (error) {
         console.error('Error fetching attendance data:', error);
@@ -108,6 +110,7 @@ function Student_AttendancePage() {
         (entry) => new Date(entry.date).toDateString() === date.toDateString()
       );
       if (attendance.length > 0) {
+        console.log(`Found ${attendance.length} attendance records for date: ${date.toDateString()}`);
         return (
           <div className="tile-content">
             {attendance.map((entry, index) => (
@@ -123,6 +126,7 @@ function Student_AttendancePage() {
         );
       }
     }
+    return null;
   };
 
   const handleSchoolYearChange = (event) => {
@@ -184,11 +188,14 @@ function Student_AttendancePage() {
       />
       <div className="attendance-details">
         <h2>Attendance for {formatDate(selectedDate)}</h2>
+        {console.log('Selected date:', selectedDate.toDateString())}
+        {console.log('Total attendance records:', attendanceData.length)}
+        {console.log('Filtered records:', attendanceData.filter(entry => new Date(entry.date).toDateString() === selectedDate.toDateString()).length)}
         <table className="attendance-table">
           <thead>
             <tr>
               <th>Subject</th>
-              <th>Day</th>
+              <th style={{ minWidth: '150px' }}>Schedule Days</th>
               <th>Time Start</th>
               <th>Time End</th>
               <th>Teacher</th>
@@ -201,7 +208,7 @@ function Student_AttendancePage() {
               .map((entry, index) => (
                 <tr key={index}>
                   <td>{entry.subject_name}</td>
-                  <td>{new Date(entry.date).toLocaleDateString('en-US', { weekday: 'long' })}</td>
+                  <td style={{ maxWidth: '200px', wordWrap: 'break-word' }}>{entry.day || 'N/A'}</td>
                   <td>{entry.time_start || 'N/A'}</td>
                   <td>{entry.time_end || 'N/A'}</td>
                   <td>{entry.teacher_name || 'N/A'}</td>
@@ -209,11 +216,6 @@ function Student_AttendancePage() {
                     <span className={`status-badge ${entry.status.toLowerCase()}`}>
                       {entry.status}
                     </span>
-                    {entry.remarks && (
-                      <div className="remarks-text">
-                        Remarks: {entry.remarks}
-                      </div>
-                    )}
                   </td>
                 </tr>
               ))}
