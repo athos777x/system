@@ -1897,6 +1897,102 @@ app.get('/attendance/:studentId', (req, res) => {
   });
 });
 
+// Get student attendance summary for teacher page
+app.get('/student-attendance-summary/:studentId', (req, res) => {
+  const studentId = req.params.studentId;
+  const schoolYearId = req.query.schoolYearId;
+
+  // First, get the section ID for this student
+  const getSectionQuery = `
+    SELECT section_id 
+    FROM student 
+    WHERE student_id = ?
+  `;
+
+  db.query(getSectionQuery, [studentId], (err, sectionResult) => {
+    if (err) {
+      console.error('Error fetching student section:', err);
+      return res.status(500).json({ 
+        success: false, 
+        error: 'Database error', 
+        details: err.message 
+      });
+    }
+
+    if (sectionResult.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Student not found'
+      });
+    }
+
+    const sectionId = sectionResult[0].section_id;
+
+    // Build the query to get attendance summary with proper counts
+    // Using nested subqueries instead of CTEs for compatibility with older MySQL versions
+    const query = `
+      SELECT 
+        sd.subject_name AS subject,
+        IFNULL(sa.total_days_present, 0) AS totalDaysPresent,
+        (sd.total_days_of_classes - IFNULL(sa.total_days_present, 0)) AS totalDaysAbsent,
+        sd.total_days_of_classes AS totalDaysOfClasses
+      FROM (
+        -- SubjectDays: Get all distinct days when attendance was recorded for this section and subject
+        SELECT 
+          s.subject_id,
+          s.subject_name,
+          COUNT(DISTINCT a.date) AS total_days_of_classes
+        FROM attendance a
+        JOIN schedule sch ON a.schedule_id = sch.schedule_id
+        JOIN subject s ON sch.subject_id = s.subject_id
+        JOIN student st ON a.student_id = st.student_id
+        WHERE st.section_id = ?
+        ${schoolYearId ? 'AND a.school_year_id = ?' : ''}
+        GROUP BY s.subject_id, s.subject_name
+      ) AS sd
+      LEFT JOIN (
+        -- StudentAttendance: Get this student's attendance records
+        SELECT 
+          s.subject_id,
+          COUNT(CASE WHEN a.status = 'P' OR a.status = 'L' THEN 1 END) AS total_days_present
+        FROM attendance a
+        JOIN schedule sch ON a.schedule_id = sch.schedule_id
+        JOIN subject s ON sch.subject_id = s.subject_id
+        WHERE a.student_id = ?
+        ${schoolYearId ? 'AND a.school_year_id = ?' : ''}
+        GROUP BY s.subject_id
+      ) AS sa ON sd.subject_id = sa.subject_id
+      ORDER BY sd.subject_name
+    `;
+
+    // Prepare the query parameters based on whether schoolYearId is provided
+    const queryParams = schoolYearId 
+      ? [sectionId, schoolYearId, studentId, schoolYearId]
+      : [sectionId, studentId];
+
+    console.log('Executing query:', query);
+    console.log('With params:', queryParams);
+
+    db.query(query, queryParams, (err, results) => {
+      if (err) {
+        console.error('Error fetching student attendance summary:', err);
+        return res.status(500).json({ 
+          success: false, 
+          error: 'Database error', 
+          details: err.message 
+        });
+      }
+
+      // If no results found, return empty array
+      if (results.length === 0) {
+        console.log(`No attendance records found for student ID: ${studentId}`);
+      }
+      
+      res.json(results);
+    });
+  });
+});
+
 // Fetch school years
 // Function: Retrieves all school years in descending order
 // Pages: SchoolYearSearchFilter.js, SearchFilter.js

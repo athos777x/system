@@ -355,4 +355,33 @@
     flex-direction: column;
     gap: 0.5rem;
   }
+}
+
+/* Add styling for the summary row */
+.summary-row {
+  background-color: rgba(0, 0, 0, 0.05);
+  border-top: 2px solid #ddd;
+}
+
+.summary-row td {
+  font-weight: bold;
+  color: #333;
+}
+
+.attendance-details-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+}
+
+.attendance-details-table th,
+.attendance-details-table td {
+  padding: 10px;
+  text-align: center;
+  border: 1px solid #e0e0e0;
+}
+
+.attendance-details-table th {
+  background-color: #f5f5f5;
+  font-weight: bold;
 } 

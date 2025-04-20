@@ -137,22 +137,39 @@ function AttendanceManagement() {
       } else {
         setSelectedStudentId(studentId);
         
-        // Fetch section schedules to get subjects
-        const schedulesResponse = await axios.get(`http://localhost:3001/sections/${sectionId}/schedules`);
-        const subjects = [...new Set(schedulesResponse.data.map(schedule => schedule.subject_name))];
+        // Get current school year ID if it's set in filters
+        const schoolYearId = filters.school_year || null;
         
-        // Create mock attendance data for each subject
-        const mockAttendanceData = subjects.map(subject => ({
-          subject: subject,
-          totalDaysPresent: Math.floor(Math.random() * 50) + 30, // Random number between 30-80
-          totalDaysAbsent: Math.floor(Math.random() * 20), // Random number between 0-20
-          totalDaysOfClasses: 80, // Fixed total days
-        }));
+        // Fetch real attendance data from the database
+        const attendanceResponse = await axios.get(
+          `http://localhost:3001/student-attendance-summary/${studentId}${schoolYearId ? `?schoolYearId=${schoolYearId}` : ''}`
+        );
         
-        setAttendanceData(mockAttendanceData);
+        console.log('Attendance data received:', attendanceResponse.data);
+        
+        if (attendanceResponse.data && attendanceResponse.data.length > 0) {
+          setAttendanceData(attendanceResponse.data);
+        } else {
+          console.log('No attendance data found, fetching subjects for section');
+          
+          // If no attendance data, still get the subjects list from schedules
+          const schedulesResponse = await axios.get(`http://localhost:3001/sections/${sectionId}/schedules`);
+          const subjects = [...new Set(schedulesResponse.data.map(schedule => schedule.subject_name))];
+          
+          // Create empty records for each subject
+          const emptyAttendanceData = subjects.map(subject => ({
+            subject: subject,
+            totalDaysPresent: 0,
+            totalDaysAbsent: 0,
+            totalDaysOfClasses: 0
+          }));
+          
+          setAttendanceData(emptyAttendanceData);
+        }
       }
     } catch (error) {
       console.error('Error fetching attendance data:', error);
+      setAttendanceData([]);
     }
   };
 
@@ -303,6 +320,14 @@ function AttendanceManagement() {
                                 <td>{record.totalDaysOfClasses}</td>
                               </tr>
                             ))}
+                            
+                            {attendanceData.length === 0 && (
+                              <tr>
+                                <td colSpan="4" style={{ textAlign: 'center', padding: '20px' }}>
+                                  No attendance records found
+                                </td>
+                              </tr>
+                            )}
                           </tbody>
                         </table>
                       </div>
