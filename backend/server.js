@@ -655,7 +655,7 @@ app.post('/students', (req, res) => {
           }
 
           const schoolYearId = syResult[0].school_year_id;
-          const brigadaStatus = brigada_eskwela === 0 ? 'Not Attended' : 'Attended';
+          const brigadaStatus = brigada_eskwela === '0' || brigada_eskwela === 0 ? 'Not Attended' : 'Attended';
 
 
           const insertBrigadaDetailsQuery = `
@@ -4118,7 +4118,7 @@ app.put('/brigada-eskwela/:studentId', (req, res) => {
     WHERE student_id = ?
   `;
 
-  const queryParams = [brigada_attendance ? 'Attended' : 'Not Attended', studentId]; // Set brigada_eskwela to 1 for "Present" or 0 for "No"
+  const queryParams = [brigada_attendance === '0' || brigada_attendance === 0 || brigada_attendance === false ? 'Not Attended' : 'Attended', studentId]; // Set brigada_eskwela to 1 for "Present" or 0 for "No"
 
   db.query(query, queryParams, (err, results) => {
     if (err) {
