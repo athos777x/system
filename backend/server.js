@@ -703,6 +703,173 @@ app.post('/students', (req, res) => {
   });
 });
 
+// Endpoint for student attendance in web app
+app.get('/attendance/:userId', async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const schoolYearId = req.query.schoolYearId || null;
+    
+    console.log(`Fetching attendance for userId: ${userId}, schoolYearId: ${schoolYearId}`);
+    
+    // Build the query with proper joins to get all required data
+    const query = `
+      SELECT 
+        a.attendance_id,
+        a.date,
+        s.subject_name,
+        s.subject_id,
+        sch.time_start,
+        sch.time_end,
+        sch.schedule_id,
+        sch.day,
+        CONCAT(e.firstname, ' ', e.lastname) AS teacher_name,
+        e.employee_id AS teacher_id,
+        CASE 
+          WHEN a.status = 'P' THEN 'Present'
+          WHEN a.status = 'A' THEN 'Absent'
+          WHEN a.status = 'L' THEN 'Late'
+          ELSE 'No Record'
+        END AS status,
+        sy.school_year,
+        sy.school_year_id,
+        st.current_yr_lvl AS grade_level,
+        sec.section_name
+      FROM attendance a
+      JOIN schedule sch ON a.schedule_id = sch.schedule_id
+      JOIN subject s ON sch.subject_id = s.subject_id
+      LEFT JOIN employee e ON sch.teacher_id = e.employee_id
+      LEFT JOIN school_year sy ON a.school_year_id = sy.school_year_id
+      JOIN student st ON a.student_id = st.student_id
+      LEFT JOIN section sec ON st.section_id = sec.section_id
+      WHERE a.student_id = (
+        SELECT student_id FROM student WHERE user_id = ?
+      )
+      ${schoolYearId ? 'AND a.school_year_id = ?' : ''}
+      ORDER BY a.date DESC
+    `;
+    
+    const queryParams = schoolYearId ? [userId, schoolYearId] : [userId];
+    
+    db.query(query, queryParams, (err, results) => {
+      if (err) {
+        console.error('Error fetching attendance:', err);
+        return res.status(500).json({ success: false, error: 'Database error', details: err.message });
+      }
+      
+      console.log(`Retrieved ${results.length} attendance records`);
+      
+      // Process the day field
+      const processedResults = results.map(record => {
+        try {
+          if (record.day && typeof record.day === 'string' && record.day.startsWith('[')) {
+            try {
+              const days = JSON.parse(record.day);
+              record.day = days.join(', '); // Join all days with a comma
+            } catch (e) {
+              console.error('Error parsing day JSON:', e);
+              record.day = 'N/A';
+            }
+          }
+          return record;
+        } catch (error) {
+          console.error('Error processing record:', error);
+          return record;
+        }
+      });
+      
+      
+      res.json(processedResults);
+    });
+  } catch (error) {
+    console.error('Server error:', error);
+    res.status(500).json({ success: false, error: 'Server error', details: error.message });
+  }
+});
+
+// Get detailed attendance for a specific date
+app.get('/attendance/:userId/date/:date', async (req, res) => {
+  try {
+    const { userId, date } = req.params;
+    const schoolYearId = req.query.schoolYearId || null;
+    
+    console.log(`Fetching attendance for date: ${date}, userId: ${userId}, schoolYearId: ${schoolYearId}`);
+    
+    // Format date for comparison
+    const formattedDate = new Date(date).toISOString().split('T')[0];
+    
+    const query = `
+      SELECT 
+        a.attendance_id,
+        a.date,
+        s.subject_name,
+        s.subject_id,
+        sch.day,
+        sch.time_start,
+        sch.time_end,
+        sch.schedule_id,
+        CONCAT(e.firstname, ' ', e.lastname) AS teacher_name,
+        e.employee_id AS teacher_id,
+        CASE 
+          WHEN a.status = 'P' THEN 'Present'
+          WHEN a.status = 'A' THEN 'Absent'
+          WHEN a.status = 'L' THEN 'Late'
+          ELSE 'No Record'
+        END AS status,
+        sy.school_year,
+        sy.school_year_id,
+        st.current_yr_lvl AS grade_level,
+        sec.section_name
+      FROM attendance a
+      JOIN schedule sch ON a.schedule_id = sch.schedule_id
+      JOIN subject s ON sch.subject_id = s.subject_id
+      LEFT JOIN employee e ON sch.teacher_id = e.employee_id
+      LEFT JOIN school_year sy ON a.school_year_id = sy.school_year_id
+      JOIN student st ON a.student_id = st.student_id
+      LEFT JOIN section sec ON st.section_id = sec.section_id
+      WHERE a.student_id = (
+        SELECT student_id FROM student WHERE user_id = ?
+      )
+      AND DATE(a.date) = ?
+      ${schoolYearId ? 'AND a.school_year_id = ?' : ''}
+    `;
+    
+    const queryParams = schoolYearId ? [userId, formattedDate, schoolYearId] : [userId, formattedDate];
+    
+    db.query(query, queryParams, (err, results) => {
+      if (err) {
+        console.error('Error fetching attendance for date:', err);
+        return res.status(500).json({ success: false, error: 'Database error', details: err.message });
+      }
+      
+      console.log(`Retrieved ${results.length} attendance records for date ${date}`);
+      
+      // Process the day field
+      const processedResults = results.map(record => {
+        try {
+          if (record.day && typeof record.day === 'string' && record.day.startsWith('[')) {
+            try {
+              const days = JSON.parse(record.day);
+              record.day = days.join(', '); // Join all days with a comma
+            } catch (e) {
+              console.error('Error parsing day JSON:', e);
+              record.day = 'N/A';
+            }
+          }
+          return record;
+        } catch (error) {
+          console.error('Error processing record:', error);
+          return record;
+        }
+      });
+      
+      res.json(processedResults);
+    });
+  } catch (error) {
+    console.error('Server error:', error);
+    res.status(500).json({ success: false, error: 'Server error', details: error.message });
+  }
+});
+
 
 
 
@@ -5851,7 +6018,8 @@ app.get('/api/class_list', (req, res) => {
           s.age,
           DATE_FORMAT(s.birthdate, '%Y-%m-%d') AS birthdate, 
           IF(s.father_name = '', s.mother_name, s.father_name) AS parent_name, 
-          IF(s.father_contact_number = '', s.mother_contact_number, s.father_contact_number) AS parent_contact_no 
+          IF(s.father_contact_number = '', s.mother_contact_number, s.father_contact_number) AS parent_contact_no,
+          s.father_name, s.mother_name
         FROM enrollment e 
         LEFT JOIN student s ON e.student_id = s.student_id 
         WHERE e.grade_level = ? AND e.section_id = ? AND e.school_year_id = ?`,
