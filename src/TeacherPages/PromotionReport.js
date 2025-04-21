@@ -639,7 +639,7 @@ function PromotionReport() {
                   <select value={section} onChange={(e) => setSection(e.target.value)} required>
                     <option value="">--Select One--</option>
                     {sections.map((sec) => (
-                      <option key={sec.section_name} value={sec.section_name}>
+                      <option key={sec.section_id} value={sec.section_id}>
                         {sec.section_name}
                       </option>
                     ))}
