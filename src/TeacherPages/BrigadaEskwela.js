@@ -227,7 +227,7 @@ function BrigadaEskwela() {
   return (
     <div className="brigada-container">
       <div className="brigada-header">
-        <h1 className="brigada-title">Brigada Eskwela</h1>
+        <h1 className="brigada-title">Brigada Eskwela (Checking)</h1>
       </div>
 
       <StudentSearchFilter

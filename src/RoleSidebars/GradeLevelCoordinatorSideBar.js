@@ -14,7 +14,8 @@ import {
   FiFileText,
   FiCheckSquare,
   FiLogOut,
-  FiLayers
+  FiLayers,
+  FiEye
 } from 'react-icons/fi';
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -27,8 +28,8 @@ function GradeLevelCoordinatorSideBar({ showSidebar, toggleSidebar, handleLogout
   const location = useLocation();
 
   // Check if current path is under a specific submenu
-  const isRecordsPath = ['/attendance', '/new-grades', '/brigada-eskwela'].includes(location.pathname);
-  const isEnrollmentPath = ['/enroll-student', '/pending-enrollment', '/school-year', '/section-list', '/enrolled-students'].includes(location.pathname);
+  const isRecordsPath = ['/attendance', '/new-grades'].includes(location.pathname);
+  const isEnrollmentPath = ['/enroll-student', '/pending-enrollment', '/school-year', '/section-list', '/enrolled-students', '/brigada-eskwela', '/brigada-eskwela-view'].includes(location.pathname);
   const isClassesPath = ['/section', '/schedule'].includes(location.pathname);
   const isExperimentalsPath = ['/grades'].includes(location.pathname);
 
@@ -125,12 +126,6 @@ function GradeLevelCoordinatorSideBar({ showSidebar, toggleSidebar, handleLogout
               >
                 <FiCheckSquare className="icon" /> Attendance
               </button>
-              <button 
-                onClick={() => handleNavigate('/brigada-eskwela')}
-                className={location.pathname === '/brigada-eskwela' ? 'active' : ''}
-              >
-                <FiCheckSquare className="icon" /> Brigada Eskwela
-              </button>
             </div>
           )}
 
@@ -185,13 +180,25 @@ function GradeLevelCoordinatorSideBar({ showSidebar, toggleSidebar, handleLogout
                 onClick={() => handleNavigate('/section-list')}
                 className={location.pathname === '/section-list' ? 'active' : ''}
               >
-                <FiBook className="icon" /> Clast List
+                <FiBook className="icon" /> Class List
               </button>
               <button 
                 onClick={() => handleNavigate('/enrolled-students')}
                 className={location.pathname === '/enrolled-students' ? 'active' : ''}
               >
                 <FiUsers className="icon" /> Enrolled Students
+              </button>
+              <button 
+                onClick={() => handleNavigate('/brigada-eskwela')}
+                className={location.pathname === '/brigada-eskwela' ? 'active' : ''}
+              >
+                <FiCheckSquare className="icon" /> Check Brigada Eskwela
+              </button>
+              <button 
+                onClick={() => handleNavigate('/brigada-eskwela-view')}
+                className={location.pathname === '/brigada-eskwela-view' ? 'active' : ''}
+              >
+                <FiEye className="icon" /> View Brigada Eskwela
               </button>
             </div>
           )}

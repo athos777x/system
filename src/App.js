@@ -25,6 +25,7 @@ import SectionList from './TeacherPages/SectionList';
 import SectionManagement from './TeacherPages/SectionManagement';
 import PromotionReport from './TeacherPages/PromotionReport';
 import BrigadaEskwela from './TeacherPages/BrigadaEskwela';
+import BrigadaEskwelaView from './TeacherPages/BrigadaEskwelaView';
 import ProfilePage from './Utilities/ProfilePage';
 import Form137 from './reports/form_137';
 import GoodMoral from './reports/good_moral';
@@ -125,6 +126,7 @@ function App() {
             <Route path="/section" element={<SectionManagement />} />
             <Route path="/summary-report-promotion" element={<PromotionReport />} />
             <Route path="/brigada-eskwela" element={<BrigadaEskwela />} />
+            <Route path="/brigada-eskwela-view" element={<BrigadaEskwelaView />} />
             <Route path="/pending-enrollment" element={<EnrollmentRequests />} />
             <Route path="/enroll-student" element={<EnrollStudentManagement />} />
             <Route path="/new-grades" element={<GradesManagement />} />
