@@ -1,102 +1,86 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { jsPDF } from 'jspdf';
 import axios from 'axios';
 import '../CssFiles/roster.css';
 
 function Roster() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { schoolYear, grade, section } = location.state || {};
+
   const [schoolData, setSchoolData] = useState({
     schoolName: "Lourdes National High School",
     schoolId: "123456",
     district: "Dauis",
     division: "Bohol",
     region: "VII",
-    schoolYear: "2023-2024",
-    grade: "9",
-    section: "Rizal"
+    schoolYear: "",
+    grade: "",
+    section: "",
+    adviser: "",
   });
 
-  const [students, setStudents] = useState([
-    {
-      lrn: "123456789012",
-      name: "Dela Cruz, Juan A.",
-      sex: "M",
-      birthDate: "2008-05-15",
-      age: "15",
-      address: "Dauis, Bohol",
-      contact: "09123456789",
-      enrollmentDate: "2023-06-05",
-      status: "Enrolled"
-    },
-    {
-      lrn: "123456789013",
-      name: "Santos, Maria B.",
-      sex: "F",
-      birthDate: "2008-07-22",
-      age: "15",
-      address: "Panglao, Bohol",
-      contact: "09123456790",
-      enrollmentDate: "2023-06-05",
-      status: "Enrolled"
-    },
-    {
-      lrn: "123456789014",
-      name: "Reyes, Pedro C.",
-      sex: "M",
-      birthDate: "2008-03-10",
-      age: "15",
-      address: "Tagbilaran City, Bohol",
-      contact: "09123456791",
-      enrollmentDate: "2023-06-06",
-      status: "Enrolled"
-    },
-    {
-      lrn: "123456789015",
-      name: "Garcia, Ana D.",
-      sex: "F",
-      birthDate: "2008-11-30",
-      age: "15",
-      address: "Dauis, Bohol",
-      contact: "09123456792",
-      enrollmentDate: "2023-06-07",
-      status: "Enrolled"
-    },
-    {
-      lrn: "123456789016",
-      name: "Torres, Jose E.",
-      sex: "M",
-      birthDate: "2008-09-18",
-      age: "15",
-      address: "Panglao, Bohol",
-      contact: "09123456793",
-      enrollmentDate: "2023-06-08",
-      status: "Enrolled"
-    }
-  ]);
-
+  const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    // In a real application, you would fetch the data from your API
-    // fetchRosterData();
-  }, []);
+    if (!schoolYear || !grade || !section) {
+      console.warn("Missing required parameters. Redirecting...");
+      navigate('/select-roster-filters');
+      return;
+    }
 
-  const fetchRosterData = async () => {
+    fetchRosterData(schoolYear, grade, section);
+    setSchoolData(prev => ({
+      ...prev,
+      schoolYear,
+      grade,
+      section,
+    }));
+  }, [schoolYear, grade, section]);
+
+  const fetchRosterData = async (schoolYearId, gradeLevel, sectionId) => {
     setLoading(true);
+    setError(null);
+
     try {
-      // This would be replaced with your actual API endpoint
-      // const response = await axios.get(`http://localhost:3001/api/roster`, {
-      //   params: {
-      //     schoolYear: schoolData.schoolYear,
-      //     grade: schoolData.grade,
-      //     section: schoolData.section
-      //   }
-      // });
-      // setStudents(response.data);
-      setLoading(false);
-    } catch (error) {
-      console.error("Error fetching roster data:", error);
-      setError("Failed to fetch roster data");
+      const response = await axios.get('http://localhost:3001/api/class_list', {
+        params: {
+          school_year_id: schoolYearId,
+          grade_level: gradeLevel,
+          section_id: sectionId
+        }
+      });
+
+      console.log("API response:", response.data);
+
+      // If API includes classInfo metadata
+      if (response.data.classInfo) {
+        const { classInfo, students: studentList } = response.data;
+
+        setSchoolData(prev => ({
+          ...prev,
+          adviser: classInfo.class_adviser || prev.adviser,
+          section: classInfo.grade_section?.split(' - ')[1] || prev.section,
+          grade: classInfo.grade_section?.match(/Grade (\d+)/)?.[1] || prev.grade,
+          schoolYear: classInfo.school_year || prev.schoolYear
+          
+        }));
+
+        setStudents(studentList || []);
+      } else if (Array.isArray(response.data)) {
+        // Fallback for just array response
+        setStudents(response.data);
+      } else {
+        setError("Received data is not in the expected format.");
+        console.error("Unexpected data format:", response.data);
+      }
+    } catch (err) {
+      console.error("Error fetching roster data:", err);
+      setError("Failed to fetch roster data.");
+    } finally {
       setLoading(false);
     }
   };
@@ -156,6 +140,9 @@ function Roster() {
           </div>
         </div>
 
+        {loading && <p>Loading student data...</p>}
+        {error && <p style={{ color: 'red' }}>{error}</p>}
+
         <div className="roster-table-container">
           <table className="roster-table">
             <thead>
@@ -173,20 +160,28 @@ function Roster() {
               </tr>
             </thead>
             <tbody>
-              {students.map((student, index) => (
-                <tr key={student.lrn}>
-                  <td>{index + 1}</td>
-                  <td>{student.lrn}</td>
-                  <td>{student.name}</td>
-                  <td>{student.sex}</td>
-                  <td>{student.birthDate}</td>
-                  <td>{student.age}</td>
-                  <td>{student.address}</td>
-                  <td>{student.contact}</td>
-                  <td>{student.enrollmentDate}</td>
-                  <td>{student.status}</td>
-                </tr>
-              ))}
+              {students.length > 0 ? (
+                students.map((student, index) => (
+                  <tr key={student.lrn || index}>
+                    <td>{index + 1}</td>
+                    <td>{student.lrn}</td>
+                    <td>{student.student_name}</td>
+                    <td>{student.gender}</td>
+                    <td>{student.birthdate}</td>
+                    <td>{student.age}</td>
+                    <td>{student.address}</td>
+                    <td>{student.contact}</td>
+                    <td>{student.enrollment_date}</td>
+                    <td>{student.enrollment_status}</td>
+                  </tr>
+                ))
+              ) : (
+                !loading && !error && (
+                  <tr>
+                    <td colSpan="10">No students found.</td>
+                  </tr>
+                )
+              )}
             </tbody>
           </table>
         </div>
@@ -198,11 +193,11 @@ function Roster() {
           </div>
           <div className="roster-summary-item">
             <span className="roster-summary-label">Male:</span>
-            <span>{students.filter(student => student.sex === 'M').length}</span>
+            <span>{students.filter(s => s.gender === 'Male').length}</span>
           </div>
           <div className="roster-summary-item">
             <span className="roster-summary-label">Female:</span>
-            <span>{students.filter(student => student.sex === 'F').length}</span>
+            <span>{students.filter(s => s.gender === 'Female').length}</span>
           </div>
         </div>
 
@@ -210,7 +205,7 @@ function Roster() {
           <div className="roster-signature-section">
             <div className="roster-signature">
               <div className="roster-signature-line"></div>
-              <div className="roster-signature-name">Class Adviser</div>
+              <div className="roster-signature-name">{schoolData.adviser || "Class Adviser"}</div>
               <div className="roster-signature-title">Teacher III</div>
             </div>
             <div className="roster-signature">
@@ -229,4 +224,4 @@ function Roster() {
   );
 }
 
-export default Roster; 
+export default Roster;

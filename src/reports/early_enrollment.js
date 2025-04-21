@@ -1,9 +1,13 @@
+import { useLocation } from 'react-router-dom';
 import React, { useState, useEffect } from 'react';
 import { jsPDF } from 'jspdf';
 import axios from 'axios';
 import '../CssFiles/early_enrollment.css';
 
 function EarlyEnrollment() {
+  const location = useLocation();
+  const { schoolYear, grade, section } = location.state || {};
+
   const [schoolData, setSchoolData] = useState({
     schoolName: "Lourdes National High School",
     schoolId: "123456",
@@ -14,37 +18,69 @@ function EarlyEnrollment() {
   });
 
   const [enrollmentData, setEnrollmentData] = useState({
-    grades: {
-      "Grade 7": { male: 120, female: 130, total: 250 },
-      "Grade 8": { male: 115, female: 125, total: 240 },
-      "Grade 9": { male: 110, female: 120, total: 230 },
-      "Grade 10": { male: 105, female: 115, total: 220 }
-    },
-    totalMale: 450,
-    totalFemale: 490,
-    grandTotal: 940,
+    grades: {},
+    totalMale: 0,
+    totalFemale: 0,
+    grandTotal: 0,
     enrollmentPeriod: "Early Enrollment",
-    enrollmentDates: "May 15-30, 2023"
+    enrollmentDates: ""
   });
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    // In a real application, you would fetch the data from your API
-    // fetchEnrollmentData();
-  }, []);
+    if (schoolYear && grade && section) {
+      fetchEnrollmentData(schoolYear, grade, section);
+    }
+  }, [schoolYear, grade, section]);
 
-  const fetchEnrollmentData = async () => {
+  const fetchEnrollmentData = async (schoolYear, grade, section) => {
     setLoading(true);
     try {
-      // This would be replaced with your actual API endpoint
-      // const response = await axios.get(`http://localhost:3001/api/early-enrollment`, {
-      //   params: {
-      //     schoolYear: schoolData.schoolYear
-      //   }
-      // });
-      // setEnrollmentData(response.data);
+      const response = await axios.get('http://localhost:3001/api/student-stats', {
+        params: {
+          school_year_id: schoolYear, // Use dynamic school year ID
+          section_id: section,        // Use dynamic section ID
+          grade_level: grade          // Use dynamic grade level
+        }
+      });
+  
+      const data = response.data;
+      
+      let totalMale = 0;
+      let totalFemale = 0;
+      let grandTotal = 0;
+  
+      const grades = data.student_statistics.reduce((acc, gradeData) => {
+        const gradeLevel = gradeData.LEVEL;
+        const maleCount = gradeData.male_count;
+        const femaleCount = gradeData.female_count;
+        const totalStudents = gradeData.total_students;
+  
+        // Update totals
+        totalMale += maleCount;
+        totalFemale += femaleCount;
+        grandTotal += totalStudents;
+  
+        acc[gradeLevel] = {
+          male: maleCount,
+          female: femaleCount,
+          total: totalStudents
+        };
+        return acc;
+      }, {});
+  
+      setEnrollmentData({
+        grades: grades,
+        totalMale: totalMale,
+        totalFemale: totalFemale,
+        grandTotal: grandTotal,
+        enrollmentPeriod: "Early Enrollment",
+        enrollmentDates: data.school_year_info.enrollment_dates || "",
+        schoolYearName: data.school_year_info.school_year_name
+      });
+  
       setLoading(false);
     } catch (error) {
       console.error("Error fetching early enrollment data:", error);
@@ -52,6 +88,7 @@ function EarlyEnrollment() {
       setLoading(false);
     }
   };
+  
 
   const handleConvertToPdf = () => {
     const doc = new jsPDF({
@@ -96,7 +133,7 @@ function EarlyEnrollment() {
         <div className="early-enrollment-school-info">
           <div className="early-enrollment-info-item">
             <span className="early-enrollment-info-label">School Year:</span>
-            <span>{schoolData.schoolYear}</span>
+            <span>{enrollmentData.schoolYearName}</span>
           </div>
           <div className="early-enrollment-info-item">
             <span className="early-enrollment-info-label">Enrollment Period:</span>
@@ -179,4 +216,4 @@ function EarlyEnrollment() {
   );
 }
 
-export default EarlyEnrollment; 
+export default EarlyEnrollment;

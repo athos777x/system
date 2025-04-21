@@ -6115,7 +6115,7 @@ app.get('/api/class_list', (req, res) => {
           DATE_FORMAT(s.birthdate, '%Y-%m-%d') AS birthdate, 
           IF(s.father_name = '', s.mother_name, s.father_name) AS parent_name, 
           IF(s.father_contact_number = '', s.mother_contact_number, s.father_contact_number) AS parent_contact_no,
-          s.father_name, s.mother_name
+          s.father_name, s.mother_name, DATE_FORMAT(e.enrollment_date, '%Y-%m-%d') AS enrollment_date, IF(e.enrollment_status='active','Enrolled','Not Enrolled') enrollment_status
         FROM enrollment e 
         LEFT JOIN student s ON e.student_id = s.student_id 
         WHERE e.grade_level = ? AND e.section_id = ? AND e.school_year_id = ?`,
@@ -6342,6 +6342,67 @@ app.get('/api/reports/subject-statistics', (req, res) => {
       res.json({
         section_info: sectionResult[0] || {},
         subject_statistics: statsResult
+      });
+    });
+  });
+});
+
+app.get('/api/student-stats', (req, res) => {
+  const { school_year_id, section_id, grade_level } = req.query;
+
+  // Check if all required parameters are provided
+  if (!school_year_id || !section_id || !grade_level) {
+    return res.status(400).json({ error: 'Missing required query parameters' });
+  }
+
+  // First query to get the school year information
+  const schoolYearQuery = `
+    SELECT 
+      school_year AS school_year_name, 
+      CONCAT(DATE_FORMAT(enrollment_start, '%M %d'), ' - ', DATE_FORMAT(enrollment_end, '%d, %Y')) AS enrollment_dates
+    FROM school_year 
+    WHERE school_year_id = ?;
+  `;
+
+  // Execute the school year query
+  db.query(schoolYearQuery, [school_year_id], (err, schoolYearResult) => {
+    if (err) {
+      console.error('School year query error:', err);
+      return res.status(500).json({ error: 'Failed to fetch school year information' });
+    }
+
+    // Get the school year details (if any)
+    const schoolYearInfo = schoolYearResult[0];
+
+    // SQL query for student stats
+    const studentStatsQuery = `
+      SELECT 
+        CONCAT('Grade', ' ', a.grade_level) AS LEVEL,
+        IFNULL(COUNT(CASE WHEN b.gender = 'Male' THEN 1 END), 0) AS male_count,
+        IFNULL(COUNT(CASE WHEN b.gender = 'Female' THEN 1 END), 0) AS female_count,
+        IFNULL(COUNT(*), 0) AS total_students
+      FROM enrollment a
+      LEFT JOIN student b ON a.student_id = b.student_id
+      LEFT JOIN school_year c ON a.school_year_id = c.school_year_id
+      WHERE a.school_year_id = ?
+        AND a.section_id = ?
+        AND a.enrollment_date <= c.enrollment_end
+        AND a.grade_level = ?
+      GROUP BY a.grade_level
+      ORDER BY a.grade_level;
+    `;
+
+    // Execute the student stats query with parameters
+    db.query(studentStatsQuery, [school_year_id, section_id, grade_level], (err, studentStatsResult) => {
+      if (err) {
+        console.error('Student stats query error:', err);
+        return res.status(500).json({ error: 'Failed to fetch student statistics' });
+      }
+
+      // Return the combined results
+      res.json({
+        school_year_info: schoolYearInfo || {},
+        student_statistics: studentStatsResult
       });
     });
   });
