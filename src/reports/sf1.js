@@ -44,16 +44,18 @@ function SF1() {
   
         const classInfoData = response.data.classInfo;
   
-        setSchoolData((prev) => ({
-          ...prev,
-          schoolYear: classInfoData.school_year,
-          adviser: classInfoData.class_adviser,
-          dateGenerated: classInfoData.date_generated || new Date().toLocaleDateString(),
-          grade_section: classInfoData.grade_section
-        }));
+        if (classInfoData) {
+          setSchoolData((prev) => ({
+            ...prev,
+            schoolYear: classInfoData.school_year,
+            adviser: classInfoData.class_adviser,
+            dateGenerated: classInfoData.date_generated || new Date().toLocaleDateString(),
+            grade_section: classInfoData.grade_section
+          }));
+          setClassInfo(classInfoData);
+        }
   
-        setClassInfo(classInfoData);
-        setStudents(response.data.students);
+        setStudents(response.data.students || []);
         setLoading(false);
       } catch (err) {
         setError('Error fetching class list data');
@@ -63,6 +65,7 @@ function SF1() {
   
     fetchClassList();
   }, [schoolYearId, gradeLevel, sectionId]);
+  
   
 
   const handleConvertToPdf = () => {

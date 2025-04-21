@@ -6137,3 +6137,212 @@ app.get('/api/class_list', (req, res) => {
 });
 
 
+app.get('/api/subject-statistics', (req, res) => {
+  const { grade_level, section_id, school_year_id, period } = req.query;
+
+  if (!grade_level || !section_id || !school_year_id || !period) {
+    return res.status(400).json({ error: 'Missing required query parameters.' });
+  }
+
+  const metaInfoQuery = `
+    SELECT 
+      a.section_name, b.school_year 
+    FROM section a
+    LEFT JOIN school_year b ON a.school_year_id = b.school_year_id
+    WHERE a.section_id = ? AND a.grade_level = ? AND a.school_year_id = ?
+  `;
+
+  const subjectStatsQuery = `
+    SELECT  
+        a.subject_name,
+        COUNT(a.student_id) AS total_students,
+        MAX(a.grade) AS highest_grade,
+        MIN(a.grade) AS lowest_grade,
+        ROUND(AVG(a.grade), 2) AS mean_grade,
+        ROUND(STDDEV_POP(a.grade), 2) AS standard_deviation,
+        SUM(CASE WHEN a.grade BETWEEN 90 AND 100 THEN 1 ELSE 0 END) AS grade_90_100,
+        SUM(CASE WHEN a.grade BETWEEN 85 AND 89 THEN 1 ELSE 0 END) AS grade_85_89,
+        SUM(CASE WHEN a.grade BETWEEN 75 AND 79 THEN 1 ELSE 0 END) AS grade_75_79,
+        SUM(CASE WHEN a.grade < 75 THEN 1 ELSE 0 END) AS grade_below_75
+    FROM grades a
+    LEFT JOIN subject b ON a.subject_name = b.subject_name
+    LEFT JOIN section c ON a.section_id = c.section_id
+    WHERE 
+        a.grade_level = ?
+        AND a.section_id = ?
+        AND a.school_year_id = ?
+        AND a.period = ?
+    GROUP BY a.subject_name
+  `;
+
+  // Run metaInfoQuery first
+  db.query(metaInfoQuery, [section_id, grade_level, school_year_id], (err, metaResults) => {
+    if (err) {
+      console.error('Meta info error:', err);
+      return res.status(500).json({ error: 'Meta info query failed.' });
+    }
+
+    db.query(subjectStatsQuery, [grade_level, section_id, school_year_id, period], (err, subjectResults) => {
+      if (err) {
+        console.error('Subject stats error:', err);
+        return res.status(500).json({ error: 'Subject statistics query failed.' });
+      }
+
+      return res.json({
+        subjects: subjectResults,
+        meta: metaResults[0] || {}
+      });
+    });
+  });
+});
+
+app.get('/api/reports/class-honor-roll', (req, res) => {
+  const { school_year_id, grade_level, section_id, quarter } = req.query;
+
+  const headerQuery = `
+    SELECT 
+      sy.school_year, 
+      CONCAT(em.firstname, ' ', LEFT(IFNULL(em.middlename, ''), 1), '.', em.lastname) AS class_adviser, 
+      CONCAT('Grade ', e.grade_level, ' - ', s.section_name) AS grade_section, 
+      DATE_FORMAT(CURDATE(), '%m/%d/%Y') AS date_generated
+    FROM enrollment e 
+    LEFT JOIN section s ON e.section_id = s.section_id 
+    LEFT JOIN employee em ON s.section_adviser = em.employee_id 
+    LEFT JOIN school_year sy ON e.school_year_id = sy.school_year_id 
+    WHERE e.school_year_id = ? AND e.grade_level = ? AND e.section_id = ?
+    LIMIT 1
+  `;
+
+  const honorRollQuery = `
+    SELECT 
+      b.lrn, 
+      CONCAT(b.lastname, ', ', b.firstname, ' ', LEFT(IFNULL(b.middlename, ''), 1)) AS stud_name, 
+      IF(b.gender = 'Male', 'M', 'F') AS sex, 
+      AVG(c.grade) AS general_average,
+      CASE
+        WHEN AVG(c.grade) >= 90 THEN 'With Highest Honor'
+        WHEN AVG(c.grade) >= 85 THEN 'With High Honor'
+        WHEN AVG(c.grade) >= 80 THEN 'With Honors'
+        ELSE 'No Honors'
+      END AS remarks
+    FROM 
+      enrollment a 
+    LEFT JOIN student b ON a.student_id = b.student_id
+    LEFT JOIN grades c ON a.student_id = c.student_id
+    WHERE 
+      a.grade_level = ? AND 
+      a.section_id = ? AND 
+      a.school_year_id = ? AND 
+      c.period = ?
+    GROUP BY a.student_id
+    ORDER BY general_average DESC
+  `;
+
+  db.query(headerQuery, [school_year_id, grade_level, section_id], (err, headerResults) => {
+    if (err) {
+      console.error('Error fetching header data:', err);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+
+    db.query(honorRollQuery, [grade_level, section_id, school_year_id, quarter], (err, results) => {
+      if (err) {
+        console.error('Error fetching honor roll:', err);
+        return res.status(500).json({ error: 'Internal server error' });
+      }
+
+      const rankedResults = results.map((student, index) => ({
+        ...student,
+        rank: index + 1
+      }));
+
+      res.json({
+        header: headerResults[0],
+        honorRoll: rankedResults
+      });
+    });
+  });
+});
+
+app.get('/api/reports/subject-statistics', (req, res) => {
+  const sectionId = req.query.section_id;
+  const gradeLevel = req.query.grade_level;
+  const schoolYearId = req.query.school_year_id;
+
+  if (!sectionId || !gradeLevel || !schoolYearId) {
+    return res.status(400).json({ error: 'Missing required query parameters' });
+  }
+
+  const sectionInfoQuery = `
+    SELECT 
+      a.section_name, 
+      b.school_year as school_year_name 
+    FROM section a
+    LEFT JOIN school_year b ON a.school_year_id = b.school_year_id
+    WHERE a.section_id = ? AND a.grade_level = ? AND a.school_year_id = ?
+  `;
+
+  db.query(sectionInfoQuery, [sectionId, gradeLevel, schoolYearId], (err, sectionResult) => {
+    if (err) {
+      console.error('Section info query error:', err);
+      return res.status(500).json({ error: 'Failed to fetch section info' });
+    }
+
+    const subjectStatsQuery = `
+      SELECT 
+        t.subject_name,
+        COUNT(*) AS total_students,
+
+        -- Male
+        COUNT(CASE WHEN t.gender = 'Male' AND t.avg_grade >= 75 THEN 1 END) AS male_passed,
+        COUNT(CASE WHEN t.gender = 'Male' AND t.avg_grade < 75 THEN 1 END) AS male_failed,
+
+        -- Female
+        COUNT(CASE WHEN t.gender = 'Female' AND t.avg_grade >= 75 THEN 1 END) AS female_passed,
+        COUNT(CASE WHEN t.gender = 'Female' AND t.avg_grade < 75 THEN 1 END) AS female_failed,
+
+        -- Total
+        COUNT(CASE WHEN t.avg_grade >= 75 THEN 1 END) AS total_passed,
+        COUNT(CASE WHEN t.avg_grade < 75 THEN 1 END) AS total_failed,
+
+        -- Promotion
+        COUNT(CASE WHEN t.gender = 'Male' AND t.avg_grade >= 75 THEN 1 END) AS male_promoted,
+        COUNT(CASE WHEN t.gender = 'Male' AND t.avg_grade < 75 THEN 1 END) AS male_retained,
+        COUNT(CASE WHEN t.gender = 'Female' AND t.avg_grade >= 75 THEN 1 END) AS female_promoted,
+        COUNT(CASE WHEN t.gender = 'Female' AND t.avg_grade < 75 THEN 1 END) AS female_retained
+
+      FROM (
+        SELECT 
+          s.subject_name,
+          g.student_id,
+          st.gender,
+          AVG(g.grade) AS avg_grade
+        FROM SUBJECT s
+        LEFT JOIN grades g ON s.subject_name = g.subject_name AND s.school_year_id = g.school_year_id
+        LEFT JOIN enrollment e ON g.student_id = e.student_id AND g.school_year_id = e.school_year_id
+        LEFT JOIN student st ON e.student_id = st.student_id
+
+        WHERE 
+          s.school_year_id = ?
+          AND s.grade_level = ?
+          AND e.section_id = ?
+          AND g.period IN ('1st', '2nd', '3rd', '4th')
+
+        GROUP BY s.subject_name, g.student_id
+      ) AS t
+
+      GROUP BY t.subject_name
+    `;
+
+    db.query(subjectStatsQuery, [schoolYearId, gradeLevel, sectionId], (err, statsResult) => {
+      if (err) {
+        console.error('Subject stats query error:', err);
+        return res.status(500).json({ error: 'Failed to fetch subject statistics' });
+      }
+
+      res.json({
+        section_info: sectionResult[0] || {},
+        subject_statistics: statsResult
+      });
+    });
+  });
+});

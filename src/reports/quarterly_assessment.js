@@ -1,129 +1,102 @@
+import { useLocation } from 'react-router-dom';
 import React, { useState, useEffect } from 'react';
 import { jsPDF } from 'jspdf';
 import axios from 'axios';
 import '../CssFiles/quarterly_assessment.css';
 
 function QuarterlyAssessment() {
+  const location = useLocation();
+  const { schoolYear, grade, section, quarter } = location.state || {};
+
   const [schoolData, setSchoolData] = useState({
     schoolName: "Lourdes National High School",
     schoolId: "123456",
     district: "Dauis",
     division: "Bohol",
     region: "VII",
-    schoolYear: "2023-2024",
-    quarter: "1st Quarter",
-    grade: "9",
-    section: "Rizal"
+    schoolYear: schoolYear,
+    quarter: quarter,
+    grade: grade,
+    section: section
   });
 
   const [assessmentData, setAssessmentData] = useState({
-    subjects: [
-      {
-        name: "Filipino",
-        totalStudents: 52,
-        highest: 98,
-        lowest: 75,
-        mean: 85.5,
-        standardDeviation: 5.2,
-        distribution: {
-          "90-100": 15,
-          "85-89": 20,
-          "80-84": 10,
-          "75-79": 5,
-          "Below 75": 2
-        }
-      },
-      {
-        name: "English",
-        totalStudents: 52,
-        highest: 100,
-        lowest: 78,
-        mean: 88.3,
-        standardDeviation: 4.8,
-        distribution: {
-          "90-100": 18,
-          "85-89": 22,
-          "80-84": 8,
-          "75-79": 3,
-          "Below 75": 1
-        }
-      },
-      {
-        name: "Mathematics",
-        totalStudents: 52,
-        highest: 95,
-        lowest: 70,
-        mean: 82.7,
-        standardDeviation: 6.1,
-        distribution: {
-          "90-100": 12,
-          "85-89": 18,
-          "80-84": 12,
-          "75-79": 7,
-          "Below 75": 3
-        }
-      },
-      {
-        name: "Science",
-        totalStudents: 52,
-        highest: 97,
-        lowest: 76,
-        mean: 86.2,
-        standardDeviation: 5.5,
-        distribution: {
-          "90-100": 14,
-          "85-89": 21,
-          "80-84": 10,
-          "75-79": 5,
-          "Below 75": 2
-        }
-      },
-      {
-        name: "Araling Panlipunan",
-        totalStudents: 52,
-        highest: 99,
-        lowest: 77,
-        mean: 87.8,
-        standardDeviation: 5.0,
-        distribution: {
-          "90-100": 16,
-          "85-89": 20,
-          "80-84": 9,
-          "75-79": 5,
-          "Below 75": 2
-        }
-      }
-    ],
-    classAverage: 86.1,
-    passingRate: 94.2,
-    failingRate: 5.8
+    subjects: [],
+    classAverage: 0,
+    passingRate: 0,
+    failingRate: 0
   });
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    // In a real application, you would fetch the data from your API
-    // fetchAssessmentData();
+    if (schoolYear && grade && section && quarter) {
+      fetchAssessmentData();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchAssessmentData = async () => {
     setLoading(true);
+    setError(null);
+
     try {
-      // This would be replaced with your actual API endpoint
-      // const response = await axios.get(`http://localhost:3001/api/quarterly-assessment`, {
-      //   params: {
-      //     schoolYear: schoolData.schoolYear,
-      //     quarter: schoolData.quarter,
-      //     grade: schoolData.grade,
-      //     section: schoolData.section
-      //   }
-      // });
-      // setAssessmentData(response.data);
-      setLoading(false);
+      const response = await axios.get('http://localhost:3001/api/subject-statistics', {
+        params: {
+          grade_level: grade,
+          section_id: section,
+          school_year_id: schoolYear,
+          period: quarter
+        }
+      });
+
+      const { subjects, meta } = response.data;
+
+      const formattedSubjects = subjects.map(subject => ({
+        name: subject.subject_name,
+        totalStudents: subject.total_students,
+        highest: subject.highest_grade,
+        lowest: subject.lowest_grade,
+        mean: subject.mean_grade,
+        standardDeviation: subject.standard_deviation,
+        distribution: {
+          "90-100": subject.grade_90_100,
+          "85-89": subject.grade_85_89,
+          "80-84": subject.grade_80_84 || 0,
+          "75-79": subject.grade_75_79,
+          "Below 75": subject.grade_below_75
+        }
+      }));
+
+      const totalStudents = formattedSubjects.length > 0 ? formattedSubjects[0].totalStudents : 0;
+      const totalGrades = formattedSubjects.reduce((sum, sub) => sum + sub.mean * totalStudents, 0);
+      const classAverage = formattedSubjects.length > 0 ? totalGrades / (totalStudents * formattedSubjects.length) : 0;
+
+      const totalFailing = formattedSubjects.reduce((sum, sub) => sum + sub.distribution["Below 75"], 0);
+      const totalPassing = totalStudents * formattedSubjects.length - totalFailing;
+      const totalAll = totalPassing + totalFailing;
+
+      const passingRate = totalAll ? (totalPassing / totalAll) * 100 : 0;
+      const failingRate = totalAll ? (totalFailing / totalAll) * 100 : 0;
+
+      setSchoolData(prev => ({
+        ...prev,
+        section: meta.section_name || prev.section,
+        schoolYearName: meta.school_year || prev.schoolYear
+      }));
+
+      setAssessmentData({
+        subjects: formattedSubjects,
+        classAverage,
+        passingRate,
+        failingRate
+      });
+
     } catch (error) {
       console.error("Error fetching quarterly assessment data:", error);
       setError("Failed to fetch quarterly assessment data");
+    } finally {
       setLoading(false);
     }
   };
@@ -149,6 +122,18 @@ function QuarterlyAssessment() {
     }
   };
 
+  const getQuarterLabel = (quarter) => {
+    switch (parseInt(quarter)) {
+      case 1: return '1st Quarter';
+      case 2: return '2nd Quarter';
+      case 3: return '3rd Quarter';
+      case 4: return '4th Quarter';
+      default: return 'N/A';
+    }
+  };
+
+  
+
   return (
     <div className="quarterly-assessment-page">
       <div className="quarterly-assessment-container">
@@ -171,11 +156,11 @@ function QuarterlyAssessment() {
         <div className="quarterly-assessment-school-info">
           <div className="quarterly-assessment-info-item">
             <span className="quarterly-assessment-info-label">School Year:</span>
-            <span>{schoolData.schoolYear}</span>
+            <span>{schoolData.schoolYearName || schoolData.schoolYear}</span>
           </div>
           <div className="quarterly-assessment-info-item">
             <span className="quarterly-assessment-info-label">Quarter:</span>
-            <span>{schoolData.quarter}</span>
+            <span>{getQuarterLabel(schoolData.quarter)}</span>
           </div>
           <div className="quarterly-assessment-info-item">
             <span className="quarterly-assessment-info-label">Grade & Section:</span>
@@ -243,23 +228,17 @@ function QuarterlyAssessment() {
           <div className="quarterly-assessment-signature-section">
             <div className="quarterly-assessment-signature">
               <div className="quarterly-assessment-signature-line"></div>
-              <div className="quarterly-assessment-signature-name">Class Adviser</div>
-              <div className="quarterly-assessment-signature-title">Teacher III</div>
-            </div>
-            <div className="quarterly-assessment-signature">
-              <div className="quarterly-assessment-signature-line"></div>
-              <div className="quarterly-assessment-signature-name">School Principal</div>
-              <div className="quarterly-assessment-signature-title">Principal III</div>
+              <span>Signature</span>
             </div>
           </div>
         </div>
-      </div>
 
-      <div className="quarterly-assessment-buttons">
-        <button onClick={handleConvertToPdf}>Print</button>
+        <div className="quarterly-assessment-footer-buttons">
+          <button onClick={handleConvertToPdf}>Download as PDF</button>
+        </div>
       </div>
     </div>
   );
 }
 
-export default QuarterlyAssessment; 
+export default QuarterlyAssessment;
