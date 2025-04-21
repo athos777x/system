@@ -1,101 +1,86 @@
+import { useLocation } from 'react-router-dom';
 import React, { useState, useEffect } from 'react';
 import { jsPDF } from 'jspdf';
 import axios from 'axios';
 import '../CssFiles/class_honor_roll.css';
 
 function ClassHonorRoll() {
+  const location = useLocation();
+  const filters = location.state || {}; // get passed values
+
   const [schoolData, setSchoolData] = useState({
     schoolName: "Lourdes National High School",
     schoolId: "123456",
     district: "Dauis",
     division: "Bohol",
     region: "VII",
-    schoolYear: "2023-2024",
-    quarter: "1st",
-    grade: "9",
-    section: "Rizal",
-    adviser: "Maria Santos"
+    schoolYear: filters.schoolYear || "2023-2024",
+    quarter: filters.quarter || "1st",
+    grade: filters.grade || "9",
+    section: filters.section || "Rizal",
+    adviser: filters.adviser || "Maria Santos"
   });
 
-  const [honorRoll, setHonorRoll] = useState([
-    {
-      rank: 1,
-      lrn: "123456789012",
-      name: "Dela Cruz, Juan A.",
-      sex: "M",
-      generalAverage: 98.5,
-      conduct: "Outstanding",
-      attendance: "Perfect",
-      remarks: "With Highest Honors"
-    },
-    {
-      rank: 2,
-      lrn: "123456789013",
-      name: "Santos, Maria B.",
-      sex: "F",
-      generalAverage: 97.8,
-      conduct: "Outstanding",
-      attendance: "Perfect",
-      remarks: "With High Honors"
-    },
-    {
-      rank: 3,
-      lrn: "123456789014",
-      name: "Reyes, Pedro C.",
-      sex: "M",
-      generalAverage: 96.5,
-      conduct: "Very Satisfactory",
-      attendance: "Perfect",
-      remarks: "With Honors"
-    },
-    {
-      rank: 4,
-      lrn: "123456789015",
-      name: "Garcia, Ana D.",
-      sex: "F",
-      generalAverage: 95.8,
-      conduct: "Very Satisfactory",
-      attendance: "Perfect",
-      remarks: "With Honors"
-    },
-    {
-      rank: 5,
-      lrn: "123456789016",
-      name: "Torres, Jose E.",
-      sex: "M",
-      generalAverage: 95.2,
-      conduct: "Very Satisfactory",
-      attendance: "Perfect",
-      remarks: "With Honors"
-    }
-  ]);
-
+  const [honorRoll, setHonorRoll] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    // In a real application, you would fetch the data from your API
-    // fetchHonorRollData();
+    fetchHonorRollData();
   }, []);
 
   const fetchHonorRollData = async () => {
     setLoading(true);
     try {
-      // This would be replaced with your actual API endpoint
-      // const response = await axios.get(`http://localhost:3001/api/class-honor-roll`, {
-      //   params: {
-      //     schoolYear: schoolData.schoolYear,
-      //     quarter: schoolData.quarter,
-      //     grade: schoolData.grade,
-      //     section: schoolData.section
-      //   }
-      // });
-      // setHonorRoll(response.data);
-      setLoading(false);
+      const response = await axios.get('http://localhost:3001/api/reports/class-honor-roll', {
+        params: {
+          school_year_id: filters.schoolYearId || '1',
+          grade_level: filters.grade || '9',
+          section_id: filters.sectionId || '1',
+          quarter: filters.quarter || '1st'
+        }
+      });
+  
+      const { header, honorRoll } = response.data;
+  
+      const transformedData = honorRoll.map((student, index) => ({
+        rank: index + 1,
+        lrn: student.lrn,
+        name: student.stud_name,
+        sex: student.sex,
+        generalAverage: parseFloat(student.general_average).toFixed(2),
+        conduct: "Outstanding",
+        attendance: "Perfect",
+        remarks: student.remarks
+      }));
+  
+      setHonorRoll(transformedData);
+  
+      if (header) {
+        setSchoolData(prev => ({
+          ...prev,
+          schoolYear: header.school_year,
+          grade: header.grade_section.split(" - ")[0].replace("Grade ", ""),
+          section: header.grade_section.split(" - ")[1],
+          adviser: header.class_adviser,
+          dateGenerated: header.date_generated
+        }));
+      }
     } catch (error) {
       console.error("Error fetching honor roll data:", error);
       setError("Failed to fetch honor roll data");
+    } finally {
       setLoading(false);
+    }
+  };
+  
+  const getQuarterLabel = (quarter) => {
+    switch (parseInt(quarter)) {
+      case 1: return '1st Quarter';
+      case 2: return '2nd Quarter';
+      case 3: return '3rd Quarter';
+      case 4: return '4th Quarter';
+      default: return 'N/A';
     }
   };
 
@@ -129,8 +114,8 @@ function ClassHonorRoll() {
           </div>
           <div className="class-honor-roll-header-text">
             <h1>Republic of the Philippines • Department of Education</h1>
-            <h2>Region VII Central Visayas • Division of Bohol • District of Dauis</h2>
-            <h2>LOURDES NATIONAL HIGH SCHOOL</h2>
+            <h2>Region {schoolData.region} • Division of {schoolData.division} • District of {schoolData.district}</h2>
+            <h2>{schoolData.schoolName.toUpperCase()}</h2>
             <h3>Dauis - Panglao Rd, Dauis, Bohol</h3>
             <h3>CLASS HONOR ROLL</h3>
           </div>
@@ -146,7 +131,7 @@ function ClassHonorRoll() {
           </div>
           <div className="class-honor-roll-info-item">
             <span className="class-honor-roll-info-label">Quarter:</span>
-            <span>{schoolData.quarter}</span>
+            <span>{getQuarterLabel(schoolData.quarter)}</span>
           </div>
           <div className="class-honor-roll-info-item">
             <span className="class-honor-roll-info-label">Grade & Section:</span>
@@ -163,34 +148,40 @@ function ClassHonorRoll() {
         </div>
 
         <div className="class-honor-roll-table-container">
-          <table className="class-honor-roll-table">
-            <thead>
-              <tr>
-                <th>Rank</th>
-                <th>LRN</th>
-                <th>Name</th>
-                <th>Sex</th>
-                <th>General Average</th>
-                <th>Conduct</th>
-                <th>Attendance</th>
-                <th>Remarks</th>
-              </tr>
-            </thead>
-            <tbody>
-              {honorRoll.map((student) => (
-                <tr key={student.lrn}>
-                  <td>{student.rank}</td>
-                  <td>{student.lrn}</td>
-                  <td>{student.name}</td>
-                  <td>{student.sex}</td>
-                  <td>{student.generalAverage}</td>
-                  <td>{student.conduct}</td>
-                  <td>{student.attendance}</td>
-                  <td>{student.remarks}</td>
+          {loading ? (
+            <p>Loading...</p>
+          ) : error ? (
+            <p style={{ color: 'red' }}>{error}</p>
+          ) : (
+            <table className="class-honor-roll-table">
+              <thead>
+                <tr>
+                  <th>Rank</th>
+                  <th>LRN</th>
+                  <th>Name</th>
+                  <th>Sex</th>
+                  <th>General Average</th>
+                  <th>Conduct</th>
+                  <th>Attendance</th>
+                  <th>Remarks</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {honorRoll.map((student) => (
+                  <tr key={student.lrn}>
+                    <td>{student.rank}</td>
+                    <td>{student.lrn}</td>
+                    <td>{student.name}</td>
+                    <td>{student.sex}</td>
+                    <td>{student.generalAverage}</td>
+                    <td>{student.conduct}</td>
+                    <td>{student.attendance}</td>
+                    <td>{student.remarks}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
 
         <div className="class-honor-roll-summary">
@@ -212,8 +203,8 @@ function ClassHonorRoll() {
           <div className="class-honor-roll-signature-section">
             <div className="class-honor-roll-signature">
               <div className="class-honor-roll-signature-line"></div>
-              <div className="class-honor-roll-signature-name">Class Adviser</div>
-              <div className="class-honor-roll-signature-title">Teacher III</div>
+              <div className="class-honor-roll-signature-name">{schoolData.adviser}</div>
+              <div className="class-honor-roll-signature-title">Class Adviser</div>
             </div>
             <div className="class-honor-roll-signature">
               <div className="class-honor-roll-signature-line"></div>
@@ -231,4 +222,4 @@ function ClassHonorRoll() {
   );
 }
 
-export default ClassHonorRoll; 
+export default ClassHonorRoll;

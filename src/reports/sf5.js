@@ -1,63 +1,106 @@
-import React, { useState } from 'react';
+import { useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
 import { jsPDF } from 'jspdf';
+import axios from 'axios';
 import '../CssFiles/sf5.css';
 
 function SF5() {
-  const [schoolData] = useState({
+  const { state } = useLocation();
+  const { schoolYear, grade, section } = state;
+  const [schoolData, setSchoolData] = useState({
     schoolName: "Lourdes National High School",
     schoolId: "123456",
     district: "Dauis",
     division: "Bohol",
     region: "VII",
-    schoolYear: "2023-2024",
-    grade: "9",
-    section: "Rizal"
+    schoolYear: schoolYear,
+    grade: grade,
+    section: section,
+    schoolYearName: ''
   });
 
-  const [promotionData] = useState({
-    subjects: [
-      {
-        name: "Filipino",
-        total: 52,
-        passed: 50,
-        failed: 2,
-        maleStats: { passed: 24, failed: 1 },
-        femaleStats: { passed: 26, failed: 1 }
-      },
-      {
-        name: "English",
-        total: 52,
-        passed: 51,
-        failed: 1,
-        maleStats: { passed: 25, failed: 0 },
-        femaleStats: { passed: 26, failed: 1 }
-      },
-      {
-        name: "Mathematics",
-        total: 52,
-        passed: 49,
-        failed: 3,
-        maleStats: { passed: 23, failed: 2 },
-        femaleStats: { passed: 26, failed: 1 }
-      },
-      {
-        name: "Science",
-        total: 52,
-        passed: 50,
-        failed: 2,
-        maleStats: { passed: 24, failed: 1 },
-        femaleStats: { passed: 26, failed: 1 }
-      },
-      // Add more subjects as needed
-    ],
+  const [promotionData, setPromotionData] = useState({
+    subjects: [],
     summary: {
-      totalStudents: 52,
-      promoted: 48,
-      retained: 4,
-      maleStats: { promoted: 23, retained: 2 },
-      femaleStats: { promoted: 25, retained: 2 }
+      totalStudents: 0,
+      promoted: 0,
+      retained: 0,
+      maleStats: { promoted: 0, retained: 0 },
+      femaleStats: { promoted: 0, retained: 0 }
     }
   });
+
+  useEffect(() => {
+    axios.get('http://localhost:3001/api/reports/subject-statistics', {
+      params: {
+        grade_level: grade,  // Example: dynamic data can replace this
+        section_id: section,  // Example: dynamic data can replace this
+        school_year_id: schoolYear // Example: dynamic data can replace this
+      }
+    })
+    .then(res => {
+      const apiData = res.data;
+  
+      if (Array.isArray(apiData.subject_statistics)) {
+        const subjects = apiData.subject_statistics.map(subject => ({
+          name: subject.subject_name,
+          total: subject.total_students,
+          passed: subject.total_passed,
+          failed: subject.total_failed,
+          maleStats: {
+            passed: subject.male_passed,
+            failed: subject.male_failed
+          },
+          femaleStats: {
+            passed: subject.female_passed,
+            failed: subject.female_failed
+          }
+        }));
+  
+        // Calculating the summary data
+        let totalStudents = 0;
+        let malePromoted = 0, maleRetained = 0;
+        let femalePromoted = 0, femaleRetained = 0;
+  
+        if (apiData.subject_statistics.length > 0) {
+          totalStudents = apiData.subject_statistics[0].total_students;
+          malePromoted = apiData.subject_statistics[0].male_promoted;
+          maleRetained = apiData.subject_statistics[0].male_retained;
+          femalePromoted = apiData.subject_statistics[0].female_promoted;
+          femaleRetained = apiData.subject_statistics[0].female_retained;
+        }
+  
+        const promoted = malePromoted + femalePromoted;
+        const retained = maleRetained + femaleRetained;
+  
+        // Set the section and school year information from API response
+        setSchoolData(prev => ({
+          ...prev,
+          section: apiData.section_info.section_name || prev.section,
+          schoolYearName: apiData.section_info.school_year_name || prev.schoolYear
+        }));        
+  
+        // Set the promotion data
+        setPromotionData({
+          subjects,
+          summary: {
+            totalStudents,
+            promoted,
+            retained,
+            maleStats: { promoted: malePromoted, retained: maleRetained },
+            femaleStats: { promoted: femalePromoted, retained: femaleRetained }
+          }
+        });
+      } else {
+        console.error('Expected subject_statistics to be an array but received:', apiData.subject_statistics);
+      }
+    })
+    .catch(err => {
+      console.error('Failed to fetch subject statistics:', err);
+    });
+  }, []);
+  
+  
 
   const handleConvertToPdf = () => {
     const doc = new jsPDF({
@@ -122,11 +165,11 @@ function SF5() {
           </div>
           <div className="sf5-info-item">
             <span className="sf5-info-label">School Year:</span>
-            <span>{schoolData.schoolYear}</span>
+            <span>{schoolData.schoolYearName}</span>
           </div>
           <div className="sf5-info-item">
             <span className="sf5-info-label">Grade & Section:</span>
-            <span>{schoolData.grade}-{schoolData.section}</span>
+            <span>{schoolData.grade} - {schoolData.section}</span>
           </div>
         </div>
 
@@ -221,7 +264,7 @@ function SF5() {
           </div>
         </div>
       </div>
-      
+
       <div className="sf5-buttons">
         <button onClick={handleConvertToPdf}>Convert to PDF</button>
       </div>
@@ -229,4 +272,4 @@ function SF5() {
   );
 }
 
-export default SF5; 
+export default SF5;
