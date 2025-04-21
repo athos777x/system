@@ -86,13 +86,18 @@ function PromotionReport() {
   };
 
   const handleGenerateForm137 = () => {
-    if (!selectedSchoolYear || !studentName) {
-      alert('Please fill in all the required fields before generating.');
+    if (!selectedSchoolYear) {
+      alert('Please select a school year before generating.');
+      return;
+    }
+    
+    if (!lrn && !studentName) {
+      alert('Please enter either LRN or Student Name before generating.');
       return;
     }
 
-    const studentData = { grade, section, name: studentName };
-    navigate('/form-137', { state: { student: studentData } });
+    const studentData = { grade, section, name: studentName, lrn: lrn };
+    navigate('/form-137', { state: { student: studentData, schoolYear: selectedSchoolYear } });
   };
   
   const handleGenerateForm138 = () => {
@@ -106,13 +111,18 @@ function PromotionReport() {
   };
 
   const handleGenerateGoodMoral = () => {
-    if (!selectedSchoolYear || !studentName) {
-      alert('Please fill in all the required fields before generating.');
+    if (!selectedSchoolYear) {
+      alert('Please select a school year before generating.');
       return;
     }
 
-    const studentData = { grade, section, name: studentName };
-    navigate('/good-moral', { state: { student: studentData } });
+    if (!lrn && !studentName) {
+      alert('Please enter either LRN or Student Name before generating.');
+      return;
+    }
+
+    const studentData = { grade, section, name: studentName, lrn: lrn };
+    navigate('/good-moral', { state: { student: studentData, schoolYear: selectedSchoolYear } });
   };
 
   const handleLateEnrolleesReport = () => {
@@ -187,8 +197,11 @@ function PromotionReport() {
   };
   
 
-  const handleSuggestionClick = (name) => {
-    setStudentName(name);
+  const handleSuggestionClick = (suggestion) => {
+    setStudentName(suggestion.stud_name);
+    if (suggestion.lrn) {
+      setLRN(suggestion.lrn);
+    }
     setSuggestions([]);
   };
 
@@ -424,44 +437,25 @@ function PromotionReport() {
                       </option>
                     ))}
                   </select>
-                  {/* <label>Grade:</label>
-                  <select value={grade} onChange={handleGradeChange} required> 
-                    <option value="">--Select One--</option>
-                    <option value="7">Grade 7</option>
-                    <option value="8">Grade 8</option>
-                    <option value="9">Grade 9</option>
-                    <option value="10">Grade 10</option>
-                  </select>
-                  <label>Section:</label>
-                  <select value={section} onChange={(e) => setSection(e.target.value)} required>
-                    <option value="">--Select One--</option>
-                    {sections.map((sec) => (
-                      <option key={sec.section_name} value={sec.section_name}>
-                        {sec.section_name}
-                      </option>
-                    ))}
-                  </select> */}
-                  <label>LRN:</label>
+                  <label>LRN: (Enter LRN or Student Name below)</label>
                   <input
                     type="text"
                     value={lrn}
                     onChange={(e) => setLRN(e.target.value)}
-                    placeholder="Enter student lrn"
-                    required
+                    placeholder="Enter student LRN"
                   />
-                  <label>Student Name:</label>
+                  <label>Student Name: (Enter Student Name or LRN above)</label>
                   <input
                     type="text"
                     value={studentName}
                     onChange={handleStudentNameChange}
                     placeholder="Enter student name"
-                    required
                   />
                   {suggestions.length > 0 && (
                     <ul className="suggestions-list">
                       {suggestions.map((suggestion, index) => (
-                        <li key={index} onClick={() => handleSuggestionClick(suggestion.stud_name)}>
-                          {suggestion.stud_name}
+                        <li key={index} onClick={() => handleSuggestionClick(suggestion)}>
+                          {suggestion.stud_name} {suggestion.lrn ? `(LRN: ${suggestion.lrn})` : ''}
                         </li>
                       ))}
                     </ul>
@@ -511,8 +505,8 @@ function PromotionReport() {
                   {suggestions.length > 0 && (
                     <ul className="suggestions-list">
                       {suggestions.map((suggestion, index) => (
-                        <li key={index} onClick={() => handleSuggestionClick(suggestion.stud_name)}>
-                          {suggestion.stud_name}
+                        <li key={index} onClick={() => handleSuggestionClick(suggestion)}>
+                          {suggestion.stud_name} {suggestion.lrn ? `(LRN: ${suggestion.lrn})` : ''}
                         </li>
                       ))}
                     </ul>
@@ -534,44 +528,25 @@ function PromotionReport() {
                       </option>
                     ))}
                   </select>
-                  {/* <label>Grade:</label>
-                  <select value={grade} onChange={handleGradeChange} required>
-                    <option value="">--Select One--</option>
-                    <option value="7">Grade 7</option>
-                    <option value="8">Grade 8</option>
-                    <option value="9">Grade 9</option>
-                    <option value="10">Grade 10</option>
-                  </select>
-                  <label>Section:</label>
-                  <select value={section} onChange={(e) => setSection(e.target.value)} required>
-                    <option value="">--Select One--</option>
-                    {sections.map((sec) => (
-                      <option key={sec.section_name} value={sec.section_name}>
-                        {sec.section_name}
-                      </option>
-                    ))}
-                  </select> */}
-                  <label>LRN:</label>
+                  <label>LRN: (Enter LRN or Student Name below)</label>
                   <input
                     type="text"
                     value={lrn}
                     onChange={(e) => setLRN(e.target.value)}
-                    placeholder="Enter student lrn"
-                    required
+                    placeholder="Enter student LRN"
                   />
-                  <label>Student Name:</label>
+                  <label>Student Name: (Enter Student Name or LRN above)</label>
                   <input
                     type="text"
                     value={studentName}
                     onChange={handleStudentNameChange}
                     placeholder="Enter student name"
-                    required
                   />
                   {suggestions.length > 0 && (
                     <ul className="suggestions-list">
                       {suggestions.map((suggestion, index) => (
-                        <li key={index} onClick={() => handleSuggestionClick(suggestion.stud_name)}>
-                          {suggestion.stud_name}
+                        <li key={index} onClick={() => handleSuggestionClick(suggestion)}>
+                          {suggestion.stud_name} {suggestion.lrn ? `(LRN: ${suggestion.lrn})` : ''}
                         </li>
                       ))}
                     </ul>
