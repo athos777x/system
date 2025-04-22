@@ -20,6 +20,7 @@ function GradesManagement() {
   const [filteredSections, setFilteredSections] = useState([]);
   const [roleName, setRoleName] = useState('');
   const [selectedSchoolYear, setSelectedSchoolYear] = useState({});
+  const [assignedSubjects, setAssignedSubjects] = useState([]);
   const [filters, setFilters] = useState({
     searchTerm: '',
     school_year: '',
@@ -36,6 +37,9 @@ function GradesManagement() {
   
     if (roleName) {
       fetchStudents(roleName);
+      if (roleName === 'subject_teacher') {
+        fetchAssignedSubjects();
+      }
     }
   }, [roleName]);
   
@@ -284,13 +288,21 @@ function GradesManagement() {
         return;
       }
 
-      const formattedSubjects = subjects.map(subject => ({
-        subject_name: subject.subject_name,
-        q1: subject.q1 || null,
-        q2: subject.q2 || null,
-        q3: subject.q3 || null,
-        q4: subject.q4 || null,
-      }));
+      // Filter to only include the subjects that the teacher is assigned to
+      const formattedSubjects = subjects
+        .filter(subject => roleName !== 'subject_teacher' || isSubjectAssigned(subject.subject_name))
+        .map(subject => ({
+          subject_name: subject.subject_name,
+          q1: subject.q1 || null,
+          q2: subject.q2 || null,
+          q3: subject.q3 || null,
+          q4: subject.q4 || null,
+        }));
+
+      if (formattedSubjects.length === 0) {
+        alert("You don't have permission to edit any of these subjects.");
+        return;
+      }
 
       const response = await axios.post("http://localhost:3001/api/save-grade", {
         student_id: selectedStudent.student_id,
@@ -574,6 +586,28 @@ function GradesManagement() {
     return average >= 75 ? "Passed" : "Failed";
   };
 
+  const fetchAssignedSubjects = async () => {
+    try {
+      const userId = localStorage.getItem('userId');
+      if (!userId) return;
+      
+      const response = await axios.get('http://localhost:3001/api/teacher/assigned-subjects', {
+        params: { userId }
+      });
+      
+      setAssignedSubjects(response.data);
+    } catch (error) {
+      console.error('Error fetching assigned subjects:', error);
+    }
+  };
+
+  const isSubjectAssigned = (subjectName) => {
+    if (roleName !== 'subject_teacher') return true; // Non-subject teachers can edit all subjects
+    return assignedSubjects.some(subject => 
+      subject.subject_name.toLowerCase().trim() === subjectName.toLowerCase().trim()
+    );
+  };
+
   return (
     <div className="grades-management-container">
       <div className="grades-management-header">
@@ -681,11 +715,13 @@ function GradesManagement() {
                           </thead>
                           <tbody>
                             {subjects?.length > 0 ? (
-                              subjects.map((subject, index) => (
+                              subjects.map((subject, index) => {
+                                const canEditSubject = isSubjectAssigned(subject.subject_name);
+                                return (
                                 <tr key={index}>
                                   <td>{subject.subject_name}</td>
                                   <td>
-                                    {editingStudent && selectedGradeLevel === student.current_yr_lvl ? (
+                                    {editingStudent && selectedGradeLevel === student.current_yr_lvl && canEditSubject ? (
                                       <input
                                         type="text"
                                         value={subject.q1 || ""}
@@ -702,7 +738,7 @@ function GradesManagement() {
                                     )}
                                   </td>
                                   <td>
-                                    {editingStudent && selectedGradeLevel === student.current_yr_lvl ? (
+                                    {editingStudent && selectedGradeLevel === student.current_yr_lvl && canEditSubject ? (
                                       <input
                                         type="text"
                                         value={subject.q2 || ""}
@@ -719,7 +755,7 @@ function GradesManagement() {
                                     )}
                                   </td>
                                   <td>
-                                    {editingStudent && selectedGradeLevel === student.current_yr_lvl ? (
+                                    {editingStudent && selectedGradeLevel === student.current_yr_lvl && canEditSubject ? (
                                       <input
                                         type="text"
                                         value={subject.q3 || ""}
@@ -736,7 +772,7 @@ function GradesManagement() {
                                     )}
                                   </td>
                                   <td>
-                                    {editingStudent && selectedGradeLevel === student.current_yr_lvl ? (
+                                    {editingStudent && selectedGradeLevel === student.current_yr_lvl && canEditSubject ? (
                                       <input
                                         type="text"
                                         value={subject.q4 || ""}
@@ -759,7 +795,7 @@ function GradesManagement() {
                                     {subject.remarks || "___"}
                                   </td>
                                 </tr>
-                              ))
+                              )})
                             ) : (
                               <tr>
                                 <td colSpan="7" style={{ textAlign: "center" }}>No academic records available.</td>

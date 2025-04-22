@@ -206,7 +206,7 @@ CREATE TABLE `enrollment` (
 
 /*Data for the table `enrollment` */
 
-insert  into `enrollment`(`enrollment_id`,`student_id`,`section_id`,`enrolling_officer_id`,`enrollment_date`,`grade_level`,`enrollee_type`,`brigada_id`,`enrollment_status`,`student_name`,`student_school_year_id`,`school_year_id`) values (4,1,1,NULL,'2025-04-18','7','Regular',3,'active','angel j. bautista',NULL,1),(5,2,2,NULL,'2025-04-18','7','Regular',4,'active','rephaim celix l. domapias',NULL,1),(6,3,NULL,NULL,'2025-04-20','7','Regular',5,'inactive','etest t. test',NULL,1),(7,4,NULL,NULL,'2025-04-20','7','Regular',6,'inactive','twe t. trtwe',NULL,1),(8,5,NULL,NULL,'2025-04-20','7','Regular',7,'inactive','sdfsd f. sadfdsf',NULL,1),(9,6,NULL,NULL,'2025-04-20','7','Regular',8,'inactive','ewq q. qwwqeqw',NULL,1),(10,7,NULL,NULL,'2025-04-20','7','Regular',9,'inactive','fdgdf h. dsfds',NULL,1),(11,8,NULL,NULL,'2025-04-20','8','Regular',10,'inactive','dfdsfsd s. dsfsdf',NULL,1);
+insert  into `enrollment`(`enrollment_id`,`student_id`,`section_id`,`enrolling_officer_id`,`enrollment_date`,`grade_level`,`enrollee_type`,`brigada_id`,`enrollment_status`,`student_name`,`student_school_year_id`,`school_year_id`) values (4,1,1,NULL,'2025-04-18','7','Regular',3,'active','angel j. bautista',NULL,1),(5,2,1,NULL,'2025-04-18','7','Regular',4,'active','rephaim celix l. domapias',NULL,1),(6,3,NULL,NULL,'2025-04-20','7','Regular',5,'inactive','etest t. test',NULL,1),(7,4,NULL,NULL,'2025-04-20','7','Regular',6,'inactive','twe t. trtwe',NULL,1),(8,5,NULL,NULL,'2025-04-20','7','Regular',7,'inactive','sdfsd f. sadfdsf',NULL,1),(9,6,NULL,NULL,'2025-04-20','7','Regular',8,'inactive','ewq q. qwwqeqw',NULL,1),(10,7,NULL,NULL,'2025-04-20','7','Regular',9,'inactive','fdgdf h. dsfds',NULL,1),(11,8,NULL,NULL,'2025-04-20','8','Regular',10,'inactive','dfdsfsd s. dsfsdf',NULL,1);
 
 /*Table structure for table `grades` */
 
@@ -337,11 +337,11 @@ CREATE TABLE `schedule` (
   KEY `fk_schedule_section_id` (`section_id`),
   CONSTRAINT `fk_schedule_section_id` FOREIGN KEY (`section_id`) REFERENCES `section` (`section_id`),
   CONSTRAINT `schedule_ibfk_1` FOREIGN KEY (`teacher_id`) REFERENCES `employee` (`employee_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8;
 
 /*Data for the table `schedule` */
 
-insert  into `schedule`(`schedule_id`,`teacher_id`,`subject_id`,`time_start`,`time_end`,`day`,`section_id`,`schedule_status`,`elective`,`grade_level`,`school_year_id`) values (5,2,1,'07:00','08:00','[\"Monday\",\"Tuesday\",\"Wednesday\",\"Thursday\",\"Friday\",\"Sunday\"]',1,'Approved',0,7,1),(6,8,3,'10:00','11:00','[\"Monday\",\"Tuesday\",\"Wednesday\",\"Thursday\",\"Friday\",\"Sunday\"]',1,'Approved',1,7,1);
+insert  into `schedule`(`schedule_id`,`teacher_id`,`subject_id`,`time_start`,`time_end`,`day`,`section_id`,`schedule_status`,`elective`,`grade_level`,`school_year_id`) values (5,2,1,'07:00','08:00','[\"Monday\",\"Tuesday\",\"Wednesday\",\"Thursday\",\"Friday\",\"Sunday\"]',1,'Approved',0,7,1),(6,8,3,'10:00','11:00','[\"Monday\",\"Tuesday\",\"Wednesday\",\"Thursday\",\"Friday\",\"Sunday\"]',1,'Approved',1,7,1),(7,8,2,'08:00','09:30','[\"Monday\",\"Tuesday\",\"Wednesday\",\"Thursday\",\"Friday\"]',1,'Approved',0,7,1);
 
 /*Table structure for table `school_year` */
 
@@ -453,7 +453,7 @@ CREATE TABLE `student` (
 
 /*Data for the table `student` */
 
-insert  into `student`(`student_id`,`lrn`,`lastname`,`middlename`,`firstname`,`current_yr_lvl`,`birthdate`,`gender`,`age`,`home_address`,`barangay`,`city_municipality`,`province`,`contact_number`,`email_address`,`mother_name`,`father_name`,`parent_address`,`father_occupation`,`mother_occupation`,`annual_hshld_income`,`number_of_siblings`,`father_educ_lvl`,`mother_educ_lvl`,`father_contact_number`,`mother_contact_number`,`id_picture`,`birth_certificate`,`form_138`,`goodmoral_cert`,`rcv_test`,`section_id`,`user_id`,`emergency_number`,`status`,`active_status`,`brigada_id`,`enroll_date`,`emergency_relation`,`emergency_contactperson`) values (1,6343121,'Bautista','J','Angel','7','2015-04-07','Male',10,'','','','','','','','','','','',0.00,0,'','','','',NULL,NULL,NULL,NULL,NULL,1,14,'','active','unarchive',3,'2025-04-18',NULL,''),(2,438937,'Domapias','Lao','Rephaim Celix','7','2015-03-30','Male',10,'','','','','','','','','','','',0.00,0,'','','','',NULL,NULL,NULL,NULL,NULL,2,15,'','active','unarchive',4,'2025-04-18',NULL,'');
+insert  into `student`(`student_id`,`lrn`,`lastname`,`middlename`,`firstname`,`current_yr_lvl`,`birthdate`,`gender`,`age`,`home_address`,`barangay`,`city_municipality`,`province`,`contact_number`,`email_address`,`mother_name`,`father_name`,`parent_address`,`father_occupation`,`mother_occupation`,`annual_hshld_income`,`number_of_siblings`,`father_educ_lvl`,`mother_educ_lvl`,`father_contact_number`,`mother_contact_number`,`id_picture`,`birth_certificate`,`form_138`,`goodmoral_cert`,`rcv_test`,`section_id`,`user_id`,`emergency_number`,`status`,`active_status`,`brigada_id`,`enroll_date`,`emergency_relation`,`emergency_contactperson`) values (1,6343121,'Bautista','J','Angel','7','2015-04-07','Male',10,'','','','','','','','','','','',0.00,0,'','','','',NULL,NULL,NULL,NULL,NULL,1,14,'','active','unarchive',3,'2025-04-18',NULL,''),(2,438937,'Domapias','Lao','Rephaim Celix','7','2015-03-29','Male',10,'','','','','','','','','','','',0.00,0,'','','','',NULL,NULL,NULL,NULL,NULL,1,15,'','active','unarchive',4,'2025-04-18',NULL,'');
 
 /*Table structure for table `student_elective` */
 
@@ -558,11 +558,11 @@ CREATE TABLE `teacher_subject` (
   UNIQUE KEY `unique_subject_id` (`subject_id`),
   UNIQUE KEY `subject_id` (`subject_id`),
   UNIQUE KEY `unique_teacher_subject` (`subject_id`,`section_id`,`employee_id`,`school_year_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8;
 
 /*Data for the table `teacher_subject` */
 
-insert  into `teacher_subject`(`subject_assigned_id`,`subject_id`,`level`,`section_id`,`employee_id`,`elective`,`school_year_id`) values (5,1,7,1,2,0,1),(6,3,7,1,8,1,1);
+insert  into `teacher_subject`(`subject_assigned_id`,`subject_id`,`level`,`section_id`,`employee_id`,`elective`,`school_year_id`) values (5,1,7,1,2,0,1),(6,3,7,1,8,1,1),(7,2,7,1,8,0,1);
 
 /*Table structure for table `users` */
 
@@ -588,7 +588,7 @@ CREATE TABLE `users` (
 
 /*Data for the table `users` */
 
-insert  into `users`(`user_id`,`username`,`password`,`role_id`,`role_name`,`password1`,`other_role_name`,`profile_picture_url`) values (1,'admin','adminpass',1,'principal',NULL,NULL,NULL),(5,'dante_r@lnhs.com','dantepass',1,'principal',NULL,'subject_teacher','http://localhost:3001/uploads/profile-pictures/user_5.jpg'),(6,'zane_y@lnhs.com','zanepass',3,'subject_teacher',NULL,NULL,'http://localhost:3001/uploads/profile-pictures/user_6.jpg'),(7,'john_d@lnhs.com','johnpass',4,'class_adviser',NULL,NULL,'http://localhost:3001/uploads/profile-pictures/user_7.jpg'),(8,'jane_s@lnhs.com','janepass',5,'grade_level_coordinator',NULL,NULL,'http://localhost:3001/uploads/profile-pictures/user_8.jpg'),(9,'alice_j@lnhs.com','alicepass',6,'registrar',NULL,NULL,'http://localhost:3001/uploads/profile-pictures/user_9.jpg'),(10,'emily_b@lnhs.com','emilypass',7,'academic_coordinator',NULL,'subject_teacher','http://localhost:3001/uploads/profile-pictures/user_10.jpg'),(11,'michael_w@lnhs.com','michaelpass',8,'subject_coordinator',NULL,NULL,'http://localhost:3001/uploads/profile-pictures/user_11.jpg'),(14,'bautista.angel@lnhs.com','1234',2,'student',NULL,NULL,NULL),(15,'domapias.rephaim_celix@lnhs.com','1234',2,'student',NULL,NULL,NULL),(22,'reyes.maria@lnhs.com','1234',3,'subject_teacher','7110eda4d09e062aa5e4a390b0a572ac0d2c0220',NULL,NULL);
+insert  into `users`(`user_id`,`username`,`password`,`role_id`,`role_name`,`password1`,`other_role_name`,`profile_picture_url`) values (1,'admin','adminpass',1,'principal',NULL,NULL,NULL),(5,'dante_r@lnhs.com','dantepass',1,'principal',NULL,'subject_teacher','http://localhost:3001/uploads/profile-pictures/user_5.jpg'),(6,'zane_y@lnhs.com','zanepass',3,'subject_teacher',NULL,NULL,'http://localhost:3001/uploads/profile-pictures/user_6.jpg'),(7,'john_d@lnhs.com','johnpass',4,'class_adviser',NULL,NULL,'http://localhost:3001/uploads/profile-pictures/user_7.jpg'),(8,'jane_s@lnhs.com','janepass',5,'grade_level_coordinator',NULL,NULL,'http://localhost:3001/uploads/profile-pictures/user_8.jpg'),(9,'alice_j@lnhs.com','alicepass',6,'registrar',NULL,NULL,'http://localhost:3001/uploads/profile-pictures/user_9.jpg'),(10,'emily_b@lnhs.com','emilypass',7,'academic_coordinator',NULL,'subject_teacher','http://localhost:3001/uploads/profile-pictures/user_10.jpg'),(11,'michael_w@lnhs.com','michaelpass',8,'subject_coordinator',NULL,NULL,'http://localhost:3001/uploads/profile-pictures/user_11.jpg'),(14,'bautista.angel@lnhs.com','1234',2,'student',NULL,NULL,'http://localhost:3001/uploads/profile-pictures/user_14.jpg'),(15,'domapias.rephaim_celix@lnhs.com','1234',2,'student',NULL,NULL,NULL),(22,'reyes.maria@lnhs.com','1234',3,'subject_teacher','7110eda4d09e062aa5e4a390b0a572ac0d2c0220',NULL,NULL);
 
 /*!50106 set global event_scheduler = 1*/;
 
