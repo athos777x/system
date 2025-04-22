@@ -15,13 +15,7 @@ function Teacher_SchedulePage() {
   const [scheduleTab, setScheduleTab] = useState('my_schedule');
   
   const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
-  const timeSlots = [
-    '07:00 AM - 08:00 AM', '08:00 AM - 09:00 AM', '09:00 AM - 10:00 AM',
-    '10:00 AM - 11:00 AM', '11:00 AM - 12:00 PM', '12:00 PM - 01:00 PM',
-    '01:00 PM - 02:00 PM', '02:00 PM - 03:00 PM', '03:00 PM - 04:00 PM',
-    '04:00 PM - 05:00 PM'
-  ];
-
+  
   useEffect(() => {
     const fetchUserRole = async () => {
       try {
@@ -146,68 +140,148 @@ function Teacher_SchedulePage() {
     }
   };
 
-  const getTimeSlotIndex = (time) => {
-    const [hours, minutes] = time.split(':');
-    const hourInt = parseInt(hours, 10);
-    const minuteInt = parseInt(minutes, 10);
-    return Math.floor((hourInt - 7) + (minuteInt / 60));
+  // Format time for display (e.g., "08:30" to "8:30 AM")
+  const formatTimeDisplay = (timeStr) => {
+    // Make sure we only have the time portion (in case AM/PM was already included)
+    let cleanTimeStr = timeStr;
+    if (timeStr.includes('AM') || timeStr.includes('PM')) {
+      // Extract just the time portion if AM/PM is already in the string
+      cleanTimeStr = timeStr.split(' ')[0];
+    }
+    
+    const [hours, minutes] = cleanTimeStr.split(':');
+    const hour = parseInt(hours, 10);
+    const period = hour >= 12 ? 'PM' : 'AM';
+    const displayHour = hour > 12 ? hour - 12 : (hour === 0 ? 12 : hour);
+    return `${displayHour}:${minutes} ${period}`;
+  };
+
+  // Compare two time strings
+  const compareTimeStrings = (time1, time2) => {
+    const [h1, m1] = time1.split(':').map(Number);
+    const [h2, m2] = time2.split(':').map(Number);
+    
+    if (h1 !== h2) return h1 - h2;
+    return m1 - m2;
   };
 
   const renderSchedule = (scheduleData = schedule) => {
-    // Initialize schedule grid
-    const scheduleGrid = timeSlots.map(() =>
-      daysOfWeek.map(() => ({ content: null, isOccupied: false }))
-    );
-  
-    // Fill in the schedule grid if there's data
-    if (scheduleData && scheduleData.length > 0) {
-      scheduleData.forEach(item => {
-        const startIndex = getTimeSlotIndex(item.time_start);
-        const endIndex = getTimeSlotIndex(item.time_end);
-        const duration = endIndex - startIndex;
-  
-        (item.days || []).forEach(day => {
-          const dayIndex = daysOfWeek.indexOf(day);
-  
-          if (dayIndex !== -1) {
-            // Ensure row and column are defined before assigning
-            for (let i = startIndex; i < endIndex; i++) {
-              if (!scheduleGrid[i]) {
-                scheduleGrid[i] = [];
-              }
-              if (!scheduleGrid[i][dayIndex]) {
-                scheduleGrid[i][dayIndex] = { content: null, isOccupied: false };
-              }
-            }
-  
-            // Mark the starting cell with the subject info
-            if (scheduleGrid[startIndex] && scheduleGrid[startIndex][dayIndex]) {
-              scheduleGrid[startIndex][dayIndex] = {
-                content: {
-                  subject: item.subject_name,
-                  section: item.section_name,
-                  grade: item.grade_level,
-                  teacher: item.teacher_name,
-                  span: duration
-                },
-                isOccupied: true
-              };
-            }
-  
-            // Mark subsequent cells as occupied
-            for (let i = startIndex + 1; i < endIndex; i++) {
-              if (scheduleGrid[i] && scheduleGrid[i][dayIndex]) {
-                scheduleGrid[i][dayIndex] = {
-                  content: null,
-                  isOccupied: true
-                };
-              }
-            }
-          }
+    if (!scheduleData || scheduleData.length === 0) {
+      return (
+        <div className="empty-schedule-notice">
+          <p>No classes have been assigned yet.</p>
+        </div>
+      );
+    }
+
+    // Create a map for each day's schedule, including empty slots
+    const daySchedules = {};
+    daysOfWeek.forEach(day => {
+      daySchedules[day] = [];
+    });
+
+    // First, add all scheduled items
+    scheduleData.forEach(item => {
+      (item.days || []).forEach(day => {
+        if (daysOfWeek.includes(day)) {
+          daySchedules[day].push({
+            startTime: item.time_start,
+            endTime: item.time_end,
+            subject: item.subject_name,
+            section: item.section_name,
+            grade: item.grade_level,
+            teacher: item.teacher_name,
+            isEmpty: false
+          });
+        }
+      });
+    });
+
+    // Sort each day's schedule by start time
+    daysOfWeek.forEach(day => {
+      daySchedules[day].sort((a, b) => compareTimeStrings(a.startTime, b.startTime));
+    });
+
+    // Add empty slots between schedule items and at the beginning/end
+    daysOfWeek.forEach(day => {
+      const slots = daySchedules[day];
+      const newSlots = [];
+      
+      // Start of day to first class
+      if (slots.length === 0) {
+        // If no classes at all, add one big empty slot for the whole day
+        newSlots.push({
+          startTime: '07:00',
+          endTime: '18:00',
+          isEmpty: true
         });
+      } else {
+        // Add empty slot from start of day to first class if needed
+        if (compareTimeStrings(slots[0].startTime, '07:00') > 0) {
+          newSlots.push({
+            startTime: '07:00',
+            endTime: slots[0].startTime,
+            isEmpty: true
+          });
+        }
+        
+        // Add the first class
+        newSlots.push(slots[0]);
+        
+        // Fill gaps between classes
+        for (let i = 1; i < slots.length; i++) {
+          const prevEndTime = slots[i-1].endTime;
+          const currStartTime = slots[i].startTime;
+          
+          if (compareTimeStrings(currStartTime, prevEndTime) > 0) {
+            // There's a gap, add an empty slot
+            newSlots.push({
+              startTime: prevEndTime,
+              endTime: currStartTime,
+              isEmpty: true
+            });
+          }
+          
+          // Add the current class
+          newSlots.push(slots[i]);
+        }
+        
+        // Add empty slot from last class to end of day if needed
+        const lastSlot = slots[slots.length - 1];
+        if (compareTimeStrings(lastSlot.endTime, '18:00') < 0) {
+          newSlots.push({
+            startTime: lastSlot.endTime,
+            endTime: '18:00',
+            isEmpty: true
+          });
+        }
+      }
+      
+      daySchedules[day] = newSlots;
+    });
+
+    // Find the maximum number of slots across all days
+    const maxSlots = Math.max(...daysOfWeek.map(day => daySchedules[day].length));
+
+    // Create a combined time range array for the time column
+    const timeRanges = [];
+    for (const day of daysOfWeek) {
+      daySchedules[day].forEach(slot => {
+        const timeRange = {
+          startTime: slot.startTime,
+          endTime: slot.endTime
+        };
+        // Check if this exact time range already exists
+        if (!timeRanges.some(tr => 
+          tr.startTime === timeRange.startTime && tr.endTime === timeRange.endTime)) {
+          timeRanges.push(timeRange);
+        }
       });
     }
-  
+    
+    // Sort the time ranges
+    timeRanges.sort((a, b) => compareTimeStrings(a.startTime, b.startTime));
+
     return (
       <table className="schedule-table">
         <thead>
@@ -219,40 +293,37 @@ function Teacher_SchedulePage() {
           </tr>
         </thead>
         <tbody>
-          {timeSlots.map((timeSlot, rowIndex) => (
-            <tr key={timeSlot}>
-              <td>{timeSlot}</td>
-              {daysOfWeek.map((day, colIndex) => {
-                const cell = scheduleGrid[rowIndex][colIndex];
-  
-                // Skip rendering if cell is occupied but not the start of a subject
-                if (cell.isOccupied && !cell.content) {
-                  return null;
+          {timeRanges.map((timeRange, rowIndex) => (
+            <tr key={rowIndex}>
+              <td className="time-cell">
+                {formatTimeDisplay(timeRange.startTime)} - {formatTimeDisplay(timeRange.endTime)}
+              </td>
+              {daysOfWeek.map(day => {
+                // Find a slot that matches this time range
+                const matchingSlot = daySchedules[day].find(slot => 
+                  slot.startTime === timeRange.startTime && slot.endTime === timeRange.endTime);
+                
+                if (!matchingSlot) {
+                  return <td key={`${day}-empty-${rowIndex}`}></td>;
                 }
-  
-                // Render subject cell
-                if (cell.content) {
+                
+                if (matchingSlot.isEmpty) {
                   return (
-                    <td 
-                      key={`${day}-${rowIndex}`}
-                      rowSpan={cell.content.span}
-                      className="schedule-subject-cell"
-                    >
-                      <div className="subject-name">{cell.content.subject}</div>
-                      <div className="section-info">
-                        {cell.content.section}
-                      </div>
-                      {scheduleTab === 'section_schedule' && cell.content.teacher && (
-                        <div className="teacher-info">
-                          {cell.content.teacher}
-                        </div>
-                      )}
+                    <td key={`${day}-empty-${rowIndex}`} className="empty-schedule-cell">
+                      &nbsp;
                     </td>
                   );
                 }
-  
-                // Render empty cell
-                return <td key={`${day}-${rowIndex}`}></td>;
+                
+                return (
+                  <td key={`${day}-${rowIndex}`} className="schedule-subject-cell">
+                    <div className="subject-name">{matchingSlot.subject}</div>
+                    <div className="section-info">{matchingSlot.section}</div>
+                    {scheduleTab === 'section_schedule' && matchingSlot.teacher && (
+                      <div className="teacher-info">{matchingSlot.teacher}</div>
+                    )}
+                  </td>
+                );
               })}
             </tr>
           ))}
@@ -260,8 +331,6 @@ function Teacher_SchedulePage() {
       </table>
     );
   };
-  
-  
 
   const generatePDF = async () => {
     try {
@@ -333,13 +402,6 @@ function Teacher_SchedulePage() {
       <div className="teacher-schedule-table-container">
         {scheduleTab === 'my_schedule' && renderSchedule(schedule)}
         {scheduleTab === 'section_schedule' && renderSchedule(sectionSchedule)}
-        
-        {(scheduleTab === 'my_schedule' && schedule.length === 0) || 
-         (scheduleTab === 'section_schedule' && sectionSchedule.length === 0) ? (
-          <div className="empty-schedule-notice">
-            <p>No classes have been assigned yet.</p>
-          </div>
-        ) : null}
       </div>
       
       <div className="print-button-container">
