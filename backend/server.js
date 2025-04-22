@@ -12,6 +12,31 @@ app.use(bodyParser.json());
 app.use(express.json());
 app.use(cors());
 
+// Database connection
+const db = mysql.createConnection({
+  host: 'localhost',
+  user: 'root',
+  password: 'root',
+  database: 'lnhsportal'
+});
+  
+db.connect(err => {
+  if (err) throw err;
+  console.log('Connected to database');
+});
+
+// Middleware to pass db to routes
+app.use((req, res, next) => {
+  req.db = db;
+  next();
+});
+
+// Import routes
+const teacherRoutes = require('./routes/teacher');
+
+// Use routes
+app.use('/', teacherRoutes);
+
 // Serve static files from the uploads directory
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
@@ -46,18 +71,6 @@ const upload = multer({
     }
     cb(new Error('Only image files are allowed!'));
   }
-});
-
-const db = mysql.createConnection({
-  host: 'localhost',
-  user: 'root',
-  password: 'root',
-  database: 'lnhsportal'
-});
-  
-db.connect(err => {
-  if (err) throw err;
-  console.log('Connected to database');
 });
 
 const roleMap = {
