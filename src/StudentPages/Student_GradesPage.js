@@ -14,6 +14,7 @@ function Student_GradesPage() {
   const [studentInfo, setStudentInfo] = useState({
     name: '',
     section: '',
+    section_id: null,
     schoolYear: '',
     schoolYearId: null,
   });
@@ -55,13 +56,15 @@ function Student_GradesPage() {
   
     const fetchStudentData = async () => {
       try {
+        console.log("Fetching student data with schoolYearId:", selectedSchoolYear);
+        
         const studentResponse = await axios.get(
           `http://localhost:3001/user-id/convert/student-id?userId=${userId}&schoolYearId=${selectedSchoolYear}`
         );
   
         if (studentResponse.data.success) {
           console.log("Fetched Student ID:", studentResponse.data.studentId);
-          console.log("Fetched School Year ID:", studentResponse.data.schoolYearId);
+          console.log("Fetched Grade Level:", studentResponse.data.gradeLevel);
   
           const studentId = studentResponse.data.studentId;
           setStudentId(studentId);
@@ -79,11 +82,17 @@ function Student_GradesPage() {
   
           console.log("Section Response:", sectionResponse.data);
   
-          setStudentInfo(prev => ({
-            ...prev,
-            name: studentResponse.data.name || '',
-            section: sectionResponse.data.section || 'Not Assigned', // Use correct response data
-          }));
+          setStudentInfo(prev => {
+            console.log("Setting studentInfo with section:", sectionResponse.data.section);
+            console.log("Setting studentInfo with section_id:", sectionResponse.data.section_id);
+            
+            return {
+              ...prev,
+              name: studentResponse.data.name || '',
+              section: sectionResponse.data.section || 'Not Assigned',
+              section_id: sectionResponse.data.section_id // No fallback, use actual section_id
+            };
+          });
         } else {
           throw new Error(studentResponse.data.message || 'Failed to fetch student data.');
         }
@@ -94,7 +103,7 @@ function Student_GradesPage() {
     };
   
     fetchStudentData();
-  }, [selectedSchoolYear]);
+  }, [selectedSchoolYear, userId]);
   
   
   
@@ -103,25 +112,50 @@ function Student_GradesPage() {
   useEffect(() => {
     const fetchSubjectsAndGrades = async () => {
       try {
-        if (!studentId || !gradeLevel || !studentInfo.schoolYearId) return;
+        console.log("Attempting to fetch subjects and grades with:", {
+          studentId,
+          gradeLevel,
+          schoolYearId: studentInfo.schoolYearId,
+          sectionId: studentInfo.section_id
+        });
+        
+        if (!studentId || !gradeLevel || !studentInfo.schoolYearId) {
+          console.log("Missing required data, skipping fetch");
+          return;
+        }
   
         const schoolYearId = studentInfo.schoolYearId; // Retrieve school_year_id
+        const sectionId = studentInfo.section_id; // Get section_id from studentInfo
+        
+        console.log("Fetching with parameters:", {
+          studentId,
+          gradeLevel,
+          schoolYearId,
+          sectionId
+        });
   
         const [subjectsResponse, gradesResponse] = await Promise.all([
           axios.get('http://localhost:3001/api/subjects-card', {
             params: { studentId, gradeLevel, schoolYearId },
           }),
           axios.get('http://localhost:3001/api/grades', {
-            params: { studentId, gradeLevel, schoolYearId },
+            params: { studentId, gradeLevel, schoolYearId, section_id: sectionId },
           }),
         ]);
   
+        console.log("Subjects response:", subjectsResponse.data);
+        console.log("Grades response:", gradesResponse.data);
+        
         if (gradesResponse.data.success) {
           const grades = gradesResponse.data.grades;
+          console.log("Fetched grades:", grades);
+          
           const updatedSubjects = (subjectsResponse.data || []).map((subject) => {
             const subjectGrades = grades.find(
               (grade) => grade.subject_name === subject.subject_name
             ) || {};
+            
+            console.log(`Mapping subject ${subject.subject_name} with grades:`, subjectGrades);
   
             return {
               ...subject,
@@ -132,8 +166,11 @@ function Student_GradesPage() {
             };
           });
   
+          console.log("Setting updated subjects:", updatedSubjects);
           setSubjects(updatedSubjects);
           setGradesFetched(true);
+        } else {
+          console.error("Grades API did not return success");
         }
       } catch (error) {
         console.error('Error fetching subjects and grades:', error);
@@ -144,7 +181,7 @@ function Student_GradesPage() {
     };
   
     fetchSubjectsAndGrades();
-  }, [studentId, gradeLevel, studentInfo.schoolYearId]); 
+  }, [studentId, gradeLevel, studentInfo.schoolYearId, studentInfo.section_id]);
   
   
   const handleSchoolYearChange = (event) => {

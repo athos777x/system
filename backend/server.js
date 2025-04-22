@@ -1557,7 +1557,6 @@ app.post('/enroll-elective', (req, res) => {
 
 
 
-
 // New endpoint to get students without enrollment status
 app.get('/unregistered-students', (req, res) => {
   const query = `
@@ -1699,7 +1698,10 @@ app.get(`/api/student/details`, (req, res) => {
 app.get('/api/subjects-card', (req, res) => {
   const { studentId, gradeLevel, schoolYearId } = req.query;
 
+  console.log('Subjects-card API called with:', { studentId, gradeLevel, schoolYearId });
+
   if (!studentId || !gradeLevel || !schoolYearId) {
+    console.error('Missing required parameters');
     return res.status(400).json({ error: 'Student ID, Grade Level, and School Year ID are required' });
   }
 
@@ -1711,12 +1713,38 @@ app.get('/api/subjects-card', (req, res) => {
       return res.status(500).json({ error: 'Failed to get student section_id' });
     }
 
-    if (sectionResult.length === 0) {
-      return res.status(404).json({ error: 'Student not found or no section assigned' });
+    // If student has no section, we'll still try to fetch subjects for their grade level
+    const sectionId = sectionResult.length > 0 ? sectionResult[0].section_id : null;
+    console.log(`Student ${studentId} section_id: ${sectionId || 'Not assigned'}`);
+
+    // If no section assigned, get subjects for the grade level without section filter
+    if (!sectionId) {
+      console.log('Fetching subjects without section filter');
+      const gradeSubjectsQuery = `
+        SELECT 
+          s.subject_name,
+          s.grade_level
+        FROM subject s
+        WHERE s.status = 'active'
+          AND s.elective = 'N'
+          AND s.grade_level = ?
+          AND s.school_year_id = ?
+        ORDER BY subject_name;
+      `;
+
+      db.query(gradeSubjectsQuery, [gradeLevel, schoolYearId], (err, results) => {
+        if (err) {
+          console.error('Error querying the database:', err);
+          return res.status(500).json({ error: 'Database query error' });
+        }
+
+        console.log(`Found ${results.length} subjects for student without section`);
+        res.json(results);
+      });
+      return;
     }
 
-    const sectionId = sectionResult[0].section_id;
-
+    // For students with sections, use the original query
     const QUERY = `
       SELECT 
         s.subject_name,
@@ -1759,6 +1787,7 @@ app.get('/api/subjects-card', (req, res) => {
         return res.status(500).json({ error: 'Database query error' });
       }
 
+      console.log(`Found ${results.length} subjects for student with section ${sectionId}`);
       res.json(results);
     });
   });
@@ -1768,25 +1797,60 @@ app.get('/api/subjects-card', (req, res) => {
 
 // Backend: Fetch grades for all subjects and periods for a student
 app.get('/api/grades', (req, res) => {
-  const { studentId, gradeLevel, schoolYearId, section_id } = req.query; // Extract schoolYearId
+  const { studentId, gradeLevel, schoolYearId, section_id } = req.query; // Extract query parameters
+  
+  console.log('Grades API called with:', { studentId, gradeLevel, schoolYearId, section_id });
 
-  const query = `
-    SELECT subject_name, 
-      MAX(CASE WHEN period = 1 THEN grade ELSE NULL END) AS q1,
-      MAX(CASE WHEN period = 2 THEN grade ELSE NULL END) AS q2,
-      MAX(CASE WHEN period = 3 THEN grade ELSE NULL END) AS q3,
-      MAX(CASE WHEN period = 4 THEN grade ELSE NULL END) AS q4
-    FROM grades
-    WHERE student_id = ? AND grade_level = ? AND school_year_id = ? AND section_id = ?
-    GROUP BY subject_name;
-  `;
+  // Validate required parameters
+  if (!studentId || !gradeLevel || !schoolYearId) {
+    console.error('Missing required parameters');
+    return res.status(400).json({ 
+      success: false, 
+      message: 'Student ID, Grade Level, and School Year ID are required.' 
+    });
+  }
 
-  db.query(query, [studentId, gradeLevel, schoolYearId, section_id], (err, results) => {
+  // For students without a section, we adjust the query
+  let query;
+  let queryParams;
+
+  if (!section_id) {
+    console.log('No section_id provided, fetching grades without section filter');
+    query = `
+      SELECT subject_name, 
+        MAX(CASE WHEN period = 1 THEN grade ELSE NULL END) AS q1,
+        MAX(CASE WHEN period = 2 THEN grade ELSE NULL END) AS q2,
+        MAX(CASE WHEN period = 3 THEN grade ELSE NULL END) AS q3,
+        MAX(CASE WHEN period = 4 THEN grade ELSE NULL END) AS q4
+      FROM grades
+      WHERE student_id = ? AND grade_level = ? AND school_year_id = ? AND (section_id IS NULL OR section_id = 0)
+      GROUP BY subject_name;
+    `;
+    queryParams = [studentId, gradeLevel, schoolYearId];
+  } else {
+    console.log('Fetching grades with section filter, section_id:', section_id);
+    query = `
+      SELECT subject_name, 
+        MAX(CASE WHEN period = 1 THEN grade ELSE NULL END) AS q1,
+        MAX(CASE WHEN period = 2 THEN grade ELSE NULL END) AS q2,
+        MAX(CASE WHEN period = 3 THEN grade ELSE NULL END) AS q3,
+        MAX(CASE WHEN period = 4 THEN grade ELSE NULL END) AS q4
+      FROM grades
+      WHERE student_id = ? AND grade_level = ? AND school_year_id = ? AND section_id = ?
+      GROUP BY subject_name;
+    `;
+    queryParams = [studentId, gradeLevel, schoolYearId, section_id];
+  }
+
+  db.query(query, queryParams, (err, results) => {
     if (err) {
       console.error('Error fetching grades:', err);
       return res.status(500).json({ success: false, message: 'Failed to fetch grades.' });
     }
 
+    console.log('Grades fetched successfully, count:', results.length);
+    
+    // Return success even if there are no results
     res.json({ success: true, grades: results });
   });
 });
@@ -4089,34 +4153,68 @@ app.get('/student-section/:studentId', (req, res) => {
 
     console.log('Fetching section for studentId:', studentId, 'School Year ID:', schoolYearId);
 
-    const query = `
-      SELECT b.section_name 
-      FROM enrollment a 
-      LEFT JOIN section b ON a.section_id = b.section_id 
-        AND a.grade_level = b.grade_level 
-      WHERE a.student_id = ? AND a.school_year_id = ?
-    `;
+    if (!studentId || !schoolYearId) {
+      console.error('Missing required parameters');
+      return res.status(400).json({ 
+        error: 'Student ID and School Year ID are required'
+      });
+    }
 
-    console.log('Executing query:', query, 'with values:', [studentId, schoolYearId]);
-
-    db.query(query, [studentId, schoolYearId], (err, results) => {
+    // First check if student exists in student table
+    const studentCheckQuery = 'SELECT * FROM student WHERE student_id = ?';
+    
+    db.query(studentCheckQuery, [studentId], (err, studentResult) => {
       if (err) {
-        console.error('Database error:', err);
+        console.error('Database error checking student:', err);
         return res.status(500).json({ 
-          error: 'Failed to fetch student section',
+          error: 'Failed to check student existence',
           details: err.message 
         });
       }
 
-      console.log('Query results:', results);
-
-      if (results.length > 0) {
-        console.log('Section found:', results[0].section_name);
-        res.json({ section: results[0].section_name });
-      } else {
-        console.log('No section found for student in selected school year');
-        res.json({ section: null });
+      if (studentResult.length === 0) {
+        console.log('Student not found in database');
+        return res.status(404).json({ 
+          error: 'Student not found'
+        });
       }
+
+      // Now check for enrollment and section
+      const query = `
+        SELECT b.section_name, a.section_id 
+        FROM enrollment a 
+        LEFT JOIN section b ON a.section_id = b.section_id 
+          AND a.grade_level = b.grade_level 
+        WHERE a.student_id = ? AND a.school_year_id = ?
+      `;
+
+      console.log('Executing query:', query, 'with values:', [studentId, schoolYearId]);
+
+      db.query(query, [studentId, schoolYearId], (err, results) => {
+        if (err) {
+          console.error('Database error:', err);
+          return res.status(500).json({ 
+            error: 'Failed to fetch student section',
+            details: err.message 
+          });
+        }
+
+        console.log('Section query results:', results);
+
+        if (results.length > 0 && results[0].section_id) {
+          console.log('Section found:', results[0].section_name, 'Section ID:', results[0].section_id);
+          res.json({ 
+            section: results[0].section_name,
+            section_id: results[0].section_id
+          });
+        } else {
+          console.log('No section found for student in selected school year');
+          res.json({ 
+            section: null,
+            section_id: null
+          });
+        }
+      });
     });
   } catch (error) {
     console.error('Error in route handler:', error);
