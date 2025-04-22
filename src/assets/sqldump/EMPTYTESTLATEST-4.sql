@@ -233,9 +233,11 @@ CREATE TABLE `grades` (
   KEY `fk_grades_school_year_id` (`school_year_id`),
   CONSTRAINT `grades_ibfk_1` FOREIGN KEY (`schedule_id`) REFERENCES `schedule` (`schedule_id`),
   CONSTRAINT `grades_ibfk_2` FOREIGN KEY (`enrollment_id`) REFERENCES `enrollment` (`enrollment_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=utf8;
 
 /*Data for the table `grades` */
+
+insert  into `grades`(`grades_id`,`schedule_id`,`enrollment_id`,`grade_level`,`subject_name`,`grade`,`period`,`remarks`,`student_id`,`student_name`,`school_year_id`,`section_id`) values (1,NULL,NULL,7,'English 7',89,1,NULL,1,'Angel Bautista',1,1),(2,NULL,NULL,7,'English 7',85,2,NULL,1,'Angel Bautista',1,1),(3,NULL,NULL,7,'English 7',82,3,NULL,1,'Angel Bautista',1,1),(4,NULL,NULL,7,'English 7',72,4,NULL,1,'Angel Bautista',1,1),(5,NULL,NULL,7,'English 7',82,1,NULL,2,'Rephaim Celix Domapias',1,1),(6,NULL,NULL,7,'English 7',89,2,NULL,2,'Rephaim Celix Domapias',1,1),(7,NULL,NULL,7,'English 7',83,3,NULL,2,'Rephaim Celix Domapias',1,1),(8,NULL,NULL,7,'English 7',87,4,NULL,2,'Rephaim Celix Domapias',1,1),(9,NULL,NULL,7,'Physical Education 7',92,1,NULL,2,'Rephaim Celix Domapias',1,1),(10,NULL,NULL,7,'Physical Education 7',95,2,NULL,2,'Rephaim Celix Domapias',1,1),(11,NULL,NULL,7,'Physical Education 7',93,3,NULL,2,'Rephaim Celix Domapias',1,1),(12,NULL,NULL,7,'Physical Education 7',94,4,NULL,2,'Rephaim Celix Domapias',1,1),(13,NULL,NULL,7,'Physical Education 7',89,1,NULL,1,'Angel Bautista',1,1),(14,NULL,NULL,7,'Physical Education 7',95,2,NULL,1,'Angel Bautista',1,1),(15,NULL,NULL,7,'Physical Education 7',98,3,NULL,1,'Angel Bautista',1,1),(16,NULL,NULL,7,'Physical Education 7',89,4,NULL,1,'Angel Bautista',1,1),(17,NULL,NULL,7,'Spanish101',92,1,NULL,1,'Angel Bautista',1,1),(18,NULL,NULL,7,'Spanish101',86,2,NULL,1,'Angel Bautista',1,1),(19,NULL,NULL,7,'Spanish101',81,3,NULL,1,'Angel Bautista',1,1),(20,NULL,NULL,7,'Spanish101',83,4,NULL,1,'Angel Bautista',1,1);
 
 /*Table structure for table `grades_detail` */
 
