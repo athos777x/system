@@ -247,3 +247,9 @@ body {
     border: 1px solid #ddd;
   }
 }
+
+.time-cell {
+  white-space: nowrap;
+  font-weight: 500;
+  min-width: 150px;
+}
