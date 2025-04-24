@@ -15,25 +15,32 @@ function Form137() {
 
   useEffect(() => {
     if (student) {
-      fetchStudentDetails();
-      fetchAcademicRecords();
+      if (!studentDetails) { // Ensure student details aren't already fetched
+        fetchStudentDetails();
+      } else if (studentDetails && academicRecords.length === 0) {
+        fetchAcademicRecords(studentDetails.student_id);
+      }
     } else {
       setError("No student data provided");
       setLoading(false);
     }
-  }, [student]);
-
+  }, [student, studentDetails, academicRecords.length]);
+  
   const fetchStudentDetails = async () => {
     try {
       // Extract student name components
       const [lastName, firstName] = student.name.replace(",", "").trim().split(/\s+/);
-
+  
       const response = await axios.get(`http://localhost:3001/api/student/details`, {
         params: { lastName, firstName },
       });
-
+  
       if (response.data.length > 0) {
         setStudentDetails(response.data[0]);
+        // After fetching student details, fetch the academic records if they are not already loaded
+        if (academicRecords.length === 0) {
+          fetchAcademicRecords(response.data[0].student_id);
+        }
       } else {
         setError("Student details not found");
       }
@@ -42,118 +49,27 @@ function Form137() {
       setError("Failed to fetch student details");
     }
   };
-
-  const fetchAcademicRecords = async () => {
+  
+  const fetchAcademicRecords = async (studentId) => {
     try {
-      // This would be replaced with your actual API endpoint for fetching academic records
-      // For now, we'll create mock data
-      const mockAcademicRecords = [
-        {
-          schoolYear: "2020-2021",
-          gradeLevel: "7",
-          schoolName: "Lourdes National High School",
-          schoolAddress: "Dauis - Panglao Rd, Dauis, Bohol",
-          subjects: [
-            { name: "Filipino", q1: "85", q2: "87", q3: "88", q4: "90", final: "88" },
-            { name: "English", q1: "88", q2: "90", q3: "92", q4: "94", final: "91" },
-            { name: "Mathematics", q1: "82", q2: "84", q3: "86", q4: "88", final: "85" },
-            { name: "Science", q1: "84", q2: "86", q3: "88", q4: "90", final: "87" },
-            { name: "Araling Panlipunan", q1: "86", q2: "88", q3: "90", q4: "92", final: "89" },
-            { name: "MAPEH", q1: "90", q2: "92", q3: "94", q4: "96", final: "93" },
-            { name: "TLE", q1: "88", q2: "90", q3: "92", q4: "94", final: "91" },
-            { name: "Values Education", q1: "92", q2: "94", q3: "96", q4: "98", final: "95" }
-          ],
-          attendance: {
-            daysPresent: 180,
-            daysAbsent: 10,
-            totalDays: 190
-          },
-          generalAverage: "90",
-          remarks: "Promoted"
-        },
-        {
-          schoolYear: "2021-2022",
-          gradeLevel: "8",
-          schoolName: "Lourdes National High School",
-          schoolAddress: "Dauis - Panglao Rd, Dauis, Bohol",
-          subjects: [
-            { name: "Filipino", q1: "86", q2: "88", q3: "90", q4: "92", final: "89" },
-            { name: "English", q1: "90", q2: "92", q3: "94", q4: "96", final: "93" },
-            { name: "Mathematics", q1: "84", q2: "86", q3: "88", q4: "90", final: "87" },
-            { name: "Science", q1: "86", q2: "88", q3: "90", q4: "92", final: "89" },
-            { name: "Araling Panlipunan", q1: "88", q2: "90", q3: "92", q4: "94", final: "91" },
-            { name: "MAPEH", q1: "92", q2: "94", q3: "96", q4: "98", final: "95" },
-            { name: "TLE", q1: "90", q2: "92", q3: "94", q4: "96", final: "93" },
-            { name: "Values Education", q1: "94", q2: "96", q3: "98", q4: "100", final: "97" }
-          ],
-          attendance: {
-            daysPresent: 185,
-            daysAbsent: 5,
-            totalDays: 190
-          },
-          generalAverage: "92",
-          remarks: "Promoted"
-        },
-        {
-          schoolYear: "2022-2023",
-          gradeLevel: "9",
-          schoolName: "Lourdes National High School",
-          schoolAddress: "Dauis - Panglao Rd, Dauis, Bohol",
-          subjects: [
-            { name: "Filipino", q1: "87", q2: "89", q3: "91", q4: "93", final: "90" },
-            { name: "English", q1: "91", q2: "93", q3: "95", q4: "97", final: "94" },
-            { name: "Mathematics", q1: "85", q2: "87", q3: "89", q4: "91", final: "88" },
-            { name: "Science", q1: "87", q2: "89", q3: "91", q4: "93", final: "90" },
-            { name: "Araling Panlipunan", q1: "89", q2: "91", q3: "93", q4: "95", final: "92" },
-            { name: "MAPEH", q1: "93", q2: "95", q3: "97", q4: "99", final: "96" },
-            { name: "TLE", q1: "91", q2: "93", q3: "95", q4: "97", final: "94" },
-            { name: "Values Education", q1: "95", q2: "97", q3: "99", q4: "100", final: "98" }
-          ],
-          attendance: {
-            daysPresent: 182,
-            daysAbsent: 8,
-            totalDays: 190
-          },
-          generalAverage: "93",
-          remarks: "Promoted"
-        },
-        {
-          schoolYear: "2023-2024",
-          gradeLevel: "10",
-          schoolName: "Lourdes National High School",
-          schoolAddress: "Dauis - Panglao Rd, Dauis, Bohol",
-          subjects: [
-            { name: "Filipino", q1: "88", q2: "90", q3: "92", q4: "94", final: "91" },
-            { name: "English", q1: "92", q2: "94", q3: "96", q4: "98", final: "95" },
-            { name: "Mathematics", q1: "86", q2: "88", q3: "90", q4: "92", final: "89" },
-            { name: "Science", q1: "88", q2: "90", q3: "92", q4: "94", final: "91" },
-            { name: "Araling Panlipunan", q1: "90", q2: "92", q3: "94", q4: "96", final: "93" },
-            { name: "MAPEH", q1: "94", q2: "96", q3: "98", q4: "100", final: "97" },
-            { name: "TLE", q1: "92", q2: "94", q3: "96", q4: "98", final: "95" },
-            { name: "Values Education", q1: "96", q2: "98", q3: "100", q4: "100", final: "99" }
-          ],
-          attendance: {
-            daysPresent: 186,
-            daysAbsent: 4,
-            totalDays: 190
-          },
-          generalAverage: "94",
-          remarks: "Graduated"
-        }
-      ];
-
-      // In a real implementation, you would fetch this data from your API
-      // const response = await axios.get(`http://localhost:3001/api/academic-records/${student.student_id}`);
-      // setAcademicRecords(response.data);
-
-      setAcademicRecords(mockAcademicRecords);
-      setLoading(false);
+      const response = await axios.get("http://localhost:3001/api/form137-data", {
+        params: { studentId },
+      });
+  
+      if (response.data && Array.isArray(response.data.schoolYears) && response.data.schoolYears.length > 0) {
+        setAcademicRecords(response.data.schoolYears);
+      } else {
+        setError("No academic records found");
+      }
     } catch (error) {
       console.error("Error fetching academic records:", error);
       setError("Failed to fetch academic records");
+    } finally {
       setLoading(false);
     }
   };
+  
+  
 
   const handleConvertToPdf = () => {
     const doc = new jsPDF({
@@ -215,7 +131,7 @@ function Form137() {
           </div>
           <div className="f137-info-item">
             <span className="f137-info-label">LRN:</span>
-            <span>{studentDetails?.student_id || "N/A"}</span>
+            <span>{studentDetails?.lrn || "N/A"}</span>
           </div>
           <div className="f137-info-item">
             <span className="f137-info-label">Gender:</span>
@@ -223,24 +139,28 @@ function Form137() {
           </div>
           <div className="f137-info-item">
             <span className="f137-info-label">Date of Birth:</span>
-            <span>{studentDetails?.birthdate ? new Date(studentDetails.birthdate).toLocaleDateString() : "N/A"}</span>
+            <span>{studentDetails?.birthdate}</span>
           </div>
           <div className="f137-info-item">
             <span className="f137-info-label">Address:</span>
             <span>
-              {studentDetails ? 
-                `${studentDetails.home_address || ""}, ${studentDetails.barangay || ""}, ${studentDetails.city_municipality || ""}` 
-                : "N/A"}
+              {studentDetails
+                ? [studentDetails.home_address, studentDetails.barangay, studentDetails.city_municipality, studentDetails.province]
+                    .filter(Boolean) // removes falsy values like undefined, null, ""
+                    .join(", ")
+                : ""}
             </span>
           </div>
+
           <div className="f137-info-item">
             <span className="f137-info-label">Parent/Guardian:</span>
             <span>
-              {studentDetails ? 
-                `${studentDetails.father_name || "N/A"} / ${studentDetails.mother_name || "N/A"}` 
-                : "N/A"}
+              {studentDetails
+                ? [studentDetails.father_name, studentDetails.mother_name].filter(Boolean).join(" / ")
+                : ""}
             </span>
           </div>
+
         </div>
 
         <div className="f137-academic-records">
@@ -254,10 +174,6 @@ function Form137() {
                 <div>
                   <span className="f137-info-label">Grade:</span>
                   <span>{record.gradeLevel}</span>
-                </div>
-                <div>
-                  <span className="f137-info-label">School:</span>
-                  <span>{record.schoolName}</span>
                 </div>
               </div>
 
@@ -273,9 +189,9 @@ function Form137() {
                   </tr>
                 </thead>
                 <tbody>
-                  {record.subjects.map((subject, subIndex) => (
+                  {record.grades.map((subject, subIndex) => (
                     <tr key={subIndex}>
-                      <td className="f137-subject-name">{subject.name}</td>
+                      <td className="f137-subject-name">{subject.subject_name}</td>
                       <td>{subject.q1}</td>
                       <td>{subject.q2}</td>
                       <td>{subject.q3}</td>
@@ -285,7 +201,7 @@ function Form137() {
                   ))}
                   <tr>
                     <td colSpan="5"><strong>General Average</strong></td>
-                    <td><strong>{record.generalAverage}</strong></td>
+                    <td><strong>{record.grades.reduce((acc, subject) => acc + subject.final, 0) / record.grades.length || 0.00}</strong></td>
                   </tr>
                 </tbody>
               </table>
@@ -302,26 +218,12 @@ function Form137() {
                     </thead>
                     <tbody>
                       <tr>
-                        <td>{record.attendance.daysPresent}</td>
-                        <td>{record.attendance.daysAbsent}</td>
-                        <td>{record.attendance.totalDays}</td>
+                        <td>{record.attendance.present}</td>
+                        <td>{record.attendance.absent}</td>
+                        <td>{record.attendance.days}</td>
                       </tr>
                     </tbody>
                   </table>
-                </div>
-                <div className="f137-summary-section" style={{
-                  width: "28%", 
-                  display: "flex", 
-                  alignItems: "center", 
-                  height: "100%",
-                  border: "1px solid #ddd",
-                  padding: "8px",
-                  backgroundColor: "#f0f0f0"
-                }}>
-                  <div className="f137-info-item" style={{margin: 0}}>
-                    <span className="f137-info-label">Remarks:</span>
-                    <span>{record.remarks}</span>
-                  </div>
                 </div>
               </div>
             </div>
@@ -342,14 +244,14 @@ function Form137() {
           </div>
           <div className="f137-signature-box">
             <div className="f137-signature-line"></div>
-            <p>School Principal</p>
+            <p>Principal</p>
           </div>
         </div>
-      </div>
 
-      <div className="f137-button-container">
-        <button onClick={handleBack}>Back</button>
-        <button onClick={handleConvertToPdf}>Print</button>
+        <div className="f137-button-container">
+          <button className="f137-button" onClick={handleBack}>Back</button>
+          <button className="f137-button" onClick={handleConvertToPdf}>Download PDF</button>
+        </div>
       </div>
     </div>
   );

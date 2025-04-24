@@ -1,56 +1,53 @@
-import React, { useState } from 'react';
+import { useLocation } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
 import { jsPDF } from 'jspdf';
+import axios from 'axios';
 import '../CssFiles/sf6.css';
 
 function SF6() {
+  const { state } = useLocation();
+  const { schoolYear, grade } = state;
   const [schoolData] = useState({
     schoolName: "Lourdes National High School",
     schoolId: "123456",
     district: "Dauis",
     division: "Bohol",
     region: "VII",
-    schoolYear: "2023-2024"
+    schoolYear: schoolYear // dynamic school year from state
   });
 
-  const [summaryData] = useState({
-    grades: {
-      "Grade 7": {
-        total: 200,
-        promoted: { male: 95, female: 98 },
-        retained: { male: 4, female: 3 },
-        totalMale: 99,
-        totalFemale: 101
-      },
-      "Grade 8": {
-        total: 195,
-        promoted: { male: 93, female: 96 },
-        retained: { male: 3, female: 3 },
-        totalMale: 96,
-        totalFemale: 99
-      },
-      "Grade 9": {
-        total: 190,
-        promoted: { male: 90, female: 94 },
-        retained: { male: 3, female: 3 },
-        totalMale: 93,
-        totalFemale: 97
-      },
-      "Grade 10": {
-        total: 185,
-        promoted: { male: 88, female: 92 },
-        retained: { male: 2, female: 3 },
-        totalMale: 90,
-        totalFemale: 95
+  const [schoolYearName, setSchoolYearName] = useState(schoolYear);
+  const [summaryData, setSummaryData] = useState(null);
+
+  useEffect(() => {
+    const fetchSummaryData = async () => {
+      try {
+        const response = await axios.get('http://localhost:3001/api/sf6-summary', {
+          params: {
+            grade_level: grade,
+            school_year_id: schoolYear
+          }
+        });
+
+        // Check if the response data is valid before setting it
+        if (response.data && response.data.summary) {
+          setSummaryData(response.data.summary);
+        } else {
+          console.error("Invalid response data:", response.data);
+        }
+
+        // Set the school year name based on the backend response
+        if (response.data && response.data.school_year) {
+          setSchoolYearName(response.data.school_year);
+        }
+
+      } catch (error) {
+        console.error("Error fetching summary data:", error);
       }
-    },
-    total: {
-      promoted: { male: 366, female: 380 },
-      retained: { male: 12, female: 12 },
-      totalMale: 378,
-      totalFemale: 392,
-      grandTotal: 770
-    }
-  });
+    };
+
+    fetchSummaryData();
+  }, [grade, schoolYear]);
 
   const handleConvertToPdf = () => {
     const doc = new jsPDF({
@@ -115,7 +112,7 @@ function SF6() {
           </div>
           <div className="sf6-info-item">
             <span className="sf6-info-label">School Year:</span>
-            <span>{schoolData.schoolYear}</span>
+            <span>{schoolYearName}</span>
           </div>
         </div>
 
@@ -145,32 +142,40 @@ function SF6() {
               </tr>
             </thead>
             <tbody>
-              {Object.entries(summaryData.grades).map(([grade, data]) => (
-                <tr key={grade}>
-                  <td>{grade}</td>
-                  <td>{data.promoted.male}</td>
-                  <td>{data.promoted.female}</td>
-                  <td>{data.retained.male}</td>
-                  <td>{data.retained.female}</td>
-                  <td>{data.totalMale}</td>
-                  <td>{data.totalFemale}</td>
-                  <td>{data.totalMale}</td>
-                  <td>{data.totalFemale}</td>
-                  <td>{data.total}</td>
+              {summaryData ? (
+                <>
+                  {summaryData.map((data, index) => (
+                    <tr key={index}>
+                      <td>{data.level}</td>
+                      <td>{data.male_promoted}</td>
+                      <td>{data.female_promoted}</td>
+                      <td>{data.male_retained}</td>
+                      <td>{data.female_retained}</td>
+                      <td>{data.male_promoted + data.male_retained}</td>
+                      <td>{data.female_promoted + data.female_retained}</td>
+                      <td>{data.male_promoted + data.male_retained}</td>
+                      <td>{data.female_promoted + data.female_retained}</td>
+                      <td>{data.male_promoted + data.female_promoted + data.male_retained + data.female_retained}</td>
+                    </tr>
+                  ))}
+                  <tr className="sf6-total-row">
+                    <td>TOTAL</td>
+                    <td>{summaryData.reduce((sum, data) => sum + data.male_promoted, 0)}</td>
+                    <td>{summaryData.reduce((sum, data) => sum + data.female_promoted, 0)}</td>
+                    <td>{summaryData.reduce((sum, data) => sum + data.male_retained, 0)}</td>
+                    <td>{summaryData.reduce((sum, data) => sum + data.female_retained, 0)}</td>
+                    <td>{summaryData.reduce((sum, data) => sum + (data.male_promoted + data.male_retained), 0)}</td>
+                    <td>{summaryData.reduce((sum, data) => sum + (data.female_promoted + data.female_retained), 0)}</td>
+                    <td>{summaryData.reduce((sum, data) => sum + (data.male_promoted + data.male_retained), 0)}</td>
+                    <td>{summaryData.reduce((sum, data) => sum + (data.female_promoted + data.female_retained), 0)}</td>
+                    <td>{summaryData.reduce((sum, data) => sum + (data.male_promoted + data.female_promoted + data.male_retained + data.female_retained), 0)}</td>
+                  </tr>
+                </>
+              ) : (
+                <tr>
+                  <td colSpan="10" style={{ textAlign: "center" }}>Loading data...</td>
                 </tr>
-              ))}
-              <tr className="sf6-total-row">
-                <td>TOTAL</td>
-                <td>{summaryData.total.promoted.male}</td>
-                <td>{summaryData.total.promoted.female}</td>
-                <td>{summaryData.total.retained.male}</td>
-                <td>{summaryData.total.retained.female}</td>
-                <td>{summaryData.total.totalMale}</td>
-                <td>{summaryData.total.totalFemale}</td>
-                <td>{summaryData.total.totalMale}</td>
-                <td>{summaryData.total.totalFemale}</td>
-                <td>{summaryData.total.grandTotal}</td>
-              </tr>
+              )}
             </tbody>
           </table>
         </div>
@@ -193,7 +198,7 @@ function SF6() {
           </div>
         </div>
       </div>
-      
+
       <div className="sf6-buttons">
         <button onClick={handleConvertToPdf}>Convert to PDF</button>
       </div>
@@ -201,4 +206,4 @@ function SF6() {
   );
 }
 
-export default SF6; 
+export default SF6;

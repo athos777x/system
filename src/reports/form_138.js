@@ -1,101 +1,45 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import "../CssFiles/form_138.css";
+import "../CssFiles/form_138.css"; // Make sure the CSS path is correct
 import { jsPDF } from "jspdf";
 import { useLocation, useNavigate } from "react-router-dom";
 
 function Form138() {
   const { state } = useLocation();
   const navigate = useNavigate();
-  const student = state?.student;
-  const [studentDetails, setStudentDetails] = useState(null);
-  const [currentGrades, setCurrentGrades] = useState(null);
+  const student = state?.student; // Student data passed from the previous page
+  const [studentData, setStudentData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [currentSchoolYear, setCurrentSchoolYear] = useState("");
 
+  // Fetch data when the component mounts
   useEffect(() => {
     if (student) {
-      fetchStudentDetails();
-      fetchCurrentGrades();
-      fetchCurrentSchoolYear();
+      fetchStudentData();
     } else {
       setError("No student data provided");
       setLoading(false);
     }
   }, [student]);
 
-  const fetchStudentDetails = async () => {
+  const fetchStudentData = async () => {
     try {
-      // Extract student name components
-      const [lastName, firstName] = student.name.replace(",", "").trim().split(/\s+/);
+      const { school_year_id, grade_level, section, student_last_name } = student;
 
-      const response = await axios.get(`http://localhost:3001/api/student/details`, {
-        params: { lastName, firstName },
+      const response = await axios.get("http://localhost:3001/api/student-grades", {
+        params: {
+          school_year_id,
+          grade: grade_level,
+          section,
+          studentName: student_last_name,
+        },
       });
 
-      if (response.data.length > 0) {
-        setStudentDetails(response.data[0]);
-      } else {
-        setError("Student details not found");
-      }
-    } catch (error) {
-      console.error("Error fetching student details:", error);
-      setError("Failed to fetch student details");
-    }
-  };
-
-  const fetchCurrentSchoolYear = async () => {
-    try {
-      // In a real implementation, you would fetch the current school year from your API
-      // const response = await axios.get('http://localhost:3001/school-years');
-      // setCurrentSchoolYear(response.data[0]?.school_year || "");
-      
-      // For now, we'll use a mock value
-      setCurrentSchoolYear("2023-2024");
-    } catch (error) {
-      console.error("Error fetching current school year:", error);
-    }
-  };
-
-  const fetchCurrentGrades = async () => {
-    try {
-      // This would be replaced with your actual API endpoint for fetching current grades
-      // For now, we'll create mock data
-      const mockCurrentGrades = {
-        schoolYear: "2023-2024",
-        gradeLevel: "9",
-        section: "Rizal",
-        schoolName: "Lourdes National High School",
-        schoolAddress: "Dauis - Panglao Rd, Dauis, Bohol",
-        subjects: [
-          { name: "Filipino", q1: "87", q2: "89", q3: "91", q4: "93", final: "90" },
-          { name: "English", q1: "92", q2: "94", q3: "96", q4: "98", final: "95" },
-          { name: "Mathematics", q1: "86", q2: "88", q3: "90", q4: "92", final: "89" },
-          { name: "Science", q1: "88", q2: "90", q3: "92", q4: "94", final: "91" },
-          { name: "Araling Panlipunan", q1: "90", q2: "92", q3: "94", q4: "96", final: "93" },
-          { name: "MAPEH", q1: "94", q2: "96", q3: "98", q4: "100", final: "97" },
-          { name: "TLE", q1: "92", q2: "94", q3: "96", q4: "98", final: "95" },
-          { name: "Values Education", q1: "96", q2: "98", q3: "100", q4: "100", final: "99" }
-        ],
-        attendance: {
-          daysPresent: 190,
-          daysAbsent: 0,
-          totalDays: 190
-        },
-        generalAverage: "94",
-        remarks: "Promoted"
-      };
-
-      // In a real implementation, you would fetch this data from your API
-      // const response = await axios.get(`http://localhost:3001/api/current-grades/${student.student_id}`);
-      // setCurrentGrades(response.data);
-
-      setCurrentGrades(mockCurrentGrades);
+      setStudentData(response.data); // Set the response data to state
       setLoading(false);
-    } catch (error) {
-      console.error("Error fetching current grades:", error);
-      setError("Failed to fetch current grades");
+    } catch (err) {
+      console.error("Error fetching student data:", err);
+      setError("Failed to fetch student report data");
       setLoading(false);
     }
   };
@@ -126,168 +70,180 @@ function Form138() {
     navigate(-1); // Go back to previous page
   };
 
-  if (loading) {
-    return <div>Loading...</div>;
-  }
+  // Loading, Error, or No Data states
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error}</div>;
+  if (!studentData) return <div>No data available.</div>;
 
-  if (error) {
-    return <div>Error: {error}</div>;
-  }
+  const { studentInfo, grades, attendance } = studentData;
+  const {
+    stud_name,
+    gender,
+    age,
+    lrn,
+    school_year_name,
+    student_id,
+    section_name
+  } = studentInfo;
+
+  // Calculate the general average
+  const getGeneralAverage = () => {
+    const totalFinalGrades = grades.reduce((sum, subject) => sum + subject.final, 0);
+    return totalFinalGrades / grades.length;
+  };
+
+  const generalAverage = getGeneralAverage();
 
   return (
-    <div>
-      <div className="f138-container">
-        <div className="f138-header">
-          <div className="f138-header-logos">
-            <img src="/deped-logo.png" alt="DepEd Logo" className="f138-logo" />
-          </div>
-          <div className="f138-header-text">
-            <h1>Republic of the Philippines • Department of Education</h1>
-            <h2>Region VII Central Visayas • Division of Bohol • District of Dauis</h2>
-            <h2>LOURDES NATIONAL HIGH SCHOOL</h2>
-            <h3>Dauis - Panglao Rd, Dauis, Bohol</h3>
-            <h3>REPORT CARD (Form 138)</h3>
-          </div>
-          <div className="f138-header-logos">
-            <img src="/lnhs-logo.png" alt="School Logo" className="f138-logo" />
-          </div>
+    <div className="f138-container">
+      <div className="f138-header">
+        <div className="f138-header-logos">
+          <img src="/deped-logo.png" alt="DepEd Logo" className="f138-logo" />
         </div>
-
-        <div className="f138-student-info">
-          <div className="f138-info-item">
-            <span className="f138-info-label">Name:</span>
-            <span>{studentDetails?.stud_name || "N/A"}</span>
-          </div>
-          <div className="f138-info-item">
-            <span className="f138-info-label">LRN:</span>
-            <span>{studentDetails?.student_id || "N/A"}</span>
-          </div>
-          <div className="f138-info-item">
-            <span className="f138-info-label">Grade & Section:</span>
-            <span>{currentGrades?.gradeLevel || "N/A"} - {currentGrades?.section || "N/A"}</span>
-          </div>
-          <div className="f138-info-item">
-            <span className="f138-info-label">School Year:</span>
-            <span>{currentGrades?.schoolYear || currentSchoolYear || "N/A"}</span>
-          </div>
-          <div className="f138-info-item">
-            <span className="f138-info-label">Age:</span>
-            <span>{studentDetails?.age || "N/A"}</span>
-          </div>
-          <div className="f138-info-item">
-            <span className="f138-info-label">Gender:</span>
-            <span>{studentDetails?.gender || "N/A"}</span>
-          </div>
+        <div className="f138-header-text">
+          <h1>Republic of the Philippines • Department of Education</h1>
+          <h2>Region VII Central Visayas • Division of Bohol • District of Dauis</h2>
+          <h2>LOURDES NATIONAL HIGH SCHOOL</h2>
+          <h3>Dauis - Panglao Rd, Dauis, Bohol</h3>
+          <h3>REPORT CARD (Form 138)</h3>
         </div>
+        <div className="f138-header-logos">
+          <img src="/lnhs-logo.png" alt="School Logo" className="f138-logo" />
+        </div>
+      </div>
 
-        <div className="f138-grades-section">
-          <h3>Academic Performance</h3>
-          <table className="f138-academic-grades-table">
-            <thead>
+      <div className="f138-student-info">
+        <div className="f138-info-item">
+          <span className="f138-info-label">Name:</span>
+          <span>{stud_name}</span>
+        </div>
+        <div className="f138-info-item">
+          <span className="f138-info-label">LRN:</span>
+          <span>{lrn}</span>
+        </div>
+        <div className="f138-info-item">
+          <span className="f138-info-label">Grade & Section:</span>
+          <span>{student.grade_level} - {section_name}</span>
+        </div>
+        <div className="f138-info-item">
+          <span className="f138-info-label">School Year:</span>
+          <span>{school_year_name}</span>
+        </div>
+        <div className="f138-info-item">
+          <span className="f138-info-label">Age:</span>
+          <span>{age}</span>
+        </div>
+        <div className="f138-info-item">
+          <span className="f138-info-label">Gender:</span>
+          <span>{gender}</span>
+        </div>
+      </div>
+
+      {/* Grades Table */}
+      <div className="f138-grades-section">
+        <h3>Academic Performance</h3>
+        <table className="f138-academic-grades-table">
+          <thead>
+            <tr>
+              <th style={{ width: "30%" }}>Subject</th>
+              <th style={{ width: "12%" }}>Q1</th>
+              <th style={{ width: "12%" }}>Q2</th>
+              <th style={{ width: "12%" }}>Q3</th>
+              <th style={{ width: "12%" }}>Q4</th>
+              <th style={{ width: "12%" }}>Final</th>
+            </tr>
+          </thead>
+          <tbody>
+            {grades.length === 0 ? (
               <tr>
-                <th style={{width: "30%"}}>Subject</th>
-                <th style={{width: "12%"}}>Q1</th>
-                <th style={{width: "12%"}}>Q2</th>
-                <th style={{width: "12%"}}>Q3</th>
-                <th style={{width: "12%"}}>Q4</th>
-                <th style={{width: "12%"}}>Final</th>
-                <th style={{width: "10%"}}>Remarks</th>
+                <td colSpan="7" className="no-data">No subjects available.</td>
               </tr>
-            </thead>
-            <tbody>
-              {currentGrades?.subjects.map((subject, index) => (
+            ) : (
+              grades.map((subject, index) => (
                 <tr key={index}>
-                  <td className="f138-subject-name">{subject.name}</td>
+                  <td>{subject.subject_name}</td>
                   <td>{subject.q1}</td>
                   <td>{subject.q2}</td>
                   <td>{subject.q3}</td>
                   <td>{subject.q4}</td>
-                  <td className="f138-final-grade">{subject.final}</td>
-                  <td>{parseInt(subject.final) >= 75 ? "Passed" : "Failed"}</td>
+                  <td>{subject.final}</td>
                 </tr>
+              ))
+            )}
+            {/* General Average row */}
+            <tr>
+              <td colSpan="5" style={{ textAlign: "right", fontWeight: "bold" }}>General Average:</td>
+              <td colSpan="2" style={{ fontWeight: "bold" }}>{generalAverage.toFixed(2)}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      {/* Attendance Table */}
+      <div className="f138-attendance-section">
+        <h3>Attendance Record</h3>
+        <table className="f138-student-attendance-table">
+          <thead>
+            <tr>
+              <th>Month</th>
+              {attendance.map((month) => (
+                <th key={month.month}>{month.month}</th> // Dynamically generate column headers
               ))}
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {attendance.length === 0 ? (
               <tr>
-                <td colSpan="5" className="f138-subject-name">General Average</td>
-                <td className="f138-final-grade">{currentGrades?.generalAverage || "N/A"}</td>
-                <td>{parseInt(currentGrades?.generalAverage || 0) >= 75 ? "Passed" : "Failed"}</td>
+                <td colSpan={attendance.length + 1} className="no-data">
+                  No attendance data available.
+                </td>
               </tr>
-            </tbody>
-          </table>
-        </div>
+            ) : (
+              <>
+                {/* Present Row */}
+                <tr>
+                  <td>Present</td>
+                  {attendance.map((month) => (
+                    <td key={month.month}>{month.present_count}</td> // Dynamically generate the attendance data
+                  ))}
+                  <td>
+                    {attendance.reduce((sum, month) => sum + month.present_count, 0)}
+                  </td> {/* Total present count */}
+                </tr>
 
-        <div className="f138-attendance-section">
-          <table className="f138-student-attendance-table">
-            <thead>
-              <tr>
-                <th colSpan="13">Attendance Record</th>
-              </tr>
-              <tr>
-                <th>Month</th>
-                <th>Jun</th>
-                <th>Jul</th>
-                <th>Aug</th>
-                <th>Sep</th>
-                <th>Oct</th>
-                <th>Nov</th>
-                <th>Dec</th>
-                <th>Jan</th>
-                <th>Feb</th>
-                <th>Mar</th>
-                <th>Apr</th>
-                <th>Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Present</td>
-                <td>20</td>
-                <td>20</td>
-                <td>18</td>
-                <td>20</td>
-                <td>18</td>
-                <td>19</td>
-                <td>15</td>
-                <td>18</td>
-                <td>18</td>
-                <td>20</td>
-                <td>4</td>
-                <td>{currentGrades?.attendance.daysPresent || "N/A"}</td>
-              </tr>
-              <tr>
-                <td>Absent</td>
-                <td>0</td>
-                <td>0</td>
-                <td>0</td>
-                <td>0</td>
-                <td>0</td>
-                <td>0</td>
-                <td>0</td>
-                <td>0</td>
-                <td>0</td>
-                <td>0</td>
-                <td>0</td>
-                <td>{currentGrades?.attendance.daysAbsent || "N/A"}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+                {/* Absent Row */}
+                <tr>
+                  <td>Absent</td>
+                  {attendance.map((month) => (
+                    <td key={month.month}>{month.absent_count}</td> // Dynamically generate the attendance data
+                  ))}
+                  <td>
+                    {attendance.reduce((sum, month) => sum + month.absent_count, 0)}
+                  </td> {/* Total absent count */}
+                </tr>
+              </>
+            )}
+          </tbody>
+        </table>
+      </div>
 
-        <div className="f138-promotion-section">
-          <h3>Promotion Status</h3>
-          <p>
-            <strong>Remarks:</strong> {currentGrades?.remarks || "N/A"}
-          </p>
-        </div>
+      <div className="f138-promotion-section">
+        <h3>Promotion Status</h3>
+        <p>
+          <strong>Remarks:</strong>
+          {generalAverage > 75 ? "Promoted" : "Retained"}
+        </p>
+      </div>
 
-        <div className="f138-signature-section">
-          <div className="f138-signature-box">
-            <div className="f138-signature-line"></div>
-            <p>Class Adviser</p>
-          </div>
-          <div className="f138-signature-box">
-            <div className="f138-signature-line"></div>
-            <p>School Principal</p>
-          </div>
+      <div className="f138-signature-section">
+        <div className="f138-signature-box">
+          <div className="f138-signature-line"></div>
+          <p>Class Adviser</p>
+        </div>
+        <div className="f138-signature-box">
+          <div className="f138-signature-line"></div>
+          <p>School Principal</p>
         </div>
       </div>
 
