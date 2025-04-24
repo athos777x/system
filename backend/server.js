@@ -6808,3 +6808,64 @@ app.get('/api/form137-data', (req, res) => {
     });
   });
 });
+
+// SF2 - Daily Attendance Report
+app.get('/api/sf2-attendance', (req, res) => {
+  const schoolYearId = req.query.school_year_id;
+  const date = req.query.date;
+
+  if (!schoolYearId || !date) {
+    return res.status(400).json({ error: 'School year ID and date are required' });
+  }
+
+  // Query to get students with their attendance status for the specified date
+  const query = `
+    SELECT 
+      s.student_id AS studentId,
+      CONCAT(s.lastname, ', ', s.firstname, ' ', IFNULL(LEFT(s.middlename, 1), ''), '.') AS studentName,
+      a.status,
+      sy.school_year
+    FROM student s
+    JOIN enrollment e ON s.student_id = e.student_id
+    LEFT JOIN attendance a ON s.student_id = a.student_id AND DATE(a.date) = ? AND a.school_year_id = ?
+    JOIN school_year sy ON e.school_year_id = sy.school_year_id
+    WHERE e.school_year_id = ? AND e.enrollment_status = 'active'
+    ORDER BY s.lastname, s.firstname
+  `;
+
+  db.query(query, [date, schoolYearId, schoolYearId], (err, results) => {
+    if (err) {
+      console.error('Error fetching SF2 attendance data:', err);
+      return res.status(500).json({ error: 'Database error' });
+    }
+
+    let totalPresent = 0;
+    let totalAbsent = 0;
+    let totalLate = 0;
+    const students = [];
+
+    results.forEach(row => {
+      // Add each student to the array
+      students.push({
+        studentId: row.studentId,
+        studentName: row.studentName,
+        status: row.status || 'A' // Default to absent if no status
+      });
+
+      // Count totals
+      if (row.status === 'P') totalPresent++;
+      else if (row.status === 'A') totalAbsent++;
+      else if (row.status === 'L') totalLate++;
+      else totalAbsent++; // Count as absent if no record
+    });
+
+    res.json({
+      students,
+      totalPresent,
+      totalAbsent,
+      totalLate,
+      totalStudents: students.length,
+      schoolYear: results.length > 0 ? results[0].school_year : ''
+    });
+  });
+});

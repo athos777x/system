@@ -17,6 +17,8 @@ function PromotionReport() {
   const [selectedSchoolYear, setSelectedSchoolYear] = useState(""); // Selected school year
   const [roleName, setRoleName] = useState('');
   const [quarter, setQuarter] = useState("");
+  const [selectedDate, setSelectedDate] = useState("");
+  const [selectedMonth, setSelectedMonth] = useState("");
 
   useEffect(() => {
     // Fetch school years from the backend
@@ -237,8 +239,32 @@ function PromotionReport() {
       alert('Please select a school year before generating.');
       return;
     }
-  
-    navigate('/sf2', { state: { schoolYearId: selectedSchoolYear } });
+    if (!grade) {
+      alert('Please select a grade level.');
+      return;
+    }
+    if (!section) {
+      alert('Please select a section.');
+      return;
+    }
+    if (!selectedMonth) {
+      alert('Please select a month for the attendance report.');
+      return;
+    }
+
+    // Create a date object for the first day of the selected month
+    const currentYear = new Date().getFullYear();
+    const firstDayOfMonth = new Date(`${selectedMonth} 1, ${currentYear}`);
+    
+    navigate('/sf2', { 
+      state: { 
+        schoolYearId: selectedSchoolYear, 
+        date: firstDayOfMonth.toISOString(),
+        grade: grade,
+        section: section,
+        month: selectedMonth
+      } 
+    });
   };
   
 
@@ -331,8 +357,8 @@ function PromotionReport() {
         {/* SF2 Card */}
         {(roleName !== 'principal' && roleName !== 'registrar' ) && (
         <div className="summary-report-card">
-          <h3>SF2 - School Summary Report of Enrollment</h3>
-          <p className="summary-report-description">Generate enrollment summary report by grade level.</p>
+          <h3>SF2 - Daily Attendance Report of Learners</h3>
+          <p className="summary-report-description">Generate daily attendance report for all students.</p>
           <button className="summary-report-btn" onClick={() => openModal('sf2')}>
             Generate SF2
           </button>
@@ -340,12 +366,12 @@ function PromotionReport() {
         )}
 
         {/* SF4 Card */}
-        {(roleName !== 'principal' && roleName !=='registrar' && roleName !=='class_adviser') && (
+        {(roleName !== 'principal' && roleName !=='registrar') && (
         <div className="summary-report-card">
-          <h3>SF4 - Monthly Learner's Movement and Attendance</h3>
+          <h3>SF2 Simple</h3>
           <p className="summary-report-description">Generate monthly attendance and movement report.</p>
           <button className="summary-report-btn" onClick={() => openModal('sf4')}>
-            Generate SF4
+            Generate SF2 Simple
           </button>
         </div>
         )}
@@ -644,7 +670,7 @@ function PromotionReport() {
             )}
             {modalContent === 'sf2' && (
               <div>
-                <h3>Generate SF2 - School Summary Report of Enrollment</h3>
+                <h3>Generate SF2 - Daily Attendance Report of Learners</h3>
                 <form onSubmit={(e) => e.preventDefault()}>
                   <label>School Year:</label>
                   <select value={selectedSchoolYear} onChange={(e) => setSelectedSchoolYear(e.target.value)} required>
@@ -655,13 +681,50 @@ function PromotionReport() {
                       </option>
                     ))}
                   </select>
+                  <label>Grade:</label>
+                  <select value={grade} onChange={handleGradeChange} required>
+                    <option value="">--Select One--</option>
+                    <option value="7">Grade 7</option>
+                    <option value="8">Grade 8</option>
+                    <option value="9">Grade 9</option>
+                    <option value="10">Grade 10</option>
+                  </select>
+                  <label>Section:</label>
+                  <select value={section} onChange={(e) => setSection(e.target.value)} required>
+                    <option value="">--Select One--</option>
+                    {sections.map((sec) => (
+                      <option key={sec.section_id} value={sec.section_id}>
+                        {sec.section_name}
+                      </option>
+                    ))}
+                  </select>
+                  <label>Month:</label>
+                  <select 
+                    value={selectedMonth} 
+                    onChange={(e) => setSelectedMonth(e.target.value)} 
+                    required
+                  >
+                    <option value="">--Select One--</option>
+                    <option value="January">January</option>
+                    <option value="February">February</option>
+                    <option value="March">March</option>
+                    <option value="April">April</option>
+                    <option value="May">May</option>
+                    <option value="June">June</option>
+                    <option value="July">July</option>
+                    <option value="August">August</option>
+                    <option value="September">September</option>
+                    <option value="October">October</option>
+                    <option value="November">November</option>
+                    <option value="December">December</option>
+                  </select>
                   <button type="button" onClick={handleGenerateSF2}>Generate Report</button>
                 </form>
               </div>
             )}
             {modalContent === 'sf4' && (
               <div>
-                <h3>Generate SF4 - Monthly Learner's Movement and Attendance</h3>
+                <h3>Generate SF2 Simple</h3>
                 <form onSubmit={(e) => e.preventDefault()}>
                   <label>School Year:</label>
                   <select value={selectedSchoolYear} onChange={(e) => setSelectedSchoolYear(e.target.value)} required>

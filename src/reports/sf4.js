@@ -61,7 +61,7 @@ function SF4() {
             <h2>Region VII Central Visayas • Division of Bohol • District of Dauis</h2>
             <h2>LOURDES NATIONAL HIGH SCHOOL</h2>
             <h3>Dauis - Panglao Rd, Dauis, Bohol</h3>
-            <h3>MONTHLY LEARNER'S MOVEMENT AND ATTENDANCE REPORT (SF4)</h3>
+            <h3>SF2 SIMPLE</h3>
           </div>
           <div className="sf4-header-logos">
             <img src="/lnhs-logo.png" alt="School Logo" className="sf4-logo" />

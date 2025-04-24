@@ -5,7 +5,7 @@
 }
 
 .sf2-container {
-  max-width: 850px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 15px;
   font-family: 'Arial', sans-serif;
@@ -60,91 +60,305 @@
   margin: 0 5px;
 }
 
-.sf2-school-info {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 8px;
+.sf2-title {
+  text-align: center;
+  margin: 10px 0;
+}
+
+.sf2-title h2 {
+  font-size: 16px;
+  margin: 5px 0;
+}
+
+.sf2-title p {
+  font-size: 12px;
+  font-style: italic;
+  margin: 5px 0;
+}
+
+.sf2-form-info {
+  margin: 15px 0;
+}
+
+.sf2-form-row {
+  display: flex;
+  justify-content: space-between;
   margin-bottom: 10px;
-  padding: 8px;
-  border: 1px solid #ddd;
-  background-color: #f9f9f9;
 }
 
-.sf2-info-item {
-  margin-bottom: 5px;
+.sf2-form-group {
+  display: flex;
+  align-items: center;
 }
 
-.sf2-info-label {
+.sf2-form-group label {
   font-weight: bold;
-  margin-right: 3px;
+  margin-right: 5px;
+  white-space: nowrap;
+}
+
+.sf2-form-group input,
+.sf2-form-group select {
+  border: 1px solid #000;
+  padding: 2px 5px;
+  width: 150px;
+}
+
+.sf2-school-name {
+  flex: 1;
+  margin-right: 20px;
+}
+
+.sf2-school-name input {
+  width: 100%;
 }
 
 .sf2-table-container {
-  margin: 30px 0;
+  margin: 20px 0;
+  overflow-x: auto;
 }
 
 .sf2-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 14px;
+  font-size: 12px;
 }
 
 .sf2-table th,
 .sf2-table td {
   border: 1px solid #000;
-  padding: 10px;
+  padding: 5px;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.sf2-learner-name-header {
+  width: 250px;
   text-align: center;
 }
 
-.sf2-table th {
+.sf2-date-header {
+  background-color: #f0f0f0;
+}
+
+.sf2-total-header {
+  background-color: #f0f0f0;
+}
+
+.sf2-remarks-header {
+  width: 200px;
+  font-size: 11px;
+}
+
+.sf2-date-cell {
+  width: 20px;
+  padding: 1px !important;
+}
+
+.sf2-day {
+  font-weight: bold;
+  font-size: 9px;
+  width: 100%;
+  text-align: center;
+}
+
+.sf2-student-name {
+  text-align: left;
+  padding-left: 5px;
+}
+
+.sf2-attendance-cell {
+  position: relative;
+  width: 20px;
+  height: 20px;
+  padding: 0 !important;
+}
+
+.sf2-attendance-diagonal {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.sf2-attendance-diagonal::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: linear-gradient(to right top, transparent calc(50% - 0.5px), #000 calc(50% - 0.5px), #000 calc(50% + 0.5px), transparent calc(50% + 0.5px));
+  z-index: 1;
+}
+
+.sf2-attendance-am {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 50%;
+  height: 50%;
+  z-index: 2;
+}
+
+.sf2-attendance-pm {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 50%;
+  height: 50%;
+  z-index: 2;
+}
+
+/* Status indicators */
+.sf2-attendance-am.absent::before {
+  content: "A";
+  position: absolute;
+  top: 0;
+  left: 1px;
+  font-size: 8px;
+  font-weight: bold;
+}
+
+.sf2-attendance-pm.absent::before {
+  content: "A";
+  position: absolute;
+  bottom: -2px;
+  right: 1px;
+  font-size: 8px;
+  font-weight: bold;
+}
+
+.sf2-attendance-am.tardy::before {
+  content: "T";
+  position: absolute;
+  top: 0;
+  left: 1px;
+  font-size: 8px;
+  font-weight: bold;
+}
+
+.sf2-attendance-pm.tardy::before {
+  content: "T";
+  position: absolute;
+  bottom: -2px;
+  right: 1px;
+  font-size: 8px;
+  font-weight: bold;
+}
+
+.sf2-total-cell {
+  width: 40px;
+}
+
+.sf2-remarks-cell {
+  width: 200px;
+  text-align: left;
+}
+
+.sf2-male-total,
+.sf2-female-total {
+  text-align: center;
   background-color: #f0f0f0;
   font-weight: bold;
 }
 
-.sf2-table tbody tr:nth-child(even) {
-  background-color: #f9f9f9;
+.sf2-combined-total-row {
+  background-color: #e6e6e6;
 }
 
-.sf2-total-row {
+.sf2-combined-total {
+  text-align: center;
   font-weight: bold;
-  background-color: #f0f0f0 !important;
 }
 
-.sf2-footer {
-  margin-top: 40px;
+.sf2-combined-total-cell {
+  background-color: #e6e6e6;
 }
 
-.sf2-signature-section {
+.sf2-guidelines-container {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 15px;
+  margin: 20px 0;
+  font-size: 11px;
+}
+
+.sf2-guidelines h3,
+.sf2-codes h3,
+.sf2-summary h3 {
+  font-size: 12px;
+  margin: 5px 0;
+  text-transform: uppercase;
+}
+
+.sf2-guidelines ol,
+.sf2-guidelines ul,
+.sf2-codes ol {
+  padding-left: 20px;
+  margin: 5px 0;
+}
+
+.sf2-guidelines ol li,
+.sf2-codes ol li {
+  margin-bottom: 3px;
+}
+
+.sf2-codes h4 {
+  font-size: 11px;
+  margin: 5px 0 3px;
+  font-style: italic;
+}
+
+.sf2-summary-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 5px;
+}
+
+.sf2-summary-table th,
+.sf2-summary-table td {
+  border: 1px solid #000;
+  padding: 5px;
+  text-align: center;
+}
+
+.sf2-summary-table th {
+  background-color: #f0f0f0;
+  font-weight: bold;
+}
+
+.sf2-certification {
+  margin: 30px 0 20px;
+  text-align: center;
+}
+
+.sf2-signatures {
   display: flex;
-  justify-content: space-around;
-  margin-bottom: 30px;
+  justify-content: space-between;
+  margin-top: 20px;
+  padding: 0 100px;
 }
 
 .sf2-signature {
   text-align: center;
-  width: 200px;
+  width: 250px;
 }
 
 .sf2-signature-line {
-  margin-bottom: 20px;
-}
-
-.sf2-signature-name {
-  font-weight: bold;
-  border-top: 1px solid #000;
-  padding-top: 5px;
+  border-bottom: 1px solid #000;
   margin-bottom: 5px;
+  height: 25px;
 }
 
-.sf2-signature-title {
-  font-style: italic;
-  color: #666;
+.sf2-signature p {
+  margin: 3px 0;
 }
 
-.sf2-date {
-  text-align: right;
+.sf2-page-number {
+  text-align: left;
   margin-top: 20px;
-  font-size: 14px;
+  font-size: 12px;
 }
 
 .sf2-buttons {
@@ -182,4 +396,31 @@
     padding: 0;
     background-color: white;
   }
+}
+
+.sf2-weekend {
+  background-color: #f0f0f0;
+}
+
+.sf2-daily-total-values {
+  font-size: 8px;
+  line-height: 1.2;
+  display: block;
+}
+
+.sf2-week-header {
+  background-color: #f0f0f0;
+  font-size: 11px;
+  font-weight: bold;
+}
+
+.sf2-date-blank-cell {
+  height: 25px;
+  border: 1px solid #000;
+  background-color: #fff;
+}
+
+.sf2-days-header {
+  border: 1px solid #000;
+  background-color: #f0f0f0;
 } 
