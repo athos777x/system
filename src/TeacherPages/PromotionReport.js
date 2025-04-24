@@ -86,29 +86,48 @@ function PromotionReport() {
   };
 
   const handleGenerateForm137 = () => {
+    // Check if a school year is selected and either LRN or student name is provided
     if (!selectedSchoolYear) {
       alert('Please select a school year before generating.');
       return;
     }
-    
     if (!lrn && !studentName) {
       alert('Please enter either LRN or Student Name before generating.');
       return;
     }
-
-    const studentData = { grade, section, name: studentName, lrn: lrn };
+  
+    // Extract the last name from student name if available
+    const lastName = studentName.split(',')[0]?.trim();
+  
+    // Prepare student data
+    const studentData = { grade, section, name: studentName, lrn };
+  
+    // Navigate to the form-137 page with the necessary data
     navigate('/form-137', { state: { student: studentData, schoolYear: selectedSchoolYear } });
   };
   
+  
   const handleGenerateForm138 = () => {
-    if (!grade || !section || !studentName) {
-      alert('Please fill in all the required fields before generating.');
+    if (!grade || !section || !studentName || !selectedSchoolYear) {
+      alert('Please fill in all required fields.');
       return;
     }
-
-    const studentData = { grade, section, name: studentName };
+  
+    // Extract last name from "LastName, FirstName" format
+    const lastName = studentName.split(',')[0].trim();
+  
+    const studentData = {
+      grade_level: grade,
+      section,
+      school_year_id: selectedSchoolYear,
+      student_name: studentName,
+      student_last_name: lastName,
+    };
+  
     navigate('/form-138', { state: { student: studentData } });
   };
+  
+  
 
   const handleGenerateGoodMoral = () => {
     if (!selectedSchoolYear) {
@@ -321,7 +340,7 @@ function PromotionReport() {
         )}
 
         {/* SF4 Card */}
-        {(roleName !== 'principal' && roleName !== 'registrar' && roleName !=='class_adviser') && (
+        {(roleName !== 'principal' && roleName !=='registrar' && roleName !=='class_adviser') && (
         <div className="summary-report-card">
           <h3>SF4 - Monthly Learner's Movement and Attendance</h3>
           <p className="summary-report-description">Generate monthly attendance and movement report.</p>
@@ -489,7 +508,7 @@ function PromotionReport() {
                   <select value={section} onChange={(e) => setSection(e.target.value)} required>
                     <option value="">--Select One--</option>
                     {sections.map((sec) => (
-                      <option key={sec.section_name} value={sec.section_name}>
+                      <option key={sec.section_id} value={sec.section_id}>
                         {sec.section_name}
                       </option>
                     ))}

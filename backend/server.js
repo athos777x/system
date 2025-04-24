@@ -1678,7 +1678,10 @@ app.get(`/api/student/details`, (req, res) => {
       a.age, 
       a.gender, 
       CONCAT('Grade',' ', a.current_yr_lvl, ' - ', b.section_name) AS grade_section, 
-      d.school_year  
+      d.school_year,
+      a.lrn,
+      a.home_address, a.barangay, a.city_municipality, a.province,
+      DATE_FORMAT(a.birthdate, '%M %e, %Y') AS birthdate
     FROM student a
     LEFT JOIN section b ON a.section_id = b.section_id
     LEFT JOIN student_school_year c ON a.student_id = c.student_id
@@ -6514,6 +6517,293 @@ app.get('/api/student-stats', (req, res) => {
       res.json({
         school_year_info: schoolYearInfo || {},
         student_statistics: studentStatsResult
+      });
+    });
+  });
+});
+
+app.get('/api/sf6-summary', (req, res) => {
+  const { grade_level, school_year_id } = req.query;
+
+  // Query to get the school year name based on the school year ID
+  const getSchoolYearQuery = `
+    SELECT school_year AS school_year_name 
+    FROM school_year 
+    WHERE school_year_id = ?
+  `;
+
+  // Query to get the promotion summary data based on grade and school year
+  const promotionSummaryQuery = `
+    SELECT 
+        CONCAT('Grade ', t.grade_level) AS level,
+        COUNT(CASE WHEN t.gender = 'Male' AND t.avg_grade >= 75 THEN 1 END) AS male_promoted,
+        COUNT(CASE WHEN t.gender = 'Male' AND t.avg_grade < 75 THEN 1 END) AS male_retained,
+        COUNT(CASE WHEN t.gender = 'Female' AND t.avg_grade >= 75 THEN 1 END) AS female_promoted,
+        COUNT(CASE WHEN t.gender = 'Female' AND t.avg_grade < 75 THEN 1 END) AS female_retained
+    FROM (
+        SELECT 
+            g.grade_level,
+            g.student_id,
+            st.gender,
+            AVG(g.grade) AS avg_grade
+        FROM grades g
+        LEFT JOIN enrollment e ON g.student_id = e.student_id AND g.school_year_id = e.school_year_id
+        LEFT JOIN student st ON e.student_id = st.student_id
+        WHERE 
+            g.school_year_id = ?
+            AND g.grade_level = ? 
+            AND g.student_id IN (
+                SELECT student_id 
+                FROM grades 
+                WHERE school_year_id = ? AND period = '4th'
+            )
+            AND g.period IN ('1st', '2nd', '3rd', '4th')
+        GROUP BY g.grade_level, g.student_id
+    ) AS t
+    GROUP BY t.grade_level
+  `;
+
+  // Fetch the school year name
+  db.query(getSchoolYearQuery, [school_year_id], (err, yearResult) => {
+    if (err) {
+      console.error('Error fetching school year:', err);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+
+    if (yearResult.length === 0) {
+      return res.status(404).json({ error: 'School year not found' });
+    }
+
+    const schoolYearName = yearResult[0].school_year_name;
+
+    // Fetch the promotion summary data for the given grade level and school year
+    db.query(promotionSummaryQuery, [school_year_id, grade_level, school_year_id], (err, summaryResults) => {
+      if (err) {
+        console.error('Error fetching promotion summary:', err);
+        return res.status(500).json({ error: 'Internal server error' });
+      }
+
+      res.json({
+        school_year: schoolYearName,
+        summary: summaryResults
+      });
+    });
+  });
+});
+
+app.get('/api/student-grades', (req, res) => {
+  const { school_year_id, grade, section, studentName } = req.query;
+
+  const studentInfoQuery = `
+    SELECT 
+      CONCAT(b.firstname, ' ', LEFT(IFNULL(b.middlename, ''), 1), '.', ' ', b.lastname) AS stud_name,
+      b.gender,
+      b.age,
+      b.lrn,
+      c.school_year AS school_year_name,
+      a.student_id,
+      d.section_name
+    FROM enrollment a
+    LEFT JOIN student b ON a.student_id = b.student_id
+    LEFT JOIN school_year c ON a.school_year_id = c.school_year_id
+    LEFT JOIN section d ON a.section_id=d.section_id
+    WHERE a.grade_level = ? AND b.lastname = ? AND a.school_year_id = ? AND a.section_id = ?
+  `;
+
+  db.query(studentInfoQuery, [grade, studentName, school_year_id, section], (err, studentInfoResults) => {
+    if (err) {
+      console.error('Error fetching student info:', err);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+
+    if (studentInfoResults.length === 0) {
+      return res.status(404).json({ error: 'Student not found' });
+    }
+
+    const studentId = studentInfoResults[0].student_id;
+
+    const gradesQuery = `
+      SELECT subject_name, 
+            MAX(CASE WHEN period = 1 THEN grade ELSE NULL END) AS q1,
+            MAX(CASE WHEN period = 2 THEN grade ELSE NULL END) AS q2,
+            MAX(CASE WHEN period = 3 THEN grade ELSE NULL END) AS q3,
+            MAX(CASE WHEN period = 4 THEN grade ELSE NULL END) AS q4,
+            ROUND(
+                (MAX(CASE WHEN period = 1 THEN grade ELSE NULL END) + 
+                  MAX(CASE WHEN period = 2 THEN grade ELSE NULL END) + 
+                  MAX(CASE WHEN period = 3 THEN grade ELSE NULL END) + 
+                  MAX(CASE WHEN period = 4 THEN grade ELSE NULL END)) / 4, 0
+                ) AS final, 
+              IF(
+                ROUND(
+                    (MAX(CASE WHEN period = 1 THEN grade ELSE NULL END) + 
+                      MAX(CASE WHEN period = 2 THEN grade ELSE NULL END) + 
+                      MAX(CASE WHEN period = 3 THEN grade ELSE NULL END) + 
+                      MAX(CASE WHEN period = 4 THEN grade ELSE NULL END)) / 4, 0
+                ) > 74, 
+                'passed', 
+                'failed') AS status 
+      FROM grades
+      WHERE student_id = ? AND grade_level = ? AND school_year_id = ? AND section_id = ?
+      GROUP BY subject_name;
+    `;
+
+    db.query(gradesQuery, [studentId, grade, school_year_id, section], (err, gradesResults) => {
+      if (err) {
+        console.error('Error fetching student grades:', err);
+        return res.status(500).json({ error: 'Internal server error' });
+      }
+
+      const attendanceQuery = `
+        SELECT 
+          month_names.month,
+          COALESCE(SUM(CASE WHEN MONTH(a.date) = month_names.month_num AND a.status = 'P' THEN 1 ELSE 0 END), 0) AS present_count,
+          COALESCE(SUM(CASE WHEN MONTH(a.date) = month_names.month_num AND a.status = 'A' THEN 1 ELSE 0 END), 0) AS absent_count
+        FROM (
+          SELECT 6 AS month_num, 'June' AS month UNION
+          SELECT 7, 'July' UNION
+          SELECT 8, 'August' UNION
+          SELECT 9, 'September' UNION
+          SELECT 10, 'October' UNION
+          SELECT 11, 'November' UNION
+          SELECT 12, 'December' UNION
+          SELECT 1, 'January' UNION
+          SELECT 2, 'February' UNION
+          SELECT 3, 'March' UNION
+          SELECT 4, 'April'
+        ) AS month_names
+        LEFT JOIN attendance a ON MONTH(a.date) = month_names.month_num 
+            AND a.student_id = ? 
+            AND a.date <= NOW()
+            AND a.school_year_id = ?
+        GROUP BY month_names.month_num
+        ORDER BY FIELD(month_names.month_num, 6,7,8,9,10,11,12,1,2,3,4);
+      `;
+
+      db.query(attendanceQuery, [studentId, school_year_id], (err, attendanceResults) => {
+        if (err) {
+          console.error('Error fetching attendance summary:', err);
+          return res.status(500).json({ error: 'Internal server error' });
+        }
+
+        res.json({
+          studentInfo: studentInfoResults[0],
+          grades: gradesResults,
+          attendance: attendanceResults
+        });
+      });
+    });
+  });
+});
+
+
+app.get('/api/form137-data', (req, res) => {
+  const { studentId } = req.query;  // Get student ID from the request
+
+  if (!studentId) {
+    return res.status(400).send('Student ID is required');
+  }
+
+  // First Query: Fetch School Year and Grade Level (only once)
+  const schoolYearQuery = `
+    SELECT b.school_year, a.grade_level, b.school_year_id
+    FROM enrollment a
+    LEFT JOIN school_year b ON a.school_year_id = b.school_year_id
+    WHERE a.student_id = ?
+    ORDER BY a.grade_level ASC
+  `;
+
+  // Second Query: Fetch Grades and Status for Each Subject (only once for each grade level)
+  const gradesQuery = `
+    SELECT subject_name, 
+           MAX(CASE WHEN period = 1 THEN grade ELSE NULL END) AS q1,
+           MAX(CASE WHEN period = 2 THEN grade ELSE NULL END) AS q2,
+           MAX(CASE WHEN period = 3 THEN grade ELSE NULL END) AS q3,
+           MAX(CASE WHEN period = 4 THEN grade ELSE NULL END) AS q4,
+           ROUND(
+               (MAX(CASE WHEN period = 1 THEN grade ELSE NULL END) + 
+                MAX(CASE WHEN period = 2 THEN grade ELSE NULL END) + 
+                MAX(CASE WHEN period = 3 THEN grade ELSE NULL END) + 
+                MAX(CASE WHEN period = 4 THEN grade ELSE NULL END)) / 4, 0
+           ) AS final, 
+           IF(
+             ROUND(
+               (MAX(CASE WHEN period = 1 THEN grade ELSE NULL END) + 
+                MAX(CASE WHEN period = 2 THEN grade ELSE NULL END) + 
+                MAX(CASE WHEN period = 3 THEN grade ELSE NULL END) + 
+                MAX(CASE WHEN period = 4 THEN grade ELSE NULL END)) / 4, 0
+             ) > 74, 
+             'passed', 
+             'failed'
+           ) AS status
+    FROM grades
+    WHERE student_id = ? AND grade_level = ? AND school_year_id = ?
+    GROUP BY subject_name
+  `;
+
+  // Attendance Query: Count the total days, present and absent (only once per school year)
+  const attendanceQuery = `
+    SELECT 
+      COUNT(*) AS days,
+      COUNT(CASE WHEN STATUS = 'P' THEN 1 END) AS present,
+      COUNT(CASE WHEN STATUS = 'A' THEN 1 END) AS absent
+    FROM attendance
+    WHERE student_id = ? AND school_year_id = ?
+  `;
+
+  // Query: Get school year and grade level only once
+  db.query(schoolYearQuery, [studentId], (err, schoolYearData) => {
+    if (err) {
+      console.error('Error executing school year query: ' + err.stack);
+      return res.status(500).send('Database error');
+    }
+
+    if (schoolYearData.length === 0) {
+      return res.status(404).send('No school year or grade level found for this student');
+    }
+
+    const results = {
+      studentId: studentId,  // Only add studentId once
+      schoolYears: []  // Array to hold all school year data
+    };
+
+    let completedQueries = 0;
+
+    // Fetch the academic records for each school year (but only once per school year)
+    schoolYearData.forEach((schoolYearRow) => {
+      const schoolYearId = schoolYearRow.school_year_id;
+      const gradeLevel = schoolYearRow.grade_level;
+
+      // Fetch Grades for the current school year and grade level (execute once)
+      db.query(gradesQuery, [studentId, gradeLevel, schoolYearId], (err, gradesData) => {
+        if (err) {
+          console.error('Error executing grades query: ' + err.stack);
+          return res.status(500).send('Database error');
+        }
+
+        // Fetch Attendance for the current school year (execute once)
+        db.query(attendanceQuery, [studentId, schoolYearId], (err, attendanceData) => {
+          if (err) {
+            console.error('Error executing attendance query: ' + err.stack);
+            return res.status(500).send('Database error');
+          }
+
+          // Combine the data for this school year and add it to results
+          results.schoolYears.push({
+            schoolYear: schoolYearRow.school_year,
+            gradeLevel: gradeLevel,
+            schoolYearId: schoolYearId,
+            grades: gradesData,
+            attendance: attendanceData[0] // Attendance data, first entry (there should be only one)
+          });
+
+          completedQueries++;
+
+          // Once all queries are completed, send the final response
+          if (completedQueries === schoolYearData.length) {
+            res.json(results);  // Send all data in a single response
+          }
+        });
       });
     });
   });
