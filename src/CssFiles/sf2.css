@@ -423,4 +423,38 @@
 .sf2-days-header {
   border: 1px solid #000;
   background-color: #f0f0f0;
-} 
+}
+
+.sf2-attendance-status {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+/* Present - blank cell */
+.sf2-attendance-status.present {
+  background-color: white;
+}
+
+/* Absent - upper diagonal half */
+.sf2-attendance-status.absent {
+  background: linear-gradient(45deg, #d3d3d3 50%, white 50%);
+}
+
+/* Tardy Late - upper diagonal half */
+.sf2-attendance-status.tardy-late {
+  background: linear-gradient(45deg, #d3d3d3 50%, white 50%);
+}
+
+/* Truant - lower diagonal half */
+.sf2-attendance-status.truant {
+  background: linear-gradient(-45deg, #d3d3d3 50%, white 50%);
+}
+
+/* Tardy Cutting - lower diagonal half */
+.sf2-attendance-status.tardy-cutting {
+  background: linear-gradient(-45deg, #d3d3d3 50%, white 50%);
+}

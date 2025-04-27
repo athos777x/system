@@ -262,7 +262,8 @@ function PromotionReport() {
         date: firstDayOfMonth.toISOString(),
         grade: grade,
         section: section,
-        month: selectedMonth
+        month: selectedMonth,
+        year: currentYear
       } 
     });
   };
@@ -366,7 +367,7 @@ function PromotionReport() {
         )}
 
         {/* SF4 Card */}
-        {(roleName !== 'principal' && roleName !=='registrar') && (
+        {(roleName !== 'principal' && roleName !=='class_adviser' && roleName !=='registrar') && (
         <div className="summary-report-card">
           <h3>SF2 Simple</h3>
           <p className="summary-report-description">Generate monthly attendance and movement report.</p>
