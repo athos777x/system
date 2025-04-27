@@ -1,8 +1,9 @@
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import React, { useState, useEffect } from 'react';
 import { jsPDF } from 'jspdf';
 import axios from 'axios';
 import '../CssFiles/sf5.css';
+import "../CssFiles/report_buttons.css";
 
 function SF5() {
   const { state } = useLocation();
@@ -29,6 +30,8 @@ function SF5() {
       femaleStats: { promoted: 0, retained: 0 }
     }
   });
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     axios.get('http://localhost:3001/api/reports/subject-statistics', {
@@ -102,29 +105,30 @@ function SF5() {
   
   
 
-  const handleConvertToPdf = () => {
+  const handlePrintPDF = () => {
     const doc = new jsPDF({
       orientation: "landscape",
       unit: "mm",
       format: "a4"
     });
 
-    const content = document.querySelector(".sf5-container");
-    if (content) {
-      doc.html(content, {
-        callback: function (doc) {
-          window.open(doc.output("bloburl"), "_blank");
-        },
-        x: 10,
-        y: 10,
-        width: 277,
-        windowWidth: 1000
-      });
-    }
+    doc.html(document.querySelector(".sf5-container"), {
+      callback: function (doc) {
+        window.open(doc.output("bloburl"), "_blank");
+      },
+      x: 10,
+      y: 10,
+      width: 277,
+      windowWidth: 1000
+    });
+  };
+
+  const handleBack = () => {
+    navigate(-1); // Go back to previous page
   };
 
   return (
-    <div className="sf5-page">
+    <div className="report-page sf5-page">
       <div className="sf5-container">
         <div className="sf5-header">
           <div className="sf5-header-logos">
@@ -264,9 +268,10 @@ function SF5() {
           </div>
         </div>
       </div>
-
-      <div className="sf5-buttons">
-        <button onClick={handleConvertToPdf}>Convert to PDF</button>
+      
+      <div className="report-buttons">
+        <button onClick={handleBack} className="report-back-btn">Back</button>
+        <button onClick={handlePrintPDF} className="report-print-btn">Print PDF</button>
       </div>
     </div>
   );

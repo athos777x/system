@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "../CssFiles/form_137.css";
+import "../CssFiles/report_buttons.css";
 import { jsPDF } from "jspdf";
 import { useLocation, useNavigate } from "react-router-dom";
 
@@ -69,22 +70,16 @@ function Form137() {
     }
   };
   
-  
-
-  const handleConvertToPdf = () => {
+  const handlePrintPDF = () => {
     const doc = new jsPDF({
       orientation: "portrait",
       unit: "mm",
       format: "a4",
     });
 
-    const button = document.querySelector(".f137-button-container");
-    if (button) button.style.display = "none";
-
     doc.html(document.querySelector(".f137-container"), {
       callback: function (doc) {
         window.open(doc.output("bloburl"), "_blank");
-        if (button) button.style.display = "flex";
       },
       x: 10,
       y: 10,
@@ -106,7 +101,7 @@ function Form137() {
   }
 
   return (
-    <div>
+    <div className="report-page f137-page">
       <div className="f137-container">
         <div className="f137-header">
           <div className="f137-header-logos">
@@ -247,11 +242,11 @@ function Form137() {
             <p>Principal</p>
           </div>
         </div>
-
-        <div className="f137-button-container">
-          <button className="f137-button" onClick={handleBack}>Back</button>
-          <button className="f137-button" onClick={handleConvertToPdf}>Download PDF</button>
-        </div>
+      </div>
+      
+      <div className="report-buttons">
+        <button onClick={handleBack} className="report-back-btn">Back</button>
+        <button onClick={handlePrintPDF} className="report-print-btn">Print PDF</button>
       </div>
     </div>
   );

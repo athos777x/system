@@ -1,11 +1,13 @@
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import React, { useState, useEffect } from 'react';
 import { jsPDF } from 'jspdf';
 import axios from 'axios';
 import '../CssFiles/quarterly_assessment.css';
+import "../CssFiles/report_buttons.css";
 
 function QuarterlyAssessment() {
   const location = useLocation();
+  const navigate = useNavigate();
   const { schoolYear, grade, section, quarter } = location.state || {};
 
   const [schoolData, setSchoolData] = useState({
@@ -101,9 +103,9 @@ function QuarterlyAssessment() {
     }
   };
 
-  const handleConvertToPdf = () => {
+  const handlePrintPDF = () => {
     const doc = new jsPDF({
-      orientation: "portrait",
+      orientation: "landscape",
       unit: "mm",
       format: "a4"
     });
@@ -116,10 +118,14 @@ function QuarterlyAssessment() {
         },
         x: 10,
         y: 10,
-        width: 190,
+        width: 277,
         windowWidth: 1000
       });
     }
+  };
+
+  const handleBack = () => {
+    navigate(-1); // Go back to previous page
   };
 
   const getQuarterLabel = (quarter) => {
@@ -135,7 +141,7 @@ function QuarterlyAssessment() {
   
 
   return (
-    <div className="quarterly-assessment-page">
+    <div className="report-page quarterly-assessment-page">
       <div className="quarterly-assessment-container">
         <div className="quarterly-assessment-header">
           <div className="quarterly-assessment-header-logos">
@@ -232,10 +238,11 @@ function QuarterlyAssessment() {
             </div>
           </div>
         </div>
-
-        <div className="quarterly-assessment-footer-buttons">
-          <button onClick={handleConvertToPdf}>Download as PDF</button>
-        </div>
+      </div>
+      
+      <div className="report-buttons">
+        <button onClick={handleBack} className="report-back-btn">Back</button>
+        <button onClick={handlePrintPDF} className="report-print-btn">Print PDF</button>
       </div>
     </div>
   );

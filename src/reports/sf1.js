@@ -1,13 +1,14 @@
-import { useLocation } from 'react-router-dom';
-import React, { useState, useEffect } from 'react';
-import { jsPDF } from 'jspdf';
-import axios from 'axios';
-import '../CssFiles/sf1.css';
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import "../CssFiles/sf1.css";
+import "../CssFiles/report_buttons.css";
+import { jsPDF } from "jspdf";
+import { useLocation, useNavigate } from "react-router-dom";
 
 function SF1() {
-  const location = useLocation();
-  const { schoolYear, grade, section, schoolName, schoolId, district, division, region } = location.state || {};
-
+  const navigate = useNavigate();
+  const { state } = useLocation();
+  const { schoolYear, grade, section, schoolName } = state || {};
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -68,7 +69,7 @@ function SF1() {
   
   
 
-  const handleConvertToPdf = () => {
+  const handlePrintPDF = () => {
     const doc = new jsPDF({
       orientation: "landscape",
       unit: "mm",
@@ -89,8 +90,12 @@ function SF1() {
     }
   };
 
+  const handleBack = () => {
+    navigate(-1); // Go back to previous page
+  };
+
   return (
-    <div className="sf1-page">
+    <div className="report-page sf1-page">
       <div className="sf1-container">
         <div className="sf1-header">
           <div className="sf1-header-logos">
@@ -204,8 +209,9 @@ function SF1() {
         </div>
       </div>
 
-      <div className="sf1-buttons">
-        <button onClick={handleConvertToPdf}>Convert to PDF</button>
+      <div className="report-buttons">
+        <button onClick={handleBack} className="report-back-btn">Back</button>
+        <button onClick={handlePrintPDF} className="report-print-btn">Print PDF</button>
       </div>
     </div>
   );

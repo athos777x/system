@@ -1,8 +1,9 @@
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import React, { useState, useEffect } from 'react';
 import { jsPDF } from 'jspdf';
 import axios from 'axios';
 import '../CssFiles/sf2.css';
+import "../CssFiles/report_buttons.css";
 
 function SF2() {
   const [schoolData, setSchoolData] = useState({
@@ -29,6 +30,8 @@ function SF2() {
     sectionName: '',
     schoolYearName: ''
   });
+
+  const navigate = useNavigate();
 
   const fetchSectionInfo = async () => {
     try {
@@ -101,25 +104,27 @@ function SF2() {
     fetchAttendanceData();
   }, [selectedMonth, grade, section, selectedYear]);
 
-  const handleConvertToPdf = () => {
+  const handlePrintPDF = () => {
     const doc = new jsPDF({
       orientation: "landscape",
       unit: "mm",
-      format: "a4"
+      format: [355.6, 215.9]
     });
 
-    const content = document.querySelector(".sf2-container");
-    if (content) {
-      doc.html(content, {
-        callback: function (doc) {
-          window.open(doc.output("bloburl"), "_blank");
-        },
-        x: 10,
-        y: 10,
-        width: 277,
-        windowWidth: 1000
-      });
-    }
+    // Hide the buttons before generating PDF
+    doc.html(document.querySelector(".sf2-container"), {
+      callback: function (doc) {
+        window.open(doc.output("bloburl"), "_blank");
+      },
+      x: 10,
+      y: 10,
+      width: 335,
+      windowWidth: 1100
+    });
+  };
+
+  const handleBack = () => {
+    navigate(-1); // Go back to previous page
   };
 
 // Helper function to convert month name to month index
@@ -443,7 +448,7 @@ const calculateSummary = () => {
 };
 
   return (
-    <div className="sf2-page">
+    <div className="report-page sf2-page">
       <div className="sf2-container">
         <div className="sf2-header">
           <div className="sf2-header-logos">
@@ -742,10 +747,10 @@ const calculateSummary = () => {
         <div className="sf2-page-number">
           <p>School Form 2 : Page ____ of ____</p>
         </div>
-
-        <div className="sf2-buttons">
-          <button onClick={handleConvertToPdf}>Convert to PDF</button>
-        </div>
+      </div>
+      <div className="report-buttons">
+        <button onClick={handleBack} className="report-back-btn">Back</button>
+        <button onClick={handlePrintPDF} className="report-print-btn">Print PDF</button>
       </div>
     </div>
   );

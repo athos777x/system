@@ -1,24 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import { jsPDF } from 'jspdf';
 import axios from 'axios';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import '../CssFiles/nutritional_report.css';
+import '../CssFiles/report_buttons.css';
 
 // Calculate age from birthdate
 function calculateAge(birthdate) {
-  const birth = new Date(birthdate);
-  const now = new Date();
-  let age = now.getFullYear() - birth.getFullYear();
-  const monthDiff = now.getMonth() - birth.getMonth();
-  if (monthDiff < 0 || (monthDiff === 0 && now.getDate() < birth.getDate())) {
+  const today = new Date();
+  const birthDate = new Date(birthdate);
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const m = today.getMonth() - birthDate.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
     age--;
   }
   return age;
 }
 
 function NutritionalReport() {
-  const location = useLocation();
-  const { schoolYear, grade, section } = location.state || {};
+  const navigate = useNavigate();
+  const { state } = useLocation();
+  const { schoolYear, grade, section } = state || {};
 
   const [schoolData, setSchoolData] = useState({
     schoolName: "Lourdes National High School",
@@ -27,25 +29,23 @@ function NutritionalReport() {
     division: "Bohol",
     region: "VII",
     schoolYear: "",
-    quarter: "1st",
-    grade: grade || "",
-    section: section || "",
+    quarter: "1st Quarter",
     adviser: "",
-    dateGenerated: ""
+    dateGenerated: new Date().toLocaleDateString()
   });
 
   const [nutritionalData, setNutritionalData] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchData = async () => {
-      if (!schoolYear || !grade || !section) {
-        setError("Missing parameters for nutritional report.");
-        return;
-      }
+    if (!schoolYear || !grade || !section) {
+      setError("Missing required parameters for the report.");
+      setLoading(false);
+      return;
+    }
 
-      setLoading(true);
+    const fetchData = async () => {
       try {
         const response = await axios.get("http://localhost:3001/api/class_list", {
           params: { school_year_id: schoolYear, grade_level: grade, section_id: section }
@@ -116,7 +116,7 @@ function NutritionalReport() {
     fetchData();
   }, [schoolYear, grade, section]);
 
-  const handleConvertToPdf = () => {
+  const handlePrintPDF = () => {
     const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
     const content = document.querySelector(".nutritional-report-container");
 
@@ -133,6 +133,10 @@ function NutritionalReport() {
     }
   };
 
+  const handleBack = () => {
+    navigate(-1); // Go back to previous page
+  };
+
   const calculateSummary = () => {
     const total = nutritionalData.length;
     const underweight = nutritionalData.filter(s => s.nutritionalStatus === "Underweight").length;
@@ -146,7 +150,7 @@ function NutritionalReport() {
   const summary = calculateSummary();
 
   return (
-    <div className="nutritional-report-page">
+    <div className="report-page nutritional-report-page">
       <div className="nutritional-report-container">
         <div className="nutritional-report-header">
           <div className="nutritional-report-header-logos">
@@ -237,8 +241,9 @@ function NutritionalReport() {
         </div>
       </div>
 
-      <div className="nutritional-report-buttons">
-        <button onClick={handleConvertToPdf}>Print</button>
+      <div className="report-buttons">
+        <button onClick={handleBack} className="report-back-btn">Back</button>
+        <button onClick={handlePrintPDF} className="report-print-btn">Print PDF</button>
       </div>
     </div>
   );

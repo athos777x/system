@@ -3,6 +3,7 @@ import { jsPDF } from 'jspdf';
 import axios from 'axios';
 import { useLocation, useNavigate } from 'react-router-dom';
 import '../CssFiles/class_list.css';
+import "../CssFiles/report_buttons.css";
 
 function ClassList() {
   const location = useLocation();
@@ -79,7 +80,7 @@ function ClassList() {
   };
   
 
-  const handleConvertToPdf = () => {
+  const handlePrintPDF = () => {
     const doc = new jsPDF({
       orientation: "portrait",
       unit: "mm",
@@ -100,6 +101,10 @@ function ClassList() {
     }
   };
 
+  const handleBack = () => {
+    navigate(-1); // Go back to previous page
+  };
+
   if (loading) {
     return <div>Loading class list...</div>;
   }
@@ -109,7 +114,7 @@ function ClassList() {
   }
 
   return (
-    <div className="class-list-page">
+    <div className="report-page class-list-page">
       <div className="class-list-container">
         <div className="class-list-header">
           <div className="class-list-header-logos">
@@ -211,9 +216,10 @@ function ClassList() {
           </div>
         </div>
       </div>
-
-      <div className="class-list-buttons">
-        <button onClick={handleConvertToPdf}>Print</button>
+      
+      <div className="report-buttons">
+        <button onClick={handleBack} className="report-back-btn">Back</button>
+        <button onClick={handlePrintPDF} className="report-print-btn">Print PDF</button>
       </div>
     </div>
   );
