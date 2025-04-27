@@ -629,7 +629,7 @@ const calculateSummary = () => {
           <div className="sf2-codes">
             <h3>1. CODES FOR CHECKING ATTENDANCE</h3>
             <p>(blank) - Present | Upper right triangle shade - Late | Lower left triangle shade - Absent</p>
-            <p>T - Truant (Absent without valid reason) | C - Cutting Classes</p>
+            {/* <p>T - Truant (Absent without valid reason) | C - Cutting Classes</p> */}
             
             <h3>2. REASONS/CAUSES FOR DROPPING OUT</h3>
             <h4>a. Student-Related Factors</h4>
