@@ -6869,3 +6869,113 @@ app.get('/api/sf2-attendance', (req, res) => {
     });
   });
 });
+
+app.get('/api/sf2-combined', (req, res) => {
+  const { month, gradeLevel, section, year } = req.query;
+
+  const currentYear = new Date().getFullYear();
+  const finalYear = year || currentYear;
+
+  const query = `
+    SELECT 
+      d.date,
+      DAYNAME(d.date) AS day_name,
+      DAY(d.date) AS day_of_month,
+      CONCAT(s.lastname, ', ', s.firstname, ' ', LEFT(IFNULL(s.middlename, ''), 1), '.') AS stud_name,
+      s.student_id,
+      s.gender,
+      a.status
+    FROM (
+      SELECT DATE(CONCAT(?, '-', 
+        CASE ?
+          WHEN 'January' THEN '01'
+          WHEN 'February' THEN '02'
+          WHEN 'March' THEN '03'
+          WHEN 'April' THEN '04'
+          WHEN 'May' THEN '05'
+          WHEN 'June' THEN '06'
+          WHEN 'July' THEN '07'
+          WHEN 'August' THEN '08'
+          WHEN 'September' THEN '09'
+          WHEN 'October' THEN '10'
+          WHEN 'November' THEN '11'
+          WHEN 'December' THEN '12'
+        END, '-', LPAD(n.n, 2, '0'))) as date
+      FROM (
+        SELECT a.N + b.N * 10 + 1 n
+        FROM (SELECT 0 AS N UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) a,
+             (SELECT 0 AS N UNION SELECT 1 UNION SELECT 2 UNION SELECT 3) b
+        ORDER BY n
+      ) n
+      WHERE n.n <= DAY(LAST_DAY(CONCAT(?, '-', 
+        CASE ?
+          WHEN 'January' THEN '01'
+          WHEN 'February' THEN '02'
+          WHEN 'March' THEN '03'
+          WHEN 'April' THEN '04'
+          WHEN 'May' THEN '05'
+          WHEN 'June' THEN '06'
+          WHEN 'July' THEN '07'
+          WHEN 'August' THEN '08'
+          WHEN 'September' THEN '09'
+          WHEN 'October' THEN '10'
+          WHEN 'November' THEN '11'
+          WHEN 'December' THEN '12'
+        END, '-01')))
+    ) d
+    CROSS JOIN (
+      SELECT DISTINCT s.student_id, s.lastname, s.firstname, s.middlename, s.gender
+      FROM student s
+      JOIN enrollment e ON s.student_id = e.student_id
+      WHERE e.grade_level = ? 
+      AND e.section_id = ?
+      AND e.enrollment_status = 'active'
+    ) s
+    LEFT JOIN attendance a ON s.student_id = a.student_id 
+      AND DATE(a.date) = d.date
+    WHERE DAYOFWEEK(d.date) BETWEEN 2 AND 6  -- Only Monday to Friday
+    ORDER BY d.date, s.lastname, s.firstname;
+  `;
+
+  db.query(query, [finalYear, month, finalYear, month, gradeLevel, section], (err, results) => {
+    if (err) {
+      console.error('Error fetching combined data:', err);
+      return res.status(500).json({ error: 'Database error' });
+    }
+    res.json(results);
+  });
+});
+
+app.get('/api/school_year/section_name', (req, res) => {
+  const { school_year_id, section } = req.query; // Get parameters from the query string
+
+  if (!school_year_id || !section) {
+    return res.status(400).json({ error: "Missing required parameters: school_year_id and section" });
+  }
+
+  // Define the SQL query
+  const query = `
+    SELECT 
+      a.section_name, 
+      b.school_year AS school_year_name 
+    FROM section a 
+    LEFT JOIN school_year b 
+      ON a.school_year_id = b.school_year_id 
+    WHERE a.school_year_id = ? 
+      AND a.section_id = ?
+  `;
+
+  // Execute the query
+  db.query(query, [school_year_id, section], (err, results) => {
+    if (err) {
+      return res.status(500).json({ error: "Database query failed", details: err.message });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ error: "No data found" });
+    }
+
+    // Return the result
+    res.json(results[0]); // Sending the first result (assuming one result will be returned)
+  });
+});

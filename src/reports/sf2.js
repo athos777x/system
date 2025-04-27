@@ -6,7 +6,7 @@ import '../CssFiles/sf2.css';
 
 function SF2() {
   const [schoolData, setSchoolData] = useState({
-    schoolName: "SAMPLE ELEMENTARY SCHOOL",
+    schoolName: "LOURDES NATIONAL HIGH SCHOOL",
     schoolId: "123456",
     district: "SAMPLE DISTRICT",
     division: "SAMPLE DIVISION",
@@ -18,65 +18,86 @@ function SF2() {
   });
 
   const location = useLocation();
-  const schoolYearId = location.state?.schoolYearId;
+  const { schoolYearId, year, grade, section, month, date } = location.state;
   const initialDate = location.state?.date ? new Date(location.state.date) : new Date();
   const [attendanceData, setAttendanceData] = useState(null);
   const [selectedDate, setSelectedDate] = useState(initialDate);
   const [selectedMonth, setSelectedMonth] = useState(location.state?.month || initialDate.toLocaleString('default', { month: 'long' }));
   const [selectedYear, setSelectedYear] = useState(initialDate.getFullYear());
   const [gradeLevel, setGradeLevel] = useState(location.state?.grade || "7");
-  const [section, setSection] = useState(location.state?.section || "A");
+  const [sectionInfo, setSectionInfo] = useState({
+    sectionName: '',
+    schoolYearName: ''
+  });
 
-  // Mock data for testing
-  const mockData = {
-    schoolYear: "2023-2024",
-    students: [
-      { studentId: "1001", studentName: "AGUILAR, Juan Miguel C.", gender: "M" },
-      { studentId: "1002", studentName: "BUENAVENTURA, Carlos P.", gender: "M" },
-      { studentId: "1003", studentName: "CRUZ, Roberto D.", gender: "M" },
-      { studentId: "1004", studentName: "DELA CRUZ, Miguel Antonio S.", gender: "M" },
-      { studentId: "1005", studentName: "ENRIQUEZ, Jose Mari B.", gender: "M" },
-      { studentId: "1006", studentName: "FERNANDO, Paul Vincent L.", gender: "M" },
-      { studentId: "1007", studentName: "GARCIA, Rafael T.", gender: "M" },
-      { studentId: "1008", studentName: "HERNANDEZ, Christian D.", gender: "M" },
-      { studentId: "1009", studentName: "IGNACIO, Martin A.", gender: "M" },
-      { studentId: "1010", studentName: "JIMENEZ, Angel David P.", gender: "M" },
-      { studentId: "1011", studentName: "AQUINO, Maria Luisa B.", gender: "F" },
-      { studentId: "1012", studentName: "BAUTISTA, Angela Rose C.", gender: "F" },
-      { studentId: "1013", studentName: "CASTILLO, Sofia Grace T.", gender: "F" },
-      { studentId: "1014", studentName: "DIZON, Jessica Mae P.", gender: "F" },
-      { studentId: "1015", studentName: "ESPERANZA, Gabriela C.", gender: "F" },
-      { studentId: "1016", studentName: "FLORES, Maria Theresa L.", gender: "F" },
-      { studentId: "1017", studentName: "GONZALES, Jillian Claire K.", gender: "F" },
-      { studentId: "1018", studentName: "HERNANDEZ, Isabel Joy O.", gender: "F" },
-      { studentId: "1019", studentName: "IGLESIAS, Patricia Anne S.", gender: "F" },
-      { studentId: "1020", studentName: "JIMENEZ, Samantha Nicole D.", gender: "F" }
-    ]
+  const fetchSectionInfo = async () => {
+    try {
+      const response = await axios.get('http://localhost:3001/api/school_year/section_name', {
+        params: {
+          school_year_id: 1, // Example: school year ID (you can dynamically pass this)
+          section: 1 // Example: section ID (you can dynamically pass this)
+        }
+      });
+      // Update section info
+      setSectionInfo({
+        sectionName: response.data.section_name,
+        schoolYearName: response.data.school_year_name
+      });
+    } catch (error) {
+      console.error('Error fetching section data:', error);
+    }
   };
 
   useEffect(() => {
-    // Use the mock data instead of fetching from the API
-    setAttendanceData(mockData);
-    
-    // Keep the original fetch code commented for when you're ready to connect to the backend
-    /*
-    if (!schoolYearId) return;
-  
-    const fetchAttendance = async () => {
+    fetchSectionInfo();
+  }, []);
+
+
+  useEffect(() => {
+    const fetchAttendanceData = async () => {
       try {
-        const formattedDate = selectedDate.toISOString().split('T')[0];
-        const url = `http://localhost:3001/api/sf2-attendance?school_year_id=${schoolYearId}&date=${formattedDate}&grade=${gradeLevel}&section=${section}`;
-        const res = await fetch(url);
-        const data = await res.json();
-        setAttendanceData(data);
-      } catch (err) {
-        console.error("Error fetching SF2 attendance data:", err);
+        const response = await axios.get('http://localhost:3001/api/sf2-combined', {
+          params: {
+            month: selectedMonth,
+            gradeLevel: grade,
+            section: section,
+            year: selectedYear
+          }
+        });
+        
+        // Process the data to group by student
+        const processedData = response.data.reduce((acc, record) => {
+          if (!record.student_id) return acc;
+          
+          if (!acc[record.student_id]) {
+            acc[record.student_id] = {
+              studentId: record.student_id,
+              stud_name: record.stud_name,
+              gender: record.gender,
+              attendance: {}
+            };
+          }
+          
+          // Store attendance status for each day
+          if (record.date) {
+            const day = record.day_of_month;
+            acc[record.student_id].attendance[day] = record.status || 'A';
+          }
+          
+          return acc;
+        }, {});
+        
+        // Convert to array format
+        const students = Object.values(processedData);
+        setAttendanceData(students);
+        
+      } catch (error) {
+        console.error('Error fetching attendance data:', error);
       }
     };
-  
-    fetchAttendance();
-    */
-  }, [schoolYearId, selectedDate, gradeLevel, section]);
+
+    fetchAttendanceData();
+  }, [selectedMonth, grade, section, selectedYear]);
 
   const handleConvertToPdf = () => {
     const doc = new jsPDF({
@@ -99,262 +120,324 @@ function SF2() {
     }
   };
 
-  // Helper function to generate the date columns for the month
-  const generateDateColumns = () => {
-    // Always create 4 sets of weekdays (M T W Th F) for a month
-    const columns = [];
+// Helper function to convert month name to month index
+const monthNameToIndex = (monthName) => {
+  const months = [
+    "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"
+  ];
+  return months.indexOf(monthName);
+};
+
+// Helper: get all weekdays (Mon-Fri) for selected month
+const getWeekdaysInMonth = (month, year) => {
+  const weekdays = [];
+  const monthIndex = monthNameToIndex(month); // Convert month name to index
+  const date = new Date(year, monthIndex, 1); // Start at first day of the month
+
+  // Loop through the days of the month
+  while (date.getMonth() === monthIndex) {
+    const day = date.getDay(); // 0=Sunday, 1=Monday, ..., 6=Saturday
+
+    if (day >= 1 && day <= 5) { // Only Monday to Friday
+      weekdays.push(new Date(date)); // Clone the date
+    }
+
+    date.setDate(date.getDate() + 1); // Move to next day
+  }
+
+  return weekdays;
+};
+
+// Helper: map numeric day to abbreviation
+const getDayAbbreviation = (dayNumber) => {
+  switch (dayNumber) {
+    case 1: return "M";
+    case 2: return "T";
+    case 3: return "W";
+    case 4: return "Th";
+    case 5: return "F";
+    default: return "";
+  }
+};
+
+// Generate the Day Abbreviations (M, T, W, Th, F)
+const generateDateColumns = (month, year) => {
+  const weekdays = getWeekdaysInMonth(month, year);
+
+  return weekdays.map((date, index) => (
+    <td key={`day-${index}`} className="sf2-date-cell">
+      <div className="sf2-day">{getDayAbbreviation(date.getDay())}</div>
+    </td>
+  ));
+};
+
+// Generate the actual Date Numbers (1, 2, 3, etc.)
+const generateDateBlankCells = (month, year) => {
+  const weekdays = getWeekdaysInMonth(month, year);
+
+  return weekdays.map((date, index) => (
+    <td key={`date-blank-${index}`} className="sf2-date-blank-cell">
+      {date.getDate()}
+    </td>
+  ));
+};
+
+// Helper function to calculate the number of weekdays (M-F) in the selected month
+const calculateWeekdaysCount = (month, year) => {
+  const weekdays = getWeekdaysInMonth(month, year);
+  return weekdays.length;
+};
+
+// Helper function to calculate number of weeks in the month
+const calculateWeeksInMonth = (month, year) => {
+  const weekdays = getWeekdaysInMonth(month, year);
+  // Count weeks based on actual weekdays, even if last week is incomplete
+  const weeks = Math.ceil(weekdays.length / 5);
+  return weeks;
+};
+
+// Generate the date header with month name
+const generateDateHeader = (month, year) => {
+  const weekdaysCount = calculateWeekdaysCount(month, year);
+  return (
+    <th colSpan={weekdaysCount} className="sf2-date-header">
+      {month} {year}
+    </th>
+  );
+};
+
+// Helper function to generate attendance cells for a student
+const generateAttendanceCells = (student) => {
+  const cells = [];
+  const weekdays = getWeekdaysInMonth(selectedMonth, selectedYear);
+  
+  // Generate cells for each weekday in the month
+  weekdays.forEach((date, index) => {
+    const dayOfMonth = date.getDate();
     
-    // Create 4 weeks (M-F) = 20 columns
-    for (let week = 0; week < 4; week++) {
-      // For each day of the week (Monday to Friday)
-      for (let day = 1; day <= 5; day++) {
-        let dayAbbr;
-        switch (day) {
-          case 1: dayAbbr = "M"; break;
-          case 2: dayAbbr = "T"; break;
-          case 3: dayAbbr = "W"; break;
-          case 4: dayAbbr = "Th"; break;
-          case 5: dayAbbr = "F"; break;
-          default: dayAbbr = "";
-        }
-        
-        columns.push(
-          <td key={`day-${week}-${day}`} className="sf2-date-cell">
-            <div className="sf2-day">{dayAbbr}</div>
-          </td>
-        );
-      }
+    // Get the status from the attendance object using the day as key
+    const status = student.attendance[dayOfMonth] || 'P';
+    
+    // Determine the status class based on the actual status
+    let statusClass = '';
+    let statusText = '';
+    
+    switch (status) {
+      case 'P':
+        statusClass = 'present';
+        statusText = 'P'; // Blank for present
+        break;
+      case 'A':
+        statusClass = 'absent';
+        statusText = 'A';
+        break;
+      case 'L':
+        statusClass = 'tardy-late';
+        statusText = 'L';
+        break;
+      case 'T':
+        statusClass = 'truant';
+        statusText = 'T';
+        break;
+      case 'C':
+        statusClass = 'tardy-cutting';
+        statusText = 'L';
+        break;
+      default:
+        statusClass = 'present';
+        statusText = 'P';
     }
     
-    return columns;
-  };
+    cells.push(
+      <td key={`attendance-${student.studentId}-${index}`} className="sf2-attendance-cell">
+        <div className={`sf2-attendance-status ${statusClass}`}>
+          {statusText}
+        </div>
+      </td>
+    );
+  });
+  
+  return cells;
+};
 
-  // Helper function to generate blank cells for dates
-  const generateDateBlankCells = () => {
-    const cells = [];
-    
-    // Create 4 weeks (M-F) = 20 columns
-    for (let week = 0; week < 4; week++) {
-      // For each day of the week (Monday to Friday)
-      for (let day = 1; day <= 5; day++) {
-        // Calculate the date number (1-20)
-        const dateNum = week * 5 + day;
-        
-        cells.push(
-          <td key={`date-blank-${week}-${day}`} className="sf2-date-blank-cell">
-            {dateNum}
-          </td>
-        );
-      }
+// Helper function to calculate monthly totals for a student
+const calculateMonthlyTotals = (student) => {
+  let absentCount = 0;
+  let tardyLateCount = 0;
+  let truantCount = 0;
+  let tardyCuttingCount = 0;
+  
+  // Count attendance records from the attendance object
+  Object.values(student.attendance).forEach(status => {
+    switch (status) {
+      case 'A':
+        absentCount += 1;
+        break;
+      case 'L':
+        tardyLateCount += 1;
+        break;
+      case 'T':
+        truantCount += 1;
+        break;
+      case 'C':
+        tardyCuttingCount += 1;
+        break;
     }
-    
-    return cells;
+  });
+  
+  return { 
+    absent: absentCount,
+    tardyLate: tardyLateCount,
+    truant: truantCount,
+    tardyCutting: tardyCuttingCount
   };
+};
 
-  // Helper function to calculate monthly totals for a student
-  const calculateMonthlyTotals = (student) => {
+// Calculate daily totals for all students
+const calculateDailyTotals = () => {
+  if (!attendanceData) return [];
+  
+  const dailyTotals = [];
+  const weekdays = getWeekdaysInMonth(selectedMonth, selectedYear);
+  
+  // For each weekday in the month
+  weekdays.forEach(date => {
+    const dayOfMonth = date.getDate();
+    let presentCount = 0;
     let absentCount = 0;
-    let tardyCount = 0;
+    let tardyLateCount = 0;
+    let truantCount = 0;
+    let tardyCuttingCount = 0;
     
-    // Create 4 weeks (M-F) = 20 days
-    for (let week = 0; week < 4; week++) {
-      // For each day of the week (Monday to Friday)
-      for (let day = 1; day <= 5; day++) {
-        // Calculate a unique day index
-        const dayIndex = week * 5 + day;
-        
-        // Using student ID and day index as seed for pseudorandom
-        const seed = ((student.studentId || 0) + dayIndex) % 100;
-        
-        // AM status
-        if (seed % 10 === 1) absentCount += 0.5;
-        else if (seed % 10 === 2) tardyCount += 0.5;
-        
-        // PM status
-        if ((seed + 3) % 10 === 1) absentCount += 0.5;
-        else if ((seed + 3) % 10 === 2) tardyCount += 0.5;
-      }
-    }
-    
-    return { absent: absentCount, tardy: tardyCount };
-  };
-
-  // Helper function to generate attendance cells for a student
-  const generateAttendanceCells = (student) => {
-    const cells = [];
-    
-    // Create 4 weeks (M-F) = 20 columns
-    for (let week = 0; week < 4; week++) {
-      // For each day of the week (Monday to Friday)
-      for (let day = 1; day <= 5; day++) {
-        // Calculate a unique day index to maintain consistent random data
-        const dayIndex = week * 5 + day;
-        
-        // Using student ID and day index as seed for pseudorandom (for consistent rendering)
-        const seed = ((student.studentId || 0) + dayIndex) % 100;
-        
-        // AM status
-        const amStatus = (seed % 10 === 1 ? 'absent' : (seed % 10 === 2 ? 'tardy' : ''));
-        
-        // PM status
-        const pmStatus = ((seed + 3) % 10 === 1 ? 'absent' : ((seed + 3) % 10 === 2 ? 'tardy' : ''));
-        
-        cells.push(
-          <td key={`attendance-${student.studentId}-${week}-${day}`} className="sf2-attendance-cell">
-            <div className="sf2-attendance-diagonal">
-              <div className={`sf2-attendance-am ${amStatus}`}></div>
-              <div className={`sf2-attendance-pm ${pmStatus}`}></div>
-            </div>
-          </td>
-        );
-      }
-    }
-    
-    return cells;
-  };
-
-  // Calculate daily totals for all students
-  const calculateDailyTotals = () => {
-    if (!attendanceData) return [];
-    
-    const dailyTotals = [];
-    
-    // Create 4 weeks (M-F) = 20 columns
-    for (let week = 0; week < 4; week++) {
-      // For each day of the week (Monday to Friday)
-      for (let day = 1; day <= 5; day++) {
-        // Calculate a unique day index
-        const dayIndex = week * 5 + day;
-        
-        let presentCount = 0;
-        let absentCount = 0;
-        let tardyCount = 0;
-        
-        // Count attendance for all students on this day
-        attendanceData.students.forEach(student => {
-          const seed = ((student.studentId || 0) + dayIndex) % 100;
-          
-          // AM status
-          if (seed % 10 === 1) absentCount += 0.5;
-          else if (seed % 10 === 2) tardyCount += 0.5;
-          else presentCount += 0.5;
-          
-          // PM status
-          if ((seed + 3) % 10 === 1) absentCount += 0.5;
-          else if ((seed + 3) % 10 === 2) tardyCount += 0.5;
-          else presentCount += 0.5;
-        });
-        
-        dailyTotals.push({ 
-          present: presentCount.toFixed(1), 
-          absent: absentCount.toFixed(1), 
-          tardy: tardyCount.toFixed(1) 
-        });
-      }
-    }
-    
-    return dailyTotals;
-  };
-
-  // Calculate summary statistics for the report
-  const calculateSummary = () => {
-    if (!attendanceData) return {
-      daysOfClasses: 0,
-      enrollment: { male: 0, female: 0, total: 0 },
-      lateEnrollment: { male: 0, female: 0, total: 0 },
-      registeredLearners: { male: 0, female: 0, total: 0 },
-      percentageEnrollment: { male: 0, female: 0, total: 0 },
-      avgDailyAttendance: { male: 0, female: 0, total: 0 },
-      percentageAttendance: { male: 0, female: 0, total: 0 },
-      absentFiveDays: { male: 0, female: 0, total: 0 },
-      dropout: { male: 0, female: 0, total: 0 },
-      transferredOut: { male: 0, female: 0, total: 0 },
-      transferredIn: { male: 0, female: 0, total: 0 }
-    };
-    
-    // Always 20 school days (4 weeks of weekdays)
-    const schoolDays = 20;
-    
-    // Count students by gender
-    const maleStudents = attendanceData.students.filter(student => student.gender === 'M');
-    const femaleStudents = attendanceData.students.filter(student => student.gender === 'F');
-    
-    // Calculate average attendance
-    let malePresentTotal = 0;
-    let femalePresentTotal = 0;
-    
-    maleStudents.forEach(student => {
-      // 4 weeks of 5 days each = 20 days
-      for (let week = 0; week < 4; week++) {
-        for (let day = 1; day <= 5; day++) {
-          const dayIndex = week * 5 + day;
-          const seed = ((student.studentId || 0) + dayIndex) % 100;
-          
-          // AM status
-          if (seed % 10 !== 1 && seed % 10 !== 2) malePresentTotal += 0.5;
-          
-          // PM status
-          if ((seed + 3) % 10 !== 1 && (seed + 3) % 10 !== 2) malePresentTotal += 0.5;
-        }
+    // Count attendance for all students on this day
+    attendanceData.forEach(student => {
+      const status = student.attendance[dayOfMonth] || 'P';
+      
+      switch (status) {
+        case 'P':
+          presentCount += 1;
+          break;
+        case 'A':
+          absentCount += 1;
+          break;
+        case 'L':
+          tardyLateCount += 1;
+          break;
+        case 'T':
+          truantCount += 1;
+          break;
+        case 'C':
+          tardyCuttingCount += 1;
+          break;
       }
     });
     
-    femaleStudents.forEach(student => {
-      // 4 weeks of 5 days each = 20 days
-      for (let week = 0; week < 4; week++) {
-        for (let day = 1; day <= 5; day++) {
-          const dayIndex = week * 5 + day;
-          const seed = ((student.studentId || 0) + dayIndex) % 100;
-          
-          // AM status
-          if (seed % 10 !== 1 && seed % 10 !== 2) femalePresentTotal += 0.5;
-          
-          // PM status
-          if ((seed + 3) % 10 !== 1 && (seed + 3) % 10 !== 2) femalePresentTotal += 0.5;
+    dailyTotals.push({ 
+      present: presentCount,
+      absent: absentCount,
+      tardyLate: tardyLateCount,
+      truant: truantCount,
+      tardyCutting: tardyCuttingCount
+    });
+  });
+  
+  return dailyTotals;
+};
+
+// Calculate summary statistics for the report
+const calculateSummary = () => {
+  if (!attendanceData) return {
+    daysOfClasses: 0,
+    enrollment: { male: 0, female: 0, total: 0 },
+    lateEnrollment: { male: 0, female: 0, total: 0 },
+    registeredLearners: { male: 0, female: 0, total: 0 },
+    percentageEnrollment: { male: 0, female: 0, total: 0 },
+    avgDailyAttendance: { male: 0, female: 0, total: 0 },
+    percentageAttendance: { male: 0, female: 0, total: 0 },
+    absentFiveDays: { male: 0, female: 0, total: 0 },
+    dropout: { male: 0, female: 0, total: 0 },
+    transferredOut: { male: 0, female: 0, total: 0 },
+    transferredIn: { male: 0, female: 0, total: 0 }
+  };
+  
+  // Always 20 school days (4 weeks of weekdays)
+  const schoolDays = 20;
+  
+  // Count students by gender
+  const maleStudents = attendanceData.filter(student => student.gender === 'Male');
+  const femaleStudents = attendanceData.filter(student => student.gender === 'Female');
+  const totalStudents = maleStudents.length + femaleStudents.length;
+  
+  // Calculate total attendance for each gender
+  let malePresentTotal = 0;
+  let femalePresentTotal = 0;
+  
+  maleStudents.forEach(student => {
+    for (let week = 0; week < 4; week++) {
+      for (let day = 1; day <= 5; day++) {
+        const dayIndex = week * 5 + day;
+        const status = student.attendance[dayIndex] || 'P';
+        
+        // Count present (P) as 1, others as 0
+        if (status === 'P') {
+          malePresentTotal += 1;
         }
       }
-    });
-    
-    const maleAvgDailyAttendance = maleStudents.length > 0 ? 
-      (malePresentTotal / (maleStudents.length * schoolDays)) * 100 : 0;
-    
-    const femaleAvgDailyAttendance = femaleStudents.length > 0 ? 
-      (femalePresentTotal / (femaleStudents.length * schoolDays)) * 100 : 0;
-    
-    const totalAvgDailyAttendance = attendanceData.students.length > 0 ? 
-      ((malePresentTotal + femalePresentTotal) / (attendanceData.students.length * schoolDays)) * 100 : 0;
-    
-    // For demonstration purposes, we'll set some sample values for the other statistics
-    return {
-      daysOfClasses: schoolDays,
-      enrollment: { 
-        male: maleStudents.length, 
-        female: femaleStudents.length, 
-        total: attendanceData.students.length 
-      },
-      lateEnrollment: { male: 0, female: 0, total: 0 },
-      registeredLearners: { 
-        male: maleStudents.length, 
-        female: femaleStudents.length, 
-        total: attendanceData.students.length 
-      },
-      percentageEnrollment: { male: 100, female: 100, total: 100 },
-      avgDailyAttendance: { 
-        male: maleAvgDailyAttendance.toFixed(1), 
-        female: femaleAvgDailyAttendance.toFixed(1), 
-        total: totalAvgDailyAttendance.toFixed(1) 
-      },
-      percentageAttendance: { 
-        male: maleAvgDailyAttendance.toFixed(1), 
-        female: femaleAvgDailyAttendance.toFixed(1), 
-        total: totalAvgDailyAttendance.toFixed(1) 
-      },
-      absentFiveDays: { male: 0, female: 0, total: 0 },
-      dropout: { male: 0, female: 0, total: 0 },
-      transferredOut: { male: 0, female: 0, total: 0 },
-      transferredIn: { male: 0, female: 0, total: 0 }
-    };
+    }
+  });
+  
+  femaleStudents.forEach(student => {
+    for (let week = 0; week < 4; week++) {
+      for (let day = 1; day <= 5; day++) {
+        const dayIndex = week * 5 + day;
+        const status = student.attendance[dayIndex] || 'P';
+        
+        // Count present (P) as 1, others as 0
+        if (status === 'P') {
+          femalePresentTotal += 1;
+        }
+      }
+    }
+  });
+
+  // Calculate metrics
+  const malePercentageEnrollment = maleStudents.length > 0 ? (maleStudents.length / totalStudents) * 100 : 0;
+  const femalePercentageEnrollment = femaleStudents.length > 0 ? (femaleStudents.length / totalStudents) * 100 : 0;
+  
+  const maleAvgDailyAttendance = maleStudents.length > 0 ? (malePresentTotal / schoolDays) : 0;
+  const femaleAvgDailyAttendance = femaleStudents.length > 0 ? (femalePresentTotal / schoolDays) : 0;
+  const totalAvgDailyAttendance = totalStudents > 0 ? ((malePresentTotal + femalePresentTotal) / schoolDays) : 0;
+  
+  const malePercentageAttendance = maleStudents.length > 0 ? (malePresentTotal / (maleStudents.length * schoolDays)) * 100 : 0;
+  const femalePercentageAttendance = femaleStudents.length > 0 ? (femalePresentTotal / (femaleStudents.length * schoolDays)) * 100 : 0;
+  const totalPercentageAttendance = totalStudents > 0 ? ((malePresentTotal + femalePresentTotal) / (totalStudents * schoolDays)) * 100 : 0;
+
+  return {
+    daysOfClasses: schoolDays,
+    enrollment: { male: maleStudents.length, female: femaleStudents.length, total: totalStudents },
+    lateEnrollment: { male: 0, female: 0, total: 0 },
+    registeredLearners: { male: maleStudents.length, female: femaleStudents.length, total: totalStudents },
+    percentageEnrollment: { 
+      male: malePercentageEnrollment.toFixed(1), 
+      female: femalePercentageEnrollment.toFixed(1), 
+      total: 100 
+    },
+    avgDailyAttendance: { 
+      male: maleAvgDailyAttendance.toFixed(1), 
+      female: femaleAvgDailyAttendance.toFixed(1), 
+      total: totalAvgDailyAttendance.toFixed(1) 
+    },
+    percentageAttendance: { 
+      male: malePercentageAttendance.toFixed(1), 
+      female: femalePercentageAttendance.toFixed(1), 
+      total: totalPercentageAttendance.toFixed(1) 
+    },
+    absentFiveDays: { male: 0, female: 0, total: 0 },
+    dropout: { male: 0, female: 0, total: 0 },
+    transferredOut: { male: 0, female: 0, total: 0 },
+    transferredIn: { male: 0, female: 0, total: 0 }
   };
+};
 
   return (
     <div className="sf2-page">
@@ -387,7 +470,7 @@ function SF2() {
             </div>
             <div className="sf2-form-group">
               <label>School Year:</label>
-              <input type="text" value={attendanceData ? attendanceData.schoolYear : ""} readOnly />
+              <input type="text" value={sectionInfo.schoolYearName} readOnly />
             </div>
             <div className="sf2-form-group">
               <label>Report for the Month of:</label>
@@ -405,7 +488,7 @@ function SF2() {
             </div>
             <div className="sf2-form-group">
               <label>Section:</label>
-              <input type="text" value={section} readOnly />
+              <input type="text" value={sectionInfo.sectionName} readOnly />
             </div>
           </div>
         </div>
@@ -414,25 +497,30 @@ function SF2() {
           <table className="sf2-table">
             <thead>
               <tr>
-                <th rowSpan="3" className="sf2-learner-name-header">LEARNER'S NAME<br />(Last Name, First Name, Middle Name)</th>
-                <th colSpan="20" className="sf2-date-header">(1st row for date)</th>
+                <th rowSpan="3" className="sf2-learner-name-header">
+                  LEARNER'S NAME<br />(Last Name, First Name, Middle Name)
+                </th>
+                {generateDateHeader(selectedMonth, selectedYear)}
                 <th colSpan="2" rowSpan="2" className="sf2-total-header">Total for the Month</th>
-                <th rowSpan="3" className="sf2-remarks-header">REMARKS (if DROPPED OUT, state reason, please refer to legend number 2.<br />if TRANSFERRED IN/OUT, write the name of School.)</th>
+                <th rowSpan="3" className="sf2-remarks-header">
+                  REMARKS
+                </th>
               </tr>
               <tr>
-                <th colSpan="5" className="sf2-week-header">Week 1</th>
-                <th colSpan="5" className="sf2-week-header">Week 2</th>
-                <th colSpan="5" className="sf2-week-header">Week 3</th>
-                <th colSpan="5" className="sf2-week-header">Week 4</th>
+                {Array.from({ length: calculateWeeksInMonth(selectedMonth, selectedYear) }, (_, weekIndex) => (
+                  <th key={`week-${weekIndex}`} colSpan={Math.min(5, calculateWeekdaysCount(selectedMonth, selectedYear) - (weekIndex * 5))} className="sf2-week-header">
+                    Week {weekIndex + 1}
+                  </th>
+                ))}
               </tr>
               <tr>
-                {generateDateBlankCells()}
+                {generateDateBlankCells(selectedMonth, selectedYear)}
                 <th className="sf2-total-column">ABSENT</th>
                 <th className="sf2-total-column">TARDY</th>
               </tr>
               <tr>
                 <th className="sf2-days-header"></th>
-                {generateDateColumns()}
+                {generateDateColumns(selectedMonth, selectedYear)}
                 <th className="sf2-total-column"></th>
                 <th className="sf2-total-column"></th>
                 <th className="sf2-remarks-header"></th>
@@ -442,37 +530,39 @@ function SF2() {
               {attendanceData ? (
                 <>
                   {/* Male Students Section */}
-                  {attendanceData.students.filter(student => student.gender === 'M').map((student) => (
-                    <tr key={student.studentId}>
-                      <td className="sf2-student-name">{student.studentName}</td>
+                  {attendanceData.filter(student => student.gender === 'Male').map((student) => (
+                    <tr key={student.student_id}>
+                      <td className="sf2-student-name">{student.stud_name}</td>
+                      {/* Dynamically generate attendance cells for each day of the month */}
                       {generateAttendanceCells(student)}
                       <td className="sf2-total-cell">{calculateMonthlyTotals(student).absent}</td>
-                      <td className="sf2-total-cell">{calculateMonthlyTotals(student).tardy}</td>
-                      <td className="sf2-remarks-cell">{/* Remarks */}</td>
+                      <td className="sf2-total-cell">{calculateMonthlyTotals(student).tardyLate}</td>
+                      <td className="sf2-remarks-cell"></td>
                     </tr>
                   ))}
                   <tr className="sf2-total-row">
-                    <td colSpan="24" className="sf2-male-total">
+                    <td colSpan={calculateWeekdaysCount(selectedMonth, selectedYear) + 4} className="sf2-male-total">
                       ⟸ MALE | TOTAL Per Day ⟹
                     </td>
                   </tr>
-                  
+
                   {/* Female Students Section */}
-                  {attendanceData.students.filter(student => student.gender === 'F').map((student) => (
-                    <tr key={student.studentId}>
-                      <td className="sf2-student-name">{student.studentName}</td>
+                  {attendanceData.filter(student => student.gender === 'Female').map((student) => (
+                    <tr key={student.student_id}>
+                      <td className="sf2-student-name">{student.stud_name}</td>
+                      {/* Dynamically generate attendance cells for each day of the month */}
                       {generateAttendanceCells(student)}
                       <td className="sf2-total-cell">{calculateMonthlyTotals(student).absent}</td>
-                      <td className="sf2-total-cell">{calculateMonthlyTotals(student).tardy}</td>
-                      <td className="sf2-remarks-cell">{/* Remarks */}</td>
+                      <td className="sf2-total-cell">{calculateMonthlyTotals(student).tardyLate}</td>
+                      <td className="sf2-remarks-cell"></td>
                     </tr>
                   ))}
                   <tr className="sf2-total-row">
-                    <td colSpan="24" className="sf2-female-total">
+                    <td colSpan={calculateWeekdaysCount(selectedMonth, selectedYear) + 4} className="sf2-female-total">
                       ⟸ FEMALE | TOTAL Per Day ⟹
                     </td>
                   </tr>
-                  
+
                   {/* Combined Total */}
                   <tr className="sf2-combined-total-row">
                     <td className="sf2-combined-total">Combined TOTAL PER DAY</td>
@@ -482,25 +572,25 @@ function SF2() {
                         <span className="sf2-daily-total-values">
                           P:{total.present}<br/>
                           A:{total.absent}<br/>
-                          T:{total.tardy}
+                          T:{total.tardyLate}
                         </span>
                       </td>
                     ))}
                     <td className="sf2-combined-total-cell">
                       <span className="sf2-daily-total-values">
-                        {attendanceData.students.reduce((sum, student) => sum + calculateMonthlyTotals(student).absent, 0).toFixed(1)}
+                        {attendanceData.reduce((sum, student) => sum + calculateMonthlyTotals(student).absent, 0).toFixed(1)}
                       </span>
                     </td>
                     <td className="sf2-combined-total-cell">
                       <span className="sf2-daily-total-values">
-                        {attendanceData.students.reduce((sum, student) => sum + calculateMonthlyTotals(student).tardy, 0).toFixed(1)}
+                        {attendanceData.reduce((sum, student) => sum + calculateMonthlyTotals(student).tardyLate, 0).toFixed(1)}
                       </span>
                     </td>
                     <td className="sf2-combined-total-cell"></td>
                   </tr>
                 </>
               ) : (
-                <tr><td colSpan="24">Loading attendance data...</td></tr>
+                <tr><td colSpan={calculateWeekdaysCount(selectedMonth, selectedYear) + 4}>Loading attendance data...</td></tr>
               )}
             </tbody>
           </table>
