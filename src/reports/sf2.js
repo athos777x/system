@@ -190,14 +190,6 @@ const calculateWeekdaysCount = (month, year) => {
   return weekdays.length;
 };
 
-// Helper function to calculate number of weeks in the month
-const calculateWeeksInMonth = (month, year) => {
-  const weekdays = getWeekdaysInMonth(month, year);
-  // Count weeks based on actual weekdays, even if last week is incomplete
-  const weeks = Math.ceil(weekdays.length / 5);
-  return weeks;
-};
-
 // Generate the date header with month name
 const generateDateHeader = (month, year) => {
   const weekdaysCount = calculateWeekdaysCount(month, year);
@@ -476,30 +468,30 @@ const calculateSummary = () => {
         <div className="sf2-form-info">
           <div className="sf2-form-row">
             <div className="sf2-form-group">
-              <label>School ID:</label>
-              <input type="text" value={schoolData.schoolId} readOnly />
+              <span className="sf2-info-label">School ID:</span>
+              <span>{schoolData.schoolId}</span>
             </div>
             <div className="sf2-form-group">
-              <label>School Year:</label>
-              <input type="text" value={sectionInfo.schoolYearName} readOnly />
+              <span className="sf2-info-label">School Year:</span>
+              <span>{sectionInfo.schoolYearName}</span>
             </div>
             <div className="sf2-form-group">
-              <label>Report for the Month of:</label>
-              <input type="text" value={selectedMonth} readOnly />
+              <span className="sf2-info-label">Report for the Month of:</span>
+              <span>{selectedMonth}</span>
             </div>
           </div>
           <div className="sf2-form-row">
             <div className="sf2-form-group sf2-school-name">
-              <label>Name of School:</label>
-              <input type="text" value={schoolData.schoolName} readOnly />
+              <span className="sf2-info-label">Name of School:</span>
+              <span>{schoolData.schoolName}</span>
             </div>
             <div className="sf2-form-group">
-              <label>Grade Level:</label>
-              <input type="text" value={gradeLevel} readOnly />
+              <span className="sf2-info-label">Grade Level:</span>
+              <span>{gradeLevel}</span>
             </div>
             <div className="sf2-form-group">
-              <label>Section:</label>
-              <input type="text" value={sectionInfo.sectionName} readOnly />
+              <span className="sf2-info-label">Section:</span>
+              <span>{sectionInfo.sectionName}</span>
             </div>
           </div>
         </div>
@@ -508,21 +500,14 @@ const calculateSummary = () => {
           <table className="sf2-table">
             <thead>
               <tr>
-                <th rowSpan="3" className="sf2-learner-name-header">
+                <th rowSpan="2" className="sf2-learner-name-header">
                   LEARNER'S NAME<br />(Last Name, First Name, Middle Name)
                 </th>
                 {generateDateHeader(selectedMonth, selectedYear)}
-                <th colSpan="2" rowSpan="2" className="sf2-total-header">Total for the Month</th>
-                <th rowSpan="3" className="sf2-remarks-header">
+                <th colSpan="2" className="sf2-total-header">Total for the Month</th>
+                <th rowSpan="2" className="sf2-remarks-header">
                   REMARKS
                 </th>
-              </tr>
-              <tr>
-                {Array.from({ length: calculateWeeksInMonth(selectedMonth, selectedYear) }, (_, weekIndex) => (
-                  <th key={`week-${weekIndex}`} colSpan={Math.min(5, calculateWeekdaysCount(selectedMonth, selectedYear) - (weekIndex * 5))} className="sf2-week-header">
-                    Week {weekIndex + 1}
-                  </th>
-                ))}
               </tr>
               <tr>
                 {generateDateBlankCells(selectedMonth, selectedYear)}

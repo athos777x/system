@@ -397,12 +397,6 @@
   display: block;
 }
 
-.sf2-week-header {
-  background-color: #f0f0f0;
-  font-size: 11px;
-  font-weight: bold;
-}
-
 .sf2-date-blank-cell {
   height: 25px;
   border: 1px solid #000;
@@ -437,4 +431,14 @@
 /* Tardy Cutting - lower diagonal half */
 .sf2-attendance-status.tardy-cutting {
   background: linear-gradient(-45deg, #d3d3d3 50%, white 50%);
+}
+
+.sf2-form-group .sf2-info-label {
+  font-weight: bold;
+  margin-right: 5px;
+  white-space: nowrap;
+}
+
+.sf2-form-group span {
+  padding: 2px 5px;
 }
