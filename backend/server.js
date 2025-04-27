@@ -6884,7 +6884,13 @@ app.get('/api/sf2-combined', (req, res) => {
       CONCAT(s.lastname, ', ', s.firstname, ' ', LEFT(IFNULL(s.middlename, ''), 1), '.') AS stud_name,
       s.student_id,
       s.gender,
-      a.status
+      -- Prioritize statuses: If any Absent, then Absent; If any Late, then Late; Otherwise Present
+      CASE 
+        WHEN GROUP_CONCAT(a.status) LIKE '%A%' THEN 'A'
+        WHEN GROUP_CONCAT(a.status) LIKE '%L%' THEN 'L'
+        WHEN GROUP_CONCAT(a.status) LIKE '%P%' THEN 'P'
+        ELSE NULL
+      END AS status
     FROM (
       SELECT DATE(CONCAT(?, '-', 
         CASE ?
@@ -6934,6 +6940,7 @@ app.get('/api/sf2-combined', (req, res) => {
     LEFT JOIN attendance a ON s.student_id = a.student_id 
       AND DATE(a.date) = d.date
     WHERE DAYOFWEEK(d.date) BETWEEN 2 AND 6  -- Only Monday to Friday
+    GROUP BY d.date, s.student_id  -- Group by date and student to get single record per day
     ORDER BY d.date, s.lastname, s.firstname;
   `;
 
