@@ -81,7 +81,9 @@ function SF2() {
           // Store attendance status for each day
           if (record.date) {
             const day = record.day_of_month;
-            acc[record.student_id].attendance[day] = record.status || 'A';
+            if (record.status) {
+              acc[record.student_id].attendance[day] = record.status;
+            }
           }
           
           return acc;
@@ -215,42 +217,47 @@ const generateAttendanceCells = (student) => {
   weekdays.forEach((date, index) => {
     const dayOfMonth = date.getDate();
     
-    // Get the status from the attendance object using the day as key
-    const status = student.attendance[dayOfMonth] || 'P';
+    // Check if there's data for this day
+    const hasData = dayOfMonth in student.attendance;
     
-    // Determine the status class based on the actual status
-    let statusClass = '';
+    // Get the status from the attendance object using the day as key
+    const status = student.attendance[dayOfMonth];
+    
+    // Cell classes based on status
+    let cellClass = 'sf2-attendance-cell';
     let statusText = '';
     
-    switch (status) {
-      case 'P':
-        statusClass = 'present';
-        statusText = 'P'; // Blank for present
-        break;
-      case 'A':
-        statusClass = 'absent';
-        statusText = 'A';
-        break;
-      case 'L':
-        statusClass = 'tardy-late';
-        statusText = 'L';
-        break;
-      case 'T':
-        statusClass = 'truant';
-        statusText = 'T';
-        break;
-      case 'C':
-        statusClass = 'tardy-cutting';
-        statusText = 'L';
-        break;
-      default:
-        statusClass = 'present';
-        statusText = 'P';
+    // Only process status if data exists
+    if (hasData) {
+      switch (status) {
+        case 'P':
+          // Present - leave blank
+          break;
+        case 'A':
+          cellClass += ' absent-lower-left';
+          statusText = '';
+          break;
+        case 'L':
+          cellClass += ' late-upper-right';
+          statusText = '';
+          break;
+        case 'T':
+          cellClass += ' truant';
+          statusText = 'T';
+          break;
+        case 'C':
+          cellClass += ' tardy-cutting';
+          statusText = 'C';
+          break;
+        default:
+          // Default case - leave blank
+          break;
+      }
     }
     
     cells.push(
-      <td key={`attendance-${student.studentId}-${index}`} className="sf2-attendance-cell">
-        <div className={`sf2-attendance-status ${statusClass}`}>
+      <td key={`attendance-${student.studentId}-${index}`} className={cellClass}>
+        <div className="sf2-attendance-status">
           {statusText}
         </div>
       </td>
@@ -269,19 +276,21 @@ const calculateMonthlyTotals = (student) => {
   
   // Count attendance records from the attendance object
   Object.values(student.attendance).forEach(status => {
-    switch (status) {
-      case 'A':
-        absentCount += 1;
-        break;
-      case 'L':
-        tardyLateCount += 1;
-        break;
-      case 'T':
-        truantCount += 1;
-        break;
-      case 'C':
-        tardyCuttingCount += 1;
-        break;
+    if (status) { // Only count if status exists
+      switch (status) {
+        case 'A':
+          absentCount += 1;
+          break;
+        case 'L':
+          tardyLateCount += 1;
+          break;
+        case 'T':
+          truantCount += 1;
+          break;
+        case 'C':
+          tardyCuttingCount += 1;
+          break;
+      }
     }
   });
   
@@ -311,24 +320,26 @@ const calculateDailyTotals = () => {
     
     // Count attendance for all students on this day
     attendanceData.forEach(student => {
-      const status = student.attendance[dayOfMonth] || 'P';
+      const status = student.attendance[dayOfMonth];
       
-      switch (status) {
-        case 'P':
-          presentCount += 1;
-          break;
-        case 'A':
-          absentCount += 1;
-          break;
-        case 'L':
-          tardyLateCount += 1;
-          break;
-        case 'T':
-          truantCount += 1;
-          break;
-        case 'C':
-          tardyCuttingCount += 1;
-          break;
+      if (status) { // Only count if status exists
+        switch (status) {
+          case 'P':
+            presentCount += 1;
+            break;
+          case 'A':
+            absentCount += 1;
+            break;
+          case 'L':
+            tardyLateCount += 1;
+            break;
+          case 'T':
+            truantCount += 1;
+            break;
+          case 'C':
+            tardyCuttingCount += 1;
+            break;
+        }
       }
     });
     
@@ -617,8 +628,8 @@ const calculateSummary = () => {
 
           <div className="sf2-codes">
             <h3>1. CODES FOR CHECKING ATTENDANCE</h3>
-            <p>(blank) - Present | (A) Absent - Tardy (half shade); Upper for Late</p>
-            <p>T - Truant (Absent without valid reason); L - Lower for Cutting Classes)</p>
+            <p>(blank) - Present | Upper right triangle shade - Late | Lower left triangle shade - Absent</p>
+            <p>T - Truant (Absent without valid reason) | C - Cutting Classes</p>
             
             <h3>2. REASONS/CAUSES FOR DROPPING OUT</h3>
             <h4>a. Student-Related Factors</h4>
