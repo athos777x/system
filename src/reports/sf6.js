@@ -1,12 +1,14 @@
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import React, { useEffect, useState } from 'react';
 import { jsPDF } from 'jspdf';
 import axios from 'axios';
 import '../CssFiles/sf6.css';
+import "../CssFiles/report_buttons.css";
 
 function SF6() {
   const { state } = useLocation();
   const { schoolYear, grade } = state;
+  const navigate = useNavigate();
   const [schoolData] = useState({
     schoolName: "Lourdes National High School",
     schoolId: "123456",
@@ -49,7 +51,7 @@ function SF6() {
     fetchSummaryData();
   }, [grade, schoolYear]);
 
-  const handleConvertToPdf = () => {
+  const handlePrintPDF = () => {
     const doc = new jsPDF({
       orientation: "landscape",
       unit: "mm",
@@ -70,8 +72,12 @@ function SF6() {
     }
   };
 
+  const handleBack = () => {
+    navigate(-1); // Go back to previous page
+  };
+
   return (
-    <div className="sf6-page">
+    <div className="report-page sf6-page">
       <div className="sf6-container">
         <div className="sf6-header">
           <div className="sf6-header-logos">
@@ -199,8 +205,9 @@ function SF6() {
         </div>
       </div>
 
-      <div className="sf6-buttons">
-        <button onClick={handleConvertToPdf}>Convert to PDF</button>
+      <div className="report-buttons">
+        <button onClick={handleBack} className="report-back-btn">Back</button>
+        <button onClick={handlePrintPDF} className="report-print-btn">Print PDF</button>
       </div>
     </div>
   );

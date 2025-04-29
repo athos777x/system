@@ -1,11 +1,13 @@
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import React, { useState, useEffect } from 'react';
 import { jsPDF } from 'jspdf';
 import axios from 'axios';
 import '../CssFiles/early_enrollment.css';
+import "../CssFiles/report_buttons.css";
 
 function EarlyEnrollment() {
   const location = useLocation();
+  const navigate = useNavigate();
   const { schoolYear, grade, section } = location.state || {};
 
   const [schoolData, setSchoolData] = useState({
@@ -90,9 +92,9 @@ function EarlyEnrollment() {
   };
   
 
-  const handleConvertToPdf = () => {
+  const handlePrintPDF = () => {
     const doc = new jsPDF({
-      orientation: "portrait",
+      orientation: "landscape",
       unit: "mm",
       format: "a4"
     });
@@ -105,14 +107,18 @@ function EarlyEnrollment() {
         },
         x: 10,
         y: 10,
-        width: 190,
+        width: 277,
         windowWidth: 1000
       });
     }
   };
 
+  const handleBack = () => {
+    navigate(-1); // Go back to previous page
+  };
+
   return (
-    <div className="early-enrollment-page">
+    <div className="report-page early-enrollment-page">
       <div className="early-enrollment-container">
         <div className="early-enrollment-header">
           <div className="early-enrollment-header-logos">
@@ -208,9 +214,10 @@ function EarlyEnrollment() {
           </div>
         </div>
       </div>
-
-      <div className="early-enrollment-buttons">
-        <button onClick={handleConvertToPdf}>Print</button>
+      
+      <div className="report-buttons">
+        <button onClick={handleBack} className="report-back-btn">Back</button>
+        <button onClick={handlePrintPDF} className="report-print-btn">Print PDF</button>
       </div>
     </div>
   );

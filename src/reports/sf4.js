@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
 import { jsPDF } from 'jspdf';
 import '../CssFiles/sf4.css';
+import '../CssFiles/report_buttons.css';
+import { useNavigate } from 'react-router-dom';
 
 function SF4() {
+  const navigate = useNavigate();
   const [schoolData] = useState({
     schoolName: "Lourdes National High School",
     schoolId: "123456",
@@ -28,7 +31,7 @@ function SF4() {
     ]
   });
 
-  const handleConvertToPdf = () => {
+  const handlePrintPDF = () => {
     const doc = new jsPDF({
       orientation: "landscape",
       unit: "mm",
@@ -49,8 +52,12 @@ function SF4() {
     }
   };
 
+  const handleBack = () => {
+    navigate(-1); // Go back to previous page
+  };
+
   return (
-    <div className="sf4-page">
+    <div className="report-page sf4-page">
       <div className="sf4-container">
         <div className="sf4-header">
           <div className="sf4-header-logos">
@@ -188,8 +195,9 @@ function SF4() {
         </div>
       </div>
       
-      <div className="sf4-buttons">
-        <button onClick={handleConvertToPdf}>Convert to PDF</button>
+      <div className="report-buttons">
+        <button onClick={handleBack} className="report-back-btn">Back</button>
+        <button onClick={handlePrintPDF} className="report-print-btn">Print PDF</button>
       </div>
     </div>
   );

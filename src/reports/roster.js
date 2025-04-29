@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { jsPDF } from 'jspdf';
 import axios from 'axios';
 import '../CssFiles/roster.css';
+import "../CssFiles/report_buttons.css";
 
 function Roster() {
   const location = useLocation();
@@ -85,9 +86,9 @@ function Roster() {
     }
   };
 
-  const handleConvertToPdf = () => {
+  const handlePrintPDF = () => {
     const doc = new jsPDF({
-      orientation: "portrait",
+      orientation: "landscape",
       unit: "mm",
       format: "a4"
     });
@@ -100,14 +101,18 @@ function Roster() {
         },
         x: 10,
         y: 10,
-        width: 190,
+        width: 277,
         windowWidth: 1000
       });
     }
   };
 
+  const handleBack = () => {
+    navigate(-1); // Go back to previous page
+  };
+
   return (
-    <div className="roster-page">
+    <div className="report-page roster-page">
       <div className="roster-container">
         <div className="roster-header">
           <div className="roster-header-logos">
@@ -216,9 +221,10 @@ function Roster() {
           </div>
         </div>
       </div>
-
-      <div className="roster-buttons">
-        <button onClick={handleConvertToPdf}>Print</button>
+      
+      <div className="report-buttons">
+        <button onClick={handleBack} className="report-back-btn">Back</button>
+        <button onClick={handlePrintPDF} className="report-print-btn">Print PDF</button>
       </div>
     </div>
   );

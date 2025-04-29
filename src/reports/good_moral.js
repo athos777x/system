@@ -2,7 +2,8 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "../CssFiles/good_moral.css";
 import { jsPDF } from "jspdf";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
+import "../CssFiles/report_buttons.css";
 
 function GoodMoral() {
   const { state } = useLocation();
@@ -10,6 +11,7 @@ function GoodMoral() {
   const date = new Date().toLocaleDateString();
   const [studentDetails, setStudentDetails] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   const fetchStudentDetails = async () => {
     if (student) {
@@ -33,26 +35,25 @@ function GoodMoral() {
     }
   };
 
-  const handleConvertToPdf = () => {
+  const handlePrintPDF = () => {
     const doc = new jsPDF({
-      orientation: "portrait", // Set portrait orientation
+      orientation: "portrait",
       unit: "mm",
-      format: "a4",
+      format: "a4"
     });
 
-    const button = document.querySelector(".convert-to-pdf");
-    if (button) button.style.display = "none";
-
-    doc.html(document.querySelector(".good-moral-container"), {
-      callback: function (doc) {
-        window.open(doc.output("bloburl"), "_blank");
-        if (button) button.style.display = "block";
-      },
-      x: 10,
-      y: 10,
-      width: 190, // Fit content into portrait layout
-      windowWidth: 900,
-    });
+    const content = document.querySelector(".good-moral-container");
+    if (content) {
+      doc.html(content, {
+        callback: function (doc) {
+          window.open(doc.output("bloburl"), "_blank");
+        },
+        x: 10,
+        y: 10,
+        width: 190,
+        windowWidth: 1000
+      });
+    }
   };
 
   useEffect(() => {
@@ -61,13 +62,12 @@ function GoodMoral() {
     }
   }, [student]);
 
-  // Function to handle back navigation
   const handleBack = () => {
-    window.location.href = 'http://localhost:3000/summary-report-promotion'; // Navigate to the specified URL
+    navigate(-1); // Go back to previous page
   };
 
   return (
-    <div>
+    <div className="report-page good-moral-page">
       <div className="good-moral-container">
         <div className="certificate">
           <div className="certificate-header">
@@ -121,11 +121,10 @@ function GoodMoral() {
           </div>
         </div>
       </div>
-
-      {/* Button Container for Print and Back */}
-      <div className="button-container">
-        <button onClick={handleBack}>Back</button>
-        <button onClick={handleConvertToPdf}>Print</button>
+      
+      <div className="report-buttons">
+        <button onClick={handleBack} className="report-back-btn">Back</button>
+        <button onClick={handlePrintPDF} className="report-print-btn">Print PDF</button>
       </div>
     </div>
   );

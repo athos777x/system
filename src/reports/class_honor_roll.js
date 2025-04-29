@@ -1,11 +1,13 @@
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import React, { useState, useEffect } from 'react';
 import { jsPDF } from 'jspdf';
 import axios from 'axios';
 import '../CssFiles/class_honor_roll.css';
+import "../CssFiles/report_buttons.css";
 
 function ClassHonorRoll() {
   const location = useLocation();
+  const navigate = useNavigate();
   const filters = location.state || {}; // get passed values
 
   const [schoolData, setSchoolData] = useState({
@@ -84,7 +86,7 @@ function ClassHonorRoll() {
     }
   };
 
-  const handleConvertToPdf = () => {
+  const handlePrintPDF = () => {
     const doc = new jsPDF({
       orientation: "portrait",
       unit: "mm",
@@ -105,8 +107,12 @@ function ClassHonorRoll() {
     }
   };
 
+  const handleBack = () => {
+    navigate(-1); // Go back to previous page
+  };
+
   return (
-    <div className="class-honor-roll-page">
+    <div className="report-page honor-roll-page">
       <div className="class-honor-roll-container">
         <div className="class-honor-roll-header">
           <div className="class-honor-roll-header-logos">
@@ -214,9 +220,10 @@ function ClassHonorRoll() {
           </div>
         </div>
       </div>
-
-      <div className="class-honor-roll-buttons">
-        <button onClick={handleConvertToPdf}>Print</button>
+      
+      <div className="report-buttons">
+        <button onClick={handleBack} className="report-back-btn">Back</button>
+        <button onClick={handlePrintPDF} className="report-print-btn">Print PDF</button>
       </div>
     </div>
   );

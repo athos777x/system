@@ -1,8 +1,9 @@
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import React, { useState, useEffect } from 'react';
 import { jsPDF } from 'jspdf';
 import axios from 'axios';
 import '../CssFiles/sf2.css';
+import "../CssFiles/report_buttons.css";
 
 function SF2() {
   const [schoolData, setSchoolData] = useState({
@@ -29,6 +30,8 @@ function SF2() {
     sectionName: '',
     schoolYearName: ''
   });
+
+  const navigate = useNavigate();
 
   const fetchSectionInfo = async () => {
     try {
@@ -81,7 +84,9 @@ function SF2() {
           // Store attendance status for each day
           if (record.date) {
             const day = record.day_of_month;
-            acc[record.student_id].attendance[day] = record.status || 'A';
+            if (record.status) {
+              acc[record.student_id].attendance[day] = record.status;
+            }
           }
           
           return acc;
@@ -99,25 +104,27 @@ function SF2() {
     fetchAttendanceData();
   }, [selectedMonth, grade, section, selectedYear]);
 
-  const handleConvertToPdf = () => {
+  const handlePrintPDF = () => {
     const doc = new jsPDF({
       orientation: "landscape",
       unit: "mm",
-      format: "a4"
+      format: [355.6, 215.9]
     });
 
-    const content = document.querySelector(".sf2-container");
-    if (content) {
-      doc.html(content, {
-        callback: function (doc) {
-          window.open(doc.output("bloburl"), "_blank");
-        },
-        x: 10,
-        y: 10,
-        width: 277,
-        windowWidth: 1000
-      });
-    }
+    // Hide the buttons before generating PDF
+    doc.html(document.querySelector(".sf2-container"), {
+      callback: function (doc) {
+        window.open(doc.output("bloburl"), "_blank");
+      },
+      x: 10,
+      y: 10,
+      width: 335,
+      windowWidth: 1100
+    });
+  };
+
+  const handleBack = () => {
+    navigate(-1); // Go back to previous page
   };
 
 // Helper function to convert month name to month index
@@ -188,14 +195,6 @@ const calculateWeekdaysCount = (month, year) => {
   return weekdays.length;
 };
 
-// Helper function to calculate number of weeks in the month
-const calculateWeeksInMonth = (month, year) => {
-  const weekdays = getWeekdaysInMonth(month, year);
-  // Count weeks based on actual weekdays, even if last week is incomplete
-  const weeks = Math.ceil(weekdays.length / 5);
-  return weeks;
-};
-
 // Generate the date header with month name
 const generateDateHeader = (month, year) => {
   const weekdaysCount = calculateWeekdaysCount(month, year);
@@ -215,42 +214,47 @@ const generateAttendanceCells = (student) => {
   weekdays.forEach((date, index) => {
     const dayOfMonth = date.getDate();
     
-    // Get the status from the attendance object using the day as key
-    const status = student.attendance[dayOfMonth] || 'P';
+    // Check if there's data for this day
+    const hasData = dayOfMonth in student.attendance;
     
-    // Determine the status class based on the actual status
-    let statusClass = '';
+    // Get the status from the attendance object using the day as key
+    const status = student.attendance[dayOfMonth];
+    
+    // Cell classes based on status
+    let cellClass = 'sf2-attendance-cell';
     let statusText = '';
     
-    switch (status) {
-      case 'P':
-        statusClass = 'present';
-        statusText = 'P'; // Blank for present
-        break;
-      case 'A':
-        statusClass = 'absent';
-        statusText = 'A';
-        break;
-      case 'L':
-        statusClass = 'tardy-late';
-        statusText = 'L';
-        break;
-      case 'T':
-        statusClass = 'truant';
-        statusText = 'T';
-        break;
-      case 'C':
-        statusClass = 'tardy-cutting';
-        statusText = 'L';
-        break;
-      default:
-        statusClass = 'present';
-        statusText = 'P';
+    // Only process status if data exists
+    if (hasData) {
+      switch (status) {
+        case 'P':
+          // Present - leave blank
+          break;
+        case 'A':
+          cellClass += ' absent-lower-left';
+          statusText = '';
+          break;
+        case 'L':
+          cellClass += ' late-upper-right';
+          statusText = '';
+          break;
+        case 'T':
+          cellClass += ' truant';
+          statusText = 'T';
+          break;
+        case 'C':
+          cellClass += ' tardy-cutting';
+          statusText = 'C';
+          break;
+        default:
+          // Default case - leave blank
+          break;
+      }
     }
     
     cells.push(
-      <td key={`attendance-${student.studentId}-${index}`} className="sf2-attendance-cell">
-        <div className={`sf2-attendance-status ${statusClass}`}>
+      <td key={`attendance-${student.studentId}-${index}`} className={cellClass}>
+        <div className="sf2-attendance-status">
           {statusText}
         </div>
       </td>
@@ -269,19 +273,21 @@ const calculateMonthlyTotals = (student) => {
   
   // Count attendance records from the attendance object
   Object.values(student.attendance).forEach(status => {
-    switch (status) {
-      case 'A':
-        absentCount += 1;
-        break;
-      case 'L':
-        tardyLateCount += 1;
-        break;
-      case 'T':
-        truantCount += 1;
-        break;
-      case 'C':
-        tardyCuttingCount += 1;
-        break;
+    if (status) { // Only count if status exists
+      switch (status) {
+        case 'A':
+          absentCount += 1;
+          break;
+        case 'L':
+          tardyLateCount += 1;
+          break;
+        case 'T':
+          truantCount += 1;
+          break;
+        case 'C':
+          tardyCuttingCount += 1;
+          break;
+      }
     }
   });
   
@@ -311,24 +317,26 @@ const calculateDailyTotals = () => {
     
     // Count attendance for all students on this day
     attendanceData.forEach(student => {
-      const status = student.attendance[dayOfMonth] || 'P';
+      const status = student.attendance[dayOfMonth];
       
-      switch (status) {
-        case 'P':
-          presentCount += 1;
-          break;
-        case 'A':
-          absentCount += 1;
-          break;
-        case 'L':
-          tardyLateCount += 1;
-          break;
-        case 'T':
-          truantCount += 1;
-          break;
-        case 'C':
-          tardyCuttingCount += 1;
-          break;
+      if (status) { // Only count if status exists
+        switch (status) {
+          case 'P':
+            presentCount += 1;
+            break;
+          case 'A':
+            absentCount += 1;
+            break;
+          case 'L':
+            tardyLateCount += 1;
+            break;
+          case 'T':
+            truantCount += 1;
+            break;
+          case 'C':
+            tardyCuttingCount += 1;
+            break;
+        }
       }
     });
     
@@ -440,7 +448,7 @@ const calculateSummary = () => {
 };
 
   return (
-    <div className="sf2-page">
+    <div className="report-page sf2-page">
       <div className="sf2-container">
         <div className="sf2-header">
           <div className="sf2-header-logos">
@@ -465,30 +473,30 @@ const calculateSummary = () => {
         <div className="sf2-form-info">
           <div className="sf2-form-row">
             <div className="sf2-form-group">
-              <label>School ID:</label>
-              <input type="text" value={schoolData.schoolId} readOnly />
+              <span className="sf2-info-label">School ID:</span>
+              <span>{schoolData.schoolId}</span>
             </div>
             <div className="sf2-form-group">
-              <label>School Year:</label>
-              <input type="text" value={sectionInfo.schoolYearName} readOnly />
+              <span className="sf2-info-label">School Year:</span>
+              <span>{sectionInfo.schoolYearName}</span>
             </div>
             <div className="sf2-form-group">
-              <label>Report for the Month of:</label>
-              <input type="text" value={selectedMonth} readOnly />
+              <span className="sf2-info-label">Report for the Month of:</span>
+              <span>{selectedMonth}</span>
             </div>
           </div>
           <div className="sf2-form-row">
             <div className="sf2-form-group sf2-school-name">
-              <label>Name of School:</label>
-              <input type="text" value={schoolData.schoolName} readOnly />
+              <span className="sf2-info-label">Name of School:</span>
+              <span>{schoolData.schoolName}</span>
             </div>
             <div className="sf2-form-group">
-              <label>Grade Level:</label>
-              <input type="text" value={gradeLevel} readOnly />
+              <span className="sf2-info-label">Grade Level:</span>
+              <span>{gradeLevel}</span>
             </div>
             <div className="sf2-form-group">
-              <label>Section:</label>
-              <input type="text" value={sectionInfo.sectionName} readOnly />
+              <span className="sf2-info-label">Section:</span>
+              <span>{sectionInfo.sectionName}</span>
             </div>
           </div>
         </div>
@@ -497,21 +505,14 @@ const calculateSummary = () => {
           <table className="sf2-table">
             <thead>
               <tr>
-                <th rowSpan="3" className="sf2-learner-name-header">
+                <th rowSpan="2" className="sf2-learner-name-header">
                   LEARNER'S NAME<br />(Last Name, First Name, Middle Name)
                 </th>
                 {generateDateHeader(selectedMonth, selectedYear)}
-                <th colSpan="2" rowSpan="2" className="sf2-total-header">Total for the Month</th>
-                <th rowSpan="3" className="sf2-remarks-header">
+                <th colSpan="2" className="sf2-total-header">Total for the Month</th>
+                <th rowSpan="2" className="sf2-remarks-header">
                   REMARKS
                 </th>
-              </tr>
-              <tr>
-                {Array.from({ length: calculateWeeksInMonth(selectedMonth, selectedYear) }, (_, weekIndex) => (
-                  <th key={`week-${weekIndex}`} colSpan={Math.min(5, calculateWeekdaysCount(selectedMonth, selectedYear) - (weekIndex * 5))} className="sf2-week-header">
-                    Week {weekIndex + 1}
-                  </th>
-                ))}
               </tr>
               <tr>
                 {generateDateBlankCells(selectedMonth, selectedYear)}
@@ -617,8 +618,8 @@ const calculateSummary = () => {
 
           <div className="sf2-codes">
             <h3>1. CODES FOR CHECKING ATTENDANCE</h3>
-            <p>(blank) - Present | (A) Absent - Tardy (half shade); Upper for Late</p>
-            <p>T - Truant (Absent without valid reason); L - Lower for Cutting Classes)</p>
+            <p>(blank) - Present | Upper right triangle shade - Late | Lower left triangle shade - Absent</p>
+            {/* <p>T - Truant (Absent without valid reason) | C - Cutting Classes</p> */}
             
             <h3>2. REASONS/CAUSES FOR DROPPING OUT</h3>
             <h4>a. Student-Related Factors</h4>
@@ -746,10 +747,10 @@ const calculateSummary = () => {
         <div className="sf2-page-number">
           <p>School Form 2 : Page ____ of ____</p>
         </div>
-
-        <div className="sf2-buttons">
-          <button onClick={handleConvertToPdf}>Convert to PDF</button>
-        </div>
+      </div>
+      <div className="report-buttons">
+        <button onClick={handleBack} className="report-back-btn">Back</button>
+        <button onClick={handlePrintPDF} className="report-print-btn">Print PDF</button>
       </div>
     </div>
   );
