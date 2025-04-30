@@ -83,8 +83,16 @@ function StudentManagement() {
 
   // Add these validation functions after the useState declarations and before the useEffect hooks
   const validateLRN = (lrn) => {
-    const lrnRegex = /^\d{1,100}$/;
-    return lrnRegex.test(lrn) ? "" : "LRN must be between 1 and 100 digits";
+    if (!lrn) return "LRN is required";
+    
+    // LRN should be exactly 12 digits according to DepEd standards
+    const lrnRegex = /^\d{12}$/;
+    
+    if (!lrnRegex.test(lrn)) {
+      return "LRN must be exactly 12 digits";
+    }
+    
+    return "";
   };
 
   const validateName = (name, fieldName) => {
@@ -1177,6 +1185,9 @@ const handleArchive = () => {
                               value={editStudentData ? editStudentData.lrn || "" : ""}
                               onChange={handleEditChange}
                               className={errors.lrn ? "error" : ""}
+                              maxLength={12}
+                              pattern="[0-9]{12}"
+                              title="LRN must be exactly 12 digits"
                             />
                           ) : (
                             student.lrn
@@ -1850,6 +1861,9 @@ const handleArchive = () => {
                     value={newStudentData.lrn}
                     onChange={handleAddChange}
                     className={errors.lrn ? "error" : ""}
+                    maxLength={12}
+                    pattern="[0-9]{12}"
+                    title="LRN must be exactly 12 digits"
                   />
                   {errors.lrn && <span className="student-mgmt-error">{errors.lrn}</span>}
                 </div>
