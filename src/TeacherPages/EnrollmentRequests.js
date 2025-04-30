@@ -19,6 +19,8 @@ function EnrollmentRequests() {
   const [showRequirementsModal, setShowRequirementsModal] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [subjects, setSubjects] = useState([]);
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [studentToReject, setStudentToReject] = useState(null);
   
 
   const [filters, setFilters] = useState({
@@ -610,6 +612,24 @@ const approveElective = async (studentElectiveId) => {
     );
   };
 
+  const handleRejectClick = (studentId, sectionId) => {
+    const student = students.find(s => s.student_id === studentId);
+    setStudentToReject({ studentId, sectionId, student });
+    setShowRejectModal(true);
+  };
+
+  const handleConfirmReject = async () => {
+    if (!studentToReject) return;
+    
+    try {
+      await validateStudent(studentToReject.studentId, 'reject', studentToReject.sectionId);
+      setShowRejectModal(false);
+      setStudentToReject(null);
+    } catch (error) {
+      console.error('Error rejecting enrollment:', error);
+    }
+  };
+
   return (
     <div className="pending-enrollment-container">
       <div className="pending-enrollment-header">
@@ -719,7 +739,7 @@ const approveElective = async (studentElectiveId) => {
                         className="pending-enrollment-btn pending-enrollment-btn-reject"
                         onClick={(e) => {
                           e.stopPropagation();
-                          validateStudent(student.student_id, 'reject', student.section_id);
+                          handleRejectClick(student.student_id, student.section_id);
                         }}
                       >
                         Reject
@@ -792,6 +812,35 @@ const approveElective = async (studentElectiveId) => {
               </tr>
             </tbody>
           </table>
+        </div>
+      )}
+
+      {showRejectModal && studentToReject && (
+        <div className="enrollment-modal">
+          <div className="enrollment-modal-content">
+            <h2>Confirm Rejection</h2>
+            <div className="student-info">
+              <p>Are you sure you want to reject the enrollment request for:</p>
+              <p><strong>{`${studentToReject.student.firstname} ${studentToReject.student.middlename ? studentToReject.student.middlename[0] + '.' : ''} ${studentToReject.student.lastname}`}</strong>?</p>
+            </div>
+            <div className="modal-actions">
+              <button
+                className="pending-enrollment-btn pending-enrollment-btn-reject"
+                onClick={handleConfirmReject}
+              >
+                Confirm Reject
+              </button>
+              <button
+                className="pending-enrollment-btn pending-enrollment-btn-approve"
+                onClick={() => {
+                  setShowRejectModal(false);
+                  setStudentToReject(null);
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

@@ -33,6 +33,9 @@ function ElectiveRequest() {
     status: ''
   });
 
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [studentToReject, setStudentToReject] = useState(null);
+
   useEffect(() => {
     fetchStudents();
     fetchSchoolYears();
@@ -127,36 +130,18 @@ const handleFilterChange = (type, value) => {
 };
 
 const applyFilters = () => {
-    let filtered = students;
-
-    if (filters.school_year) {
-        filtered = filtered.filter(student => String(student.school_year) === filters.school_year);
-    }
-    if (filters.grade) {
-        filtered = filtered.filter(student => student.current_yr_lvl === filters.grade);
-    }
-    if (filters.section) {
-        filtered = filtered.filter(student => String(student.section_id) === filters.section);
-    }
-    if (filters.status) {
-        filtered = filtered.filter(student => student.enrollment_status === filters.status);
-    }
-    if (filters.searchTerm) {
-        filtered = filtered.filter(student => {
-            const firstName = student.firstname ? student.firstname.toLowerCase() : "";
-            const lastName = student.lastname ? student.lastname.toLowerCase() : "";
-            return firstName.includes(filters.searchTerm.toLowerCase()) || 
-                   lastName.includes(filters.searchTerm.toLowerCase());
-        });
-    }
-
-    setFilteredStudents(filtered);
-    console.log('Filtered students:', filtered);
+    console.log('Applying filters:', filters);
+    // Send the filters to the backend instead of filtering client-side
+    fetchStudents({
+      searchTerm: filters.searchTerm,
+      grade: filters.grade,
+      section: filters.section,
+      school_year: filters.school_year
+    });
     setCurrentPage(1); // Reset to first page when filters are applied
 };
 
 const handleApplyFilters = () => {
-    console.log('Applying filters:', filters);
     applyFilters(); // Apply filters only when the button is clicked
 };
 
@@ -341,8 +326,23 @@ const handleConfirmApproval = async () => {
     setShowCancelModal(true);
   };
 
- 
-  
+  const handleRejectClick = (studentId) => {
+    const student = students.find(s => s.student_id === studentId);
+    setStudentToReject({ studentId, student });
+    setShowRejectModal(true);
+  };
+
+  const handleConfirmReject = async () => {
+    if (!studentToReject) return;
+    
+    try {
+      await approveElective(studentToReject.studentId, 'reject');
+      setShowRejectModal(false);
+      setStudentToReject(null);
+    } catch (error) {
+      console.error('Error rejecting elective:', error);
+    }
+  };
 
   return (
     <div className="pending-enrollment-container">
@@ -389,7 +389,7 @@ const handleConfirmApproval = async () => {
           >
             <option value="">Select Section</option>
             {filteredSections.map((section) => (
-              <option key={section.section_id} value={section.section_name}>
+              <option key={section.section_id} value={section.section_id}>
                 {section.section_name}
               </option>
             ))}
@@ -450,7 +450,7 @@ const handleConfirmApproval = async () => {
                         className="pending-enrollment-btn pending-enrollment-btn-reject"
                         onClick={(e) => {
                           e.stopPropagation();
-                          approveElective(student.student_id, 'reject');
+                          handleRejectClick(student.student_id);
                         }}
                       >
                         Reject
@@ -580,6 +580,35 @@ const handleConfirmApproval = async () => {
               <button
                 className="pending-enrollment-btn pending-enrollment-btn-reject"
                 onClick={() => setShowElectiveModal(false)}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showRejectModal && studentToReject && (
+        <div className="enrollment-modal">
+          <div className="enrollment-modal-content">
+            <h2>Confirm Rejection</h2>
+            <div className="student-info">
+              <p>Are you sure you want to reject the elective request for:</p>
+              <p><strong>{`${studentToReject.student.firstname} ${studentToReject.student.middlename ? studentToReject.student.middlename[0] + '.' : ''} ${studentToReject.student.lastname}`}</strong>?</p>
+            </div>
+            <div className="modal-actions">
+              <button
+                className="pending-enrollment-btn pending-enrollment-btn-reject"
+                onClick={handleConfirmReject}
+              >
+                Confirm Reject
+              </button>
+              <button
+                className="pending-enrollment-btn pending-enrollment-btn-approve"
+                onClick={() => {
+                  setShowRejectModal(false);
+                  setStudentToReject(null);
+                }}
               >
                 Cancel
               </button>

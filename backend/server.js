@@ -452,27 +452,6 @@ app.get('/students/pending-enrollment', (req, res) => {
       queryParams.push(section);
     }
 
-    // if (school_year) {
-    //   conditions.push(`
-    //     s.student_id IN (
-    //       SELECT ss.student_id FROM student_school_year ss 
-    //       JOIN school_year sy ON ss.school_year_id = sy.school_year_id 
-    //       WHERE sy.school_year = ?
-    //     )
-    //   `);
-    //   queryParams.push(school_year);
-    // } else {
-    //   // Default to the latest school year if no specific year is provided
-    //   conditions.push(`
-    //     s.student_id IN (
-    //       SELECT ss.student_id FROM student_school_year ss 
-    //       JOIN school_year sy ON ss.school_year_id = sy.school_year_id 
-    //       WHERE sy.school_year = ?
-    //     )
-    //   `);
-    //   queryParams.push(latestSchoolYear);
-    // }
-
     if (conditions.length > 0) {
       query += ' AND ' + conditions.join(' AND ');
     }
@@ -5056,7 +5035,7 @@ app.get('/students/pending-elective', (req, res) => {
 
     console.log('Active school year:', latestSchoolYear);
 
-    // Build the main query
+    // Build the main query with fixed subquery
     let query = `
       SELECT s.student_id, s.user_id, s.lastname, s.firstname, s.middlename, 
       s.current_yr_lvl, s.birthdate, s.gender, s.age, 
@@ -5066,9 +5045,9 @@ app.get('/students/pending-elective', (req, res) => {
       s.mother_occupation, s.annual_hshld_income, s.number_of_siblings, 
       s.father_educ_lvl, s.mother_educ_lvl, s.father_contact_number, 
       s.mother_contact_number, bd.brigada_status AS brigada_eskwela,
-      (SELECT ss.status FROM student_school_year ss
+      (SELECT MAX(ss.status) FROM student_school_year ss
       JOIN school_year sy ON ss.school_year_id = sy.school_year_id
-      WHERE ss.student_id = s.student_id AND sy.status = 'active') as active_status,
+      WHERE ss.student_id = s.student_id AND sy.status = 'active' LIMIT 1) as active_status,
       se.enrollment_status, se.student_elective_id,
       e.subject_name as subject_name, e.description, CONCAT(f.time_start,' - ',f.time_end) AS time,
       f.day, CONCAT(ee.firstname,' ',LEFT(IFNULL(ee.middlename,''),1),' ',ee.lastname) AS teacher,
