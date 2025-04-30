@@ -468,7 +468,7 @@ function StudentManagement() {
         lastname: formatCapitalization(newStudentData.lastname),
         firstname: formatCapitalization(newStudentData.firstname),
         middlename: newStudentData.middlename ? formatCapitalization(newStudentData.middlename) : '',
-        current_yr_lvl: parseInt(newStudentData.current_yr_lvl, 10),
+        current_yr_lvl: newStudentData.current_yr_lvl, // Keep as string
         birthdate: new Date(newStudentData.birthdate).toISOString().split('T')[0],
         gender: newStudentData.gender,
         age: parseInt(newStudentData.age, 10),
@@ -965,11 +965,17 @@ const handleArchive = () => {
     // Update the student data with the formatted birthdate
     const updatedStudentData = { 
       ...formattedData, 
+      current_yr_lvl: editStudentData.current_yr_lvl, // Ensure grade level is kept as is
       birthdate: formattedBirthdate,
       section_id: formattedData.section_id, // now an int
       annual_hshld_income: parseFloat(formattedData.annual_hshld_income?.replace(/,/g, '') || 0), // Format income to remove commas
       brigada_eskwela: formattedData.brigada_eskwela || '0' // Default value for brigada_eskwela
     };
+
+    // Deep debugging of the request data
+    console.log('Full student data to be sent:', JSON.stringify(updatedStudentData, null, 2));
+    console.log('Grade level value:', updatedStudentData.current_yr_lvl);
+    console.log('Grade level type:', typeof updatedStudentData.current_yr_lvl);
 
     try {
         // Make the PUT request to the backend to update the student
@@ -983,11 +989,25 @@ const handleArchive = () => {
 
         // Check if the response is OK
         if (!response.ok) {
-            throw new Error('Failed to save student data');
+            console.error('Server responded with error status:', response.status);
+            const errorText = await response.text();
+            console.error('Error response:', errorText);
+            throw new Error(`Failed to save student data: ${response.status} ${errorText}`);
         }
 
         // Get the updated student data from the response
-        const updatedStudent = await response.json();
+        const responseText = await response.text();
+        console.log('Raw response from server:', responseText);
+        
+        let updatedStudent;
+        try {
+            updatedStudent = JSON.parse(responseText);
+        } catch (e) {
+            console.error('Error parsing response JSON:', e);
+            throw new Error('Invalid response format from server');
+        }
+
+        console.log('Parsed response data:', updatedStudent);
 
         // Update the state with the updated student data
         setStudents((prevStudents) =>
@@ -1250,13 +1270,18 @@ const handleArchive = () => {
                         <th>Grade Level:</th>
                         <td>
                           {isEditing ? (
-                            <input
-                              type="text"
+                            <select
                               name="current_yr_lvl"
                               value={editStudentData ? editStudentData.current_yr_lvl || "" : ""}
-                              readOnly
-                              className="read-only"
-                            />
+                              onChange={handleEditChange}
+                              className={errors.current_yr_lvl ? "error" : ""}
+                            >
+                              <option value="">Select Grade Level</option>
+                              <option value="7">Grade 7</option>
+                              <option value="8">Grade 8</option>
+                              <option value="9">Grade 9</option>
+                              <option value="10">Grade 10</option>
+                            </select>
                           ) : (
                             student.current_yr_lvl
                           )}
@@ -1909,10 +1934,10 @@ const handleArchive = () => {
                     className={errors.current_yr_lvl ? "error" : ""}
                   >
                     <option value="">Select Year Level</option>
-                    <option value="7">7</option>
-                    <option value="8">8</option>
-                    <option value="9">9</option>
-                    <option value="10">10</option>
+                    <option value="7">Grade 7</option>
+                    <option value="8">Grade 8</option>
+                    <option value="9">Grade 9</option>
+                    <option value="10">Grade 10</option>
                   </select>
                   {errors.current_yr_lvl && <span className="student-mgmt-error">{errors.current_yr_lvl}</span>}
                 </div>
