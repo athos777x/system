@@ -47,6 +47,7 @@ function TeacherManagement() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [schoolYears, setSchoolYears] = useState([]);
   const [selectedSchoolYear, setSelectedSchoolYear] = useState('');
+  const [selectedSubjectsSchoolYear, setSelectedSubjectsSchoolYear] = useState('');
   const [editTeacherData, setEditTeacherData] = useState({
     firstname: '',
     lastname: '',
@@ -58,7 +59,9 @@ function TeacherManagement() {
     role_id: '',
     status: 'active'
   });
-  const [selectedSubjectsSchoolYear, setSelectedSubjectsSchoolYear] = useState('');
+  const [showAssignGradeLevelModal, setShowAssignGradeLevelModal] = useState(false);
+  const [selectedGradeLevelForCoordinator, setSelectedGradeLevelForCoordinator] = useState('7');
+  const [teacherGradeLevel, setTeacherGradeLevel] = useState([]);
 
   const navigate = useNavigate();
 
@@ -562,28 +565,78 @@ function TeacherManagement() {
     }
   };
   
+  const fetchTeacherGradeLevel = async (teacherId, schoolYearId) => {
+    try {
+      const response = await axios.get(`http://localhost:3001/teacher-grade-level/${teacherId}`, {
+        params: { school_year_id: schoolYearId }
+      });
+      setTeacherGradeLevel(response.data);
+    } catch (error) {
+      console.error('Error fetching teacher grade level:', error);
+    }
+  };
+
+  const handleAssignGradeLevel = (employeeId) => {
+    setCurrentTeacherId(employeeId);
+    setShowAssignGradeLevelModal(true);
+    setSelectedGradeLevelForCoordinator('7');
+  };
+
+  const handleGradeLevelAssignment = async () => {
+    if (!selectedGradeLevelForCoordinator || !selectedSchoolYear) {
+      alert('Please select a grade level and school year');
+      return;
+    }
+  
+    try {
+      console.log('Assigning grade level with:', {
+        teacherId: currentTeacherId,
+        gradeLevel: selectedGradeLevelForCoordinator,
+        schoolYearId: selectedSchoolYear,
+      });
+  
+      const response = await axios.post(`http://localhost:3001/assign-grade-level/${currentTeacherId}`, {
+        grade_level: selectedGradeLevelForCoordinator,
+        school_year_id: selectedSchoolYear,
+      });
+  
+      if (response.status === 200) {
+        alert('Grade level assigned successfully');
+        setShowAssignGradeLevelModal(false);
+        setSelectedGradeLevelForCoordinator('7');
+        fetchTeacherGradeLevel(currentTeacherId, selectedSchoolYear);
+      }
+    } catch (error) {
+      console.error('Error assigning grade level:', error);
+      alert('Error assigning grade level: ' + (error.response?.data?.error || error.message));
+    }
+  };
+  
+  
   
 
-  
   const handleViewDetails = (teacherId, roleId) => {
     if (selectedTeacherId === teacherId) {
       setSelectedTeacherId(null);
       setTeacherSubjects();
       setTeacherSection(null);
+      setTeacherGradeLevel([]);
     } else {
       setSelectedTeacherId(teacherId);
       // Find active school year and set it as default
       const activeYear = schoolYears.find(year => year.status === 'active');
       if (activeYear) {
         setSelectedSubjectsSchoolYear(activeYear.school_year_id);
-        fetchTeacherSubjects(teacherId, activeYear.school_year_id,roleId);
+        fetchTeacherSubjects(teacherId, activeYear.school_year_id, roleId);
       } else {
-        fetchTeacherSubjects(teacherId,roleId); 
+        fetchTeacherSubjects(teacherId, roleId); 
       }
       if (roleId === 4) {
-        fetchTeacherSection(teacherId,activeYear.school_year_id);
+        fetchTeacherSection(teacherId, activeYear.school_year_id);
       }
-
+      if (roleId === 5) {
+        fetchTeacherGradeLevel(teacherId, activeYear.school_year_id);
+      }
     }
   };
 
@@ -731,6 +784,7 @@ useEffect(() => {
     setSelectedSubjectsSchoolYear(schoolYearId);
     fetchTeacherSubjects(selectedTeacherId, schoolYearId);
     fetchTeacherSection(selectedTeacherId, schoolYearId);
+    fetchTeacherGradeLevel(selectedTeacherId, schoolYearId);
   };
 
   return (
@@ -936,6 +990,44 @@ useEffect(() => {
                               )}
                             </>
                           )}
+
+                          {teacher.role_id === 5 && (
+                            <>
+                              <h3>Assigned Grade Level</h3>
+                              <select
+                                value={selectedSubjectsSchoolYear}
+                                onChange={(e) => handleSubjectsSchoolYearChange(e.target.value)}
+                                style={{
+                                  padding: '5px',
+                                  width: '150px',
+                                }}
+                              >
+                                {schoolYears.map((year) => (
+                                  <option key={year.school_year_id} value={year.school_year_id}>
+                                    {year.school_year}
+                                  </option>
+                                ))}
+                              </select>
+                              {teacherGradeLevel && teacherGradeLevel.length > 0 ? (
+                                <table className="teacher-mgmt-details-table">
+                                  <thead>
+                                    <tr>
+                                      <th>Grade Level</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {teacherGradeLevel.map((level, index) => (
+                                      <tr key={index}>
+                                        <td>{level.grade_level}</td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              ) : (
+                                <p>No grade level assigned yet</p>
+                              )}
+                            </>
+                          )}
                         </div>
 
                         <div className="teacher-mgmt-details-actions">
@@ -945,6 +1037,14 @@ useEffect(() => {
                               onClick={() => handleAssignSection(teacher.employee_id)}
                             >
                               Assign Section
+                            </button>
+                          )}
+                          {teacher.role_id === 5 && (
+                            <button 
+                              className="teacher-mgmt-btn teacher-mgmt-btn-view"
+                              onClick={() => handleAssignGradeLevel(teacher.employee_id)}
+                            >
+                              Assign Grade Level
                             </button>
                           )}
                           {teacher.role_id === 8 && (
@@ -1462,6 +1562,61 @@ useEffect(() => {
               <button 
                 className="teacher-mgmt-btn teacher-mgmt-btn-archive"
                 onClick={() => setShowEditModal(false)}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showAssignGradeLevelModal && (
+        <div className="teacher-mgmt-modal">
+          <div className="teacher-mgmt-modal-content compact teacher-mgmt-section-modal">
+            <div className="teacher-mgmt-modal-header">
+              <h2 className="teacher-mgmt-modal-title">Assign Grade Level</h2>
+            </div>
+
+            <div className="teacher-mgmt-form-field">
+              <label className="teacher-mgmt-form-label">School Year:</label>
+              <select
+                value={selectedSchoolYear}
+                onChange={(e) => setSelectedSchoolYear(e.target.value)}
+                className="teacher-mgmt-form-select"
+              >
+                {schoolYears.map((year) => (
+                  <option key={year.school_year_id} value={year.school_year_id}>
+                    {year.school_year}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="teacher-mgmt-form-field">
+              <label className="teacher-mgmt-form-label">Grade Level:</label>
+              <div className="teacher-mgmt-button-grid">
+                {[7, 8, 9, 10].map((grade) => (
+                  <button
+                    key={grade}
+                    className={`teacher-mgmt-grid-button ${selectedGradeLevelForCoordinator === grade.toString() ? 'selected' : ''}`}
+                    onClick={() => setSelectedGradeLevelForCoordinator(grade.toString())}
+                  >
+                    Grade {grade}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="teacher-mgmt-modal-footer">
+              <button 
+                className="teacher-mgmt-btn teacher-mgmt-btn-view teacher-mgmt-modal-button"
+                onClick={handleGradeLevelAssignment}
+              >
+                Assign Grade Level
+              </button>
+              <button 
+                className="teacher-mgmt-btn teacher-mgmt-btn-archive teacher-mgmt-modal-button"
+                onClick={() => setShowAssignGradeLevelModal(false)}
               >
                 Cancel
               </button>
