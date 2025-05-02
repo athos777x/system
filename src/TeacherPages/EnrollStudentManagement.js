@@ -177,10 +177,9 @@ function EnrollStudentManagement() {
         filteredParams.grade = coordinatorGradeLevel.toString();
       }
   
-      // ✅ Determine the endpoint based on roleName
-      const endpoint = roleName === 'class_adviser' 
-        ? 'http://localhost:3001/students/by-adviser' 
-        : 'http://localhost:3001/students/apply-enrollment';
+      // ✅ Always use apply-enrollment endpoint for this component
+      // This ensures all roles including class advisers can see inactive students
+      const endpoint = 'http://localhost:3001/students/apply-enrollment';
   
       // ✅ Make request with correct filters
       const response = await axios.get(endpoint, { params: filteredParams });
@@ -1316,17 +1315,6 @@ const handleArchive = () => {
                       >
                         Edit
                       </button>
-                    )} */}
-                    {/* {(roleName === 'registrar' && student.active_status === null) && (
-                      <button 
-                        className="enroll-student-btn enroll-student-btn-register"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          enrollStudent(student.student_id);
-                        }}
-                      >
-                        Register
-                      </button> 
                     )} */}
                     {(roleName === 'registrar' || roleName === 'class_adviser' || roleName === 'grade_level_coordinator') && student.active_status === 'inactive' && (
                       <button 

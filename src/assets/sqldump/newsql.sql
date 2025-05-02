@@ -2,8 +2,7 @@
 SQLyog Ultimate v9.62 
 MySQL - 5.6.37-log : Database - lnhsportal
 *********************************************************************
-*/
-
+*/
 
 /*!40101 SET NAMES utf8 */;
 
@@ -122,7 +121,7 @@ CREATE TABLE `enrollment` (
 
 /*Data for the table `enrollment` */
 
-insert  into `enrollment`(`enrollment_id`,`student_id`,`section_id`,`enrolling_officer_id`,`enrollment_date`,`grade_level`,`enrollee_type`,`brigada_id`,`enrollment_status`,`student_name`,`student_school_year_id`,`school_year_id`) values (4,1,1,NULL,'2025-04-18','7','Regular',3,'active','angel j. bautista',NULL,1),(5,2,1,NULL,'2025-04-18','7','Regular',4,'active','rephaim celix l. domapias',NULL,1),(9,6,NULL,NULL,'2025-04-20','7','Regular',8,'inactive','ewq q. qwwqeqw',NULL,1),(10,7,NULL,NULL,'2025-04-20','7','Regular',9,'inactive','fdgdf h. dsfds',NULL,1),(11,8,NULL,NULL,'2025-04-20','8','Regular',10,'inactive','dfdsfsd s. dsfsdf',NULL,1),(12,3,1,NULL,'2025-04-30','7','Regular',5,'active','hannah j. clerigo',NULL,1),(13,4,1,NULL,'2025-04-30','7','Regular',6,'active','test t. tet',NULL,1),(14,5,2,NULL,'2025-04-30','7','Regular',7,'active','tsfdsfs t. terst',NULL,1),(15,6,NULL,NULL,'2025-04-30','7','Regular',8,'inactive','peligrino j. noel',NULL,1),(16,7,NULL,NULL,'2025-04-30','7','Regular',9,'inactive','asdas s. weewdsa',NULL,1),(17,8,NULL,NULL,'2025-04-30','8','Regular',10,'inactive','dfsd d. sdf',NULL,1),(18,9,NULL,NULL,'2025-04-30','9','Regular',11,'inactive','jose j. rizal',NULL,1),(19,10,NULL,NULL,'2025-04-30','9','Regular',12,'inactive','andres l. bonifacio',NULL,1),(20,11,NULL,NULL,'2025-04-30','10','Regular',13,'pending','emilio m. aguinaldo',NULL,1),(21,12,NULL,NULL,'2025-05-01','8','Regular',14,'inactive','juan a. luna',NULL,1);
+insert  into `enrollment`(`enrollment_id`,`student_id`,`section_id`,`enrolling_officer_id`,`enrollment_date`,`grade_level`,`enrollee_type`,`brigada_id`,`enrollment_status`,`student_name`,`student_school_year_id`,`school_year_id`) values (4,1,1,NULL,'2025-04-18','7','Regular',3,'active','angel j. bautista',NULL,1),(5,2,1,NULL,'2025-04-18','7','Regular',4,'active','rephaim celix l. domapias',NULL,1),(9,6,NULL,NULL,'2025-04-20','7','Regular',8,'inactive','ewq q. qwwqeqw',NULL,1),(10,7,NULL,NULL,'2025-04-20','7','Regular',9,'inactive','fdgdf h. dsfds',NULL,1),(11,8,NULL,NULL,'2025-04-20','8','Regular',10,'pending','dfdsfsd s. dsfsdf',NULL,1),(12,3,1,NULL,'2025-04-30','7','Regular',5,'active','hannah j. clerigo',NULL,1),(13,4,1,NULL,'2025-04-30','7','Regular',6,'active','test t. tet',NULL,1),(14,5,2,NULL,'2025-04-30','7','Regular',7,'active','tsfdsfs t. terst',NULL,1),(15,6,NULL,NULL,'2025-04-30','7','Regular',8,'inactive','peligrino j. noel',NULL,1),(16,7,NULL,NULL,'2025-04-30','7','Regular',9,'inactive','asdas s. weewdsa',NULL,1),(17,8,NULL,NULL,'2025-04-30','8','Regular',10,'pending','dfsd d. sdf',NULL,1),(18,9,NULL,NULL,'2025-04-30','9','Regular',11,'inactive','jose j. rizal',NULL,1),(19,10,NULL,NULL,'2025-04-30','9','Regular',12,'inactive','andres l. bonifacio',NULL,1),(20,11,NULL,NULL,'2025-04-30','10','Regular',13,'pending','emilio m. aguinaldo',NULL,1),(21,12,NULL,NULL,'2025-05-01','8','Regular',14,'pending','juan a. luna',NULL,1);
 
 /*Table structure for table `grade_level_assigned` */
 
@@ -371,7 +370,7 @@ CREATE TABLE `student_school_year` (
 
 /*Data for the table `student_school_year` */
 
-insert  into `student_school_year`(`student_school_year_id`,`student_id`,`school_year_id`,`status`,`student_name`,`grade_level`) values (3,1,1,'active','angel j. bautista',7),(4,2,1,'active','rephaim celix l. domapias',8),(5,3,1,'active','etest t. test',7),(6,4,1,'active','twe t. trtwe',7),(7,5,1,'active','sdfsd f. sadfdsf',7),(8,6,1,'active','ewq q. qwwqeqw',7),(9,7,1,'active','fdgdf h. dsfds',7),(10,8,1,'active','dfdsfsd s. dsfsdf',8),(11,3,1,'active','hannah j. clerigo',7),(12,4,1,'active','test t. tet',7),(13,5,1,'active','tsfdsfs t. terst',7),(14,6,1,'active','peligrino j. noel',7),(15,7,1,'active','asdas s. weewdsa',7),(16,8,1,'active','dfsd d. sdf',8),(17,9,1,'active','jose j. rizal',9),(18,10,1,'active','andres l. bonifacio',9),(19,11,1,'pending','emilio m. aguinaldo',10),(20,12,1,'active','juan a. luna',8);
+insert  into `student_school_year`(`student_school_year_id`,`student_id`,`school_year_id`,`status`,`student_name`,`grade_level`) values (3,1,1,'active','angel j. bautista',7),(4,2,1,'active','rephaim celix l. domapias',8),(5,3,1,'active','etest t. test',7),(6,4,1,'active','twe t. trtwe',7),(7,5,1,'active','sdfsd f. sadfdsf',7),(8,6,1,'active','ewq q. qwwqeqw',7),(9,7,1,'active','fdgdf h. dsfds',7),(10,8,1,'pending','dfdsfsd s. dsfsdf',8),(11,3,1,'active','hannah j. clerigo',7),(12,4,1,'active','test t. tet',7),(13,5,1,'active','tsfdsfs t. terst',7),(14,6,1,'active','peligrino j. noel',7),(15,7,1,'active','asdas s. weewdsa',7),(16,8,1,'pending','dfsd d. sdf',8),(17,9,1,'active','jose j. rizal',9),(18,10,1,'active','andres l. bonifacio',9),(19,11,1,'pending','emilio m. aguinaldo',10),(20,12,1,'pending','juan a. luna',8);
 
 /*Table structure for table `subject` */
 
