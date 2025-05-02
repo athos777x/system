@@ -619,8 +619,8 @@ function TeacherManagement() {
   };
   
   
-  
 
+  
   const handleViewDetails = (teacherId, roleId) => {
     if (selectedTeacherId === teacherId) {
       setSelectedTeacherId(null);
@@ -968,20 +968,20 @@ useEffect(() => {
                                 }}
                               >
                                 <h3 style={{ margin: 0 }}>Assigned Section</h3>
-                                <select
-                                  value={selectedSubjectsSchoolYear}
-                                  onChange={(e) => handleSubjectsSchoolYearChange(e.target.value)}
-                                  style={{
-                                    padding: '5px',
-                                    width: '150px',
-                                  }}
-                                >
-                                  {schoolYears.map((year) => (
-                                    <option key={year.school_year_id} value={year.school_year_id}>
-                                      {year.school_year}
-                                    </option>
-                                  ))}
-                                </select>
+                              <select
+                              value={selectedSubjectsSchoolYear}
+                              onChange={(e) => handleSubjectsSchoolYearChange(e.target.value)}
+                              style={{
+                                padding: '5px',
+                                width: '150px',
+                              }}
+                            >
+                              {schoolYears.map((year) => (
+                                <option key={year.school_year_id} value={year.school_year_id}>
+                                  {year.school_year}
+                                </option>
+                              ))}
+                            </select>
                               </div>
                               {teacherSection && teacherSection.length > 0 ? (
                                 <table className="teacher-mgmt-details-table">
