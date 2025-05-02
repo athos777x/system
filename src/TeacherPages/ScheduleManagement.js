@@ -62,7 +62,7 @@ function Principal_SchedulePage() {
     } catch (error) {
       console.error('There was an error fetching the sections!', error);
     }
-  }, [roleName, filters]); 
+  }, [roleName]);
   
 
   const fetchSchoolYears = useCallback(async () => {
@@ -78,28 +78,27 @@ function Principal_SchedulePage() {
     fetchSections();
     fetchSchoolYears();
     getSubjectTeachers();
-  }, [roleName, filters, fetchSections, fetchSchoolYears]);
+  }, [roleName, fetchSections, fetchSchoolYears]);
 
-  const applyFilters = (updatedFilters) => {
-    setFilters(updatedFilters);
+  const applyFilters = () => {
     let filtered = sections;
 
-    if (updatedFilters.searchTerm) {
+    if (filters.searchTerm) {
       filtered = filtered.filter(section =>
-        section.section_name.toLowerCase().includes(updatedFilters.searchTerm.toLowerCase())
+        section.section_name.toLowerCase().includes(filters.searchTerm.toLowerCase())
       );
     }
 
-    if (updatedFilters.grade) {
-      filtered = filtered.filter(section => section.grade_level === updatedFilters.grade);
+    if (filters.grade) {
+      filtered = filtered.filter(section => section.grade_level === filters.grade);
     }
 
-    if (updatedFilters.section) {
-      filtered = filtered.filter(section => section.section_id === parseInt(updatedFilters.section));
+    if (filters.section) {
+      filtered = filtered.filter(section => section.section_id === parseInt(filters.section));
     }
 
-    if (updatedFilters.schoolYear) {
-      filtered = filtered.filter(section => section.school_year === updatedFilters.schoolYear);
+    if (filters.schoolYear) {
+      filtered = filtered.filter(section => section.school_year === filters.schoolYear);
     }
 
     setFilteredSections(filtered);
@@ -108,20 +107,23 @@ function Principal_SchedulePage() {
   const handleGradeChange = (event) => {
     const grade = event.target.value;
     setFilters(prev => ({ ...prev, grade }));
+    // Remove auto-filtering
   };
 
   const handleSectionChange = (event) => {
     const section = event.target.value;
     setFilters(prev => ({ ...prev, section }));
+    // Remove auto-filtering
   };
 
   const handleSchoolYearChange = (event) => {
     const schoolYear = event.target.value;
     setFilters(prev => ({ ...prev, schoolYear }));
+    // Remove auto-filtering
   };
 
-  const handleApplyFilters = (filters) => {
-    applyFilters(filters);
+  const handleApplyFilters = () => {
+    applyFilters();
   };
 
   const handleViewClick = async (sectionId) => {
@@ -570,19 +572,10 @@ function Principal_SchedulePage() {
             type="text"
             placeholder="Search sections..."
             value={filters.searchTerm}
-            onChange={(e) => applyFilters({ ...filters, searchTerm: e.target.value })}
+            onChange={(e) => setFilters({ ...filters, searchTerm: e.target.value })}
           />
         </div>
         <div className="schedule-mgmt-filters-group">
-          {/* <select
-            value={filters.grade}
-            onChange={handleGradeChange}
-          >
-            <option value="">All Grades</option>
-            {['7', '8', '9', '10'].map(grade => (
-              <option key={grade} value={grade}>Grade {grade}</option>
-            ))}
-          </select> */}
           <select
             value={filters.schoolYear}
             onChange={handleSchoolYearChange}
@@ -593,17 +586,15 @@ function Principal_SchedulePage() {
             ))}
           </select>
           <select
-            value={filters.section}
-            onChange={handleSectionChange}
+            value={filters.grade}
+            onChange={handleGradeChange}
           >
-            <option value="">All Sections</option>
-            {sections.map(section => (
-              <option key={section.section_id} value={section.section_id}>
-                {section.section_name}
-              </option>
+            <option value="">Select Grade Level</option>
+            {[7, 8, 9, 10].map(grade => (
+              <option key={grade} value={grade}>Grade {grade}</option>
             ))}
           </select>
-        <button onClick={() => applyFilters(filters)}>Filter</button>
+          <button onClick={handleApplyFilters}>Filter</button>
         </div>
       </div>
 
