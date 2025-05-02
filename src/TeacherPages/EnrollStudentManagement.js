@@ -1848,15 +1848,7 @@ const handleArchive = () => {
                                         Print
                                   </button>
                                   */}
-                                  {roleName === 'registrar' && (
-                              <button
-                                      className="enroll-student-btn enroll-student-btn-archive"
-                                      onClick={() => openArchiveModal(student.student_id)}
-                              >
-                                      Archive
-                              </button>
-                          )}
-                        </>
+                            </>
                       )}
                             </div>
                           </div>

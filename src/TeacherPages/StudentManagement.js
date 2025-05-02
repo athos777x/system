@@ -14,6 +14,7 @@ function StudentManagement() {
   const [isEditing, setIsEditing] = useState(false); // Tracks edit mode
   const [editStudentData, setEditStudentData] = useState(null); // Stores the editable student data
   const [showCancelModal, setShowCancelModal] = useState(false); // Tracks cancel confirmation modal
+  const [showAddCancelModal, setShowAddCancelModal] = useState(false); // New state for add form cancel confirmation
   const [errors, setErrors] = useState({});
 
   const [schoolYears, setSchoolYears] = useState([]);
@@ -565,9 +566,17 @@ function StudentManagement() {
 
   
 const cancelAdding = () => {
-  setIsAdding(false);
-  setShowModal(false);
-  setErrors({}); // Reset errors when closing the add new student modal
+  setShowAddCancelModal(true);
+};
+
+// New function to handle confirmation for canceling add student form
+const confirmCancelAdding = (confirm) => {
+  setShowAddCancelModal(false);
+  if (confirm) {
+    setIsAdding(false);
+    setShowModal(false);
+    setErrors({}); // Reset errors when closing the add new student modal
+  }
 };
 
 const enrollStudent = async (studentId) => {
@@ -1803,6 +1812,32 @@ const handleArchive = () => {
               Yes
             </button>
               <button className="student-mgmt-modal-btn student-mgmt-modal-btn-cancel" onClick={() => confirmCancel(false)}>
+              No
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+
+    {/* Add new cancel confirmation modal */}
+    {showAddCancelModal && (
+      <div className="student-mgmt-modal" style={{ zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div className="student-mgmt-modal-content" style={{ maxWidth: '400px', margin: '0', padding: '1.5rem' }}>
+          <h2 style={{ marginTop: '0', textAlign: 'center' }}>Cancel Adding Student?</h2>
+          <p style={{ textAlign: 'center' }}>Are you sure you want to cancel? All entered information will be lost.</p>
+          <div className="student-mgmt-modal-actions" style={{ justifyContent: 'center', gap: '1rem', marginTop: '1.5rem' }}>
+            <button 
+              className="student-mgmt-modal-btn student-mgmt-modal-btn-cancel" 
+              onClick={() => confirmCancelAdding(true)}
+              style={{ minWidth: '80px' }}
+            >
+              Yes
+            </button>
+            <button 
+              className="student-mgmt-modal-btn student-mgmt-modal-btn-confirm" 
+              onClick={() => confirmCancelAdding(false)}
+              style={{ minWidth: '80px' }}
+            >
               No
             </button>
           </div>
