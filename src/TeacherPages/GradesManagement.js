@@ -21,6 +21,7 @@ function GradesManagement() {
   const [roleName, setRoleName] = useState('');
   const [selectedSchoolYear, setSelectedSchoolYear] = useState({});
   const [assignedSubjects, setAssignedSubjects] = useState([]);
+  const [coordinatorGradeLevel, setCoordinatorGradeLevel] = useState(null);
   const [filters, setFilters] = useState({
     searchTerm: '',
     school_year: '',
@@ -36,14 +37,20 @@ function GradesManagement() {
     fetchSections();
   
     if (roleName) {
-      fetchStudents(roleName);
-      if (roleName === 'subject_teacher') {
-        fetchAssignedSubjects();
+      if (roleName === 'grade_level_coordinator') {
+        // Wait for coordinator grade level to be set before fetching students
+        if (coordinatorGradeLevel) {
+          fetchStudents({ grade: coordinatorGradeLevel.toString() });
+        }
+      } else {
+        fetchStudents(roleName);
+        if (roleName === 'subject_teacher') {
+          fetchAssignedSubjects();
+        }
       }
     }
-  }, [roleName]);
+  }, [roleName, coordinatorGradeLevel]);
   
-
   useEffect(() => {
     if (students.length > 0) {
       applyFilters();
@@ -59,6 +66,16 @@ function GradesManagement() {
       setFilteredSections(sections);
     }
   }, [filters.grade, sections]);
+
+  useEffect(() => {
+    if (coordinatorGradeLevel && sections.length > 0) {
+      // When coordinator's grade level is set, filter sections by that grade level
+      const sectionsForGrade = sections.filter(section => 
+        String(section.grade_level) === String(coordinatorGradeLevel)
+      );
+      setFilteredSections(sectionsForGrade);
+    }
+  }, [coordinatorGradeLevel, sections]);
 
   useEffect(() => {
     const userId = localStorage.getItem('userId'); // Retrieve userId from localStorage
@@ -78,6 +95,11 @@ function GradesManagement() {
         console.log('Response received:', response.data); // Debugging log
         setRoleName(response.data.role_name);
         console.log('Role name set to:', response.data.role_name); // Debugging log
+        
+        // If user is a grade level coordinator, fetch their assigned grade level
+        if (response.data.role_name === 'grade_level_coordinator') {
+          fetchCoordinatorGradeLevel(userId);
+        }
       } else {
         console.error('Failed to fetch role name. Response status:', response.status);
       }
@@ -89,6 +111,20 @@ function GradesManagement() {
       } else {
         console.error('Error setting up request:', error.message);
       }
+    }
+  };
+  
+  const fetchCoordinatorGradeLevel = async (userId) => {
+    try {
+      const response = await axios.get(`http://localhost:3001/coordinator-grade-level/${userId}`);
+      if (response.status === 200 && response.data.gradeLevel) {
+        console.log('Coordinator grade level:', response.data.gradeLevel);
+        setCoordinatorGradeLevel(response.data.gradeLevel);
+        // Auto-set the grade filter to the coordinator's assigned grade level
+        setFilters(prev => ({ ...prev, grade: response.data.gradeLevel.toString() }));
+      }
+    } catch (error) {
+      console.error('Error fetching coordinator grade level:', error);
     }
   };
 
@@ -113,8 +149,17 @@ function GradesManagement() {
       // Sort students by last name (ascending order)
       const sortedStudents = response.data.sort((a, b) => b.lastName);
   
-      setStudents(sortedStudents);
-      setFilteredStudents(sortedStudents);
+      let filteredStudents = sortedStudents;
+      
+      // For grade level coordinators, filter the students by their assigned grade level
+      if (roleName === 'grade_level_coordinator' && coordinatorGradeLevel) {
+        filteredStudents = sortedStudents.filter(student => 
+          student.current_yr_lvl.toString() === coordinatorGradeLevel.toString()
+        );
+      }
+  
+      setStudents(filteredStudents);
+      setFilteredStudents(filteredStudents);
     } catch (error) {
       console.error('Error fetching students:', error);
     }
@@ -131,6 +176,8 @@ function GradesManagement() {
 
   const fetchSchoolYearsGrades = async (studentId) => {
     try {
+      // Important: For this specific endpoint, we always want to fetch ALL grade levels
+      // for a student regardless of the coordinator's assigned grade level
       const response = await axios.get(`http://localhost:3001/get-grade-level/${studentId}`);
       
       if (response.status === 200) {
@@ -443,12 +490,20 @@ function GradesManagement() {
   const applyFilters = () => {
     let filtered = [...students]; // Create a new array to avoid mutating state directly
 
+    // For grade level coordinators, enforce their assigned grade level filter regardless of other filters
+    if (roleName === 'grade_level_coordinator' && coordinatorGradeLevel) {
+      filtered = filtered.filter(student => String(student.current_yr_lvl) === String(coordinatorGradeLevel));
+    }
+
     if (filters.school_year) {
       filtered = filtered.filter(student => String(student.school_year) === String(filters.school_year));
     }
-    if (filters.grade) {
+    
+    // Only apply grade filter if not a coordinator (coordinators already filtered by their grade level)
+    if (filters.grade && !(roleName === 'grade_level_coordinator' && coordinatorGradeLevel)) {
       filtered = filtered.filter(student => String(student.current_yr_lvl) === String(filters.grade));
     }
+    
     if (filters.section) {
       filtered = filtered.filter(student => String(student.section_name) === String(filters.section));
     }
@@ -480,10 +535,21 @@ function GradesManagement() {
       ...prev,
       [student.student_id]: newSchoolYearId
     }));
+    
+    // Find the selected year's data to get its grade level
+    const selectedYear = studentSchoolYears[student.student_id]?.find(
+      year => year.school_year_id.toString() === newSchoolYearId.toString()
+    );
+    
+    const gradeLevel = selectedYear?.grade_level || student.current_yr_lvl;
+    const section_id = selectedYear?.section_id || student.section_id;
   
+    // Important: We allow viewing ANY grade level for a specific student
+    // even if the user is a grade level coordinator with a specific assigned grade
+    
     // Fetch the subjects and grades for the selected student and new school year
-    const fetchedSubjects = await fetchSubjects(student.student_id, student.current_yr_lvl, newSchoolYearId);
-    await fetchGrades(student.student_id, student.current_yr_lvl, fetchedSubjects, newSchoolYearId);
+    const fetchedSubjects = await fetchSubjects(student.student_id, gradeLevel, newSchoolYearId, section_id);
+    await fetchGrades(student.student_id, gradeLevel, fetchedSubjects, newSchoolYearId, section_id);
   };
 
   const calculateQuarterAverage = (quarter) => {
@@ -623,6 +689,8 @@ function GradesManagement() {
         filteredSections={filteredSections} 
         filters={filters}
         setFilters={setFilters}
+        coordinatorGradeLevel={coordinatorGradeLevel}
+        roleName={roleName}
       />
 
       <div className="grades-management-table-container">
@@ -683,6 +751,10 @@ function GradesManagement() {
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                           <h3 className="grades-details-title">Grades for {student.firstname} {student.lastname}</h3>
                           <div className="grade-level-school-year-container">
+                            {/* 
+                              This dropdown intentionally shows ALL grade levels for the specific student
+                              without any restrictions, even for grade level coordinators
+                            */}
                             <select 
                               value={selectedSchoolYear[student.student_id] || student.school_year_id} 
                               onChange={(e) => handleSchoolYearChange(e, student)}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Pagination from '../Utilities/pagination';
 import axios from 'axios';
 import '../TeacherPagesCss/EnrollmentRequests.css';
@@ -21,6 +21,8 @@ function EnrollmentRequests() {
   const [subjects, setSubjects] = useState([]);
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [studentToReject, setStudentToReject] = useState(null);
+  const [roleName, setRoleName] = useState('');
+  const [coordinatorGradeLevel, setCoordinatorGradeLevel] = useState(null);
   
 
   const [filters, setFilters] = useState({
@@ -31,30 +33,23 @@ function EnrollmentRequests() {
     status: ''
   });
 
-  useEffect(() => {
-    fetchStudents();
-    fetchSchoolYears();
-    fetchSections();
-  }, []);
-
-  useEffect(() => {
-    if (filters.grade) {
-      // Filter sections based on the selected grade level
-      const sectionsForGrade = sections.filter(section => String(section.grade_level) === String(filters.grade));
-      setFilteredSections(sectionsForGrade);
-    } else {
-      setFilteredSections(sections);
-    }
-  }, [filters.grade, sections]);
-
-  const fetchStudents = async (appliedFilters = {}) => {
+  // Memoize the fetchStudents function with useCallback
+  const fetchStudents = useCallback(async (appliedFilters = {}) => {
     try {
       // Log the applied filters to check what's being passed to the backend
       console.log('Applied filters:', appliedFilters);
+      
+      // Create a copy of the filters to modify
+      const filteredParams = { ...appliedFilters };
+      
+      // Apply grade level restriction for grade level coordinators
+      if (roleName === 'grade_level_coordinator' && coordinatorGradeLevel) {
+        filteredParams.grade = coordinatorGradeLevel.toString();
+      }
   
       // Make the API request to get students with the applied filters
       const response = await axios.get('http://localhost:3001/students/pending-enrollment', {
-        params: appliedFilters
+        params: filteredParams
       });
   
       // Log the full response from the server to see if it's working as expected
@@ -70,13 +65,21 @@ function EnrollmentRequests() {
       sortedStudents.forEach(student => {
         console.log(`Student ${student.student_id} status: ${student.enrollment_status}, type: ${typeof student.enrollment_status}`);
       });
+      
+      // Apply coordinator grade level filtering to the results if needed
+      let filteredResults = sortedStudents;
+      if (roleName === 'grade_level_coordinator' && coordinatorGradeLevel) {
+        filteredResults = sortedStudents.filter(student => 
+          student.grade_level.toString() === coordinatorGradeLevel.toString()
+        );
+      }
   
       // Update the students and filteredStudents state
-      setStudents(sortedStudents);
-      setFilteredStudents(sortedStudents);
+      setStudents(filteredResults);
+      setFilteredStudents(filteredResults);
   
       // Log the state after setting it to ensure it's correct
-      console.log('Students state updated:', sortedStudents);
+      console.log('Students state updated:', filteredResults);
   
     } catch (error) {
       // Log the error in detail if the request fails
@@ -88,7 +91,35 @@ function EnrollmentRequests() {
         console.error('Error setting up request:', error.message);
       }
     }
-  };
+  }, [roleName, coordinatorGradeLevel]);
+
+  useEffect(() => {
+    fetchSchoolYears();
+    fetchSections();
+  }, []);
+  
+  // Add useEffect hook to fetch students when fetchStudents function changes
+  useEffect(() => {
+    fetchStudents();
+  }, [fetchStudents]);
+  
+  // Add useEffect hook to refresh data when coordinatorGradeLevel changes
+  useEffect(() => {
+    if (coordinatorGradeLevel) {
+      // Refresh student data with the coordinator's grade level filter
+      fetchStudents({ grade: coordinatorGradeLevel.toString() });
+    }
+  }, [coordinatorGradeLevel, fetchStudents]);
+
+  useEffect(() => {
+    if (filters.grade) {
+      // Filter sections based on the selected grade level
+      const sectionsForGrade = sections.filter(section => String(section.grade_level) === String(filters.grade));
+      setFilteredSections(sectionsForGrade);
+    } else {
+      setFilteredSections(sections);
+    }
+  }, [filters.grade, sections]);
 
   const fetchSchoolYears = async () => {
     try {
@@ -118,6 +149,11 @@ function EnrollmentRequests() {
 };
 
 const handleFilterChange = (type, value) => {
+    // Don't allow changing grade for grade level coordinators
+    if (type === 'grade' && roleName === 'grade_level_coordinator' && coordinatorGradeLevel) {
+      return;
+    }
+    
     setFilters(prevFilters => ({
         ...prevFilters,
         [type]: value
@@ -130,9 +166,16 @@ const applyFilters = () => {
     if (filters.school_year) {
         filtered = filtered.filter(student => String(student.school_year) === filters.school_year);
     }
-    if (filters.grade) {
-        filtered = filtered.filter(student => student.grade_level === filters.grade);
+    
+    // For grade level coordinators, always filter by their assigned grade level
+    if (roleName === 'grade_level_coordinator' && coordinatorGradeLevel) {
+        filtered = filtered.filter(student => student.grade_level.toString() === coordinatorGradeLevel.toString());
     }
+    // Otherwise, apply the selected grade filter
+    else if (filters.grade) {
+        filtered = filtered.filter(student => student.grade_level.toString() === filters.grade.toString());
+    }
+    
     if (filters.section) {
         filtered = filtered.filter(student => String(student.section_id) === filters.section);
     }
@@ -163,6 +206,22 @@ const validateStudent = async (studentId, action, sectionId) => {
   try {
     console.log(`Validating enrollment for student ID: ${studentId} with action: ${action}`);
 
+    // If the user is a grade level coordinator, verify the student is in their grade level
+    if (roleName === 'grade_level_coordinator' && coordinatorGradeLevel) {
+      // Find the student in the students array
+      const student = students.find(s => s.student_id === studentId);
+      if (!student) {
+        alert('Student not found');
+        return;
+      }
+      
+      // Check if the student's grade level matches the coordinator's grade level
+      if (student.grade_level.toString() !== coordinatorGradeLevel.toString()) {
+        alert('You can only manage students in your assigned grade level');
+        return;
+      }
+    }
+
     // Send the POST request with the action (approve/reject) and section ID
     const response = await axios.post('http://localhost:3001/validate-enrollment', { 
       studentId, 
@@ -174,7 +233,7 @@ const validateStudent = async (studentId, action, sectionId) => {
     if (response.status === 200) {
       console.log('Validation successful:', response.data);
       alert(response.data.message);
-      await fetchStudents(); // Refresh the student list after validation
+      fetchStudents(); // Refresh the student list after validation
     } else {
       console.warn('Failed to validate enrollment, non-200 response:', response);
       alert('Failed to validate enrollment.');
@@ -196,13 +255,28 @@ const validateStudent = async (studentId, action, sectionId) => {
 
 const approveElective = async (studentElectiveId) => {
   try {
+      // First find the corresponding student to check their grade level
+      const elective = students.find(s => s.student_elective_id === studentElectiveId);
+      if (!elective) {
+          alert('Student elective information not found');
+          return;
+      }
+      
+      // If user is coordinator, check if this is their grade level
+      if (roleName === 'grade_level_coordinator' && coordinatorGradeLevel) {
+          if (elective.grade_level.toString() !== coordinatorGradeLevel.toString()) {
+              alert('You can only approve electives for students in your assigned grade level');
+              return;
+          }
+      }
+      
       const response = await axios.post('http://localhost:3001/approve-elective', {
           studentElectiveId
       });
 
       if (response.data.message) {
           alert(response.data.message);
-          await fetchStudents(); // Refresh student list after approval
+          fetchStudents(); // Refresh student list after approval
       } else {
           alert('Failed to approve elective.');
       }
@@ -235,7 +309,6 @@ const approveElective = async (studentElectiveId) => {
   const currentStudents = filteredStudents.slice(indexOfFirstStudent, indexOfLastStudent);
 
   const totalPages = Math.ceil(filteredStudents.length / studentsPerPage);
-  const [roleName, setRoleName] = useState('');
 
   useEffect(() => {
     const userId = localStorage.getItem('userId'); // Retrieve userId from localStorage
@@ -260,6 +333,11 @@ const approveElective = async (studentElectiveId) => {
         console.log('Response received:', response.data); // Debugging log
         setRoleName(response.data.role_name);
         console.log('Role name set to:', response.data.role_name); // Debugging log
+        
+        // If user is a grade level coordinator, fetch their assigned grade level
+        if (response.data.role_name === 'grade_level_coordinator') {
+          fetchCoordinatorGradeLevel(userId);
+        }
       } else {
         console.error('Failed to fetch role name. Response status:', response.status);
       }
@@ -274,6 +352,19 @@ const approveElective = async (studentElectiveId) => {
     }
   };
 
+  const fetchCoordinatorGradeLevel = async (userId) => {
+    try {
+      const response = await axios.get(`http://localhost:3001/coordinator-grade-level/${userId}`);
+      if (response.status === 200 && response.data.gradeLevel) {
+        console.log('Coordinator grade level:', response.data.gradeLevel);
+        setCoordinatorGradeLevel(response.data.gradeLevel);
+        // Auto-set the grade filter to the coordinator's assigned grade level
+        setFilters(prev => ({ ...prev, grade: response.data.gradeLevel.toString() }));
+      }
+    } catch (error) {
+      console.error('Error fetching coordinator grade level:', error);
+    }
+  };
 
   // Handle changes in editable fields
   const handleEditChange = (e) => {
@@ -411,7 +502,7 @@ const approveElective = async (studentElectiveId) => {
 
   
 
-  const EnrollmentModal = ({ student, onClose, onEnroll }) => {
+  const EnrollmentModal = ({ student, roleName, coordinatorGradeLevel, onClose, onEnroll }) => {
     const [requirementsChecked, setRequirementsChecked] = useState(false);
     const [loading, setLoading] = useState(true);
     const [availableSections, setAvailableSections] = useState([]);
@@ -443,10 +534,29 @@ const approveElective = async (studentElectiveId) => {
       try {
         // Fetch sections for the student's grade level
         const response = await axios.get('http://localhost:3001/sections/active');
-        // Filter sections to only include those matching the student's grade level
-        const filteredSections = response.data.filter(
+        
+        // First check if we need to filter by coordinator's grade level
+        let sectionsToFilter = response.data;
+        if (roleName === 'grade_level_coordinator' && coordinatorGradeLevel) {
+          // Make sure the student's grade level matches the coordinator's grade level
+          if (student.grade_level.toString() !== coordinatorGradeLevel.toString()) {
+            console.warn('Student grade level does not match coordinator grade level');
+            setAvailableSections([]);
+            setSelectedSection(null);
+            return;
+          }
+          
+          // Filter sections to only include those matching the coordinator's grade level
+          sectionsToFilter = response.data.filter(
+            section => section.grade_level.toString() === coordinatorGradeLevel.toString()
+          );
+        }
+        
+        // Then filter by student's grade level (which should match coordinator's if applicable)
+        const filteredSections = sectionsToFilter.filter(
           section => section.grade_level === student.grade_level
         );
+        
         setAvailableSections(filteredSections);
         
         // Set to empty string for auto-assign as default only if sections are available
@@ -613,6 +723,22 @@ const approveElective = async (studentElectiveId) => {
   };
 
   const handleRejectClick = (studentId, sectionId) => {
+    // If the user is a grade level coordinator, verify the student is in their grade level
+    if (roleName === 'grade_level_coordinator' && coordinatorGradeLevel) {
+      // Find the student in the students array
+      const student = students.find(s => s.student_id === studentId);
+      if (!student) {
+        alert('Student not found');
+        return;
+      }
+      
+      // Check if the student's grade level matches the coordinator's grade level
+      if (student.grade_level.toString() !== coordinatorGradeLevel.toString()) {
+        alert('You can only manage students in your assigned grade level');
+        return;
+      }
+    }
+
     const student = students.find(s => s.student_id === studentId);
     setStudentToReject({ studentId, sectionId, student });
     setShowRejectModal(true);
@@ -662,11 +788,16 @@ const approveElective = async (studentElectiveId) => {
             className="pending-enrollment-select"
             value={filters.grade}
             onChange={(e) => handleFilterChange('grade', e.target.value)}
+            disabled={roleName === 'grade_level_coordinator' && coordinatorGradeLevel}
           >
             <option value="">Select Grade</option>
-            {[7, 8, 9, 10].map((grade) => (
-              <option key={grade} value={grade}>Grade {grade}</option>
-            ))}
+            {roleName === 'grade_level_coordinator' && coordinatorGradeLevel ? (
+              <option value={coordinatorGradeLevel}>Grade {coordinatorGradeLevel}</option>
+            ) : (
+              [7, 8, 9, 10].map((grade) => (
+                <option key={grade} value={grade}>Grade {grade}</option>
+              ))
+            )}
           </select>
           <select
             className="pending-enrollment-select"
@@ -762,6 +893,8 @@ const approveElective = async (studentElectiveId) => {
       {showRequirementsModal && selectedStudent && (
         <EnrollmentModal  
           student={selectedStudent}
+          roleName={roleName}
+          coordinatorGradeLevel={coordinatorGradeLevel}
           onClose={() => {
             setShowRequirementsModal(false);
             setSelectedStudent(null);

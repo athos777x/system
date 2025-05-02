@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Pagination from '../Utilities/pagination';
 import axios from 'axios';
@@ -16,6 +16,7 @@ function StudentManagement() {
   const [showCancelModal, setShowCancelModal] = useState(false); // Tracks cancel confirmation modal
   const [showAddCancelModal, setShowAddCancelModal] = useState(false); // New state for add form cancel confirmation
   const [errors, setErrors] = useState({});
+  const [roleName, setRoleName] = useState('');
 
   const [schoolYears, setSchoolYears] = useState([]);
   const [sections, setSections] = useState([]);
@@ -27,6 +28,9 @@ function StudentManagement() {
     section: '',
     status: ''
   });
+  
+  // Add state for coordinator's grade level
+  const [coordinatorGradeLevel, setCoordinatorGradeLevel] = useState(null);
 
   const [isAdding, setIsAdding] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -60,12 +64,13 @@ function StudentManagement() {
     brigada_eskwela: '0',
     brigada_remarks: '',
     status: 'active',
-    archive_status: 'unarchive'
+    active_status: 'unarchive',
+    user_id: ''
   });
 
   // Add this state for tab management
   const [activeTab, setActiveTab] = useState('basic');
-
+  
   const navigate = useNavigate();
 
   // Add this constant for education levels near the top of the file, after the imports
@@ -138,41 +143,8 @@ function StudentManagement() {
     return "";
   };
 
-  useEffect(() => {
-    fetchSchoolYears();
-    fetchSections();
-  }, []);
-
-  useEffect(() => {
-    if (filters.grade) {
-      // Filter sections based on the selected grade level
-      const sectionsForGrade = sections.filter(section => String(section.grade_level) === String(filters.grade));
-      setFilteredSections(sectionsForGrade);
-    } else {
-      setFilteredSections(sections);
-    }
-  }, [filters.grade, sections]);
-
-  const fetchSchoolYears = async () => {
-    try {
-      const response = await axios.get('http://localhost:3001/api/school_years');
-      setSchoolYears(response.data);
-    } catch (error) {
-      console.error('Error fetching school years:', error);
-    }
-  };
-
-  const fetchSections = async () => {
-    try {
-      const response = await axios.get('http://localhost:3001/sections');
-      setSections(response.data);
-      setFilteredSections(response.data);
-    } catch (error) {
-      console.error('Error fetching sections:', error);
-    }
-  };
-
-  const triggerCronJob = async () => {
+  // Memoize the triggerCronJob function
+  const triggerCronJob = useCallback(async () => {
     try {
       const response = await axios.put('http://localhost:3001/cron/level-up-students');
       
@@ -184,9 +156,10 @@ function StudentManagement() {
     } catch (error) {
       console.error('Error triggering cron job:', error);
     }
-  };
+  }, []);
 
-  const fetchStudents = async (appliedFilters = {}) => {
+  // Memoize the fetchStudents function with useCallback
+  const fetchStudents = useCallback(async (appliedFilters = {}) => {
     try {
       console.log('Original filters:', appliedFilters);
   
@@ -214,6 +187,11 @@ function StudentManagement() {
       if (userId) {
         filteredParams.user_id = userId; // Add user_id to the request parameters
       }
+      
+      // Apply grade level restriction for grade level coordinators
+      if (roleName === 'grade_level_coordinator' && coordinatorGradeLevel) {
+        filteredParams.grade = coordinatorGradeLevel.toString();
+      }
   
       // ✅ Determine the endpoint based on roleName
       const endpoint = roleName === 'class_adviser' 
@@ -239,9 +217,65 @@ function StudentManagement() {
         console.error('Error setting up request:', error.message);
       }
     }
-    
+  }, [roleName, coordinatorGradeLevel, triggerCronJob]);
+
+  useEffect(() => {
+    const userId = localStorage.getItem('userId'); // Retrieve userId from localStorage
+    if (userId) {
+      console.log(`Retrieved userId from localStorage: ${userId}`); // Debugging log
+      fetchUserRole(userId);
+    } else {
+      console.error('No userId found in localStorage');
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchSchoolYears();
+    fetchSections();
+  }, []);
+
+  // Add useEffect hook to fetch students when fetchStudents function changes
+  useEffect(() => {
+    // Perform initial fetch of students data
+    fetchStudents();
+  }, [fetchStudents]);
+
+  useEffect(() => {
+    if (filters.grade) {
+      // Filter sections based on the selected grade level
+      const sectionsForGrade = sections.filter(section => String(section.grade_level) === String(filters.grade));
+      setFilteredSections(sectionsForGrade);
+    } else {
+      setFilteredSections(sections);
+    }
+  }, [filters.grade, sections]);
+
+  // Add useEffect hook to refresh data when coordinatorGradeLevel changes
+  useEffect(() => {
+    if (coordinatorGradeLevel) {
+      // Refresh student data with the coordinator's grade level filter
+      fetchStudents({ ...filters, grade: coordinatorGradeLevel.toString() });
+    }
+  }, [coordinatorGradeLevel, fetchStudents, filters]);
+
+  const fetchSchoolYears = async () => {
+    try {
+      const response = await axios.get('http://localhost:3001/api/school_years');
+      setSchoolYears(response.data);
+    } catch (error) {
+      console.error('Error fetching school years:', error);
+    }
   };
-  
+
+  const fetchSections = async () => {
+    try {
+      const response = await axios.get('http://localhost:3001/sections');
+      setSections(response.data);
+      setFilteredSections(response.data);
+    } catch (error) {
+      console.error('Error fetching sections:', error);
+    }
+  };
 
   const startAdding = () => {
     setIsAdding(true);
@@ -757,17 +791,6 @@ const handleArchive = () => {
   const currentStudents = filteredStudents.slice(indexOfFirstStudent, indexOfLastStudent);
 
   const totalPages = Math.ceil(filteredStudents.length / studentsPerPage);
-  const [roleName, setRoleName] = useState('');
-
-  useEffect(() => {
-    const userId = localStorage.getItem('userId'); // Retrieve userId from localStorage
-    if (userId) {
-      console.log(`Retrieved userId from localStorage: ${userId}`); // Debugging log
-      fetchUserRole(userId);
-    } else {
-      console.error('No userId found in localStorage');
-    }
-  }, []);
 
   const fetchUserRole = async (userId) => {
     try {
@@ -777,6 +800,11 @@ const handleArchive = () => {
         console.log('Response received:', response.data); // Debugging log
         setRoleName(response.data.role_name);
         console.log('Role name set to:', response.data.role_name); // Debugging log
+        
+        // If user is a grade level coordinator, fetch their assigned grade level
+        if (response.data.role_name === 'grade_level_coordinator') {
+          fetchCoordinatorGradeLevel(userId);
+        }
       } else {
         console.error('Failed to fetch role name. Response status:', response.status);
       }
@@ -788,6 +816,20 @@ const handleArchive = () => {
       } else {
         console.error('Error setting up request:', error.message);
       }
+    }
+  };
+
+  const fetchCoordinatorGradeLevel = async (userId) => {
+    try {
+      const response = await axios.get(`http://localhost:3001/coordinator-grade-level/${userId}`);
+      if (response.status === 200 && response.data.gradeLevel) {
+        console.log('Coordinator grade level:', response.data.gradeLevel);
+        setCoordinatorGradeLevel(response.data.gradeLevel);
+        // Auto-set the grade filter to the coordinator's assigned grade level
+        setFilters(prev => ({ ...prev, grade: response.data.gradeLevel.toString() }));
+      }
+    } catch (error) {
+      console.error('Error fetching coordinator grade level:', error);
     }
   };
 
@@ -1140,6 +1182,8 @@ const handleArchive = () => {
         filteredSections={filteredSections} 
         filters={filters}
         setFilters={setFilters}
+        coordinatorGradeLevel={coordinatorGradeLevel}
+        roleName={roleName}
       />
 
       <div className="student-mgmt-table-container">

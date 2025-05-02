@@ -54,78 +54,11 @@ CREATE TABLE `brigada_details` (
   `school_year_id` int(11) DEFAULT NULL,
   `brigada_status` enum('Attended','Not Attended') DEFAULT NULL,
   PRIMARY KEY (`brigada_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8;
 
 /*Data for the table `brigada_details` */
 
-insert  into `brigada_details`(`brigada_id`,`student_id`,`remarks`,`school_year_id`,`brigada_status`) values (3,1,'',1,'Attended'),(4,2,'afasfa',1,'Attended'),(5,3,'',1,'Not Attended'),(6,4,'',1,'Not Attended'),(7,5,'',1,'Not Attended');
-
-/*Table structure for table `components` */
-
-DROP TABLE IF EXISTS `components`;
-
-CREATE TABLE `components` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `component_id` int(11) DEFAULT NULL,
-  `scores` int(11) DEFAULT NULL,
-  `total_items` int(11) DEFAULT NULL,
-  `remarks` varchar(255) DEFAULT NULL,
-  `student_id` int(11) DEFAULT NULL,
-  `subject_name` varchar(255) DEFAULT NULL,
-  `period` int(11) DEFAULT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-/*Data for the table `components` */
-
-/*Table structure for table `components_name` */
-
-DROP TABLE IF EXISTS `components_name`;
-
-CREATE TABLE `components_name` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `component_name` varchar(255) DEFAULT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-/*Data for the table `components_name` */
-
-/*Table structure for table `dtr` */
-
-DROP TABLE IF EXISTS `dtr`;
-
-CREATE TABLE `dtr` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `stud_id` int(11) DEFAULT NULL,
-  `status` enum('P','A','L') DEFAULT NULL,
-  `log_date` datetime DEFAULT NULL,
-  `subject` int(11) DEFAULT NULL,
-  `yr` int(11) DEFAULT NULL,
-  `level` int(11) DEFAULT NULL,
-  `section` int(11) DEFAULT NULL,
-  `sy` int(11) DEFAULT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-/*Data for the table `dtr` */
-
-/*Table structure for table `elective` */
-
-DROP TABLE IF EXISTS `elective`;
-
-CREATE TABLE `elective` (
-  `elective_id` int(11) NOT NULL AUTO_INCREMENT,
-  `name` varchar(255) DEFAULT NULL,
-  `max_capacity` int(35) DEFAULT NULL,
-  `employee_id` int(11) DEFAULT NULL,
-  `status` enum('active','inactive') DEFAULT 'active',
-  `archive_status` enum('unarchive','archive') DEFAULT 'unarchive',
-  `school_year_id` int(11) DEFAULT NULL,
-  `description` varchar(200) DEFAULT NULL,
-  PRIMARY KEY (`elective_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-/*Data for the table `elective` */
+insert  into `brigada_details`(`brigada_id`,`student_id`,`remarks`,`school_year_id`,`brigada_status`) values (3,1,'',1,'Attended'),(4,2,'afasfa',1,'Attended'),(5,3,'',1,'Not Attended'),(6,4,'',1,'Not Attended'),(7,5,'',1,'Not Attended'),(8,6,'',1,'Not Attended'),(9,7,'',1,'Not Attended'),(10,8,'',1,'Not Attended'),(11,9,'',1,'Not Attended'),(12,10,'',1,'Not Attended'),(13,11,'',1,'Not Attended'),(14,12,'',1,'Not Attended');
 
 /*Table structure for table `employee` */
 
@@ -159,24 +92,6 @@ CREATE TABLE `employee` (
 
 insert  into `employee`(`employee_id`,`firstname`,`lastname`,`middlename`,`status`,`contact_number`,`address`,`year_started`,`role_name`,`role_id`,`user_id`,`archive_status`,`gender`,`birthday`,`email_address`) values (1,'Dante','Roe','A.','active','09348394384','123 Main St','2020','principal',1,5,'unarchive','Male','2025-02-13',NULL),(2,'Zane','Youth','B.','active','0987654321','456 Elm St','2021','subject_teacher',3,6,'unarchive','Male','2025-06-05',NULL),(3,'John','Doe','T.','active','1234567890','123 Oak St','2022','class_adviser',4,7,'unarchive','Male','2025-04-10',NULL),(4,'Jane','Smith','A.','active','09234234324','456 Pine St','2023','grade_level_coordinator',5,8,'unarchive','Male','2020-06-25',NULL),(5,'Alaine','Johnson','E.','active','09343984938','789 Maple St','2023','registrar',6,9,'unarchive','Male','2025-01-13',NULL),(6,'Emily','Brown','C.','active','0987654321','789 Birch St','2023','academic_coordinator',7,10,'unarchive','Male','2015-07-17',NULL),(7,'Michael','White','D.','active','1234567890','456 Oak St','2023','subject_coordinator',8,11,'unarchive','Male','2015-07-17',NULL),(8,'Maria','Reyes','Angelica','active','09111234567','123 Main St','2020','subject_teacher',3,22,'unarchive','Female','2000-04-05','mariareyes@gmail.com');
 
-/*Table structure for table `employee_roles` */
-
-DROP TABLE IF EXISTS `employee_roles`;
-
-CREATE TABLE `employee_roles` (
-  `employee_role_id` int(11) NOT NULL AUTO_INCREMENT,
-  `employee_id` int(11) DEFAULT NULL,
-  `role_id` int(11) DEFAULT NULL,
-  `employee_name` varchar(255) DEFAULT NULL,
-  PRIMARY KEY (`employee_role_id`),
-  KEY `fk_employee` (`employee_id`),
-  KEY `fk_role_in_employee_roles` (`role_id`),
-  CONSTRAINT `fk_employee` FOREIGN KEY (`employee_id`) REFERENCES `employee` (`employee_id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `fk_role_in_employee_roles` FOREIGN KEY (`role_id`) REFERENCES `roles` (`role_id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-/*Data for the table `employee_roles` */
-
 /*Table structure for table `enrollment` */
 
 DROP TABLE IF EXISTS `enrollment`;
@@ -202,11 +117,27 @@ CREATE TABLE `enrollment` (
   KEY `fk_enrollment_school_year_id` (`school_year_id`),
   CONSTRAINT `enrollment_ibfk_2` FOREIGN KEY (`section_id`) REFERENCES `section` (`section_id`),
   CONSTRAINT `enrollment_ibfk_3` FOREIGN KEY (`enrolling_officer_id`) REFERENCES `employee` (`employee_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8;
 
 /*Data for the table `enrollment` */
 
-insert  into `enrollment`(`enrollment_id`,`student_id`,`section_id`,`enrolling_officer_id`,`enrollment_date`,`grade_level`,`enrollee_type`,`brigada_id`,`enrollment_status`,`student_name`,`student_school_year_id`,`school_year_id`) values (4,1,1,NULL,'2025-04-18','7','Regular',3,'active','angel j. bautista',NULL,1),(5,2,1,NULL,'2025-04-18','7','Regular',4,'active','rephaim celix l. domapias',NULL,1),(9,6,NULL,NULL,'2025-04-20','7','Regular',8,'inactive','ewq q. qwwqeqw',NULL,1),(10,7,NULL,NULL,'2025-04-20','7','Regular',9,'inactive','fdgdf h. dsfds',NULL,1),(11,8,NULL,NULL,'2025-04-20','8','Regular',10,'inactive','dfdsfsd s. dsfsdf',NULL,1),(12,3,1,NULL,'2025-04-30','7','Regular',5,'active','hannah j. clerigo',NULL,1),(13,4,NULL,NULL,'2025-04-30','7','Regular',6,'pending','test t. tet',NULL,1),(14,5,NULL,NULL,'2025-04-30','7','Regular',7,'pending','tsfdsfs t. terst',NULL,1);
+insert  into `enrollment`(`enrollment_id`,`student_id`,`section_id`,`enrolling_officer_id`,`enrollment_date`,`grade_level`,`enrollee_type`,`brigada_id`,`enrollment_status`,`student_name`,`student_school_year_id`,`school_year_id`) values (4,1,1,NULL,'2025-04-18','7','Regular',3,'active','angel j. bautista',NULL,1),(5,2,1,NULL,'2025-04-18','7','Regular',4,'active','rephaim celix l. domapias',NULL,1),(9,6,NULL,NULL,'2025-04-20','7','Regular',8,'inactive','ewq q. qwwqeqw',NULL,1),(10,7,NULL,NULL,'2025-04-20','7','Regular',9,'inactive','fdgdf h. dsfds',NULL,1),(11,8,NULL,NULL,'2025-04-20','8','Regular',10,'pending','dfdsfsd s. dsfsdf',NULL,1),(12,3,1,NULL,'2025-04-30','7','Regular',5,'active','hannah j. clerigo',NULL,1),(13,4,1,NULL,'2025-04-30','7','Regular',6,'active','test t. tet',NULL,1),(14,5,2,NULL,'2025-04-30','7','Regular',7,'active','tsfdsfs t. terst',NULL,1),(15,6,NULL,NULL,'2025-04-30','7','Regular',8,'inactive','peligrino j. noel',NULL,1),(16,7,NULL,NULL,'2025-04-30','7','Regular',9,'inactive','asdas s. weewdsa',NULL,1),(17,8,NULL,NULL,'2025-04-30','8','Regular',10,'pending','dfsd d. sdf',NULL,1),(18,9,NULL,NULL,'2025-04-30','9','Regular',11,'inactive','jose j. rizal',NULL,1),(19,10,NULL,NULL,'2025-04-30','9','Regular',12,'inactive','andres l. bonifacio',NULL,1),(20,11,NULL,NULL,'2025-04-30','10','Regular',13,'pending','emilio m. aguinaldo',NULL,1),(21,12,NULL,NULL,'2025-05-01','8','Regular',14,'pending','juan a. luna',NULL,1);
+
+/*Table structure for table `grade_level_assigned` */
+
+DROP TABLE IF EXISTS `grade_level_assigned`;
+
+CREATE TABLE `grade_level_assigned` (
+  `grade_level_assigned_id` int(12) NOT NULL AUTO_INCREMENT,
+  `employee_id` int(12) DEFAULT NULL,
+  `grade_level` int(12) DEFAULT NULL,
+  `school_year_id` int(12) DEFAULT NULL,
+  PRIMARY KEY (`grade_level_assigned_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
+
+/*Data for the table `grade_level_assigned` */
+
+insert  into `grade_level_assigned`(`grade_level_assigned_id`,`employee_id`,`grade_level`,`school_year_id`) values (1,4,8,1);
 
 /*Table structure for table `grades` */
 
@@ -238,68 +169,6 @@ CREATE TABLE `grades` (
 /*Data for the table `grades` */
 
 insert  into `grades`(`grades_id`,`schedule_id`,`enrollment_id`,`grade_level`,`subject_name`,`grade`,`period`,`remarks`,`student_id`,`student_name`,`school_year_id`,`section_id`) values (1,NULL,NULL,7,'English 7',89,1,NULL,1,'Angel Bautista',1,1),(2,NULL,NULL,7,'English 7',85,2,NULL,1,'Angel Bautista',1,1),(3,NULL,NULL,7,'English 7',82,3,NULL,1,'Angel Bautista',1,1),(4,NULL,NULL,7,'English 7',72,4,NULL,1,'Angel Bautista',1,1),(5,NULL,NULL,7,'English 7',82,1,NULL,2,'Rephaim Celix Domapias',1,1),(6,NULL,NULL,7,'English 7',89,2,NULL,2,'Rephaim Celix Domapias',1,1),(7,NULL,NULL,7,'English 7',83,3,NULL,2,'Rephaim Celix Domapias',1,1),(8,NULL,NULL,7,'English 7',87,4,NULL,2,'Rephaim Celix Domapias',1,1),(9,NULL,NULL,7,'Physical Education 7',92,1,NULL,2,'Rephaim Celix Domapias',1,1),(10,NULL,NULL,7,'Physical Education 7',95,2,NULL,2,'Rephaim Celix Domapias',1,1),(11,NULL,NULL,7,'Physical Education 7',93,3,NULL,2,'Rephaim Celix Domapias',1,1),(12,NULL,NULL,7,'Physical Education 7',94,4,NULL,2,'Rephaim Celix Domapias',1,1),(13,NULL,NULL,7,'Physical Education 7',89,1,NULL,1,'Angel Bautista',1,1),(14,NULL,NULL,7,'Physical Education 7',95,2,NULL,1,'Angel Bautista',1,1),(15,NULL,NULL,7,'Physical Education 7',98,3,NULL,1,'Angel Bautista',1,1),(16,NULL,NULL,7,'Physical Education 7',89,4,NULL,1,'Angel Bautista',1,1),(17,NULL,NULL,7,'Spanish101',92,1,NULL,1,'Angel Bautista',1,1),(18,NULL,NULL,7,'Spanish101',86,2,NULL,1,'Angel Bautista',1,1),(19,NULL,NULL,7,'Spanish101',81,3,NULL,1,'Angel Bautista',1,1),(20,NULL,NULL,7,'Spanish101',83,4,NULL,1,'Angel Bautista',1,1);
-
-/*Table structure for table `grades_detail` */
-
-DROP TABLE IF EXISTS `grades_detail`;
-
-CREATE TABLE `grades_detail` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `grades_id` int(11) DEFAULT NULL,
-  `written_works` float DEFAULT NULL,
-  `performance_task` float DEFAULT NULL,
-  `quarterly_assessment` float DEFAULT NULL,
-  `student_id` int(11) DEFAULT NULL,
-  `period` int(11) DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `unique_grade_period` (`grades_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-/*Data for the table `grades_detail` */
-
-/*Table structure for table `marks` */
-
-DROP TABLE IF EXISTS `marks`;
-
-CREATE TABLE `marks` (
-  `student_id` int(11) NOT NULL,
-  `sy` varchar(10) DEFAULT NULL,
-  `subject_name` varchar(255) DEFAULT NULL,
-  `period` int(11) DEFAULT NULL,
-  `grade` float DEFAULT NULL,
-  `submitted_by` int(11) DEFAULT NULL,
-  PRIMARY KEY (`student_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-/*Data for the table `marks` */
-
-/*Table structure for table `nutrition` */
-
-DROP TABLE IF EXISTS `nutrition`;
-
-CREATE TABLE `nutrition` (
-  `nutrition_id` int(11) NOT NULL AUTO_INCREMENT,
-  `enrollment_id` int(12) DEFAULT NULL,
-  `height` double(5,2) DEFAULT NULL,
-  `weight` double(5,2) DEFAULT NULL,
-  PRIMARY KEY (`nutrition_id`),
-  KEY `enrollment_id` (`enrollment_id`),
-  CONSTRAINT `nutrition_ibfk_1` FOREIGN KEY (`enrollment_id`) REFERENCES `enrollment` (`enrollment_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-/*Data for the table `nutrition` */
-
-/*Table structure for table `period` */
-
-DROP TABLE IF EXISTS `period`;
-
-CREATE TABLE `period` (
-  `period` int(11) NOT NULL AUTO_INCREMENT,
-  `label` varchar(255) DEFAULT NULL,
-  KEY `period` (`period`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-/*Data for the table `period` */
 
 /*Table structure for table `roles` */
 
@@ -380,11 +249,11 @@ CREATE TABLE `section` (
   `section_adviser` int(11) DEFAULT NULL,
   PRIMARY KEY (`section_id`),
   KEY `fk_section_school_year_id` (`school_year_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8;
 
 /*Data for the table `section` */
 
-insert  into `section`(`section_id`,`section_name`,`grade_level`,`status`,`max_capacity`,`school_year_id`,`room_number`,`archive_status`,`section_adviser`) values (1,'Aquila','7','active',50,1,200,'unarchive',NULL),(2,'Phoenix','7','active',10,1,222,'unarchive',NULL);
+insert  into `section`(`section_id`,`section_name`,`grade_level`,`status`,`max_capacity`,`school_year_id`,`room_number`,`archive_status`,`section_adviser`) values (1,'Aquila','7','active',50,1,200,'unarchive',NULL),(2,'Phoenix','7','active',10,1,222,'unarchive',NULL),(3,'Zephyr','9','active',50,1,353,'unarchive',NULL),(4,'Libra','8','active',50,1,876,'unarchive',NULL);
 
 /*Table structure for table `section_assigned` */
 
@@ -410,7 +279,7 @@ DROP TABLE IF EXISTS `student`;
 
 CREATE TABLE `student` (
   `student_id` int(12) NOT NULL,
-  `lrn` int(100) DEFAULT NULL,
+  `lrn` varchar(12) DEFAULT NULL,
   `lastname` varchar(30) DEFAULT NULL,
   `middlename` varchar(30) DEFAULT NULL,
   `firstname` varchar(30) DEFAULT NULL,
@@ -457,7 +326,7 @@ CREATE TABLE `student` (
 
 /*Data for the table `student` */
 
-insert  into `student`(`student_id`,`lrn`,`lastname`,`middlename`,`firstname`,`current_yr_lvl`,`birthdate`,`gender`,`age`,`home_address`,`barangay`,`city_municipality`,`province`,`contact_number`,`email_address`,`mother_name`,`father_name`,`parent_address`,`father_occupation`,`mother_occupation`,`annual_hshld_income`,`number_of_siblings`,`father_educ_lvl`,`mother_educ_lvl`,`father_contact_number`,`mother_contact_number`,`id_picture`,`birth_certificate`,`form_138`,`goodmoral_cert`,`rcv_test`,`section_id`,`user_id`,`emergency_number`,`status`,`active_status`,`brigada_id`,`enroll_date`,`emergency_relation`,`emergency_contactperson`) values (1,6343121,'Bautista','J','Angel','7','2015-04-07','Male',10,'','','','','','','','','','','',0.00,0,'','','','',NULL,NULL,NULL,NULL,NULL,1,14,'','active','unarchive',3,'2025-04-18',NULL,''),(2,438937,'Domapias','Lao','Rephaim Celix','7','2015-03-29','Male',10,'','','','','','','','','','','',0.00,0,'','','','',NULL,NULL,NULL,NULL,NULL,1,15,'','active','unarchive',4,'2025-04-18',NULL,''),(3,123213,'Clerigo','J','Hannah','7','2015-04-22','Female',10,'','','','','','','','','','','',0.00,0,'','','','',NULL,NULL,NULL,NULL,NULL,1,23,'','active','unarchive',5,'2025-04-30',NULL,''),(4,2311232,'Tet','Test','Test','7','2015-04-14','Male',10,'','','','','','','','','','','',0.00,0,'','','','',NULL,NULL,NULL,NULL,NULL,NULL,24,'','active','unarchive',6,'2025-04-30',NULL,''),(5,234234234,'Terst','Tetsdf','Tsfdsfs','7','2015-04-06','Male',10,'','','','','','','','','','','',0.00,0,'','','','',NULL,NULL,NULL,NULL,NULL,NULL,25,'','active','unarchive',7,'2025-04-30',NULL,'');
+insert  into `student`(`student_id`,`lrn`,`lastname`,`middlename`,`firstname`,`current_yr_lvl`,`birthdate`,`gender`,`age`,`home_address`,`barangay`,`city_municipality`,`province`,`contact_number`,`email_address`,`mother_name`,`father_name`,`parent_address`,`father_occupation`,`mother_occupation`,`annual_hshld_income`,`number_of_siblings`,`father_educ_lvl`,`mother_educ_lvl`,`father_contact_number`,`mother_contact_number`,`id_picture`,`birth_certificate`,`form_138`,`goodmoral_cert`,`rcv_test`,`section_id`,`user_id`,`emergency_number`,`status`,`active_status`,`brigada_id`,`enroll_date`,`emergency_relation`,`emergency_contactperson`) values (1,'6343121','Bautista','J','Angel','7','2015-04-07','Male',10,'','','','','','','','','','','',0.00,0,'','','','',NULL,NULL,NULL,NULL,NULL,1,14,'','active','unarchive',3,'2025-04-18',NULL,''),(2,'438937','Domapias','Lao','Rephaim Celix','7','2015-03-29','Male',10,'','','','','','','','','','','',0.00,0,'','','','',NULL,NULL,NULL,NULL,NULL,1,15,'','active','unarchive',4,'2025-04-18',NULL,''),(3,'123213','Clerigo','J','Hannah','7','2015-04-22','Female',10,'','','','','','','','','','','',0.00,0,'','','','',NULL,NULL,NULL,NULL,NULL,1,23,'','active','unarchive',5,'2025-04-30',NULL,''),(4,'2311232','Tet','Test','Test','7','2015-04-14','Male',10,'','','','','','','','','','','',0.00,0,'','','','',NULL,NULL,NULL,NULL,NULL,1,24,'','active','unarchive',6,'2025-04-30',NULL,''),(5,'234234234','Terst','Tetsdf','Tsfdsfs','7','2015-04-06','Male',10,'','','','','','','','','','','',0.00,0,'','','','',NULL,NULL,NULL,NULL,NULL,2,25,'','active','unarchive',7,'2025-04-30',NULL,''),(6,'344342','Noel','J','Peligrino','7','2015-04-08','Male',10,'','','','','','','','','','','',0.00,0,'','','','',NULL,NULL,NULL,NULL,NULL,NULL,26,'','active','unarchive',8,'2025-04-30',NULL,''),(7,'576742321321','Weewdsa','Sadsad','Asdas','7','2015-03-26','Male',10,'','','','','','','','','','','',0.00,0,'','','','',NULL,NULL,NULL,NULL,NULL,NULL,27,'','active','unarchive',9,'2025-04-30',NULL,''),(8,'343242','Sdf','Dsfsd','Dfsd','8','2015-03-30','Male',10,'','','','','','','','','','','',0.00,0,'','','','',NULL,NULL,NULL,NULL,NULL,NULL,28,'','active','unarchive',10,'2025-04-30',NULL,''),(9,'123897218372','Rizal','J','Jose','9','2015-03-29','Male',10,'','','','','','','','','','','',0.00,0,'','','','',NULL,NULL,NULL,NULL,NULL,NULL,29,'','active','unarchive',11,'2025-04-30',NULL,''),(10,'323432432424','Bonifacio','L','Andres','9','2015-04-11','Male',10,'','','','','','','','','','','',0.00,0,'','','','',NULL,NULL,NULL,NULL,NULL,NULL,30,'','active','unarchive',12,'2025-04-30',NULL,''),(11,'577567546545','Aguinaldo','M','Emilio','10','2015-04-12','Male',10,'','','','','','','','','','','',0.00,0,'','','','',NULL,NULL,NULL,NULL,NULL,NULL,31,'','active','unarchive',13,'2025-04-30',NULL,''),(12,'232463221422','Luna','A','Juan','8','2015-03-31','Male',10,'','','','','','','','','','','',0.00,0,'','','','',NULL,NULL,NULL,NULL,NULL,NULL,32,'','active','unarchive',14,'2025-05-01',NULL,'');
 
 /*Table structure for table `student_elective` */
 
@@ -477,11 +346,11 @@ CREATE TABLE `student_elective` (
   KEY `student_elective_ibfk_1` (`user_id`),
   KEY `student_elective_ibfk_3` (`student_id`),
   CONSTRAINT `student_elective_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `student` (`user_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8;
 
 /*Data for the table `student_elective` */
 
-insert  into `student_elective`(`student_elective_id`,`user_id`,`elective_id`,`enrollment_status`,`student_id`,`grade_level`,`school_year_id`,`section_id`) values (1,14,3,'approved',1,7,1,1),(3,15,3,'approved',2,7,1,2),(4,23,3,'pending',3,7,1,1);
+insert  into `student_elective`(`student_elective_id`,`user_id`,`elective_id`,`enrollment_status`,`student_id`,`grade_level`,`school_year_id`,`section_id`) values (1,14,3,'approved',1,7,1,1),(3,15,3,'approved',2,7,1,2),(4,23,3,'approved',3,7,1,1),(5,24,3,'rejected',4,7,1,NULL);
 
 /*Table structure for table `student_school_year` */
 
@@ -497,11 +366,11 @@ CREATE TABLE `student_school_year` (
   PRIMARY KEY (`student_school_year_id`),
   KEY `student_id` (`student_id`),
   KEY `school_year_id` (`school_year_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=utf8;
 
 /*Data for the table `student_school_year` */
 
-insert  into `student_school_year`(`student_school_year_id`,`student_id`,`school_year_id`,`status`,`student_name`,`grade_level`) values (3,1,1,'active','angel j. bautista',7),(4,2,1,'active','rephaim celix l. domapias',8),(5,3,1,'active','etest t. test',7),(6,4,1,'pending','twe t. trtwe',7),(7,5,1,'pending','sdfsd f. sadfdsf',7),(8,6,1,'active','ewq q. qwwqeqw',7),(9,7,1,'active','fdgdf h. dsfds',7),(10,8,1,'active','dfdsfsd s. dsfsdf',8),(11,3,1,'active','hannah j. clerigo',7),(12,4,1,'pending','test t. tet',7),(13,5,1,'pending','tsfdsfs t. terst',7);
+insert  into `student_school_year`(`student_school_year_id`,`student_id`,`school_year_id`,`status`,`student_name`,`grade_level`) values (3,1,1,'active','angel j. bautista',7),(4,2,1,'active','rephaim celix l. domapias',8),(5,3,1,'active','etest t. test',7),(6,4,1,'active','twe t. trtwe',7),(7,5,1,'active','sdfsd f. sadfdsf',7),(8,6,1,'active','ewq q. qwwqeqw',7),(9,7,1,'active','fdgdf h. dsfds',7),(10,8,1,'pending','dfdsfsd s. dsfsdf',8),(11,3,1,'active','hannah j. clerigo',7),(12,4,1,'active','test t. tet',7),(13,5,1,'active','tsfdsfs t. terst',7),(14,6,1,'active','peligrino j. noel',7),(15,7,1,'active','asdas s. weewdsa',7),(16,8,1,'pending','dfsd d. sdf',8),(17,9,1,'active','jose j. rizal',9),(18,10,1,'active','andres l. bonifacio',9),(19,11,1,'pending','emilio m. aguinaldo',10),(20,12,1,'pending','juan a. luna',8);
 
 /*Table structure for table `subject` */
 
@@ -588,11 +457,11 @@ CREATE TABLE `users` (
   CONSTRAINT `fk_role_in_users` FOREIGN KEY (`role_id`) REFERENCES `roles` (`role_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `fk_users_role_name` FOREIGN KEY (`role_name`) REFERENCES `roles` (`role_name`),
   CONSTRAINT `users_ibfk_1` FOREIGN KEY (`role_id`) REFERENCES `roles` (`role_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=26 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=33 DEFAULT CHARSET=utf8;
 
 /*Data for the table `users` */
 
-insert  into `users`(`user_id`,`username`,`password`,`role_id`,`role_name`,`password1`,`other_role_name`,`profile_picture_url`) values (1,'admin','adminpass',1,'principal',NULL,NULL,NULL),(5,'dante_r@lnhs.com','dantepass',1,'principal',NULL,'subject_teacher','http://localhost:3001/uploads/profile-pictures/user_5.jpg'),(6,'zane_y@lnhs.com','zanepass',3,'subject_teacher',NULL,NULL,'http://localhost:3001/uploads/profile-pictures/user_6.jpg'),(7,'john_d@lnhs.com','johnpass',4,'class_adviser',NULL,NULL,'http://localhost:3001/uploads/profile-pictures/user_7.jpg'),(8,'jane_s@lnhs.com','janepass',5,'grade_level_coordinator',NULL,NULL,'http://localhost:3001/uploads/profile-pictures/user_8.jpg'),(9,'alice_j@lnhs.com','alicepass',6,'registrar',NULL,NULL,'http://localhost:3001/uploads/profile-pictures/user_9.jpg'),(10,'emily_b@lnhs.com','emilypass',7,'academic_coordinator',NULL,'subject_teacher','http://localhost:3001/uploads/profile-pictures/user_10.jpg'),(11,'michael_w@lnhs.com','michaelpass',8,'subject_coordinator',NULL,NULL,'http://localhost:3001/uploads/profile-pictures/user_11.jpg'),(14,'bautista.angel@lnhs.com','1234',2,'student',NULL,NULL,'http://localhost:3001/uploads/profile-pictures/user_14.jpg'),(15,'domapias.rephaim_celix@lnhs.com','1234',2,'student',NULL,NULL,NULL),(22,'reyes.maria@lnhs.com','1234',3,'subject_teacher','7110eda4d09e062aa5e4a390b0a572ac0d2c0220',NULL,NULL),(23,'clerigo.hannah@lnhs.com','1234',2,'student',NULL,NULL,NULL),(24,'tet.test@lnhs.com','1234',2,'student',NULL,NULL,NULL),(25,'terst.tsfdsfs@lnhs.com','1234',2,'student',NULL,NULL,NULL);
+insert  into `users`(`user_id`,`username`,`password`,`role_id`,`role_name`,`password1`,`other_role_name`,`profile_picture_url`) values (1,'admin','adminpass',1,'principal',NULL,NULL,NULL),(5,'dante_r@lnhs.com','dantepass',1,'principal',NULL,'subject_teacher','http://localhost:3001/uploads/profile-pictures/user_5.jpg'),(6,'zane_y@lnhs.com','zanepass',3,'subject_teacher',NULL,NULL,'http://localhost:3001/uploads/profile-pictures/user_6.jpg'),(7,'john_d@lnhs.com','johnpass',4,'class_adviser',NULL,NULL,'http://localhost:3001/uploads/profile-pictures/user_7.jpg'),(8,'jane_s@lnhs.com','janepass',5,'grade_level_coordinator',NULL,NULL,'http://localhost:3001/uploads/profile-pictures/user_8.jpg'),(9,'alice_j@lnhs.com','alicepass',6,'registrar',NULL,NULL,'http://localhost:3001/uploads/profile-pictures/user_9.jpg'),(10,'emily_b@lnhs.com','emilypass',7,'academic_coordinator',NULL,'subject_teacher','http://localhost:3001/uploads/profile-pictures/user_10.jpg'),(11,'michael_w@lnhs.com','michaelpass',8,'subject_coordinator',NULL,NULL,'http://localhost:3001/uploads/profile-pictures/user_11.jpg'),(14,'bautista.angel@lnhs.com','1234',2,'student',NULL,NULL,'http://localhost:3001/uploads/profile-pictures/user_14.jpg'),(15,'domapias.rephaim_celix@lnhs.com','1234',2,'student',NULL,NULL,NULL),(22,'reyes.maria@lnhs.com','1234',3,'subject_teacher','7110eda4d09e062aa5e4a390b0a572ac0d2c0220',NULL,NULL),(23,'clerigo.hannah@lnhs.com','1234',2,'student',NULL,NULL,NULL),(24,'tet.test@lnhs.com','1234',2,'student',NULL,NULL,NULL),(25,'terst.tsfdsfs@lnhs.com','1234',2,'student',NULL,NULL,NULL),(26,'noel.peligrino@lnhs.com','1234',2,'student',NULL,NULL,NULL),(27,'weewdsa.asdas@lnhs.com','1234',2,'student',NULL,NULL,NULL),(28,'sdf.dfsd@lnhs.com','1234',2,'student',NULL,NULL,NULL),(29,'rizal.jose@lnhs.com','1234',2,'student',NULL,NULL,NULL),(30,'bonifacio.andres@lnhs.com','1234',2,'student',NULL,NULL,NULL),(31,'aguinaldo.emilio@lnhs.com','1234',2,'student',NULL,NULL,NULL),(32,'luna.juan@lnhs.com','1234',2,'student',NULL,NULL,NULL);
 
 /*!50106 set global event_scheduler = 1*/;
 

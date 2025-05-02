@@ -2548,6 +2548,66 @@ app.get('/teacher-grade-level/:teacherId', (req, res) => {
   });
 });
 
+// ENDPOINT USED:
+// SCHEDULE MANAGEMENT PAGE
+app.get('/coordinator-grade-level/:userId', (req, res) => {
+  const userId = req.params.userId;
+  
+  // First, get the employee_id from the user_id
+  const employeeQuery = `
+    SELECT employee_id FROM employee WHERE user_id = ?
+  `;
+  
+  db.query(employeeQuery, [userId], (err, employeeResults) => {
+    if (err) {
+      console.error('Error fetching employee ID:', err);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+    
+    if (employeeResults.length === 0) {
+      return res.status(404).json({ error: 'Employee not found' });
+    }
+    
+    const employeeId = employeeResults[0].employee_id;
+    
+    // Get the active school year
+    const schoolYearQuery = `SELECT school_year_id FROM school_year WHERE status = 'active'`;
+    
+    db.query(schoolYearQuery, (err, schoolYearResults) => {
+      if (err) {
+        console.error('Error fetching active school year:', err);
+        return res.status(500).json({ error: 'Internal server error' });
+      }
+      
+      if (schoolYearResults.length === 0) {
+        return res.status(404).json({ error: 'No active school year found' });
+      }
+      
+      const schoolYearId = schoolYearResults[0].school_year_id;
+      
+      // Get the grade level assigned to this coordinator for the active school year
+      const query = `
+        SELECT grade_level 
+        FROM grade_level_assigned 
+        WHERE employee_id = ? AND school_year_id = ?
+      `;
+      
+      db.query(query, [employeeId, schoolYearId], (err, results) => {
+        if (err) {
+          console.error('Error fetching coordinator grade level:', err);
+          return res.status(500).json({ error: 'Internal server error' });
+        }
+        
+        if (results.length === 0) {
+          return res.json({ gradeLevel: null });
+        }
+        
+        res.json({ gradeLevel: results[0].grade_level });
+      });
+    });
+  });
+});
+
 app.get('/subject-assigned/:teacherId', (req, res) => {
   const teacherId = req.params.teacherId;
   const schoolYearId = req.query.school_year_id; // Get school_year_id from query parameters

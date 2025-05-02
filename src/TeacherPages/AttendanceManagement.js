@@ -14,6 +14,7 @@ function AttendanceManagement() {
   const [filteredSections, setFilteredSections] = useState([]);
   const [sectionSubjects, setSectionSubjects] = useState([]);
   const [roleName, setRoleName] = useState('');
+  const [coordinatorGradeLevel, setCoordinatorGradeLevel] = useState(null);
   const [filters, setFilters] = useState({
     searchTerm: '',
     grade: '',
@@ -33,6 +34,13 @@ function AttendanceManagement() {
 }, [roleName]); // Depend on roleName to trigger re-fetching when roleName changes
 
   useEffect(() => {
+    if (coordinatorGradeLevel) {
+      // When coordinator's grade level is set, fetch students with the grade level filter applied
+      fetchStudents({ grade: coordinatorGradeLevel.toString() });
+    }
+  }, [coordinatorGradeLevel]);
+
+  useEffect(() => {
     const userId = localStorage.getItem('userId'); // Retrieve userId from localStorage
     if (userId) {
       console.log(`Retrieved userId from localStorage: ${userId}`); // Debugging log
@@ -50,6 +58,11 @@ function AttendanceManagement() {
         console.log('Response received:', response.data); // Debugging log
         setRoleName(response.data.role_name);
         console.log('Role name set to:', response.data.role_name); // Debugging log
+        
+        // If user is a grade level coordinator, fetch their assigned grade level
+        if (response.data.role_name === 'grade_level_coordinator') {
+          fetchCoordinatorGradeLevel(userId);
+        }
       } else {
         console.error('Failed to fetch role name. Response status:', response.status);
       }
@@ -61,6 +74,20 @@ function AttendanceManagement() {
       } else {
         console.error('Error setting up request:', error.message);
       }
+    }
+  };
+  
+  const fetchCoordinatorGradeLevel = async (userId) => {
+    try {
+      const response = await axios.get(`http://localhost:3001/coordinator-grade-level/${userId}`);
+      if (response.status === 200 && response.data.gradeLevel) {
+        console.log('Coordinator grade level:', response.data.gradeLevel);
+        setCoordinatorGradeLevel(response.data.gradeLevel);
+        // Auto-set the grade filter to the coordinator's assigned grade level
+        setFilters(prev => ({ ...prev, grade: response.data.gradeLevel.toString() }));
+      }
+    } catch (error) {
+      console.error('Error fetching coordinator grade level:', error);
     }
   };
 
@@ -84,11 +111,18 @@ function AttendanceManagement() {
   
       const sortedStudents = response.data.sort((a, b) => b.lastName);
   
-      const updatedStudents = sortedStudents.map(student => ({
+      let updatedStudents = sortedStudents.map(student => ({
         ...student,
         grade_level: student.current_yr_lvl || '-',
         brigada_attendance: student.brigada_eskwela === 'Attended' ? 'Yes' : 'No'
       }));
+      
+      // For grade level coordinators, filter the students by their assigned grade level
+      if (roleName === 'grade_level_coordinator' && coordinatorGradeLevel) {
+        updatedStudents = updatedStudents.filter(student => 
+          student.current_yr_lvl.toString() === coordinatorGradeLevel.toString()
+        );
+      }
   
       setStudents(updatedStudents);
       setFilteredStudents(updatedStudents);
@@ -184,6 +218,16 @@ function AttendanceManagement() {
   }, [filters.grade, sections]);
 
   useEffect(() => {
+    if (coordinatorGradeLevel && sections.length > 0) {
+      // When coordinator's grade level is set, filter sections by that grade level
+      const sectionsForGrade = sections.filter(section => 
+        String(section.grade_level) === String(coordinatorGradeLevel)
+      );
+      setFilteredSections(sectionsForGrade);
+    }
+  }, [coordinatorGradeLevel, sections]);
+
+  useEffect(() => {
     if (filters.searchTerm !== '') {
       applyFilters({ ...filters, searchTerm: filters.searchTerm });
     } else {
@@ -194,6 +238,11 @@ function AttendanceManagement() {
   const applyFilters = (updatedFilters) => {
     let filtered = students;
 
+    // For grade level coordinators, enforce their assigned grade level filter regardless of other filters
+    if (roleName === 'grade_level_coordinator' && coordinatorGradeLevel) {
+      filtered = filtered.filter((student) => student.current_yr_lvl.toString() === coordinatorGradeLevel.toString());
+    }
+
     if (updatedFilters.searchTerm) {
       filtered = filtered.filter((student) =>
         `${student.firstname} ${student.middlename} ${student.lastname}`
@@ -202,7 +251,8 @@ function AttendanceManagement() {
       );
     }
 
-    if (updatedFilters.grade) {
+    // Only apply grade filter if not a coordinator (coordinators already filtered by their grade level)
+    if (updatedFilters.grade && !(roleName === 'grade_level_coordinator' && coordinatorGradeLevel)) {
       filtered = filtered.filter((student) => student.current_yr_lvl === updatedFilters.grade);
     }
 
@@ -250,6 +300,8 @@ function AttendanceManagement() {
         filteredSections={filteredSections} 
         filters={filters}
         setFilters={setFilters}
+        coordinatorGradeLevel={coordinatorGradeLevel}
+        roleName={roleName}
       />
 
       <div className="attendance-mgmt-table-container">

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Pagination from '../Utilities/pagination';
 import axios from 'axios';
@@ -30,6 +30,7 @@ function EnrollStudentManagement() {
 
   const [isAdding, setIsAdding] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [roleName, setRoleName] = useState('');
   const [newStudentData, setNewStudentData] = useState({
     lastname: '',
     middlename: '',
@@ -62,6 +63,9 @@ function EnrollStudentManagement() {
     status: 'active',
     archive_status: 'unarchive'
   });
+
+  // Add state for coordinator's grade level
+  const [coordinatorGradeLevel, setCoordinatorGradeLevel] = useState(null);
 
   // Add this state for tab management
   const [activeTab, setActiveTab] = useState('basic');
@@ -138,11 +142,101 @@ function EnrollStudentManagement() {
     return "";
   };
 
+  // Memoize the fetchStudents function with useCallback
+  const fetchStudents = useCallback(async (appliedFilters = {}) => {
+    try {
+      console.log('Original filters:', appliedFilters);
+  
+      // ✅ Remove empty filters before sending request
+      const filteredParams = Object.fromEntries(
+        Object.entries(appliedFilters).filter(([_, value]) => value !== '' && value !== null && value !== undefined)
+      );
+  
+      console.log('Filtered params before request:', filteredParams);
+  
+      // ✅ Ensure `school_year` is included if missing
+      if (!filteredParams.school_year) {
+        try {
+          const activeYearResponse = await axios.get('http://localhost:3001/active-school-year');
+          filteredParams.school_year = activeYearResponse.data.school_year;
+          console.log('No school year selected, using active year:', filteredParams.school_year);
+        } catch (error) {
+          console.error('Error fetching active school year:', error);
+          return; // Stop execution if we can't get the active year
+        }
+      }
+
+      // Add user_id to the filteredParams
+      const userId = localStorage.getItem('userId'); // Retrieve userId from localStorage
+      if (userId) {
+        filteredParams.user_id = userId; // Add user_id to the request parameters
+      }
+      
+      // Apply grade level restriction for grade level coordinators
+      if (roleName === 'grade_level_coordinator' && coordinatorGradeLevel) {
+        filteredParams.grade = coordinatorGradeLevel.toString();
+      }
+  
+      // ✅ Always use apply-enrollment endpoint for this component
+      // This ensures all roles including class advisers can see inactive students
+      const endpoint = 'http://localhost:3001/students/apply-enrollment';
+  
+      // ✅ Make request with correct filters
+      const response = await axios.get(endpoint, { params: filteredParams });
+  
+      console.log('Response from server:', response.data);
+  
+      // ✅ Ensure sorting by `current_yr_lvl` (highest grade first)
+      const sortedStudents = response.data.sort((a, b) => b.lastname);
+      
+      // Apply coordinator grade level filtering to the results if needed
+      let filteredStudents = sortedStudents;
+      if (roleName === 'grade_level_coordinator' && coordinatorGradeLevel) {
+        filteredStudents = sortedStudents.filter(student => 
+          student.current_yr_lvl.toString() === coordinatorGradeLevel.toString()
+        );
+      }
+      
+      setStudents(filteredStudents);
+      setFilteredStudents(filteredStudents);
+    } catch (error) {
+      if (error.response) {
+        console.error('Server responded with an error:', error.response.data);
+      } else if (error.request) {
+        console.error('No response received from server. Request:', error.request);
+      } else {
+        console.error('Error setting up request:', error.message);
+      }
+    }
+  }, [roleName, coordinatorGradeLevel]);
+
+  useEffect(() => {
+    const userId = localStorage.getItem('userId'); // Retrieve userId from localStorage
+    if (userId) {
+      console.log(`Retrieved userId from localStorage: ${userId}`); // Debugging log
+      fetchUserRole(userId);
+    } else {
+      console.error('No userId found in localStorage');
+    }
+  }, []);
+
   useEffect(() => {
     fetchSchoolYears();
     fetchSections();
-    fetchStudents();
   }, []);
+
+  // Add useEffect hook to refresh data when fetchStudents changes
+  useEffect(() => {
+    fetchStudents();
+  }, [fetchStudents]);
+
+  // Add useEffect hook to refresh data when coordinatorGradeLevel changes
+  useEffect(() => {
+    if (coordinatorGradeLevel) {
+      // Refresh student data with the coordinator's grade level filter
+      fetchStudents({ grade: coordinatorGradeLevel.toString() });
+    }
+  }, [coordinatorGradeLevel, fetchStudents]);
 
   useEffect(() => {
     if (filters.grade) {
@@ -171,61 +265,6 @@ function EnrollStudentManagement() {
     } catch (error) {
       console.error('Error fetching sections:', error);
     }
-  };
-
-  const fetchStudents = async (appliedFilters = {}) => {
-    try {
-      console.log('Original filters:', appliedFilters);
-  
-      // ✅ Remove empty filters before sending request
-      const filteredParams = Object.fromEntries(
-        Object.entries(appliedFilters).filter(([_, value]) => value !== '' && value !== null && value !== undefined)
-      );
-  
-      console.log('Filtered params before request:', filteredParams);
-  
-      // ✅ Ensure `school_year` is included if missing
-      if (!filteredParams.school_year) {
-        try {
-          const activeYearResponse = await axios.get('http://localhost:3001/active-school-year');
-          filteredParams.school_year = activeYearResponse.data.school_year;
-          console.log('No school year selected, using active year:', filteredParams.school_year);
-        } catch (error) {
-          console.error('Error fetching active school year:', error);
-          return; // Stop execution if we can't get the active year
-        }
-      }
-
-      // Add user_id to the filteredParams
-      const userId = localStorage.getItem('userId'); // Retrieve userId from localStorage
-      if (userId) {
-        filteredParams.user_id = userId; // Add user_id to the request parameters
-      }
-  
-      // ✅ Determine the endpoint based on roleName
-      const endpoint = roleName === 'class_adviser' 
-        ? 'http://localhost:3001/students/by-adviser' 
-        : 'http://localhost:3001/students/apply-enrollment';
-  
-      // ✅ Make request with correct filters
-      const response = await axios.get(endpoint, { params: filteredParams });
-  
-      console.log('Response from server:', response.data);
-  
-      // ✅ Ensure sorting by `current_yr_lvl` (highest grade first)
-      const sortedStudents = response.data.sort((a, b) => b.lastname);
-      setStudents(sortedStudents);
-      setFilteredStudents(sortedStudents);
-    } catch (error) {
-      if (error.response) {
-        console.error('Server responded with an error:', error.response.data);
-      } else if (error.request) {
-        console.error('No response received from server. Request:', error.request);
-      } else {
-        console.error('Error setting up request:', error.message);
-      }
-    }
-    
   };
 
   const startAdding = () => {
@@ -566,7 +605,7 @@ const enrollStudent = async (studentId, gradeLevel) => {
     if (response.status === 200 || response.status === 201) {
       console.log('Enrollment successful:', response.data);
       alert('Student registered successfully');
-      await fetchStudents(); // Refresh the student l ist after enrolling
+      fetchStudents(); // Refresh the student list after enrolling
     } else {
       console.warn('Failed to enroll student, non-200 response:', response);
       alert('Failed to enroll student.');
@@ -596,6 +635,7 @@ const handleApplyEnrollment = async (studentId) => {
     } else {
       alert('Failed to apply for enrollment. Please try again.');
     }
+    fetchStudents();
   } catch (error) {
     console.error('Error applying for enrollment:', error);
     alert('Failed to apply for enrollment. Please try again.');
@@ -739,17 +779,6 @@ const handleArchive = () => {
   const currentStudents = filteredStudents.slice(indexOfFirstStudent, indexOfLastStudent);
 
   const totalPages = Math.ceil(filteredStudents.length / studentsPerPage);
-  const [roleName, setRoleName] = useState('');
-
-  useEffect(() => {
-    const userId = localStorage.getItem('userId'); // Retrieve userId from localStorage
-    if (userId) {
-      console.log(`Retrieved userId from localStorage: ${userId}`); // Debugging log
-      fetchUserRole(userId);
-    } else {
-      console.error('No userId found in localStorage');
-    }
-  }, []);
 
   const fetchUserRole = async (userId) => {
     try {
@@ -759,6 +788,11 @@ const handleArchive = () => {
         console.log('Response received:', response.data); // Debugging log
         setRoleName(response.data.role_name);
         console.log('Role name set to:', response.data.role_name); // Debugging log
+        
+        // If user is a grade level coordinator, fetch their assigned grade level
+        if (response.data.role_name === 'grade_level_coordinator') {
+          fetchCoordinatorGradeLevel(userId);
+        }
       } else {
         console.error('Failed to fetch role name. Response status:', response.status);
       }
@@ -773,6 +807,19 @@ const handleArchive = () => {
     }
   };
 
+  const fetchCoordinatorGradeLevel = async (userId) => {
+    try {
+      const response = await axios.get(`http://localhost:3001/coordinator-grade-level/${userId}`);
+      if (response.status === 200 && response.data.gradeLevel) {
+        console.log('Coordinator grade level:', response.data.gradeLevel);
+        setCoordinatorGradeLevel(response.data.gradeLevel);
+        // Auto-set the grade filter to the coordinator's assigned grade level
+        setFilters(prev => ({ ...prev, grade: response.data.gradeLevel.toString() }));
+      }
+    } catch (error) {
+      console.error('Error fetching coordinator grade level:', error);
+    }
+  };
 
   // Handle changes in editable fields
   // Update the handleEditChange function to auto-calculate age when birthdate changes
@@ -1080,9 +1127,20 @@ const handleArchive = () => {
       const sortedStudents = response.data.sort((a, b) =>
         a.student_name.localeCompare(b.student_name)
       );
+      
+      let filteredStudents = sortedStudents;
+      
+      // If user is a grade level coordinator, filter by their assigned grade level
+      if (roleName === 'grade_level_coordinator' && coordinatorGradeLevel) {
+        filteredStudents = sortedStudents.filter(student => 
+          student.current_yr_lvl.toString() === coordinatorGradeLevel.toString()
+        );
+        // Also set the selected grade level to the coordinator's assigned grade level
+        setSelectedGradeLevel(coordinatorGradeLevel.toString());
+      }
   
-      setAvailableStudents(sortedStudents);
-      setFilteredAvailableStudents(sortedStudents);
+      setAvailableStudents(filteredStudents);
+      setFilteredAvailableStudents(filteredStudents);
     } catch (error) {
       console.error('Error fetching available students:', error);
       alert('Error fetching available students for enrollment');
@@ -1103,8 +1161,14 @@ const handleArchive = () => {
       );
     }
     
-    // Apply grade level filter if selected
-    if (gradeLevel) {
+    // For grade level coordinators, always filter by their assigned grade level
+    if (roleName === 'grade_level_coordinator' && coordinatorGradeLevel) {
+      filtered = filtered.filter(student => 
+        student.current_yr_lvl.toString() === coordinatorGradeLevel.toString()
+      );
+    } 
+    // Otherwise, apply grade level filter if selected
+    else if (gradeLevel) {
       filtered = filtered.filter(student => 
         student.current_yr_lvl.toString() === gradeLevel
       );
@@ -1212,6 +1276,8 @@ const handleArchive = () => {
         filteredSections={filteredSections} 
         filters={filters}
         setFilters={setFilters}
+        coordinatorGradeLevel={coordinatorGradeLevel}
+        roleName={roleName}
       />
 
       <div className="enroll-student-table-container">
@@ -1250,18 +1316,7 @@ const handleArchive = () => {
                         Edit
                       </button>
                     )} */}
-                    {/* {(roleName === 'registrar' && student.active_status === null) && (
-                      <button 
-                        className="enroll-student-btn enroll-student-btn-register"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          enrollStudent(student.student_id);
-                        }}
-                      >
-                        Register
-                      </button> 
-                    )} */}
-                    {(roleName === 'registrar' && student.active_status === 'inactive') && (
+                    {(roleName === 'registrar' || roleName === 'class_adviser' || roleName === 'grade_level_coordinator') && student.active_status === 'inactive' && (
                       <button 
                         className="enroll-student-btn enroll-student-btn-register"
                         onClick={(e) => {
@@ -1952,11 +2007,18 @@ const handleArchive = () => {
                   value={selectedGradeLevel}
                   onChange={handleGradeLevelChange}
                   className="enroll-student-grade-select"
+                  disabled={roleName === 'grade_level_coordinator' && coordinatorGradeLevel}
                 >
                   <option value="">All Grade Levels</option>
-                  <option value="7">Grade 7</option>
-                  <option value="8">Grade 8</option>
-                  <option value="9">Grade 9</option>
+                  {roleName === 'grade_level_coordinator' && coordinatorGradeLevel ? (
+                    <option value={coordinatorGradeLevel}>Grade {coordinatorGradeLevel}</option>
+                  ) : (
+                    <>
+                      <option value="7">Grade 7</option>
+                      <option value="8">Grade 8</option>
+                      <option value="9">Grade 9</option>
+                    </>
+                  )}
                 </select>
               </div>
             </div>

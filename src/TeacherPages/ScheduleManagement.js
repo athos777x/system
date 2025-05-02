@@ -30,6 +30,7 @@ function Principal_SchedulePage() {
   const [teachers, setTeachers] = useState([]);
   const [subjectteachers, setSubjectTeachers] = useState([]);
   const [roleName, setRoleName] = useState('');
+  const [coordinatorGradeLevel, setCoordinatorGradeLevel] = useState(null);
 
   // Helper function to sort days in chronological order
   const sortDays = (days) => {
@@ -49,7 +50,7 @@ function Principal_SchedulePage() {
       }
   
       // Determine the endpoint based on roleName
-      const endpoint = roleName === 'class_adviser' 
+      let endpoint = roleName === 'class_adviser' 
         ? `http://localhost:3001/sections/by-adviser/${userId}`  // Use the 'by-adviser' endpoint for class advisers
         : 'http://localhost:3001/sections';  // Default endpoint for other roles
   
@@ -57,12 +58,22 @@ function Principal_SchedulePage() {
   
       // Fetch the data from the determined endpoint
       const response = await axios.get(endpoint);
-      setSections(response.data);
-      setFilteredSections(response.data);
+      let sectionsData = response.data;
+      
+      // For grade level coordinators, filter the sections by their assigned grade level
+      if (roleName === 'grade_level_coordinator' && coordinatorGradeLevel) {
+        console.log('Filtering sections for grade level coordinator. Grade level:', coordinatorGradeLevel);
+        sectionsData = sectionsData.filter(section => 
+          section.grade_level.toString() === coordinatorGradeLevel.toString()
+        );
+      }
+      
+      setSections(sectionsData);
+      setFilteredSections(sectionsData);
     } catch (error) {
       console.error('There was an error fetching the sections!', error);
     }
-  }, [roleName]);
+  }, [roleName, coordinatorGradeLevel]);
   
 
   const fetchSchoolYears = useCallback(async () => {
@@ -79,6 +90,12 @@ function Principal_SchedulePage() {
     fetchSchoolYears();
     getSubjectTeachers();
   }, [roleName, fetchSections, fetchSchoolYears]);
+
+  useEffect(() => {
+    if (coordinatorGradeLevel) {
+      fetchSections();
+    }
+  }, [coordinatorGradeLevel, fetchSections]);
 
   const applyFilters = () => {
     let filtered = sections;
@@ -517,6 +534,11 @@ function Principal_SchedulePage() {
         console.log('Response received:', response.data); // Debugging log
         setRoleName(response.data.role_name);
         console.log('Role name set to:', response.data.role_name); // Debugging log
+        
+        // If user is a grade level coordinator, fetch their assigned grade level
+        if (response.data.role_name === 'grade_level_coordinator') {
+          fetchCoordinatorGradeLevel(userId);
+        }
       } else {
         console.error('Failed to fetch role name. Response status:', response.status);
       }
@@ -528,6 +550,20 @@ function Principal_SchedulePage() {
       } else {
         console.error('Error setting up request:', error.message);
       }
+    }
+  };
+  
+  const fetchCoordinatorGradeLevel = async (userId) => {
+    try {
+      const response = await axios.get(`http://localhost:3001/coordinator-grade-level/${userId}`);
+      if (response.status === 200 && response.data.gradeLevel) {
+        console.log('Coordinator grade level:', response.data.gradeLevel);
+        setCoordinatorGradeLevel(response.data.gradeLevel);
+        // Auto-set the grade filter to the coordinator's assigned grade level
+        setFilters(prev => ({ ...prev, grade: response.data.gradeLevel.toString() }));
+      }
+    } catch (error) {
+      console.error('Error fetching coordinator grade level:', error);
     }
   };
 
@@ -588,11 +624,16 @@ function Principal_SchedulePage() {
           <select
             value={filters.grade}
             onChange={handleGradeChange}
+            disabled={roleName === 'grade_level_coordinator'}
           >
             <option value="">Select Grade Level</option>
-            {[7, 8, 9, 10].map(grade => (
-              <option key={grade} value={grade}>Grade {grade}</option>
-            ))}
+            {roleName === 'grade_level_coordinator' && coordinatorGradeLevel ? (
+              <option value={coordinatorGradeLevel}>Grade {coordinatorGradeLevel}</option>
+            ) : (
+              [7, 8, 9, 10].map(grade => (
+                <option key={grade} value={grade}>Grade {grade}</option>
+              ))
+            )}
           </select>
           <button onClick={handleApplyFilters}>Filter</button>
         </div>
