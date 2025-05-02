@@ -292,7 +292,17 @@
 }
 
 .teacher-mgmt-btn-archive:hover {
-  background: #d32f2f;
+  background: #d84315;
+}
+
+.teacher-mgmt-btn-disabled {
+  background: #e0e0e0;
+  color: #ffffff;
+  cursor: not-allowed;
+}
+
+.teacher-mgmt-btn-disabled:hover {
+  background: #e0e0e0;
 }
 
 /* Details view styles */

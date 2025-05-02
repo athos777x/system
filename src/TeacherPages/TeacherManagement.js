@@ -587,6 +587,12 @@ function TeacherManagement() {
       alert('Please select a grade level and school year');
       return;
     }
+    
+    // Check if this coordinator already has a grade level assigned
+    if (teacherGradeLevel && teacherGradeLevel.length > 0) {
+      alert('This coordinator already has a grade level assigned for this school year');
+      return;
+    }
   
     try {
       console.log('Assigning grade level with:', {
@@ -1059,10 +1065,12 @@ useEffect(() => {
                           )}
                           {teacher.role_id === 5 && (
                             <button 
-                              className="teacher-mgmt-btn teacher-mgmt-btn-view"
+                              className={`teacher-mgmt-btn ${teacherGradeLevel && teacherGradeLevel.length > 0 ? 'teacher-mgmt-btn-disabled' : 'teacher-mgmt-btn-view'}`}
                               onClick={() => handleAssignGradeLevel(teacher.employee_id)}
+                              disabled={teacherGradeLevel && teacherGradeLevel.length > 0}
+                              title={teacherGradeLevel && teacherGradeLevel.length > 0 ? "This coordinator already has an assigned grade level" : ""}
                             >
-                              Assign Grade Level
+                              {teacherGradeLevel && teacherGradeLevel.length > 0 ? "Grade Level Assigned" : "Assign Grade Level"}
                             </button>
                           )}
                           {teacher.role_id === 8 && (
