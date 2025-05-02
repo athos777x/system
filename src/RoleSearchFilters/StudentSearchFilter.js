@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-function StudentSearchFilter({ students, fetchStudents, setFilteredStudents, setCurrentPage, schoolYears, filteredSections }) {
+function StudentSearchFilter({ students, fetchStudents, setFilteredStudents, setCurrentPage, schoolYears, filteredSections, coordinatorGradeLevel, roleName }) {
   const [filters, setFilters] = useState({
     searchID: '',
     searchTerm: '',
@@ -15,7 +15,20 @@ function StudentSearchFilter({ students, fetchStudents, setFilteredStudents, set
   // Filter sections based on the selected grade
   const [availableSections, setAvailableSections] = useState(filteredSections);
 
+  // Initialize the grade filter with the coordinator's grade level if available
+  useEffect(() => {
+    if (roleName === 'grade_level_coordinator' && coordinatorGradeLevel) {
+      setTempFilters(prev => ({ ...prev, grade: coordinatorGradeLevel.toString() }));
+      setFilters(prev => ({ ...prev, grade: coordinatorGradeLevel.toString() }));
+    }
+  }, [roleName, coordinatorGradeLevel]);
+
   const handleSearch = (type, value) => {
+    // Don't allow changing grade for grade level coordinators
+    if (type === 'grade' && roleName === 'grade_level_coordinator' && coordinatorGradeLevel) {
+      return;
+    }
+    
     setTempFilters(prevFilters => ({
       ...prevFilters,
       [type]: value
@@ -23,6 +36,11 @@ function StudentSearchFilter({ students, fetchStudents, setFilteredStudents, set
   };
 
   const handleFilterChange = (type, value) => {
+    // Don't allow changing grade for grade level coordinators
+    if (type === 'grade' && roleName === 'grade_level_coordinator' && coordinatorGradeLevel) {
+      return;
+    }
+    
     setTempFilters(prevFilters => ({
       ...prevFilters,
       [type]: value,
@@ -125,11 +143,20 @@ function StudentSearchFilter({ students, fetchStudents, setFilteredStudents, set
           ))}
         </select>
 
-        <select name="grade" value={tempFilters.grade} onChange={(e) => handleFilterChange('grade', e.target.value)}>
+        <select 
+          name="grade" 
+          value={tempFilters.grade} 
+          onChange={(e) => handleFilterChange('grade', e.target.value)}
+          disabled={roleName === 'grade_level_coordinator' && coordinatorGradeLevel}
+        >
           <option value="">Select Grade Level</option>
-          {[7, 8, 9, 10].map((grade) => (
-            <option key={grade} value={grade}>Grade {grade}</option>
-          ))}
+          {roleName === 'grade_level_coordinator' && coordinatorGradeLevel ? (
+            <option value={coordinatorGradeLevel}>Grade {coordinatorGradeLevel}</option>
+          ) : (
+            [7, 8, 9, 10].map((grade) => (
+              <option key={grade} value={grade}>Grade {grade}</option>
+            ))
+          )}
         </select>
 
         <select 
