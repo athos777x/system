@@ -2472,6 +2472,32 @@ app.post('/assign-section/:teacherId', (req, res) => {
   });
 });
 
+// ENDPOINT USED:
+// TEACHER PAGE
+app.post('/assign-grade-level/:teacherId', (req, res) => {
+  const teacherId = req.params.teacherId;
+  const { grade_level, school_year_id } = req.body;
+  
+  const query = `
+    INSERT INTO grade_level_assigned 
+    (grade_level_assigned_id, employee_id, grade_level, school_year_id) 
+    VALUES (NULL, ?, ?, ?)
+    ON DUPLICATE KEY UPDATE 
+      employee_id = VALUES(employee_id),
+      grade_level = VALUES(grade_level),
+      school_year_id = VALUES(school_year_id)
+  `;
+
+  db.query(query, [teacherId, grade_level, school_year_id], (err, result) => {
+    if (err) {
+      console.error('Error assigning grade level:', err);
+      res.status(500).json({ error: 'Internal server error' });
+      return;
+    }
+    console.log('Grade level assigned successfully');
+    res.json({ message: 'Grade level assigned successfully' });
+  });
+});
 
 // ENDPOINT USED:
 // TEACHER PAGE
@@ -2495,6 +2521,27 @@ app.get('/teacher-subjects/:teacherId', (req, res) => {
   db.query(query, [teacherId, schoolYearId], (err, results) => {
     if (err) {
       console.error('Error fetching assigned subjects:', err);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+    res.json(results);
+  });
+});
+
+// ENDPOINT USED:
+// TEACHER PAGE
+app.get('/teacher-grade-level/:teacherId', (req, res) => {
+  const teacherId = req.params.teacherId;
+  const schoolYearId = req.query.school_year_id; // Get school_year_id from query parameters
+
+  const query = `
+    SELECT CONCAT('Grade ', grade_level) AS grade_level 
+    FROM grade_level_assigned 
+    WHERE employee_id = ? AND school_year_id = ?
+  `;
+
+  db.query(query, [teacherId, schoolYearId], (err, results) => {
+    if (err) {
+      console.error('Error fetching assigned grade levels:', err);
       return res.status(500).json({ error: 'Internal server error' });
     }
     res.json(results);
