@@ -953,21 +953,30 @@ useEffect(() => {
 
                           {teacher.role_id === 4 && (
                             <>
-                              <h3>Assigned Section</h3>
-                              <select
-                              value={selectedSubjectsSchoolYear}
-                              onChange={(e) => handleSubjectsSchoolYearChange(e.target.value)}
-                              style={{
-                                padding: '5px',
-                                width: '150px',
-                              }}
-                            >
-                              {schoolYears.map((year) => (
-                                <option key={year.school_year_id} value={year.school_year_id}>
-                                  {year.school_year}
-                                </option>
-                              ))}
-                            </select>
+                              <div
+                                style={{
+                                  display: 'flex',
+                                  justifyContent: 'space-between',
+                                  alignItems: 'center',
+                                  marginBottom: '1rem',
+                                }}
+                              >
+                                <h3 style={{ margin: 0 }}>Assigned Section</h3>
+                                <select
+                                  value={selectedSubjectsSchoolYear}
+                                  onChange={(e) => handleSubjectsSchoolYearChange(e.target.value)}
+                                  style={{
+                                    padding: '5px',
+                                    width: '150px',
+                                  }}
+                                >
+                                  {schoolYears.map((year) => (
+                                    <option key={year.school_year_id} value={year.school_year_id}>
+                                      {year.school_year}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
                               {teacherSection && teacherSection.length > 0 ? (
                                 <table className="teacher-mgmt-details-table">
                                   <thead>
@@ -993,21 +1002,30 @@ useEffect(() => {
 
                           {teacher.role_id === 5 && (
                             <>
-                              <h3>Assigned Grade Level</h3>
-                              <select
-                                value={selectedSubjectsSchoolYear}
-                                onChange={(e) => handleSubjectsSchoolYearChange(e.target.value)}
+                              <div
                                 style={{
-                                  padding: '5px',
-                                  width: '150px',
+                                  display: 'flex',
+                                  justifyContent: 'space-between',
+                                  alignItems: 'center',
+                                  marginBottom: '1rem',
                                 }}
                               >
-                                {schoolYears.map((year) => (
-                                  <option key={year.school_year_id} value={year.school_year_id}>
-                                    {year.school_year}
-                                  </option>
-                                ))}
-                              </select>
+                                <h3 style={{ margin: 0 }}>Assigned Grade Level</h3>
+                                <select
+                                  value={selectedSubjectsSchoolYear}
+                                  onChange={(e) => handleSubjectsSchoolYearChange(e.target.value)}
+                                  style={{
+                                    padding: '5px',
+                                    width: '150px',
+                                  }}
+                                >
+                                  {schoolYears.map((year) => (
+                                    <option key={year.school_year_id} value={year.school_year_id}>
+                                      {year.school_year}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
                               {teacherGradeLevel && teacherGradeLevel.length > 0 ? (
                                 <table className="teacher-mgmt-details-table">
                                   <thead>
