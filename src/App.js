@@ -19,7 +19,6 @@ import TeacherManagement from './TeacherPages/TeacherManagement';
 import AttendanceManagement from './TeacherPages/AttendanceManagement';
 import EarlyEnrollmentReport from './TeacherPages/EarlyEnrollmentReport';
 import EnrolledStudents from './TeacherPages/EnrolledStudents';
-import StudentEnrollees from './TeacherPages/StudentEnrollees';
 import SchoolYearManagement from './TeacherPages/SchoolYearManagement';
 import SectionList from './TeacherPages/SectionList';
 import SectionManagement from './TeacherPages/SectionManagement';
@@ -120,7 +119,6 @@ function App() {
             <Route path="/enrolled-students" element={<EnrolledStudents />} />
             <Route path="/account" element={<AccountManagement />} />
             <Route path="/grades" element={<ExperimentalGrades />} />
-            <Route path="/list-of-student-enrollees" element={<StudentEnrollees />} />
             <Route path="/school-year" element={<SchoolYearManagement />} />
             <Route path="/section-list" element={<SectionList />} />
             <Route path="/section" element={<SectionManagement />} />

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import Pagination from '../Utilities/pagination';
 import '../TeacherPagesCss/BrigadaEskwela.css';
@@ -12,6 +12,8 @@ function BrigadaEskwelaView() {
   const [schoolYears, setSchoolYears] = useState([]);
   const [sections, setSections] = useState([]);
   const [filteredSections, setFilteredSections] = useState([]);
+  const [roleName, setRoleName] = useState('');
+  const [coordinatorGradeLevel, setCoordinatorGradeLevel] = useState(null);
   const [filters, setFilters] = useState({
     searchTerm: '',
     grade: '',
@@ -19,9 +21,57 @@ function BrigadaEskwelaView() {
   });
 
   useEffect(() => {
+    const userId = localStorage.getItem('userId'); // Retrieve userId from localStorage
+    if (userId) {
+      console.log(`Retrieved userId from localStorage: ${userId}`); // Debugging log
+      fetchUserRole(userId);
+    } else {
+      console.error('No userId found in localStorage');
+    }
     fetchSchoolYears();
     fetchSections();
   }, []);
+
+  const fetchUserRole = async (userId) => {
+    try {
+      console.log(`Fetching role for user ID: ${userId}`); // Debugging log
+      const response = await axios.get(`http://localhost:3001/user-role/${userId}`);
+      if (response.status === 200) {
+        console.log('Response received:', response.data); // Debugging log
+        setRoleName(response.data.role_name);
+        console.log('Role name set to:', response.data.role_name); // Debugging log
+        
+        // If user is a grade level coordinator, fetch their assigned grade level
+        if (response.data.role_name === 'grade_level_coordinator') {
+          fetchCoordinatorGradeLevel(userId);
+        }
+      } else {
+        console.error('Failed to fetch role name. Response status:', response.status);
+      }
+    } catch (error) {
+      if (error.response) {
+        console.error('Error response from server:', error.response.data);
+      } else if (error.request) {
+        console.error('No response received from server. Request:', error.request);
+      } else {
+        console.error('Error setting up request:', error.message);
+      }
+    }
+  };
+  
+  const fetchCoordinatorGradeLevel = async (userId) => {
+    try {
+      const response = await axios.get(`http://localhost:3001/coordinator-grade-level/${userId}`);
+      if (response.status === 200 && response.data.gradeLevel) {
+        console.log('Coordinator grade level:', response.data.gradeLevel);
+        setCoordinatorGradeLevel(response.data.gradeLevel);
+        // Auto-set the grade filter to the coordinator's assigned grade level
+        setFilters(prev => ({ ...prev, grade: response.data.gradeLevel.toString() }));
+      }
+    } catch (error) {
+      console.error('Error fetching coordinator grade level:', error);
+    }
+  };
 
   useEffect(() => {
     if (filters.grade) {
@@ -34,20 +84,37 @@ function BrigadaEskwelaView() {
     }
   }, [filters.grade, sections]);
 
-  const fetchStudents = async (appliedFilters = {}) => {
+  // Refetch students when coordinator's grade level changes
+  useEffect(() => {
+    if (coordinatorGradeLevel) {
+      fetchStudents();
+    }
+  }, [coordinatorGradeLevel]);
+
+  const fetchStudents = useCallback(async (appliedFilters = {}) => {
     try {
       const response = await axios.get('http://localhost:3001/brigada-eskwela', {
         params: appliedFilters,
       });
-      const sortedStudents = response.data.sort((a, b) =>
+      
+      let studentsData = response.data.sort((a, b) =>
         a.stud_name.localeCompare(b.stud_name)
       );
-      setStudents(sortedStudents);
-      setFilteredStudents(sortedStudents);
+      
+      // For grade level coordinators, filter the students by their assigned grade level
+      if (roleName === 'grade_level_coordinator' && coordinatorGradeLevel) {
+        console.log('Filtering students for grade level coordinator. Grade level:', coordinatorGradeLevel);
+        studentsData = studentsData.filter(student => 
+          student.grade_lvl.toString() === coordinatorGradeLevel.toString()
+        );
+      }
+      
+      setStudents(studentsData);
+      setFilteredStudents(studentsData);
     } catch (err) {
       console.error('Error fetching data:', err);
     }
-  };
+  }, [roleName, coordinatorGradeLevel]);
 
   const fetchSchoolYears = async () => {
     try {
@@ -61,8 +128,19 @@ function BrigadaEskwelaView() {
   const fetchSections = async () => {
     try {
       const response = await axios.get('http://localhost:3001/sections');
-      setSections(response.data);
-      setFilteredSections(response.data);
+      
+      let sectionsData = response.data;
+      
+      // For grade level coordinators, filter the sections by their assigned grade level
+      if (roleName === 'grade_level_coordinator' && coordinatorGradeLevel) {
+        console.log('Filtering sections for grade level coordinator. Grade level:', coordinatorGradeLevel);
+        sectionsData = sectionsData.filter(section => 
+          section.grade_level.toString() === coordinatorGradeLevel.toString()
+        );
+      }
+      
+      setSections(sectionsData);
+      setFilteredSections(sectionsData);
     } catch (error) {
       console.error('Error fetching sections:', error);
     }
@@ -135,6 +213,8 @@ function BrigadaEskwelaView() {
         filteredSections={filteredSections}
         filters={filters}
         setFilters={setFilters}
+        roleName={roleName}
+        coordinatorGradeLevel={coordinatorGradeLevel}
       />
 
       <div className="brigada-table-container">
