@@ -8,11 +8,12 @@ function SectionList() {
   const [selectedSectionId, setSelectedSectionId] = useState(null);
   const [sectionDetails, setSectionDetails] = useState({});
   const [activeSchoolYear, setActiveSchoolYear] = useState(null);
+  const [schoolYears, setSchoolYears] = useState([]);
   const [roleName, setRoleName] = useState('');
   const [filters, setFilters] = useState({
     searchTerm: '',
     grade: '',
-    section: ''
+    schoolYear: ''
   });
   const [studentsByGender, setStudentsByGender] = useState({ boys: [], girls: [] });
   const [showStudents, setShowStudents] = useState(false);
@@ -60,6 +61,15 @@ function SectionList() {
     }
   }, []);
 
+  const fetchSchoolYears = useCallback(async () => {
+    try {
+      const response = await axios.get('http://localhost:3001/school-years');
+      setSchoolYears(response.data);
+    } catch (error) {
+      console.error('There was an error fetching the school years!', error);
+    }
+  }, []);
+
   const fetchSections = useCallback(async (schoolYearId, applyFilters = false) => {
     try {
         const params = { schoolYearId };
@@ -94,7 +104,7 @@ function SectionList() {
     } catch (error) {
         console.error("Error fetching sections:", error);
     }
-}, [filters, roleName]);
+}, [roleName]);
 
   const getUniqueGrades = (sections) => {
     const grades = sections.map(section => section.grade_level);
@@ -103,30 +113,31 @@ function SectionList() {
 
   useEffect(() => {
     async function loadSections() {
+      await fetchSchoolYears();
       const activeYear = await fetchActiveSchoolYear();
       if (activeYear) {
         fetchSections(activeYear.school_year_id);
       }
     }
     loadSections();
-  }, [fetchActiveSchoolYear, fetchSections]);
+  }, [fetchActiveSchoolYear, fetchSections, fetchSchoolYears]);
 
-  const applyFilters = (updatedFilters) => {
-    console.log('Updated filters:', updatedFilters);
+  const applyFilters = () => {
+    console.log('Applying filters:', filters);
     let filtered = sections;
 
-    if (updatedFilters.searchTerm) {
+    if (filters.searchTerm) {
       filtered = filtered.filter(section =>
-        section.section_name.toLowerCase().includes(updatedFilters.searchTerm.toLowerCase())
+        section.section_name.toLowerCase().includes(filters.searchTerm.toLowerCase())
       );
     }
 
-    if (updatedFilters.grade) {
-      filtered = filtered.filter(section => section.grade_level === updatedFilters.grade);
+    if (filters.grade) {
+      filtered = filtered.filter(section => section.grade_level === filters.grade);
     }
 
-    if (updatedFilters.section) {
-      filtered = filtered.filter(section => section.section_id === parseInt(updatedFilters.section));
+    if (filters.schoolYear) {
+      filtered = filtered.filter(section => section.school_year === filters.schoolYear);
     }
 
     console.log('Filtered sections:', filtered);
@@ -136,7 +147,6 @@ function SectionList() {
   const handleSearch = (event) => {
     const searchTerm = event.target.value;
     setFilters(prev => ({ ...prev, searchTerm }));
-    applyFilters({ ...filters, searchTerm });
   };
 
   const handleGradeChange = (event) => {
@@ -144,9 +154,9 @@ function SectionList() {
     setFilters(prev => ({ ...prev, grade }));
   };
 
-  const handleSectionChange = (event) => {
-    const section = event.target.value;
-    setFilters(prev => ({ ...prev, section }));
+  const handleSchoolYearChange = (event) => {
+    const schoolYear = event.target.value;
+    setFilters(prev => ({ ...prev, schoolYear }));
   };
 
   const handleViewClick = async (sectionId) => {
@@ -233,6 +243,18 @@ function SectionList() {
         </div>
         <select
           className="section-list-select"
+          value={filters.schoolYear}
+          onChange={handleSchoolYearChange}
+        >
+          <option value="">All School Years</option>
+          {schoolYears.map((year) => (
+            <option key={year.school_year_id} value={year.school_year}>
+              {year.school_year}
+            </option>
+          ))}
+        </select>
+        <select
+          className="section-list-select"
           value={filters.grade}
           onChange={handleGradeChange}
         >
@@ -241,19 +263,7 @@ function SectionList() {
             <option key={grade} value={grade}>Grade {grade}</option>
           ))}
         </select>
-        <select
-          className="section-list-select"
-          value={filters.section}
-          onChange={handleSectionChange}
-        >
-          <option value="">All Sections</option>
-          {sections.map(section => (
-            <option key={section.section_id} value={section.section_id}>
-              {section.section_name}
-            </option>
-          ))}
-        </select>
-        <button onClick={() => applyFilters(filters)}>Filter</button>
+        <button onClick={() => applyFilters()}>Filter</button>
       </div>
 
       <div className="section-list-table-container">
