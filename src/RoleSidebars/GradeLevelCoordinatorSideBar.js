@@ -29,7 +29,7 @@ function GradeLevelCoordinatorSideBar({ showSidebar, toggleSidebar, handleLogout
 
   // Check if current path is under a specific submenu
   const isRecordsPath = ['/attendance', '/new-grades'].includes(location.pathname);
-  const isEnrollmentPath = ['/enroll-student', '/pending-enrollment', '/school-year', '/section-list', '/enrolled-students', '/brigada-eskwela', '/brigada-eskwela-view'].includes(location.pathname);
+  const isEnrollmentPath = ['/enroll-student', '/pending-enrollment', '/pending-elective', '/school-year', '/section-list', '/enrolled-students', '/brigada-eskwela', '/brigada-eskwela-view'].includes(location.pathname);
   const isClassesPath = ['/section', '/schedule'].includes(location.pathname);
   const isExperimentalsPath = ['/grades'].includes(location.pathname);
 
@@ -169,6 +169,12 @@ function GradeLevelCoordinatorSideBar({ showSidebar, toggleSidebar, handleLogout
                 className={location.pathname === '/pending-enrollment' ? 'active' : ''}
               >
                 <FiUsers className="icon" /> Pending Enrollment
+              </button>
+              <button 
+                onClick={() => handleNavigate('/pending-elective')}
+                className={location.pathname === '/pending-elective' ? 'active' : ''}
+              >
+                <FiUsers className="icon" /> Pending Elective
               </button>
               {/* <button 
                 onClick={() => handleNavigate('/school-year')}
