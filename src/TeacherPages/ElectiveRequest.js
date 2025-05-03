@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Pagination from '../Utilities/pagination';
 import axios from 'axios';
 import '../TeacherPagesCss/EnrollmentRequests.css';
@@ -17,6 +17,7 @@ function ElectiveRequest() {
   const [filteredSections, setFilteredSections] = useState([]);
   const [showElectiveModal, setShowElectiveModal] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
+  const [coordinatorGradeLevel, setCoordinatorGradeLevel] = useState(null);
   const mockElectiveDetails = {
     subject_name: "Basic Web Development",
     day: "Monday and Wednesday",
@@ -52,11 +53,23 @@ function ElectiveRequest() {
     }
   }, [filters.grade, sections]);
 
+  // Refetch students when coordinator's grade level changes
+  useEffect(() => {
+    if (coordinatorGradeLevel) {
+      fetchStudents();
+    }
+  }, [coordinatorGradeLevel]);
+
   const fetchStudents = async (appliedFilters = {}) => {
     try {
       // Log the applied filters to check what's being passed to the backend
       console.log('Applied filters:', appliedFilters);
   
+      // For grade level coordinators, set the grade filter to their assigned grade level
+      if (roleName === 'grade_level_coordinator' && coordinatorGradeLevel) {
+        appliedFilters.grade = coordinatorGradeLevel.toString();
+      }
+
       // Make the API request to get students with the applied filters
       const response = await axios.get('http://localhost:3001/students/pending-elective', {
         params: appliedFilters
@@ -108,7 +121,16 @@ function ElectiveRequest() {
     try {
       const response = await axios.get('http://localhost:3001/sections');
       setSections(response.data);
-      setFilteredSections(response.data);
+      
+      // For grade level coordinators, filter sections based on their assigned grade level
+      if (roleName === 'grade_level_coordinator' && coordinatorGradeLevel) {
+        const filteredSecs = response.data.filter(section => 
+          section.grade_level.toString() === coordinatorGradeLevel.toString()
+        );
+        setFilteredSections(filteredSecs);
+      } else {
+        setFilteredSections(response.data);
+      }
     } catch (error) {
       console.error('Error fetching sections:', error);
     }
@@ -244,6 +266,11 @@ const handleConfirmApproval = async () => {
         console.log('Response received:', response.data); // Debugging log
         setRoleName(response.data.role_name);
         console.log('Role name set to:', response.data.role_name); // Debugging log
+        
+        // If user is a grade level coordinator, fetch their assigned grade level
+        if (response.data.role_name === 'grade_level_coordinator') {
+          fetchCoordinatorGradeLevel(userId);
+        }
       } else {
         console.error('Failed to fetch role name. Response status:', response.status);
       }
@@ -258,6 +285,19 @@ const handleConfirmApproval = async () => {
     }
   };
 
+  const fetchCoordinatorGradeLevel = async (userId) => {
+    try {
+      const response = await axios.get(`http://localhost:3001/coordinator-grade-level/${userId}`);
+      if (response.status === 200 && response.data.gradeLevel) {
+        console.log('Coordinator grade level:', response.data.gradeLevel);
+        setCoordinatorGradeLevel(response.data.gradeLevel);
+        // Auto-set the grade filter to the coordinator's assigned grade level
+        setFilters(prev => ({ ...prev, grade: response.data.gradeLevel.toString() }));
+      }
+    } catch (error) {
+      console.error('Error fetching coordinator grade level:', error);
+    }
+  };
 
   // Handle changes in editable fields
   const handleEditChange = (e) => {
@@ -376,11 +416,16 @@ const handleConfirmApproval = async () => {
             className="pending-enrollment-select"
             value={filters.grade}
             onChange={(e) => handleFilterChange('grade', e.target.value)}
+            disabled={roleName === 'grade_level_coordinator'}
           >
             <option value="">Select Grade</option>
-            {[7, 8, 9, 10].map((grade) => (
-              <option key={grade} value={grade}>Grade {grade}</option>
-            ))}
+            {roleName === 'grade_level_coordinator' && coordinatorGradeLevel ? (
+              <option value={coordinatorGradeLevel}>Grade {coordinatorGradeLevel}</option>
+            ) : (
+              [7, 8, 9, 10].map((grade) => (
+                <option key={grade} value={grade}>Grade {grade}</option>
+              ))
+            )}
           </select>
           <select
             className="pending-enrollment-select"

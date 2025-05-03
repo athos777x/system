@@ -795,7 +795,7 @@ const approveElective = async (studentElectiveId) => {
               <option value={coordinatorGradeLevel}>Grade {coordinatorGradeLevel}</option>
             ) : (
               [7, 8, 9, 10].map((grade) => (
-                <option key={grade} value={grade}>Grade {grade}</option>
+              <option key={grade} value={grade}>Grade {grade}</option>
               ))
             )}
           </select>

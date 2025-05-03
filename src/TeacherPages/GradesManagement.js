@@ -43,14 +43,14 @@ function GradesManagement() {
           fetchStudents({ grade: coordinatorGradeLevel.toString() });
         }
       } else {
-        fetchStudents(roleName);
-        if (roleName === 'subject_teacher') {
-          fetchAssignedSubjects();
-        }
+      fetchStudents(roleName);
+      if (roleName === 'subject_teacher') {
+        fetchAssignedSubjects();
       }
     }
+    }
   }, [roleName, coordinatorGradeLevel]);
-  
+
   useEffect(() => {
     if (students.length > 0) {
       applyFilters();
@@ -546,7 +546,7 @@ function GradesManagement() {
   
     // Important: We allow viewing ANY grade level for a specific student
     // even if the user is a grade level coordinator with a specific assigned grade
-    
+  
     // Fetch the subjects and grades for the selected student and new school year
     const fetchedSubjects = await fetchSubjects(student.student_id, gradeLevel, newSchoolYearId, section_id);
     await fetchGrades(student.student_id, gradeLevel, fetchedSubjects, newSchoolYearId, section_id);
