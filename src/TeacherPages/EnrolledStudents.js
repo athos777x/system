@@ -222,7 +222,7 @@ function EnrolledStudents() {
     }
 
     try {
-      const response = await axios.put(`http://localhost:3001/students/${studentToEdit.student_id}`, {
+      const response = await axios.put(`http://localhost:3001/students/section/${studentToEdit.student_id}`, {
         section_id: selectedSection
       });
 
