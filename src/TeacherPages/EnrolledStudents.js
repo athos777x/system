@@ -19,6 +19,10 @@ function EnrolledStudents() {
     searchTerm: '',
     grade: ''
   });
+  const [sections, setSections] = useState([]);
+  const [showSectionModal, setShowSectionModal] = useState(false);
+  const [selectedSection, setSelectedSection] = useState('');
+  const [studentToEdit, setStudentToEdit] = useState(null);
 
   useEffect(() => {
     const userId = localStorage.getItem('userId'); // Retrieve userId from localStorage
@@ -29,6 +33,7 @@ function EnrolledStudents() {
       console.error('No userId found in localStorage');
     }
     fetchCurrentSchoolYear();
+    fetchSections(); // Fetch sections on component mount
   }, []);
 
   const fetchUserRole = async (userId) => {
@@ -72,6 +77,25 @@ function EnrolledStudents() {
     }
   };
 
+  const fetchSections = async () => {
+    try {
+      console.log("Fetching sections for school year ID:", currentSchoolYearId);
+      const response = await axios.get('http://localhost:3001/sections', {
+        params: { school_year_id: currentSchoolYearId }
+      });
+      console.log("Sections data received:", response.data);
+      setSections(response.data);
+    } catch (error) {
+      console.error('Error fetching sections:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (currentSchoolYearId) {
+      fetchSections();
+    }
+  }, [currentSchoolYearId]);
+
   useEffect(() => {
     if (currentSchoolYearId) {
         fetchStudents();
@@ -102,7 +126,13 @@ function EnrolledStudents() {
     }
 
     try {
-        const queryParams = { ...appliedFilters, school_year_id: currentSchoolYearId }; 
+        // Add include_section=true to ensure we get section info
+        const queryParams = { 
+          ...appliedFilters, 
+          school_year_id: currentSchoolYearId,
+          include_section: true,
+          preserve_data: true // Add flag to indicate we want to preserve all fields 
+        }; 
         console.log("Fetching students with params:", queryParams); // Debugging
 
         const response = await axios.get('http://localhost:3001/enrolled-students', {
@@ -112,6 +142,15 @@ function EnrolledStudents() {
         let studentsData = response.data.filter(
             (student) => student.enrollment_status === 'active'
         );
+        
+        // Log detailed data about sections
+        console.log("Students data received:", studentsData.map(student => ({
+          id: student.student_id,
+          name: student.stud_name,
+          section_id: student.section_id,
+          section_name: student.section_name,
+          enrollment_id: student.enrollment_id
+        })));
         
         // For grade level coordinators, filter the students by their assigned grade level
         if (roleName === 'grade_level_coordinator' && coordinatorGradeLevel) {
@@ -128,8 +167,6 @@ function EnrolledStudents() {
         console.error('There was an error fetching the students!', error);
     }
   }, [currentSchoolYearId, roleName, coordinatorGradeLevel]);
-
-
 
   const handleSearch = (event) => {
     const searchTerm = event.target.value;
@@ -161,11 +198,86 @@ function EnrolledStudents() {
     setCurrentPage(1);
   };
 
+  const handleChangeSectionClick = (student) => {
+    console.log("Student data:", student);
+    console.log("All sections:", sections);
+    console.log("Student grade level:", student.grade_level, "type:", typeof student.grade_level);
+    console.log("Filtered sections:", sections.filter(section => 
+      String(section.grade_level) === String(student.grade_level)
+    ));
+    
+    setStudentToEdit(student);
+    setSelectedSection(student.section_id || '');
+    setShowSectionModal(true);
+  };
+
+  const handleSectionChange = (e) => {
+    setSelectedSection(e.target.value);
+  };
+
+  const updateStudentSection = async () => {
+    if (!studentToEdit || !selectedSection) {
+      alert('Please select a section');
+      return;
+    }
+
+    try {
+      const response = await axios.put(`http://localhost:3001/students/${studentToEdit.student_id}`, {
+        section_id: selectedSection
+      });
+
+      if (response.status === 200) {
+        console.log('Update response:', response.data);
+        
+        // Update the student in the local state with the updated data
+        if (response.data.student_data) {
+          setStudents(prevStudents => 
+            prevStudents.map(student => 
+              student.student_id === studentToEdit.student_id 
+                ? { ...student, 
+                    section_id: selectedSection,
+                    section_name: sections.find(s => s.section_id === parseInt(selectedSection))?.section_name || 'Unknown'
+                  }
+                : student
+            )
+          );
+          
+          // Also update filtered students
+          setFilteredStudents(prevStudents => 
+            prevStudents.map(student => 
+              student.student_id === studentToEdit.student_id 
+                ? { ...student, 
+                    section_id: selectedSection,
+                    section_name: sections.find(s => s.section_id === parseInt(selectedSection))?.section_name || 'Unknown'
+                  }
+                : student
+            )
+          );
+        } else {
+          // If no student data in response, do a full refresh
+          await fetchStudents();
+        }
+        
+        setShowSectionModal(false);
+        alert('Student section updated successfully');
+      } else {
+        alert('Failed to update student section');
+      }
+    } catch (error) {
+      console.error('Error updating student section:', error);
+      alert('Error updating student section');
+    }
+  };
+
   const handleViewClick = async (studentId) => {
     if (selectedStudentId === studentId) {
       setSelectedStudentId(null);
       setStudentSchedules([]);
     } else {
+      // Find the student in our currentStudents array
+      const studentDetails = currentStudents.find(s => s.student_id === studentId);
+      console.log("Selected student details:", studentDetails);
+      
       setSelectedStudentId(studentId);
       await fetchStudentSchedules(studentId);
     }
@@ -173,6 +285,10 @@ function EnrolledStudents() {
 
   const fetchStudentSchedules = async (studentId) => {
     try {
+      // Find the full student data from our collection
+      const studentData = students.find(s => s.student_id === studentId);
+      console.log("Full student data for schedules:", studentData);
+      
       const response = await axios.get(`http://localhost:3001/students/${studentId}/schedules`);
       
       // Process the schedule data to handle multiple days
@@ -280,6 +396,14 @@ function EnrolledStudents() {
                       >
                         View
                       </button>
+                      {(roleName === 'class_adviser' || roleName === 'registrar' || roleName === 'grade_level_coordinator') && (
+                        <button
+                          className="enrolled-students-btn enrolled-students-btn-view"
+                          onClick={() => handleChangeSectionClick(student)}
+                        >
+                          Change Section
+                        </button>
+                      )}
                     </td>
                   </tr>
                   {selectedStudentId === student.student_id && (
@@ -287,6 +411,12 @@ function EnrolledStudents() {
                       <td colSpan="4">
                         <div className="enrolled-students-schedule">
                           <h3>Class Schedule</h3>
+                          <div className="enrolled-students-student-info">
+                            <p><strong>Grade Level:</strong> {student.grade_level}</p>
+                            <p>
+                              <strong>Section:</strong> {student.section_name || 'Not Assigned'}
+                            </p>
+                          </div>
                           <table className="enrolled-students-schedule-table">
                             <thead>
                               <tr>
@@ -348,6 +478,45 @@ function EnrolledStudents() {
           onPageChange={paginate}
         />
       </div>
+
+      {showSectionModal && (
+        <div className="enrolled-students-modal">
+          <div className="enrolled-students-modal-content">
+            <h2>Change Section</h2>
+            <p>Select a new section for {studentToEdit?.stud_name}:</p>
+            
+            <select
+              className="enrolled-students-select"
+              value={selectedSection}
+              onChange={handleSectionChange}
+            >
+              <option value="">Select Section</option>
+              {sections
+                .filter((section) => String(section.grade_level) === String(studentToEdit?.grade_level))
+                .map((section) => (
+                  <option key={section.section_id} value={section.section_id}>
+                    {section.section_name}
+                  </option>
+                ))}
+            </select>
+            
+            <div className="enrolled-students-modal-actions">
+              <button 
+                className="enrolled-students-btn enrolled-students-btn-save"
+                onClick={updateStudentSection}
+              >
+                Save
+              </button>
+              <button 
+                className="enrolled-students-btn enrolled-students-btn-cancel"
+                onClick={() => setShowSectionModal(false)}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
