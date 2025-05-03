@@ -3135,9 +3135,10 @@ app.get('/enrolled-students', (req, res) => {
     SELECT s.student_id, s.firstname, s.middlename, s.lastname, 
       CONCAT(s.lastname, ', ', s.firstname, ' ', 
       IF(s.middlename IS NOT NULL AND s.middlename != '', CONCAT(LEFT(s.middlename, 1), '.'), '')) AS stud_name, 
-      e.grade_level, e.enrollment_status
+      e.grade_level, e.enrollment_status, sec.section_name
     FROM student s
     JOIN enrollment e ON s.student_id = e.student_id
+    JOIN section sec ON e.section_id = sec.section_id
     WHERE e.school_year_id = ?
   `;
 
@@ -7070,5 +7071,66 @@ app.get('/api/school_year/section_name', (req, res) => {
 
     // Return the result
     res.json(results[0]); // Sending the first result (assuming one result will be returned)
+  });
+});
+
+
+app.put('/students/section/:id', (req, res) => {
+  const studentId = req.params.id;
+  const updatedData = req.body;
+
+  const updateQuery = `
+    UPDATE student 
+    SET section_id = ?
+    WHERE student_id = ?
+  `;
+
+  const VALUES = [
+    updatedData.section_id,
+    studentId
+  ];
+
+  // Update student information first
+  db.query(updateQuery, VALUES, (err, result) => {
+    if (err) {
+      console.error('Error updating student:', err);
+      return res.status(500).json({ error: 'Failed to update student' });
+    }
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Student not found' });
+    }
+
+    // Get active school year
+    const getSchoolYearQuery = `SELECT school_year_id FROM school_year WHERE status = 'active' LIMIT 1`;
+
+    db.query(getSchoolYearQuery, (err, schoolYearResult) => {
+      if (err) {
+        console.error('Error getting active school year:', err);
+        return res.status(500).json({ error: 'Failed to retrieve school year' });
+      }
+
+      if (schoolYearResult.length === 0) {
+        return res.status(400).json({ error: 'No active school year found' });
+      }
+
+      const school_year_id = schoolYearResult[0].school_year_id;
+
+      // Update the section_id in the enrollment table
+      const updateEnrollmentQuery = `
+        UPDATE enrollment 
+        SET section_id = ? 
+        WHERE student_id = ? AND school_year_id = ?
+      `;
+
+      db.query(updateEnrollmentQuery, [updatedData.section_id, studentId, school_year_id], (err, enrollResult) => {
+        if (err) {
+          console.error('Error updating enrollment section:', err);
+          return res.status(500).json({ error: 'Failed to update section in enrollment' });
+        }
+
+        res.json({ message: 'Student and enrollment section updated successfully' });
+      });
+    });
   });
 });

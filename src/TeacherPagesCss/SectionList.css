@@ -307,15 +307,15 @@
 .section-list-students-table th:nth-child(3),
 .section-list-students-table td:nth-child(1),
 .section-list-students-table td:nth-child(3) {
-  width: 85px;
-  max-width: 85px;
+  width: 120px;
+  max-width: 120px;
 }
 
 .section-list-students-table th:nth-child(2),
 .section-list-students-table th:nth-child(4),
 .section-list-students-table td:nth-child(2),
 .section-list-students-table td:nth-child(4) {
-  width: calc((100% - 170px) / 2);
+  width: calc((100% - 240px) / 2);
   padding-left: 8px;
 }
 
