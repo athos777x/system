@@ -38,7 +38,7 @@ const teacherRoutes = require('./routes/teacher');
 app.use('/', teacherRoutes);
 
 // Import and initialize subject coordinator endpoints
-const subjectCoordinatorRoutes = require('./subject-coordinator-endpoints');
+const subjectCoordinatorRoutes = require('./routes/subject-coordinator-endpoints');
 subjectCoordinatorRoutes(app, db);
 
 // Serve static files from the uploads directory
