@@ -86,8 +86,11 @@ function Student_EnrollmentPage() {
         section_id: studentData.section_id
       });
 
-      // Update electiveStatus state to reflect the pending status immediately
-      setElectiveStatus('pending');
+      // Update electiveStatus state with the correct object structure
+      setElectiveStatus({
+        enrollment_status: 'pending',
+        hasElective: 1
+      });
       
       alert(data.message);
       handleCloseModal();

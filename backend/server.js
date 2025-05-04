@@ -1245,7 +1245,7 @@ app.get('/elective-status/:user_id', (req, res) => {
   const userId = req.params.user_id;
 
   // First, get the student's section_id based on user_id
-  const getSectionQuery = `SELECT section_id FROM student WHERE user_id = ?`;
+  const getSectionQuery = `SELECT section_id, student_id FROM student WHERE user_id = ?`;
 
   db.query(getSectionQuery, [userId], (err, sectionResult) => {
     if (err) {
@@ -1254,31 +1254,37 @@ app.get('/elective-status/:user_id', (req, res) => {
     }
 
     if (sectionResult.length === 0) {
-      return res.json({ status: '' }); // No student found
+      return res.json({ status: '', hasElective: 0 }); // No student found
     }
 
     const sectionId = sectionResult[0].section_id;
+    const studentId = sectionResult[0].student_id;
 
-    // Now, check if the student has any elective for that section
+    // Now, check if the student has any elective enrollment
     const checkElectiveQuery = `
-      SELECT COUNT(*) AS hasElective, enrollment_status
+      SELECT enrollment_status
       FROM student_elective 
-      WHERE user_id = ? 
-        AND section_id = ?
+      WHERE user_id = ?
+      LIMIT 1
     `;
 
-    db.query(checkElectiveQuery, [userId, sectionId], (err, electiveResult) => {
+    db.query(checkElectiveQuery, [userId], (err, electiveResult) => {
       if (err) {
         console.error('Error checking elective status:', err);
         return res.status(500).json({ error: 'Database error' });
       }
 
-      const hasElective = electiveResult[0].hasElective > 0;
-      res.json({ status: hasElective ? 'existing' : '' });
+      // Check if there are any elective records
+      const hasElective = electiveResult.length > 0 ? 1 : 0;
+      const status = electiveResult.length > 0 ? electiveResult[0].enrollment_status : '';
+      
+      res.json({ 
+        status: status, 
+        hasElective: hasElective 
+      });
     });
   });
 });
-
 
 // ENDPOINT USED:
 // STUDENT ENROLLMENT PAGE
