@@ -78,11 +78,23 @@ function ElectiveRequest() {
       // Log the full response from the server to see if it's working as expected
       console.log('Full response from server:', response);
   
-      // Sort the students by first name
-      const sortedStudents = response.data.sort((a, b) => a.firstname.localeCompare(b.firstname));
+      // Remove duplicate student records by using a Map with student_id as key
+      const uniqueStudentsMap = new Map();
+      response.data.forEach(student => {
+        // Only add the student if they're not already in the map
+        if (!uniqueStudentsMap.has(student.student_id)) {
+          uniqueStudentsMap.set(student.student_id, student);
+        }
+      });
+      
+      // Convert the Map back to an array
+      const uniqueStudents = Array.from(uniqueStudentsMap.values());
+      
+      // Sort the students by last name alphabetically
+      const sortedStudents = uniqueStudents.sort((a, b) => a.lastname.localeCompare(b.lastname));
   
       // Log the sorted students before setting the state
-      console.log('Sorted students:', sortedStudents);
+      console.log('Sorted students (after removing duplicates):', sortedStudents);
       
       // Log each student's data to check the status field
       sortedStudents.forEach(student => {
@@ -460,7 +472,7 @@ const handleConfirmApproval = async () => {
               currentStudents.map((student, index) => (
                 <tr key={student.student_id}>
                   <td>{indexOfFirstStudent + index + 1}</td>
-                  <td>{student.firstname} {student.middlename && `${student.middlename[0]}.`} {student.lastname}</td>
+                  <td>{student.lastname}, {student.firstname} {student.middlename}</td>
                   <td>{student.current_yr_lvl}</td>
                   <td>{student.section_name}</td>
                   <td>

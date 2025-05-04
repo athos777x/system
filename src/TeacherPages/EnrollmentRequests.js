@@ -55,8 +55,8 @@ function EnrollmentRequests() {
       // Log the full response from the server to see if it's working as expected
       console.log('Full response from server:', response);
   
-      // Sort the students by first name
-      const sortedStudents = response.data.sort((a, b) => a.firstname.localeCompare(b.firstname));
+      // Sort the students by last name
+      const sortedStudents = response.data.sort((a, b) => a.lastname.localeCompare(b.lastname));
   
       // Log the sorted students before setting the state
       console.log('Sorted students:', sortedStudents);
@@ -600,7 +600,7 @@ const approveElective = async (studentElectiveId) => {
               <tbody>
                 <tr>
                   <th>Student Name:</th>
-                  <td>{`${student.firstname} ${student.middlename ? student.middlename + ' ' : ''}${student.lastname}`}</td>
+                  <td>{`${student.lastname}, ${student.firstname} ${student.middlename || ''}`}</td>
                 </tr>
                 <tr>
                   <th>Student Type:</th>
@@ -832,7 +832,7 @@ const approveElective = async (studentElectiveId) => {
               currentStudents.map((student, index) => (
                 <tr key={student.student_id}>
                   <td>{indexOfFirstStudent + index + 1}</td>
-                  <td>{student.firstname} {student.middlename && `${student.middlename[0]}.`} {student.lastname}</td>
+                  <td>{student.lastname}, {student.firstname} {student.middlename}</td>
                   <td>{student.grade_level}</td>
                   <td>{student.section_id}</td>
                   <td>
@@ -950,11 +950,11 @@ const approveElective = async (studentElectiveId) => {
 
       {showRejectModal && studentToReject && (
         <div className="enrollment-modal">
-          <div className="enrollment-modal-content">
+          <div className="enrollment-modal-content reject-modal">
             <h2>Confirm Rejection</h2>
             <div className="student-info">
               <p>Are you sure you want to reject the enrollment request for:</p>
-              <p><strong>{`${studentToReject.student.firstname} ${studentToReject.student.middlename ? studentToReject.student.middlename[0] + '.' : ''} ${studentToReject.student.lastname}`}</strong>?</p>
+              <p><strong>{`${studentToReject.student.lastname}, ${studentToReject.student.firstname} ${studentToReject.student.middlename || ''}`}</strong>?</p>
             </div>
             <div className="modal-actions">
               <button

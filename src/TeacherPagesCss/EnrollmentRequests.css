@@ -589,4 +589,37 @@
   border-radius: 4px;
   text-align: center;
   font-style: italic;
-} 
+}
+
+/* Styling for the reject confirmation modal */
+.enrollment-modal .enrollment-modal-content.reject-modal {
+  width: 400px;
+  max-width: 90%;
+  padding: 20px;
+  border-radius: 8px;
+  margin: 0 auto;
+  max-height: none;
+  overflow: visible;
+}
+
+.reject-modal h2 {
+  margin-top: 0;
+  font-size: 1.5rem;
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+.reject-modal .student-info {
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.reject-modal .modal-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.reject-modal .modal-actions button {
+  min-width: 120px;
+}
