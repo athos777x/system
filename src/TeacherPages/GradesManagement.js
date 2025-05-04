@@ -291,8 +291,9 @@ function GradesManagement() {
     // Convert to number for validation
     const numValue = parseInt(value);
 
-    // Set invalid flag if complete number is outside range
-    const isInvalid = (value.length === 2 || value.length === 3) && (numValue < 70 || numValue > 100);
+    // Set invalid flag if value is outside range (70-100)
+    // For single digits or incomplete values, allow entry but mark as invalid
+    const isInvalid = value.length >= 2 && (numValue < 70 || numValue > 100);
 
     setSubjects((prevSubjects) => {
       const updatedSubjects = [...prevSubjects];
@@ -302,7 +303,7 @@ function GradesManagement() {
         [`${period}_invalid`]: isInvalid 
       };
 
-      // Only calculate final grade if all quarters have valid grades
+      // Only calculate final grade if all quarters have valid grades and none are invalid
       if (!isInvalid) {
         const q1 = parseFloat(updatedSubjects[index].q1) || 0;
         const q2 = parseFloat(updatedSubjects[index].q2) || 0;
@@ -314,7 +315,13 @@ function GradesManagement() {
                            updatedSubjects[index].q3 && 
                            updatedSubjects[index].q4;
 
-        if (hasAllGrades) {
+        const hasAnyInvalidGrade = 
+          updatedSubjects[index].q1_invalid || 
+          updatedSubjects[index].q2_invalid || 
+          updatedSubjects[index].q3_invalid || 
+          updatedSubjects[index].q4_invalid;
+
+        if (hasAllGrades && !hasAnyInvalidGrade) {
           const finalGrade = (q1 + q2 + q3 + q4) / 4;
           updatedSubjects[index].final = finalGrade.toFixed(2);
           updatedSubjects[index].remarks = finalGrade >= 75 ? "Passed" : "Failed";
@@ -332,6 +339,19 @@ function GradesManagement() {
     try {
       if (!selectedStudent || subjects.length === 0) {
         alert("No student or subjects selected.");
+        return;
+      }
+
+      // Check for invalid grades before proceeding
+      const invalidGrades = subjects.some(subject => {
+        return ['q1', 'q2', 'q3', 'q4'].some(quarter => {
+          const grade = subject[quarter];
+          return grade && (parseInt(grade) < 70 || parseInt(grade) > 100);
+        });
+      });
+
+      if (invalidGrades) {
+        alert("Cannot save. Some grades are outside the valid range (70-100).");
         return;
       }
 
@@ -712,34 +732,37 @@ function GradesManagement() {
                   </td>
                   <td>
                     <div className="grades-management-actions">
-                      <button 
-                        className="grades-management-btn grades-management-btn-view"
-                        onClick={() => handleStudentClick(student)}
-                      >
-                        View
-                      </button>
-                      {(roleName !== 'principal' && roleName !== 'registrar' && roleName !== 'grade_level_coordinator' && roleName !== 'class_adviser') && (
-                        <>
-                      <button 
-                        className={`grades-management-btn grades-management-btn-edit ${editingStudent && editingStudent.student_id === student.student_id ? 'cancel' : ''}`}
-                        onClick={() => handleEditClick(student)}
-                        disabled={!editingStudent && selectedStudent?.student_id === student.student_id && selectedGradeLevel !== student.current_yr_lvl}
-                        style={{ 
-                          opacity: !editingStudent && selectedStudent?.student_id === student.student_id && selectedGradeLevel !== student.current_yr_lvl ? '0.5' : '1',
-                          cursor: !editingStudent && selectedStudent?.student_id === student.student_id && selectedGradeLevel !== student.current_yr_lvl ? 'not-allowed' : 'pointer'
-                        }}
-                      >
-                        {editingStudent && editingStudent.student_id === student.student_id ? "Cancel" : "Edit"}
-                      </button>
-                      {editingStudent && editingStudent.student_id === student.student_id && (
+                      {(!editingStudent || editingStudent.student_id === student.student_id) && (
                         <button 
-                          className="grades-management-btn grades-management-btn-save"
-                          onClick={handleSaveChanges}
+                          className="grades-management-btn grades-management-btn-view"
+                          onClick={() => handleStudentClick(student)}
+                          style={{ display: editingStudent ? 'none' : 'inline-block' }}
                         >
-                          Save
+                          View
                         </button>
                       )}
-                      </>
+                      {(roleName !== 'principal' && roleName !== 'registrar' && roleName !== 'grade_level_coordinator' && roleName !== 'class_adviser') && (
+                        <>
+                        <button 
+                          className={`grades-management-btn grades-management-btn-edit ${editingStudent && editingStudent.student_id === student.student_id ? 'cancel' : ''}`}
+                          onClick={() => handleEditClick(student)}
+                          disabled={!editingStudent && selectedStudent?.student_id === student.student_id && selectedGradeLevel !== student.current_yr_lvl}
+                          style={{ 
+                            opacity: !editingStudent && selectedStudent?.student_id === student.student_id && selectedGradeLevel !== student.current_yr_lvl ? '0.5' : '1',
+                            cursor: !editingStudent && selectedStudent?.student_id === student.student_id && selectedGradeLevel !== student.current_yr_lvl ? 'not-allowed' : 'pointer'
+                          }}
+                        >
+                          {editingStudent && editingStudent.student_id === student.student_id ? "Cancel" : "Edit"}
+                        </button>
+                        {editingStudent && editingStudent.student_id === student.student_id && (
+                          <button 
+                            className="grades-management-btn grades-management-btn-save"
+                            onClick={handleSaveChanges}
+                          >
+                            Save
+                          </button>
+                        )}
+                        </>
                       )}
                     </div>
                   </td>
@@ -800,6 +823,7 @@ function GradesManagement() {
                                         onChange={(e) => handleGradeChange(index, "q1", e.target.value)}
                                         placeholder="70-100"
                                         maxLength="3"
+                                        title="Enter a grade between 70 and 100"
                                         style={{
                                           border: subject.q1_invalid ? '2px solid #ff4444' : '1px solid #ccc',
                                           backgroundColor: subject.q1_invalid ? '#fff0f0' : 'white'
@@ -817,6 +841,7 @@ function GradesManagement() {
                                         onChange={(e) => handleGradeChange(index, "q2", e.target.value)}
                                         placeholder="70-100"
                                         maxLength="3"
+                                        title="Enter a grade between 70 and 100"
                                         style={{
                                           border: subject.q2_invalid ? '2px solid #ff4444' : '1px solid #ccc',
                                           backgroundColor: subject.q2_invalid ? '#fff0f0' : 'white'
@@ -834,6 +859,7 @@ function GradesManagement() {
                                         onChange={(e) => handleGradeChange(index, "q3", e.target.value)}
                                         placeholder="70-100"
                                         maxLength="3"
+                                        title="Enter a grade between 70 and 100"
                                         style={{
                                           border: subject.q3_invalid ? '2px solid #ff4444' : '1px solid #ccc',
                                           backgroundColor: subject.q3_invalid ? '#fff0f0' : 'white'
@@ -851,6 +877,7 @@ function GradesManagement() {
                                         onChange={(e) => handleGradeChange(index, "q4", e.target.value)}
                                         placeholder="70-100"
                                         maxLength="3"
+                                        title="Enter a grade between 70 and 100"
                                         style={{
                                           border: subject.q4_invalid ? '2px solid #ff4444' : '1px solid #ccc',
                                           backgroundColor: subject.q4_invalid ? '#fff0f0' : 'white'
