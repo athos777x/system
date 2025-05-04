@@ -1316,7 +1316,7 @@ const handleArchive = () => {
                         Edit
                       </button>
                     )} */}
-                    {(roleName === 'registrar' || roleName === 'class_adviser' || roleName === 'grade_level_coordinator') && student.active_status === 'inactive' && (
+                    {(roleName === 'registrar' || roleName === 'class_adviser' || roleName === 'grade_level_coordinator' || roleName === 'subject_teacher') && student.active_status === 'inactive' && (
                       <button 
                         className="enroll-student-btn enroll-student-btn-register"
                         onClick={(e) => {

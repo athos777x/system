@@ -37,6 +37,10 @@ const teacherRoutes = require('./routes/teacher');
 // Use routes
 app.use('/', teacherRoutes);
 
+// Import and initialize subject coordinator endpoints
+const subjectCoordinatorRoutes = require('./routes/subject-coordinator-endpoints');
+subjectCoordinatorRoutes(app, db);
+
 // Serve static files from the uploads directory
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
@@ -1245,7 +1249,7 @@ app.get('/elective-status/:user_id', (req, res) => {
   const userId = req.params.user_id;
 
   // First, get the student's section_id based on user_id
-  const getSectionQuery = `SELECT section_id FROM student WHERE user_id = ?`;
+  const getSectionQuery = `SELECT section_id, student_id FROM student WHERE user_id = ?`;
 
   db.query(getSectionQuery, [userId], (err, sectionResult) => {
     if (err) {
@@ -1254,31 +1258,37 @@ app.get('/elective-status/:user_id', (req, res) => {
     }
 
     if (sectionResult.length === 0) {
-      return res.json({ status: '' }); // No student found
+      return res.json({ status: '', hasElective: 0 }); // No student found
     }
 
     const sectionId = sectionResult[0].section_id;
+    const studentId = sectionResult[0].student_id;
 
-    // Now, check if the student has any elective for that section
+    // Now, check if the student has any elective enrollment
     const checkElectiveQuery = `
-      SELECT COUNT(*) AS hasElective, enrollment_status
+      SELECT enrollment_status
       FROM student_elective 
-      WHERE user_id = ? 
-        AND section_id = ?
+      WHERE user_id = ?
+      LIMIT 1
     `;
 
-    db.query(checkElectiveQuery, [userId, sectionId], (err, electiveResult) => {
+    db.query(checkElectiveQuery, [userId], (err, electiveResult) => {
       if (err) {
         console.error('Error checking elective status:', err);
         return res.status(500).json({ error: 'Database error' });
       }
 
-      const hasElective = electiveResult[0].hasElective > 0;
-      res.json({ status: hasElective ? 'existing' : '' });
+      // Check if there are any elective records
+      const hasElective = electiveResult.length > 0 ? 1 : 0;
+      const status = electiveResult.length > 0 ? electiveResult[0].enrollment_status : '';
+      
+      res.json({ 
+        status: status, 
+        hasElective: hasElective 
+      });
     });
   });
 });
-
 
 // ENDPOINT USED:
 // STUDENT ENROLLMENT PAGE
@@ -5538,21 +5548,32 @@ app.get('/sections/:sectionId/schedules/by-adviser', (req, res) => {
     const employee_id = empResult[0].employee_id;
     console.log('✅ Found employee_id:', employee_id);
 
+    // Modified query that handles both regular subjects and elective subjects directly
     const scheduleQuery = `
     SELECT 
-    sc.schedule_id, sc.teacher_id, IF(sc.elective = '0', sb.subject_name, f.name) AS subject_name, 
-    TIME_FORMAT(sc.time_start, '%h:%i %p') AS time_start, TIME_FORMAT(sc.time_end, '%h:%i %p') AS time_end, 
-    sc.day, sc.section_id, s.section_name, sc.schedule_status,
-    CONCAT(e.firstname, ' ', IF(e.middlename IS NOT NULL AND e.middlename != '', CONCAT(LEFT(e.middlename, 1), '. '), ''), 
-    e.lastname) AS teacher_name
-    FROM section_assigned sa JOIN schedule sc  ON sa.section_id = sc.section_id AND sa.school_year_id = sc.school_year_id
-    LEFT JOIN subject sb ON sc.subject_id = sb.subject_id LEFT JOIN elective f ON sc.elective = f.elective_id
-    LEFT JOIN employee e ON sc.teacher_id = e.employee_id LEFT JOIN section s ON sa.section_id = s.section_id
-    WHERE sa.employee_id = ? 
-    ORDER BY s.section_name, sc.time_start`;
+      sc.schedule_id, 
+      sc.teacher_id, 
+      sb.subject_name, 
+      TIME_FORMAT(sc.time_start, '%h:%i %p') AS time_start, 
+      TIME_FORMAT(sc.time_end, '%h:%i %p') AS time_end, 
+      sc.day, 
+      sc.section_id, 
+      s.section_name, 
+      sc.schedule_status,
+      CONCAT(
+        emp.firstname, ' ', 
+        IF(emp.middlename IS NOT NULL AND emp.middlename != '', 
+          CONCAT(LEFT(emp.middlename, 1), '. '), ''), 
+        emp.lastname
+      ) AS teacher_name
+    FROM schedule sc
+    LEFT JOIN subject sb ON sc.subject_id = sb.subject_id
+    LEFT JOIN employee emp ON sc.teacher_id = emp.employee_id
+    LEFT JOIN section s ON sc.section_id = s.section_id
+    WHERE sc.section_id = ?
+    ORDER BY sc.time_start`;
 
-
-    db.query(scheduleQuery, [employee_id, sectionId], (err, schedules) => {
+    db.query(scheduleQuery, [sectionId], (err, schedules) => {
       if (err) {
         console.error('❌ Error fetching section schedules:', err);
         return res.status(500).json({ error: 'Failed to fetch schedules' });

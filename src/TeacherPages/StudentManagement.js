@@ -1813,7 +1813,7 @@ const handleArchive = () => {
                                         Print
                                   </button>
                                   */}
-                                  {roleName === 'registrar' && (
+                                  {(roleName === 'registrar' || roleName === 'subject_teacher') && (
                               <button
                                       className="student-mgmt-btn student-mgmt-btn-archive"
                                       onClick={() => openArchiveModal(student.student_id)}

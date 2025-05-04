@@ -396,7 +396,7 @@ function EnrolledStudents() {
                       >
                         View
                       </button>
-                      {(roleName === 'class_adviser' || roleName === 'registrar' || roleName === 'grade_level_coordinator') && (
+                      {(roleName === 'registrar' || roleName === 'grade_level_coordinator') && (
                         <button
                           className="enrolled-students-btn enrolled-students-btn-view"
                           onClick={() => handleChangeSectionClick(student)}

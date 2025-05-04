@@ -16,7 +16,8 @@ import {
   FiSettings,
   FiLogOut,
   FiClock,
-  FiLayers
+  FiLayers,
+  FiEye
 } from 'react-icons/fi';
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -30,8 +31,8 @@ function SubjectTeacherSideBar({ showSidebar, toggleSidebar, handleLogout }) {
   const location = useLocation();
 
   // Check if current path is under a specific submenu
-  const isRecordsPath = ['/attendance', '/brigada-eskwela', '/new-grades'].includes(location.pathname);
-  const isEnrollmentPath = ['/school-year', '/section-list', '/enrolled-students'].includes(location.pathname);
+  const isRecordsPath = ['/attendance', '/new-grades'].includes(location.pathname);
+  const isEnrollmentPath = ['/enroll-student', '/pending-enrollment', '/pending-elective', '/section-list', '/enrolled-students', '/brigada-eskwela', '/brigada-eskwela-view'].includes(location.pathname);
   const isExperimentalsPath = ['/grades'].includes(location.pathname);
 
   // Update useEffect to handle initial submenu state based on path
@@ -59,7 +60,7 @@ function SubjectTeacherSideBar({ showSidebar, toggleSidebar, handleLogout }) {
     setShowClassesSubMenu(false);
     setShowExperimentalsSubMenu(false);
     if (!showEnrollmentSubMenu) {
-      navigate('/school-year');
+      navigate('/enroll-student');
     }
   };
 
@@ -122,12 +123,12 @@ function SubjectTeacherSideBar({ showSidebar, toggleSidebar, handleLogout }) {
           <FiHome className="icon" /> Home
         </button>
         
-        {/* <button 
+        <button 
           onClick={() => handleNavigate('/student')}
           className={location.pathname === '/student' ? 'active' : ''}
         >
           <FiUsers className="icon" /> Students
-        </button> */}
+        </button>
 
         <button 
           onClick={() => handleNavigate('/teacher-schedule')}
@@ -169,17 +170,29 @@ function SubjectTeacherSideBar({ showSidebar, toggleSidebar, handleLogout }) {
         >
           <FiBook className="icon" /> Section
         </button> */}
-        {/* <div className={`menu-with-submenu ${showEnrollmentSubMenu || isEnrollmentPath ? 'active' : ''}`}>
+        <div className={`menu-with-submenu ${showEnrollmentSubMenu || isEnrollmentPath ? 'active' : ''}`}>
           <button onClick={toggleEnrollmentSubMenu}>
             <FiCalendar className="icon" /> Enrollment
           </button>
           {showEnrollmentSubMenu && (
             <div className="submenu">
               <button 
-                onClick={() => handleNavigate('/school-year')}
-                className={location.pathname === '/school-year' ? 'active' : ''}
+                onClick={() => handleNavigate('/enroll-student')}
+                className={location.pathname === '/enroll-student' ? 'active' : ''}
               >
-                <FiCalendar className="icon" /> School Year
+                <FiUsers className="icon" /> Enroll Student
+              </button>
+              <button 
+                onClick={() => handleNavigate('/pending-enrollment')}
+                className={location.pathname === '/pending-enrollment' ? 'active' : ''}
+              >
+                <FiUsers className="icon" /> Pending Enrollment
+              </button>
+              <button 
+                onClick={() => handleNavigate('/pending-elective')}
+                className={location.pathname === '/pending-elective' ? 'active' : ''}
+              >
+                <FiUsers className="icon" /> Pending Elective
               </button>
               <button 
                 onClick={() => handleNavigate('/section-list')}
@@ -193,9 +206,21 @@ function SubjectTeacherSideBar({ showSidebar, toggleSidebar, handleLogout }) {
               >
                 <FiUsers className="icon" /> Enrolled Students
               </button>
+              <button 
+                onClick={() => handleNavigate('/brigada-eskwela')}
+                className={location.pathname === '/brigada-eskwela' ? 'active' : ''}
+              >
+                <FiCheckSquare className="icon" /> Check Brigada Eskwela
+              </button>
+              <button 
+                onClick={() => handleNavigate('/brigada-eskwela-view')}
+                className={location.pathname === '/brigada-eskwela-view' ? 'active' : ''}
+              >
+                <FiEye className="icon" /> View Brigada Eskwela
+              </button>
             </div>
           )}
-        </div> */}
+        </div>
         {/* <div className={`menu-with-submenu ${showExperimentalsSubMenu || isExperimentalsPath ? 'active' : ''}`}>
           <button onClick={toggleExperimentalsSubMenu}>
             <FiLayers className="icon" /> Experimentals
