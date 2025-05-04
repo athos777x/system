@@ -70,6 +70,7 @@ function SubjectsManagement() {
     try {
       const userId = localStorage.getItem('userId');  // Get the user ID from localStorage
       console.log('userId:', userId);  // Check if userId is available in the console
+      console.log('Current role name:', roleName);  // Log the role name
   
       if (!userId) {
         console.error('User ID is missing');
@@ -81,6 +82,8 @@ function SubjectsManagement() {
       const endpoint = roleName === 'subject_coordinator'
         ? `http://localhost:3001/subjects/by-coordinator/${userId}`  // Pass userId in the URL
         : `http://localhost:3001/subjects`;  // Regular subjects
+      
+      console.log('Using endpoint:', endpoint);  // Log the endpoint being used
   
       // Fetch subjects with parameters
       const response = await axios.get(endpoint, {
@@ -89,11 +92,28 @@ function SubjectsManagement() {
           searchTerm: filters.searchTerm.trim(),
         },
       });
+      
+      console.log('API Response:', response.data);  // Log the API response data
   
       setSubjects(response.data);
       setFilteredSubjects(response.data);
     } catch (error) {
       console.error('Error fetching subjects:', error);
+      
+      // Enhanced error logging
+      if (error.response) {
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        console.error('Error response data:', error.response.data);
+        console.error('Error response status:', error.response.status);
+        console.error('Error response headers:', error.response.headers);
+      } else if (error.request) {
+        // The request was made but no response was received
+        console.error('Error request:', error.request);
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        console.error('Error message:', error.message);
+      }
     }
   }, [filters, roleName]);
   
@@ -196,7 +216,19 @@ function SubjectsManagement() {
       console.log('Subject data being sent:', subjectData); // Check the data here
   
       if (isEditing) {
-        await axios.put(`http://localhost:3001/subjects/${selectedSubject.subject_id}`, subjectData);
+        // Use different endpoints based on role
+        if (roleName === 'subject_coordinator') {
+          // For subject coordinators, use the restricted edit endpoint
+          const userId = localStorage.getItem('userId');
+          await axios.put(`http://localhost:3001/subjects/coordinator-edit/${selectedSubject.subject_id}`, {
+            userId,
+            description: subjectData.description,
+            status: subjectData.status
+          });
+        } else {
+          // For other roles, use the standard endpoint
+          await axios.put(`http://localhost:3001/subjects/${selectedSubject.subject_id}`, subjectData);
+        }
       } else {
         await axios.post('http://localhost:3001/subjects', subjectData);
       }
@@ -210,8 +242,10 @@ function SubjectsManagement() {
       console.error('Error saving subject:', error);
       if (error.response?.data?.error === 'Subject already exists') {
         setErrors({ subject_name: 'Subject already exists' });
+      } else if (error.response?.data?.error === 'Not authorized to edit this subject') {
+        setErrors({ general: 'You are not authorized to edit this subject' });
       } else {
-        setErrors({ subject_name: 'Error saving subject' });
+        setErrors({ general: 'Error saving subject' });
       }
     } finally {
       setIsSaving(false);
@@ -345,17 +379,17 @@ function SubjectsManagement() {
                           Edit
                         </button>
                         {roleName === 'principal' && (
-                        <button 
-                        className={`subjects-management-btn ${subject?.archive_status === 'archive' ? 'subjects-management-btn-view' : 'subjects-management-btn-archive'}`}
-                        onClick={() => handleDelete(subject)}
-                        disabled={subject?.archive_status !== 'archive' && subject?.hasSched === "1"}
-                        style={{
-                          opacity: subject?.archive_status !== 'archive' && subject?.hasSched === "1" ? 0.5 : 1, 
-                          cursor: subject?.archive_status !== 'archive' && subject?.hasSched === "1" ? 'not-allowed' : 'pointer'
-                        }}
-                      >
-                        {subject?.archive_status === 'archive' ? 'Unarchive' : 'Archive'}
-                      </button>                    
+                          <button 
+                            className={`subjects-management-btn ${subject?.archive_status === 'archive' ? 'subjects-management-btn-view' : 'subjects-management-btn-archive'}`}
+                            onClick={() => handleDelete(subject)}
+                            disabled={subject?.archive_status !== 'archive' && subject?.hasSched === "1"}
+                            style={{
+                              opacity: subject?.archive_status !== 'archive' && subject?.hasSched === "1" ? 0.5 : 1, 
+                              cursor: subject?.archive_status !== 'archive' && subject?.hasSched === "1" ? 'not-allowed' : 'pointer'
+                            }}
+                          >
+                            {subject?.archive_status === 'archive' ? 'Unarchive' : 'Archive'}
+                          </button>                    
                         )}
                       </div>
                     </td>
@@ -392,6 +426,12 @@ function SubjectsManagement() {
                                 <th>Description:</th>
                                 <td>{selectedSubject.description || 'No description provided'}</td>
                               </tr>
+                              {roleName === 'subject_coordinator' && selectedSubject.school_year && (
+                                <tr>
+                                  <th>School Year:</th>
+                                  <td>{selectedSubject.school_year}</td>
+                                </tr>
+                              )}
                             </tbody>
                           </table>
                         </div>
@@ -425,6 +465,7 @@ function SubjectsManagement() {
                   value={newSubjectData.subject_name}
                   onChange={handleAddChange}
                   required
+                  disabled={isEditing && roleName === 'subject_coordinator'}
                 />
                 {errors.subject_name && (
                   <div className="error-message" style={{ color: 'red', fontSize: '0.8em', marginTop: '5px' }}>
@@ -439,6 +480,7 @@ function SubjectsManagement() {
                   name="subject_type"
                   value={newSubjectData.subject_type}
                   onChange={handleAddChange}
+                  disabled={isEditing && roleName === 'subject_coordinator'}
                 >
                   <option value="regular">Regular Subject</option>
                   <option value="elective">Elective Subject</option>
@@ -454,6 +496,7 @@ function SubjectsManagement() {
                     value={newSubjectData.max_capacity}
                     onChange={handleAddChange}
                     required={newSubjectData.subject_type === 'elective'}
+                    disabled={isEditing && roleName === 'subject_coordinator'}
                   >
                   </input>
                 </div>
@@ -467,6 +510,7 @@ function SubjectsManagement() {
                     value={newSubjectData.grade_level}
                     onChange={handleAddChange}
                     required={newSubjectData.subject_type === 'regular'}
+                    disabled={isEditing && roleName === 'subject_coordinator'}
                   >
                     {grades.map((grade) => (
                       <option key={grade} value={grade}>
@@ -497,6 +541,12 @@ function SubjectsManagement() {
                   onChange={handleAddChange}
                 />
               </div>
+              
+              {errors.general && (
+                <div className="error-message" style={{ color: 'red', fontSize: '0.8em', marginTop: '5px', marginBottom: '10px' }}>
+                  {errors.general}
+                </div>
+              )}
 
               <div className="subjects-management-modal-actions">
                 <button 

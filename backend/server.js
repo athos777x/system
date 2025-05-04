@@ -37,6 +37,10 @@ const teacherRoutes = require('./routes/teacher');
 // Use routes
 app.use('/', teacherRoutes);
 
+// Import and initialize subject coordinator endpoints
+const subjectCoordinatorRoutes = require('./subject-coordinator-endpoints');
+subjectCoordinatorRoutes(app, db);
+
 // Serve static files from the uploads directory
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 

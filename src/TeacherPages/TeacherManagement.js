@@ -62,6 +62,7 @@ function TeacherManagement() {
   const [showAssignGradeLevelModal, setShowAssignGradeLevelModal] = useState(false);
   const [selectedGradeLevelForCoordinator, setSelectedGradeLevelForCoordinator] = useState('7');
   const [teacherGradeLevel, setTeacherGradeLevel] = useState([]);
+  const [isSubjectCoordinator, setIsSubjectCoordinator] = useState(false);
 
   const navigate = useNavigate();
 
@@ -415,61 +416,130 @@ function TeacherManagement() {
   const handleAssignSubject = (employeeId) => {
     setCurrentTeacherId(employeeId);
     setShowAssignSubjectModal(true);
-    setSelectedGradeLevel('7');
-    handleGradeLevelChange('7');
+    
+    const currentTeacher = teachers.find(t => t.employee_id === employeeId);
+    
+    // Check if the teacher is a subject coordinator (role_id === 8)
+    if (currentTeacher && currentTeacher.role_id === 8) {
+      // For subject coordinators, fetch only unassigned subjects
+      // We'll call this after a school year is selected
+      setIsSubjectCoordinator(true);
+      
+      // If a school year is already selected, fetch unassigned subjects
+      if (selectedSchoolYear) {
+        fetchUnassignedSubjects();
+      } else {
+        // Clear subjects until school year is selected
+        setSubjectsByGrade([]);
+      }
+    } else {
+      // For other roles, continue with grade level filtering
+      setIsSubjectCoordinator(false);
+      setSelectedGradeLevel('7');
+      handleGradeLevelChange('7');
+    }
+  };
+
+  // Fetch subjects not yet assigned to any coordinator
+  const fetchUnassignedSubjects = async () => {
+    if (!selectedSchoolYear) {
+      alert('Please select a school year first');
+      return;
+    }
+    
+    try {
+      const response = await axios.get('http://localhost:3001/unassigned-subjects', {
+        params: { school_year_id: selectedSchoolYear }
+      });
+      
+      // Transform the data to match the expected format for subject assignment
+      const formattedSubjects = response.data.map(subject => ({
+        subject_name: subject.subject_name,
+        type: subject.elective === 'Y' ? 'elective' : 'subject',
+        subject_id: subject.subject_id
+      }));
+      
+      setSubjectsByGrade(formattedSubjects);
+    } catch (error) {
+      console.error('Error fetching unassigned subjects:', error);
+      alert('Error fetching unassigned subjects');
+    }
   };
 
   const handleSubjectAssignment = async () => {
-    if (!selectedSubject || !selectedGradeLevelForSection || !selectedSection || !selectedSchoolYear) {
-      alert('Please select a subject, grade level, section, and school year.');
-      return;
+    const currentTeacher = teachers.find(t => t.employee_id === currentTeacherId);
+    const isSubjectCoordinator = currentTeacher && currentTeacher.role_id === 8;
+    
+    // Validation differs based on role
+    if (isSubjectCoordinator) {
+      if (!selectedSubject || !selectedSchoolYear) {
+        alert('Please select a subject and school year.');
+        return;
+      }
+    } else {
+      if (!selectedSubject || !selectedGradeLevelForSection || !selectedSection || !selectedSchoolYear) {
+        alert('Please select a subject, grade level, section, and school year.');
+        return;
+      }
     }
-  
+
     const [type, id] = selectedSubject.split('-');
     const subjectId = parseInt(id, 10);
-  
+
     const selectedSubjectDetails = subjectsByGrade.find((subject) => {
       return type === 'elective'
         ? subject.subject_id === subjectId && subject.type === 'elective'
         : subject.subject_id === subjectId && subject.type === 'subject';
     });
-  
+
     if (!selectedSubjectDetails) {
       alert('Invalid subject selection.');
       return;
     }
-  
+
     const isElective = selectedSubjectDetails.type === 'elective';
-  
+
     try {
+      // For subject coordinators, use different parameters (no section or grade level)
+      const requestData = isSubjectCoordinator
+        ? {
+            // For coordinator, just use the subject ID directly
+            subject_id: subjectId,
+            employee_id: currentTeacherId,
+            school_year_id: selectedSchoolYear,
+          }
+        : {
+            subject_id: subjectId,
+            grade_level: selectedGradeLevelForSection,
+            section_id: selectedSection,
+            type: isElective ? 'elective' : 'subject',
+            school_year_id: selectedSchoolYear,
+          };
+
       console.log('Assigning subject with:', {
         teacherId: currentTeacherId,
-        subjectId: subjectId,
-        gradeLevel: selectedGradeLevelForSection,
-        sectionId: selectedSection,
-        type: isElective ? 'elective' : 'subject',
-        schoolYearId: selectedSchoolYear,
+        ...requestData
       });
-  
-      const response = await axios.post(
-        `http://localhost:3001/assign-subject/${currentTeacherId}`,
-        {
-          subject_id: subjectId,
-          grade_level: selectedGradeLevelForSection,
-          section_id: selectedSection,
-          type: isElective ? 'elective' : 'subject',
-          school_year_id: selectedSchoolYear,
-        }
-      );
-  
-      if (response.status === 200) {
+
+      // Use different endpoints for subject coordinators vs. regular teachers
+      const endpoint = isSubjectCoordinator
+        ? 'http://localhost:3001/assign-subject-to-coordinator'
+        : `http://localhost:3001/assign-subject/${currentTeacherId}`;
+
+      const response = await axios.post(endpoint, requestData);
+
+      if (response.status === 200 || response.status === 201) {
         alert(response.data.message || 'Subject assigned successfully');
-        fetchTeacherSubjects(currentTeacherId, selectedSchoolYear);
+        fetchTeacherSubjects(currentTeacherId, selectedSchoolYear, isSubjectCoordinator ? 8 : null);
 
         setShowAssignSubjectModal(false);
         setSelectedSubject('');
-        setSelectedGradeLevelForSection('7');
-        setSectionsByGrade([]);
+        
+        // Only reset these if not a subject coordinator
+        if (!isSubjectCoordinator) {
+          setSelectedGradeLevelForSection('7');
+          setSectionsByGrade([]);
+        }
       }
     } catch (error) { 
       console.error('Error assigning subject:', error);
@@ -536,9 +606,9 @@ function TeacherManagement() {
 
   const fetchTeacherSubjects = async (teacherId, schoolYearId, roleId) => {
     try {
-      // Check if roleId is 8, then use the /subject-assigned endpoint
+      // Check if roleId is 8 (subject coordinator), then use the coordinator-subjects endpoint
       const endpoint = roleId === 8
-        ? `http://localhost:3001/subject-assigned/${teacherId}`
+        ? `http://localhost:3001/coordinator-subjects/${teacherId}`
         : `http://localhost:3001/teacher-subjects/${teacherId}`;
         
       const response = await axios.get(endpoint, {
@@ -793,6 +863,13 @@ useEffect(() => {
     fetchTeacherGradeLevel(selectedTeacherId, schoolYearId);
   };
 
+  // Add a useEffect to refresh the subjects list when the school year changes
+  useEffect(() => {
+    if (isSubjectCoordinator && selectedSchoolYear && showAssignSubjectModal) {
+      fetchUnassignedSubjects();
+    }
+  }, [selectedSchoolYear, isSubjectCoordinator]);
+
   return (
     <div className="teacher-mgmt-container">
       <div className="teacher-mgmt-header">
@@ -922,7 +999,8 @@ useEffect(() => {
                                 <tr>
                                   <th>Grade Level</th>
                                   <th>Subject Name</th>
-                                  <th>Section</th>
+                                  {/* Show Section column only if teacher is not role 8 (subject coordinator) */}
+                                  {teacher.role_id !== 8 && <th>Section</th>}
                                   {/* Show Day and Time if teacher is not role 8 */}
                                   {teacher.role_id !== 8 && (
                                     <>
@@ -937,7 +1015,8 @@ useEffect(() => {
                                   <tr key={index}>
                                     <td>{subject.grade_level}</td>
                                     <td>{subject.subject_name}</td>
-                                    <td>{subject.section_name}</td>
+                                    {/* Show Section column only if teacher is not role 8 (subject coordinator) */}
+                                    {teacher.role_id !== 8 && <td>{subject.section_name}</td>}
                                     {teacher.role_id !== 8 && (
                                       <>
                                         <td>{subject.day || 'Not set'}</td>
@@ -1376,7 +1455,7 @@ useEffect(() => {
 
       {showAssignSubjectModal && (
         <div className="teacher-mgmt-modal">
-          <div className="teacher-mgmt-modal-content compact teacher-mgmt-subject-modal">
+          <div className="teacher-mgmt-modal-content compact teacher-mgmt-section-modal">
             <div className="teacher-mgmt-modal-header">
               <h2 className="teacher-mgmt-modal-title">Assign Subject</h2>
             </div>
@@ -1396,44 +1475,51 @@ useEffect(() => {
               </select>
             </div>
 
-            <div className="teacher-mgmt-form-field">
-              <label className="teacher-mgmt-form-label">Grade Level:</label>
-              <div className="teacher-mgmt-button-grid">
-                {[7, 8, 9, 10].map((grade) => (
-                  <button
-                    key={grade}
-                    className={`teacher-mgmt-grid-button ${selectedGradeLevelForSection === grade.toString() ? 'selected' : ''}`}
-                    onClick={() => handleGradeLevelChangeForSection(grade.toString())}
-                  >
-                    Grade {grade}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="teacher-mgmt-form-field">
-              <label className="teacher-mgmt-form-label">Available Sections:</label>
-              <div className="teacher-mgmt-item-grid">
-                {sectionsByGrade.length > 0 ? (
-                  sectionsByGrade.map((section) => (
-                    <button 
-                      key={section.section_id}
-                      className={`teacher-mgmt-grid-button ${selectedSection === section.section_id ? 'selected' : ''}`}
-                      onClick={() => setSelectedSection(section.section_id)}
-                    >
-                      {section.section_name}
-                    </button>
-                  ))
-                ) : (
-                  <div className="teacher-mgmt-grid-empty">
-                    No sections available for this grade level
+            {/* Only show grade level and section filters for non-subject coordinators */}
+            {!(teachers.find(t => t.employee_id === currentTeacherId)?.role_id === 8) && (
+              <>
+                <div className="teacher-mgmt-form-field">
+                  <label className="teacher-mgmt-form-label">Grade Level:</label>
+                  <div className="teacher-mgmt-button-grid">
+                    {[7, 8, 9, 10].map((grade) => (
+                      <button
+                        key={grade}
+                        className={`teacher-mgmt-grid-button ${selectedGradeLevelForSection === grade.toString() ? 'selected' : ''}`}
+                        onClick={() => handleGradeLevelChangeForSection(grade.toString())}
+                      >
+                        Grade {grade}
+                      </button>
+                    ))}
                   </div>
-                )}
-              </div>
-            </div>
+                </div>
+
+                <div className="teacher-mgmt-form-field">
+                  <label className="teacher-mgmt-form-label">Available Sections:</label>
+                  <div className="teacher-mgmt-item-grid">
+                    {sectionsByGrade.length > 0 ? (
+                      sectionsByGrade.map((section) => (
+                        <button 
+                          key={section.section_id}
+                          className={`teacher-mgmt-grid-button ${selectedSection === section.section_id ? 'selected' : ''}`}
+                          onClick={() => setSelectedSection(section.section_id)}
+                        >
+                          {section.section_name}
+                        </button>
+                      ))
+                    ) : (
+                      <div className="teacher-mgmt-grid-empty">
+                        No sections available for this grade level
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
 
             <div className="teacher-mgmt-form-field">
-              <label className="teacher-mgmt-form-label">Available Subjects:</label>
+              <label className="teacher-mgmt-form-label">
+                {isSubjectCoordinator ? 'Available Unassigned Subjects:' : 'Available Subjects:'}
+              </label>
               <div className="teacher-mgmt-item-grid">
                 {subjectsByGrade.length > 0 ? (
                   subjectsByGrade.map((subject) => {
@@ -1450,7 +1536,10 @@ useEffect(() => {
                   })
                 ) : (
                   <div className="teacher-mgmt-grid-empty">
-                    No subjects available for this grade level
+                    {isSubjectCoordinator 
+                      ? 'No unassigned subjects available. Please select a school year first.'
+                      : 'No subjects available for this grade level'
+                    }
                   </div>
                 )}
               </div>
@@ -1458,9 +1547,18 @@ useEffect(() => {
 
             <div className="teacher-mgmt-modal-footer">
               <button 
-                className={`teacher-mgmt-btn teacher-mgmt-btn-view teacher-mgmt-modal-button ${(!selectedSection || !selectedSubject) ? 'disabled' : ''}`}
+                className={`teacher-mgmt-btn teacher-mgmt-btn-view teacher-mgmt-modal-button ${
+                  // Adjust validation conditions for subject coordinators
+                  teachers.find(t => t.employee_id === currentTeacherId)?.role_id === 8
+                    ? !selectedSubject ? 'disabled' : ''
+                    : (!selectedSection || !selectedSubject) ? 'disabled' : ''
+                }`}
                 onClick={handleSubjectAssignment}
-                disabled={!selectedSection || !selectedSubject}
+                disabled={
+                  teachers.find(t => t.employee_id === currentTeacherId)?.role_id === 8
+                    ? !selectedSubject
+                    : !selectedSection || !selectedSubject
+                }
               >
                 Assign Subject
               </button>
