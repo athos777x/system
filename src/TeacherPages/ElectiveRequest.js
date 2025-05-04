@@ -647,11 +647,11 @@ const handleConfirmApproval = async () => {
 
       {showRejectModal && studentToReject && (
         <div className="enrollment-modal">
-          <div className="enrollment-modal-content">
+          <div className="enrollment-modal-content reject-modal">
             <h2>Confirm Rejection</h2>
             <div className="student-info">
               <p>Are you sure you want to reject the elective request for:</p>
-              <p><strong>{`${studentToReject.student.firstname} ${studentToReject.student.middlename ? studentToReject.student.middlename[0] + '.' : ''} ${studentToReject.student.lastname}`}</strong>?</p>
+              <p><strong>{`${studentToReject.student.lastname}, ${studentToReject.student.firstname} ${studentToReject.student.middlename || ''}`}</strong>?</p>
             </div>
             <div className="modal-actions">
               <button
