@@ -488,7 +488,7 @@ const handleConfirmApproval = async () => {
                       >
                         View
                       </button>
-                      {(roleName === 'registrar' || roleName === 'principal' || roleName === 'grade_level_coordinator') && (
+                      {(roleName === 'registrar' || roleName === 'principal' || roleName === 'grade_level_coordinator' || roleName === 'subject_teacher') && (
                         <>
                         {console.log('Role check passed:', roleName)}
                         {console.log('Student status:', student.active_status)}

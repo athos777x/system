@@ -850,7 +850,7 @@ const approveElective = async (studentElectiveId) => {
                       >
                         View
                       </button>
-                      {(roleName === 'registrar' || roleName === 'grade_level_coordinator' || roleName === 'class_adviser') && (
+                      {(roleName === 'registrar' || roleName === 'grade_level_coordinator' || roleName === 'class_adviser' || roleName === 'subject_teacher') && (
                         <>
                         {(student.active_status && student.active_status.toLowerCase() === 'pending') && (
                           <button 
