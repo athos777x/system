@@ -121,7 +121,7 @@ CREATE TABLE `enrollment` (
 
 /*Data for the table `enrollment` */
 
-insert  into `enrollment`(`enrollment_id`,`student_id`,`section_id`,`enrolling_officer_id`,`enrollment_date`,`grade_level`,`enrollee_type`,`brigada_id`,`enrollment_status`,`student_name`,`student_school_year_id`,`school_year_id`) values (4,1,1,NULL,'2025-04-18','7','Regular',3,'active','angel j. bautista',NULL,1),(5,2,1,NULL,'2025-04-18','7','Regular',4,'active','rephaim celix l. domapias',NULL,1),(9,6,1,NULL,'2025-04-20','7','Regular',8,'active','ewq q. qwwqeqw',NULL,1),(10,7,NULL,NULL,'2025-04-20','7','Regular',9,'inactive','fdgdf h. dsfds',NULL,1),(12,3,1,NULL,'2025-04-30','7','Regular',5,'active','hannah j. clerigo',NULL,1),(13,4,2,NULL,'2025-04-30','7','Regular',6,'active','test t. tet',NULL,1),(14,5,2,NULL,'2025-04-30','7','Regular',7,'active','tsfdsfs t. terst',NULL,1),(15,6,1,NULL,'2025-04-30','7','Regular',8,'active','peligrino j. noel',NULL,1),(16,7,NULL,NULL,'2025-04-30','7','Regular',9,'inactive','asdas s. weewdsa',NULL,1),(17,8,NULL,NULL,'2025-04-30','8','Regular',10,'inactive','dfsd d. sdf',NULL,1),(18,9,NULL,NULL,'2025-04-30','9','Regular',11,'inactive','jose j. rizal',NULL,1),(19,10,NULL,NULL,'2025-04-30','9','Regular',12,'pending','andres l. bonifacio',NULL,1),(20,11,NULL,NULL,'2025-04-30','10','Regular',13,'pending','emilio m. aguinaldo',NULL,1),(21,12,NULL,NULL,'2025-05-01','8','Regular',14,'pending','juan a. luna',NULL,1);
+insert  into `enrollment`(`enrollment_id`,`student_id`,`section_id`,`enrolling_officer_id`,`enrollment_date`,`grade_level`,`enrollee_type`,`brigada_id`,`enrollment_status`,`student_name`,`student_school_year_id`,`school_year_id`) values (4,1,1,NULL,'2025-04-18','7','Regular',3,'active','angel j. bautista',NULL,1),(5,2,1,NULL,'2025-04-18','7','Regular',4,'active','rephaim celix l. domapias',NULL,1),(9,6,1,NULL,'2025-04-20','7','Regular',8,'active','ewq q. qwwqeqw',NULL,1),(10,7,NULL,NULL,'2025-04-20','7','Regular',9,'inactive','fdgdf h. dsfds',NULL,1),(12,3,1,NULL,'2025-04-30','7','Regular',5,'active','hannah j. clerigo',NULL,1),(13,4,2,NULL,'2025-04-30','7','Regular',6,'active','test t. tet',NULL,1),(14,5,2,NULL,'2025-04-30','7','Regular',7,'active','tsfdsfs t. terst',NULL,1),(15,6,1,NULL,'2025-04-30','7','Regular',8,'active','peligrino j. noel',NULL,1),(16,7,NULL,NULL,'2025-04-30','7','Regular',9,'inactive','asdas s. weewdsa',NULL,1),(17,8,NULL,NULL,'2025-04-30','8','Regular',10,'inactive','dfsd d. sdf',NULL,1),(18,9,NULL,NULL,'2025-04-30','9','Regular',11,'pending','jose j. rizal',NULL,1),(19,10,NULL,NULL,'2025-04-30','9','Regular',12,'pending','andres l. bonifacio',NULL,1),(20,11,NULL,NULL,'2025-04-30','10','Regular',13,'pending','emilio m. aguinaldo',NULL,1),(21,12,NULL,NULL,'2025-05-01','8','Regular',14,'pending','juan a. luna',NULL,1);
 
 /*Table structure for table `grade_level_assigned` */
 
@@ -164,7 +164,7 @@ CREATE TABLE `grades` (
   KEY `fk_grades_school_year_id` (`school_year_id`),
   CONSTRAINT `grades_ibfk_1` FOREIGN KEY (`schedule_id`) REFERENCES `schedule` (`schedule_id`),
   CONSTRAINT `grades_ibfk_2` FOREIGN KEY (`enrollment_id`) REFERENCES `enrollment` (`enrollment_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=27 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8;
 
 /*Data for the table `grades` */
 
@@ -370,7 +370,7 @@ CREATE TABLE `student_school_year` (
 
 /*Data for the table `student_school_year` */
 
-insert  into `student_school_year`(`student_school_year_id`,`student_id`,`school_year_id`,`status`,`student_name`,`grade_level`) values (3,1,1,'active','angel j. bautista',7),(4,2,1,'active','rephaim celix l. domapias',8),(5,3,1,'active','etest t. test',7),(6,4,1,'active','twe t. trtwe',7),(7,5,1,'active','sdfsd f. sadfdsf',7),(8,6,1,'active','ewq q. qwwqeqw',7),(9,7,1,'active','fdgdf h. dsfds',7),(10,8,1,'inactive','dfdsfsd s. dsfsdf',8),(11,3,1,'active','hannah j. clerigo',7),(12,4,1,'active','test t. tet',7),(13,5,1,'active','tsfdsfs t. terst',7),(14,6,1,'active','peligrino j. noel',7),(15,7,1,'active','asdas s. weewdsa',7),(16,8,1,'inactive','dfsd d. sdf',8),(17,9,1,'active','jose j. rizal',9),(18,10,1,'pending','andres l. bonifacio',9),(19,11,1,'pending','emilio m. aguinaldo',10),(20,12,1,'pending','juan a. luna',8);
+insert  into `student_school_year`(`student_school_year_id`,`student_id`,`school_year_id`,`status`,`student_name`,`grade_level`) values (3,1,1,'active','angel j. bautista',7),(4,2,1,'active','rephaim celix l. domapias',8),(5,3,1,'active','etest t. test',7),(6,4,1,'active','twe t. trtwe',7),(7,5,1,'active','sdfsd f. sadfdsf',7),(8,6,1,'active','ewq q. qwwqeqw',7),(9,7,1,'active','fdgdf h. dsfds',7),(10,8,1,'inactive','dfdsfsd s. dsfsdf',8),(11,3,1,'active','hannah j. clerigo',7),(12,4,1,'active','test t. tet',7),(13,5,1,'active','tsfdsfs t. terst',7),(14,6,1,'active','peligrino j. noel',7),(15,7,1,'active','asdas s. weewdsa',7),(16,8,1,'inactive','dfsd d. sdf',8),(17,9,1,'pending','jose j. rizal',9),(18,10,1,'pending','andres l. bonifacio',9),(19,11,1,'pending','emilio m. aguinaldo',10),(20,12,1,'pending','juan a. luna',8);
 
 /*Table structure for table `subject` */
 
@@ -390,11 +390,11 @@ CREATE TABLE `subject` (
   `max_capacity` int(35) DEFAULT NULL,
   PRIMARY KEY (`subject_id`),
   KEY `fk_subject_school_year_id` (`school_year_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8;
 
 /*Data for the table `subject` */
 
-insert  into `subject`(`subject_id`,`grade_level`,`subject_name`,`status`,`grading_criteria`,`description`,`archive_status`,`school_year_id`,`employee_id`,`elective`,`max_capacity`) values (1,7,'English 7','active',NULL,'English Class','unarchive',1,NULL,'N',NULL),(2,7,'Physical Education 7','active',NULL,'PE 7','unarchive',1,NULL,'N',NULL),(3,NULL,'Spanish101','active',NULL,'Spanish Elective Class','unarchive',1,NULL,'Y',50),(4,NULL,'Japanese101','active',NULL,'Japanese Elective Class','unarchive',1,NULL,'Y',NULL),(5,7,'Math 7','active',NULL,'Math101','unarchive',1,NULL,'N',NULL);
+insert  into `subject`(`subject_id`,`grade_level`,`subject_name`,`status`,`grading_criteria`,`description`,`archive_status`,`school_year_id`,`employee_id`,`elective`,`max_capacity`) values (1,7,'English 7','active',NULL,'English Class','unarchive',1,NULL,'N',NULL),(2,7,'Physical Education 7','active',NULL,'PE 7 REGULAR','unarchive',1,NULL,'N',NULL),(3,NULL,'Spanish101','active',NULL,'Spanish Elective Class','unarchive',1,NULL,'Y',50),(4,NULL,'Japanese101','active',NULL,'Japanese Elective Class','archive',1,NULL,'Y',NULL),(5,7,'Math 7','active',NULL,'Math101','archive',1,NULL,'N',NULL),(6,8,'English 8','active',NULL,'English','archive',1,NULL,'N',NULL),(7,9,'Biology 9','active',NULL,'Biology','unarchive',1,NULL,'N',NULL);
 
 /*Table structure for table `subject_assigned` */
 
@@ -409,11 +409,11 @@ CREATE TABLE `subject_assigned` (
   UNIQUE KEY `subject_assigned_id` (`subjectcoordinator_assigned_id`),
   UNIQUE KEY `unique_subject_id` (`subject_id`),
   UNIQUE KEY `subject_id` (`subject_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8;
 
 /*Data for the table `subject_assigned` */
 
-insert  into `subject_assigned`(`subjectcoordinator_assigned_id`,`subject_id`,`employee_id`,`school_year_id`) values (1,1,7,1),(2,5,7,1);
+insert  into `subject_assigned`(`subjectcoordinator_assigned_id`,`subject_id`,`employee_id`,`school_year_id`) values (3,2,7,1),(4,1,7,1),(5,6,7,1);
 
 /*Table structure for table `teacher_subject` */
 

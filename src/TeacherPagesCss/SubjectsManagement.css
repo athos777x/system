@@ -284,12 +284,14 @@
   padding: 1.5rem;
   background: #fff;
   border-top: 1px solid #c8e6c9;
+  text-align: left;
 }
 
 .subjects-management-details table {
   width: 100%;
   border-collapse: collapse;
   margin-bottom: 1rem;
+  text-align: left;
 }
 
 .subjects-management-details th {
@@ -306,6 +308,7 @@
   width: 70%;
   padding: 0.75rem;
   border: 1px solid #c8e6c9;
+  text-align: left;
 }
 
 /* Modal styles */
@@ -432,4 +435,66 @@
   .subjects-management-modal-actions button {
     width: 100%;
   }
+}
+
+/* Subject type indicators */
+.subject-type {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-weight: 500;
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+.subject-type-regular {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+
+.subject-type-elective {
+  background-color: #c8e6c9;
+  color: #1b5e20;
+}
+
+/* Sort dropdown */
+.subjects-management-sort {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  padding: 0.5rem 0.75rem;
+  background: #fff;
+  border-radius: 6px;
+  box-shadow: 0 1px 4px rgba(46, 125, 50, 0.1);
+}
+
+.subjects-management-sort label {
+  font-weight: 500;
+  color: #2e7d32;
+  white-space: nowrap;
+}
+
+.subjects-management-sort select {
+  padding: 0.5rem 2rem 0.5rem 0.75rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  color: #1e293b;
+  background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2390a4ae'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E") no-repeat right 0.5rem center;
+  background-size: 14px;
+  appearance: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-grow: 1;
+}
+
+.subjects-management-sort select:hover {
+  border-color: #81c784;
+}
+
+.subjects-management-sort select:focus {
+  outline: none;
+  border-color: #4CAF50;
+  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
 } 
