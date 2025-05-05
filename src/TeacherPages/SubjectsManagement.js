@@ -146,12 +146,8 @@ function SubjectsManagement() {
         );
       }
       
-      // Apply archive_status filter locally
-      if (filters.archive_status) {
-        filteredData = filteredData.filter(subject => 
-          subject.archive_status === filters.archive_status
-        );
-      }
+      // Remove local archive_status filtering since the backend now handles it
+      // No need to filter by archive_status locally anymore
       
       console.log('After local filtering:', filteredData);
       
@@ -159,8 +155,7 @@ function SubjectsManagement() {
       const usingLocalFilters = 
         (filters.searchTerm && filters.searchTerm.trim() !== '') ||
         (filters.grade && filters.grade.trim() !== '') ||
-        (filters.school_year && filters.school_year.trim() !== '') ||
-        filters.archive_status;
+        (filters.school_year && filters.school_year.trim() !== '');
       
       setSubjects(response.data); // Keep the original data
       

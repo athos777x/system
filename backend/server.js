@@ -3403,19 +3403,12 @@ app.get('/subjects', (req, res) => {
       FROM SUBJECT s
       LEFT JOIN school_year sy ON s.school_year_id = sy.school_year_id
       LEFT JOIN SCHEDULE sch ON s.subject_id=sch.subject_id
-      WHERE s.archive_status = 'unarchive'
+      ${whereClause}
+      ${searchCondition}
+      ${gradeCondition}
+      ${schoolYearCondition}
       GROUP BY s.subject_id
-
-      
   `;
-
-  // Add parameters for electives section if needed
-  if (archive_status) {
-    queryParams.push(archive_status);
-  }
-  if (searchTerm && searchTerm.trim() !== '') {
-    queryParams.push(`%${searchTerm}%`);
-  }
 
   console.log('Query:', mainQuery);
   console.log('Parameters:', queryParams);
