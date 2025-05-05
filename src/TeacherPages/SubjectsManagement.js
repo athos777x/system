@@ -97,7 +97,8 @@ function SubjectsManagement() {
         params: requestParams,
       });
       
-      console.log('API Response:', response.data);  // Log the API response data
+      console.log('API Response data count:', response.data.length);
+      console.log('Sample subject data:', response.data.length > 0 ? response.data[0] : 'No subjects');  // Log the API response data structure
       
       // Apply local filtering in case the backend filters aren't working
       let filteredData = response.data;
@@ -338,19 +339,82 @@ function SubjectsManagement() {
   };
 
   const handleDelete = async (subject) => {
+    const action = subject.archive_status === 'archive' ? 'unarchive' : 'archive';
+    const isElective = subject.subject_type === 'elective' || subject.elective === 'Y';
+    
     try {
-      const action = subject.archive_status === 'archive' ? 'unarchive' : 'archive';
-  
-      await axios.put(`http://localhost:3001/subjects/${subject.subject_id}/archive`, {
-        elective_id: subject.elective_id, 
-        action: action, 
+      console.log('Archive button clicked:', {
+        subject_id: subject.subject_id,
+        elective_id: subject.elective_id || null,
+        action: action,
+        current_archive_status: subject.archive_status,
+        hasSchedule: subject.hasSched,
+        isDisabled: subject?.archive_status !== 'archive' && subject?.hasSched === "1",
+        subject_type: subject.subject_type || subject.elective,
+        isElective: isElective,
+        school_year_id: subject.school_year_id
       });
+      
+      // For elective subjects, the subject_id itself should be passed as elective_id
+      // This is because the backend expects regular subjects and electives to be handled differently
+      const elective_id = isElective ? subject.subject_id : (subject.elective_id || null);
+      
+      try {
+        // First try with the standard endpoint
+        console.log('Request being sent:', {
+          url: `http://localhost:3001/subjects/${subject.subject_id}/archive`,
+          method: 'PUT',
+          data: {
+            elective_id: elective_id,
+            action: action,
+            school_year_id: subject.school_year_id 
+          }
+        });
+    
+        const response = await axios.put(`http://localhost:3001/subjects/${subject.subject_id}/archive`, {
+          elective_id: elective_id, 
+          action: action,
+          school_year_id: subject.school_year_id 
+        });
+        
+        console.log('Archive response:', response.data);
+      } catch (err) {
+        if (err.response && err.response.data.error === 'No matching school year found') {
+          // If the standard endpoint fails with school year error, try direct update
+          console.log('Falling back to direct archive status update');
+          
+          // This is a backup approach that directly updates just the archive_status
+          const directUpdateResponse = await axios.put(`http://localhost:3001/subjects/${subject.subject_id}`, {
+            archive_status: action === 'archive' ? 'archive' : 'unarchive'
+          });
+          
+          console.log('Direct update response:', directUpdateResponse.data);
+        } else {
+          // If it's not the school year error, rethrow for the outer catch block
+          throw err;
+        }
+      }
   
-      fetchSubjects();
-      setSelectedSubject(null);
-      setShowDetails(false);
+      // Use a slight delay to ensure the DB has time to update before fetching
+      setTimeout(() => {
+        fetchSubjects();
+        setSelectedSubject(null);
+        setShowDetails(false);
+      }, 300);
+      
     } catch (error) {
       console.error(`Error archiving subject:`, error);
+      if (error.response) {
+        console.error('Error response data:', error.response.data);
+        console.error('Error response status:', error.response.status);
+        alert(`Failed to ${action} subject: ${error.response.data.error || 'Unknown error'}`);
+      } else if (error.request) {
+        console.error('No response received:', error.request);
+        alert('No response received from server. Check your network connection.');
+      } else {
+        console.error('Error message:', error.message);
+        alert(`Error: ${error.message}`);
+      }
     }
   };
 
@@ -493,6 +557,9 @@ function SubjectsManagement() {
                             className={`subjects-management-btn ${subject?.archive_status === 'archive' ? 'subjects-management-btn-view' : 'subjects-management-btn-archive'}`}
                             onClick={() => handleDelete(subject)}
                             disabled={subject?.archive_status !== 'archive' && subject?.hasSched === "1"}
+                            title={subject?.archive_status !== 'archive' && subject?.hasSched === "1" ? 
+                              "Cannot archive a subject with an active schedule" : 
+                              (subject?.archive_status === 'archive' ? "Unarchive this subject" : "Archive this subject")}
                             style={{
                               opacity: subject?.archive_status !== 'archive' && subject?.hasSched === "1" ? 0.5 : 1, 
                               cursor: subject?.archive_status !== 'archive' && subject?.hasSched === "1" ? 'not-allowed' : 'pointer'
