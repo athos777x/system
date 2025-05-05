@@ -188,12 +188,12 @@ function SubjectTeacherSideBar({ showSidebar, toggleSidebar, handleLogout }) {
               >
                 <FiUsers className="icon" /> Pending Enrollment
               </button>
-              <button 
+              {/* <button 
                 onClick={() => handleNavigate('/pending-elective')}
                 className={location.pathname === '/pending-elective' ? 'active' : ''}
               >
                 <FiUsers className="icon" /> Pending Elective
-              </button>
+              </button> */}
               <button 
                 onClick={() => handleNavigate('/section-list')}
                 className={location.pathname === '/section-list' ? 'active' : ''}
