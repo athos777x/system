@@ -162,7 +162,10 @@ function SubjectsManagement() {
         filters.archive_status;
       
       setSubjects(response.data); // Keep the original data
-      setFilteredSubjects(filteredData); // Set filtered data for display
+      
+      // Apply sorting to the filtered data
+      const sortedData = sortSubjects(filteredData);
+      setFilteredSubjects(sortedData); // Set sorted filtered data for display
     } catch (error) {
       console.error('Error fetching subjects:', error);
       
@@ -225,6 +228,7 @@ function SubjectsManagement() {
     }
   }, [roleName, filters, fetchSubjects]);
   
+  // No need for the additional sorting effect since sorting is applied in fetchSubjects
 
   useEffect(() => {
     fetchSchoolYears();
@@ -355,6 +359,33 @@ function SubjectsManagement() {
     setErrors({});
   };
 
+  const sortSubjects = useCallback((subjects) => {
+    if (!subjects) return [];
+    
+    const sortedSubjects = [...subjects];
+    
+    // Sort by type (Regular first), then by grade level (ascending), then alphabetically
+    return sortedSubjects.sort((a, b) => {
+      // First sort by type: regular subjects first, then elective
+      const typeA = a.subject_type === 'elective' || a.elective === 'Y' ? 1 : 0; // 0 for regular (comes first), 1 for elective
+      const typeB = b.subject_type === 'elective' || b.elective === 'Y' ? 1 : 0; // 0 for regular (comes first), 1 for elective
+      
+      // Compare types (regular first, then elective)
+      if (typeA !== typeB) return typeA - typeB;
+      
+      // For same type, sort by grade level (ascending)
+      // Handle null or undefined grade levels (electives)
+      const gradeA = a.grade_level === null || a.grade_level === undefined ? 999 : parseInt(a.grade_level);
+      const gradeB = b.grade_level === null || b.grade_level === undefined ? 999 : parseInt(b.grade_level);
+      
+      const gradeCompare = gradeA - gradeB;
+      if (gradeCompare !== 0) return gradeCompare;
+      
+      // For same grade, sort alphabetically
+      return a.subject_name.localeCompare(b.subject_name);
+    });
+  }, []);
+
   return (
     <div className="subjects-management-container">
       <div className="subjects-management-header">
@@ -421,6 +452,7 @@ function SubjectsManagement() {
             <tr>
               <th>#</th>
               <th>Subject Name</th>
+              <th>Type</th>
               <th>Status</th>
               <th>Actions</th>
             </tr>
@@ -432,6 +464,11 @@ function SubjectsManagement() {
                   <tr>
                     <td>{subject.subject_id}</td>
                     <td>{subject.subject_name}</td>
+                    <td>
+                      {subject.subject_type === 'elective' || subject.elective === 'Y' 
+                        ? <span className="subject-type subject-type-elective">Elective</span> 
+                        : <span className="subject-type subject-type-regular">Regular</span>}
+                    </td>
                     <td>
                       <span className={`status-${subject.status.toLowerCase()}`}>
                         {subject.status.charAt(0).toUpperCase() + subject.status.slice(1)}
@@ -469,7 +506,7 @@ function SubjectsManagement() {
                   </tr>
                   {selectedSubject && selectedSubject.subject_id === subject.subject_id && selectedSubject.elective_id === subject.elective_id && showDetails && (
                     <tr key={`details-${subject.subject_id}-${subject.elective_id || ''}`}>
-                      <td colSpan="4">
+                      <td colSpan="5">
                         <div className="subjects-management-details">
                           <table>
                             <tbody>
@@ -515,7 +552,7 @@ function SubjectsManagement() {
               ))
             ) : (
               <tr>
-                <td colSpan="4" style={{ textAlign: 'center' }}>No subjects available.</td>
+                <td colSpan="5" style={{ textAlign: 'center' }}>No subjects available.</td>
               </tr>
             )}
           </tbody>
