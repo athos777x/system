@@ -86,17 +86,83 @@ function SubjectsManagement() {
       console.log('Using endpoint:', endpoint);  // Log the endpoint being used
   
       // Fetch subjects with parameters
+      const requestParams = {
+        ...filters,
+        searchTerm: filters.searchTerm.trim(),
+      };
+      
+      console.log('Request params being sent to API:', requestParams);
+      
       const response = await axios.get(endpoint, {
-        params: {
-          ...filters,
-          searchTerm: filters.searchTerm.trim(),
-        },
+        params: requestParams,
       });
       
       console.log('API Response:', response.data);  // Log the API response data
-  
-      setSubjects(response.data);
-      setFilteredSubjects(response.data);
+      
+      // Apply local filtering in case the backend filters aren't working
+      let filteredData = response.data;
+      
+      // Apply search term filter locally
+      if (filters.searchTerm && filters.searchTerm.trim() !== '') {
+        const searchTerm = filters.searchTerm.trim().toLowerCase();
+        filteredData = filteredData.filter(subject => 
+          subject.subject_name.toLowerCase().includes(searchTerm)
+        );
+      }
+      
+      // Apply grade filter locally if specified
+      if (filters.grade && filters.grade.trim() !== '') {
+        console.log('Filtering by grade level:', filters.grade);
+        console.log('Subject grade levels in data:', filteredData.map(subject => ({
+          subject_name: subject.subject_name,
+          grade_level: subject.grade_level,
+          subject_type: subject.subject_type,
+          elective: subject.elective, // Check for 'Y'/'N' format
+          grade_level_type: typeof subject.grade_level
+        })));
+        
+        // Convert both to strings for comparison to handle number/string type mismatch
+        filteredData = filteredData.filter(subject => {
+          // Skip grade filtering for elective subjects (which might have null grade_level)
+          const isElective = subject.subject_type === 'elective' || subject.elective === 'Y';
+          
+          if (isElective) {
+            return true; // Keep all elective subjects regardless of grade
+          }
+          
+          return subject.grade_level !== null && 
+                 subject.grade_level !== undefined && 
+                 String(subject.grade_level) === String(filters.grade);
+        });
+        
+        console.log('After grade filtering, remaining subjects:', filteredData.length);
+      }
+      
+      // Apply school_year filter locally if specified
+      if (filters.school_year && filters.school_year.trim() !== '') {
+        filteredData = filteredData.filter(subject => 
+          subject.school_year === filters.school_year
+        );
+      }
+      
+      // Apply archive_status filter locally
+      if (filters.archive_status) {
+        filteredData = filteredData.filter(subject => 
+          subject.archive_status === filters.archive_status
+        );
+      }
+      
+      console.log('After local filtering:', filteredData);
+      
+      // Check if filters were applied locally
+      const usingLocalFilters = 
+        (filters.searchTerm && filters.searchTerm.trim() !== '') ||
+        (filters.grade && filters.grade.trim() !== '') ||
+        (filters.school_year && filters.school_year.trim() !== '') ||
+        filters.archive_status;
+      
+      setSubjects(response.data); // Keep the original data
+      setFilteredSubjects(filteredData); // Set filtered data for display
     } catch (error) {
       console.error('Error fetching subjects:', error);
       
@@ -136,6 +202,7 @@ function SubjectsManagement() {
   }, []);
 
   const handleSearch = (searchTerm) => {
+    console.log('Search term changed:', searchTerm);
     const newFilters = { 
       ...filters, 
       searchTerm
@@ -146,11 +213,14 @@ function SubjectsManagement() {
   
 
   const applyFilters = useCallback((newFilters) => {
+    console.log('Applying filters:', newFilters);
     setFilters(newFilters);
+    setPendingFilters(newFilters); // Keep pendingFilters in sync with filters
   }, []);
 
   useEffect(() => {
     if (roleName) {
+      console.log('Filters changed, fetching subjects with filters:', filters);
       fetchSubjects();
     }
   }, [roleName, filters, fetchSubjects]);
@@ -290,9 +360,9 @@ function SubjectsManagement() {
       <div className="subjects-management-header">
         <h1 className="subjects-management-title">Subject Management</h1>
         {roleName !== 'subject_coordinator' && (
-        <button className="subjects-management-btn-add" onClick={startAdding}>
-          Add Subject
-        </button>
+          <button className="subjects-management-btn-add" onClick={startAdding}>
+            Add Subject
+          </button>
         )}
       </div>
 
@@ -333,7 +403,10 @@ function SubjectsManagement() {
             <option value="unarchive">Unarchived</option>
             <option value="archive">Archived</option>
           </select>
-          <button onClick={() => applyFilters(pendingFilters)}>
+          <button onClick={() => {
+            console.log('Filter button clicked, applying filters:', pendingFilters);
+            applyFilters(pendingFilters);
+          }}>
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
             </svg>
