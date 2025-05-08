@@ -4199,7 +4199,7 @@ app.post('/submit-grade', (req, res) => {
             performance_task,
             quarterly_assessment,
             student_id,
-            period
+        period
           ) 
           VALUES (?, ?, ?, ?, ?, ?)  
           ON DUPLICATE KEY UPDATE
@@ -4670,7 +4670,7 @@ app.get('/student-grades', (req, res) => {
 
   const query = `
     SELECT ROUND(grade,0) AS grade, period 
-    FROM grades 
+      FROM grades
     WHERE grade_level = ? 
     AND subject_name = ? 
     AND student_id = ?

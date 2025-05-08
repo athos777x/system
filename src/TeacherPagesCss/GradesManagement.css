@@ -389,6 +389,21 @@
   gap: 1rem;
 }
 
+.inactive-school-year-warning {
+  background-color: #ffebee;
+  color: #d32f2f;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  margin-left: 10px;
+  border: 1px solid #ef9a9a;
+  display: flex;
+  align-items: center;
+  height: 35px;
+  box-sizing: border-box;
+}
+
 .grade-level-indicator {
   padding: 0.5rem 1rem;
   border-radius: 4px;
@@ -411,4 +426,156 @@
   background-color: #fff;
   font-size: 14px;
   height: 35px;
+}
+
+/* Add these styles for the Submit button functionality */
+
+.quarter-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.quarter-submit-btn {
+  font-size: 0.7rem;
+  padding: 2px 5px;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  margin-top: 3px;
+}
+
+.quarter-submit-btn:hover:not(:disabled) {
+  background-color: #45a049;
+}
+
+.quarter-submit-btn:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.submitted-grade {
+  color: #006600;
+  font-weight: bold;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  background-color: #f0fff0;
+  padding: 3px 5px;
+  border-radius: 3px;
+  border: 1px solid #c8e6c9;
+}
+
+.submitted-icon {
+  color: #00aa00;
+  margin-left: 3px;
+  font-size: 1.2rem;
+  position: relative;
+  top: -2px;
+  line-height: 1;
+}
+
+input.submitted-grade {
+  cursor: not-allowed;
+}
+
+/* Add these CSS styles for the confirmation modal at the end of the file */
+
+/* Confirmation Modal Styles */
+.confirmation-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.confirmation-modal {
+  background-color: white;
+  border-radius: 8px;
+  padding: 24px;
+  width: 400px;
+  max-width: 90%;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.confirmation-modal h3 {
+  margin: 0;
+  color: #333;
+  font-size: 1.3rem;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 12px;
+}
+
+.confirmation-modal p {
+  margin: 0;
+  font-size: 1rem;
+  color: #555;
+}
+
+.warning-text {
+  color: #e74c3c !important;
+  font-weight: 500;
+}
+
+.confirmation-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.cancel-btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  min-width: 80px;
+  background: #ef5350;
+  color: white;
+}
+
+.cancel-btn:hover {
+  background: #e53935;
+}
+
+.confirm-btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  min-width: 80px;
+  background: #4CAF50;
+  color: white;
+}
+
+.confirm-btn:hover {
+  background: #388e3c;
 } 
