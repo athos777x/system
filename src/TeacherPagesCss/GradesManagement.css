@@ -411,4 +411,60 @@
   background-color: #fff;
   font-size: 14px;
   height: 35px;
+}
+
+/* Add these styles for the Submit button functionality */
+
+.quarter-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.quarter-submit-btn {
+  font-size: 0.7rem;
+  padding: 2px 5px;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  margin-top: 3px;
+}
+
+.quarter-submit-btn:hover:not(:disabled) {
+  background-color: #45a049;
+}
+
+.quarter-submit-btn:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.submitted-grade {
+  color: #006600;
+  font-weight: bold;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  background-color: #f0fff0;
+  padding: 3px 5px;
+  border-radius: 3px;
+  border: 1px solid #c8e6c9;
+}
+
+.submitted-icon {
+  color: #00aa00;
+  margin-left: 3px;
+  font-size: 1.2rem;
+  position: relative;
+  top: -2px;
+  line-height: 1;
+}
+
+input.submitted-grade {
+  cursor: not-allowed;
 } 

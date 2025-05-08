@@ -31,6 +31,13 @@ function GradesManagement() {
   });
   const [selectedGradeLevel, setSelectedGradeLevel] = useState(null);
   const [studentSchoolYears, setStudentSchoolYears] = useState({});
+  // Add state to track submitted quarters
+  const [quarterSubmissionState, setQuarterSubmissionState] = useState({
+    q1: {},
+    q2: {},
+    q3: {},
+    q4: {}
+  });
 
   useEffect(() => {
     fetchAllSchoolYears();
@@ -283,7 +290,138 @@ function GradesManagement() {
 
 
 
+  const fetchGrades = useCallback(async (studentId, gradeLevel, existingSubjects, schoolYearId, section_id) => {
+    if (!studentId || !gradeLevel || !schoolYearId ) return;
+
+    try {
+      console.log('Fetching grades for:', { studentId, gradeLevel, schoolYearId, section_id  });
+
+      // Fetch the regular grades
+      const gradeResponse = await axios.get('http://localhost:3001/api/grades', {
+        params: { 
+          studentId, 
+          gradeLevel,
+          schoolYearId,
+          section_id
+        },
+      });
+
+      console.log('Grades response:', gradeResponse.data);
+
+      if (!gradeResponse.data || !gradeResponse.data.grades || gradeResponse.data.grades.length === 0) {
+        console.log('No grades found, keeping existing subjects:', existingSubjects);
+        setSubjects(existingSubjects);
+        setGradesFetched(true);
+        return;
+      }
+
+      const gradesData = gradeResponse.data.grades;
+      console.log('Fetched grades:', gradesData);
+
+      // Fetch the grade submission status
+      const statusResponse = await axios.get('http://localhost:3001/api/grade-submission-status', {
+        params: { 
+          studentId, 
+          gradeLevel,
+          schoolYearId,
+          section_id
+        },
+      });
+
+      // Default submissions map in case the API fails
+      let submissionStatusMap = {};
+      
+      if (statusResponse.data && statusResponse.data.success) {
+        submissionStatusMap = statusResponse.data.submissionStatus || {};
+      }
+
+      const updatedSubjects = existingSubjects.map(subject => {
+        // Find matching grade for this subject
+        const matchingGrade = gradesData.find(grade => 
+          grade.subject_name.toLowerCase().trim() === subject.subject_name.toLowerCase().trim()
+        );
+
+        // Get submission status for this subject
+        const subjectStatus = submissionStatusMap[subject.subject_name] || {};
+
+        console.log(`Matching grade for ${subject.subject_name}:`, matchingGrade);
+        console.log(`Submission status for ${subject.subject_name}:`, subjectStatus);
+
+        // If we found a matching grade, use its values
+        if (matchingGrade) {
+          return {
+            ...subject,
+            q1: matchingGrade.q1,
+            q2: matchingGrade.q2,
+            q3: matchingGrade.q3,
+            q4: matchingGrade.q4,
+            // Add submission states
+            q1_state: subjectStatus.q1 || 'draft',
+            q2_state: subjectStatus.q2 || 'draft',
+            q3_state: subjectStatus.q3 || 'draft',
+            q4_state: subjectStatus.q4 || 'draft',
+            final: matchingGrade.q1 && matchingGrade.q2 && matchingGrade.q3 && matchingGrade.q4 
+              ? ((parseFloat(matchingGrade.q1) + parseFloat(matchingGrade.q2) + 
+                  parseFloat(matchingGrade.q3) + parseFloat(matchingGrade.q4)) / 4).toFixed(0)
+              : null,
+            remarks: matchingGrade.q1 && matchingGrade.q2 && matchingGrade.q3 && matchingGrade.q4
+              ? ((parseFloat(matchingGrade.q1) + parseFloat(matchingGrade.q2) + 
+                  parseFloat(matchingGrade.q3) + parseFloat(matchingGrade.q4)) / 4) >= 75
+                ? "Passed" : "Failed"
+              : "___"
+          };
+        }
+
+        // If no matching grade was found, return the original subject with default submission states
+        return {
+          ...subject,
+          q1_state: 'draft',
+          q2_state: 'draft', 
+          q3_state: 'draft',
+          q4_state: 'draft'
+        };
+      });
+
+      console.log('Final updated subjects:', updatedSubjects);
+      setSubjects(updatedSubjects);
+      setGradesFetched(true);
+      
+      // Update the quarter submission state based on the fetched data
+      const updatedQuarterState = {
+        q1: {},
+        q2: {},
+        q3: {},
+        q4: {}
+      };
+      
+      // Check if any subject has a submitted state for each quarter
+      ['q1', 'q2', 'q3', 'q4'].forEach(quarter => {
+        const isQuarterSubmitted = updatedSubjects.some(subject => subject[`${quarter}_state`] === 'submitted');
+        if (isQuarterSubmitted) {
+          updatedQuarterState[quarter][studentId] = true;
+        }
+      });
+      
+      setQuarterSubmissionState(prev => ({
+        ...prev,
+        ...updatedQuarterState
+      }));
+      
+    } catch (error) {
+      console.error('Error fetching grades:', error);
+    }
+  }, []);
+
   const handleGradeChange = (index, period, value) => {
+    // Get the current subject
+    const subject = subjects[index];
+    
+    // Check if this period is already submitted
+    if (subject[`${period}_state`] === 'submitted') {
+      alert(`Cannot edit ${period.toUpperCase()} grade as it has already been submitted.`);
+      return;
+    }
+    
     // Allow empty value
     if (value === "") {
       setSubjects((prevSubjects) => {
@@ -446,74 +584,6 @@ function GradesManagement() {
     const fetchedSubjects = await fetchSubjects(student.student_id, gradeLevel, schoolYearId, section_id);
     await fetchGrades(student.student_id, gradeLevel, fetchedSubjects, schoolYearId, section_id);
   };
-
-
-  const fetchGrades = useCallback(async (studentId, gradeLevel, existingSubjects, schoolYearId, section_id) => {
-    if (!studentId || !gradeLevel || !schoolYearId ) return;
-
-    try {
-      console.log('Fetching grades for:', { studentId, gradeLevel, schoolYearId, section_id  });
-
-      const response = await axios.get('http://localhost:3001/api/grades', {
-        params: { 
-          studentId, 
-          gradeLevel,
-          schoolYearId,
-          section_id
-        },
-      });
-
-      console.log('Grades response:', response.data);
-
-      if (!response.data || !response.data.grades || response.data.grades.length === 0) {
-        console.log('No grades found, keeping existing subjects:', existingSubjects);
-        setSubjects(existingSubjects);
-        setGradesFetched(true);
-        return;
-      }
-
-      const gradesData = response.data.grades;
-      console.log('Fetched grades:', gradesData);
-
-      const updatedSubjects = existingSubjects.map(subject => {
-        // Find matching grade for this subject
-        const matchingGrade = gradesData.find(grade => 
-          grade.subject_name.toLowerCase().trim() === subject.subject_name.toLowerCase().trim()
-        );
-
-        console.log(`Matching grade for ${subject.subject_name}:`, matchingGrade);
-
-        // If we found a matching grade, use its values
-        if (matchingGrade) {
-          return {
-            ...subject,
-            q1: matchingGrade.q1,
-            q2: matchingGrade.q2,
-            q3: matchingGrade.q3,
-            q4: matchingGrade.q4,
-            final: matchingGrade.q1 && matchingGrade.q2 && matchingGrade.q3 && matchingGrade.q4 
-              ? ((parseFloat(matchingGrade.q1) + parseFloat(matchingGrade.q2) + 
-                  parseFloat(matchingGrade.q3) + parseFloat(matchingGrade.q4)) / 4).toFixed(0)
-              : null,
-            remarks: matchingGrade.q1 && matchingGrade.q2 && matchingGrade.q3 && matchingGrade.q4
-              ? ((parseFloat(matchingGrade.q1) + parseFloat(matchingGrade.q2) + 
-                  parseFloat(matchingGrade.q3) + parseFloat(matchingGrade.q4)) / 4) >= 75
-                ? "Passed" : "Failed"
-              : "___"
-          };
-        }
-
-        // If no matching grade was found, return the original subject
-        return subject;
-      });
-
-      console.log('Final updated subjects:', updatedSubjects);
-      setSubjects(updatedSubjects);
-      setGradesFetched(true);
-    } catch (error) {
-      console.error('Error fetching grades:', error);
-    }
-  }, []);
 
   const handleSearch = (searchTerm) => {
     setFilters((prevFilters) => ({ ...prevFilters, searchTerm }));
@@ -749,6 +819,103 @@ function GradesManagement() {
     }
   }, [assignedSubjects, selectedStudent, fetchSubjects, fetchGrades, roleName]);
 
+  // Check if all subjects have grades for a specific quarter
+  const allSubjectsHaveGradesForQuarter = (quarter) => {
+    if (!subjects || subjects.length === 0) return false;
+    return subjects.every(subject => 
+      subject[quarter] && 
+      subject[quarter] !== "" && 
+      subject[quarter] !== "___"
+    );
+  };
+
+  // Function to check if a quarter has been submitted for the selected student and subject
+  const isQuarterSubmitted = (quarter) => {
+    if (!selectedStudent) return false;
+    
+    // Check if any of the current displayed subjects have a submitted state for this quarter
+    return subjects.some(subject => 
+      subject[`${quarter}_state`] === 'submitted'
+    );
+  };
+
+  // Function to handle submission of grades for a quarter
+  const handleSubmitQuarter = async (quarter) => {
+    try {
+      if (!selectedStudent || subjects.length === 0) {
+        alert("No student or subjects selected.");
+        return;
+      }
+
+      // Check if all subjects have valid grades for this quarter
+      if (!allSubjectsHaveGradesForQuarter(quarter)) {
+        alert(`Cannot submit. All subjects must have grades for ${quarter.toUpperCase()}.`);
+        return;
+      }
+
+      // Check for invalid grades before proceeding
+      const invalidGrades = subjects.some(subject => {
+        const grade = subject[quarter];
+        return grade && (parseInt(grade) < 70 || parseInt(grade) > 100);
+      });
+
+      if (invalidGrades) {
+        alert("Cannot submit. Some grades are outside the valid range (70-100).");
+        return;
+      }
+
+      // Filter to only include the subjects that the teacher is assigned to
+      const formattedSubjects = subjects
+        .filter(subject => roleName !== 'subject_teacher' || isSubjectAssigned(subject.subject_name))
+        .map(subject => ({
+          subject_name: subject.subject_name,
+          [quarter]: subject[quarter] || null,
+          grade_state: 'submitted'
+        }));
+
+      if (formattedSubjects.length === 0) {
+        alert("You don't have permission to submit grades for any of these subjects.");
+        return;
+      }
+
+      const response = await axios.post("http://localhost:3001/api/submit-grade", {
+        student_id: selectedStudent.student_id,
+        student_name: `${selectedStudent.firstname} ${selectedStudent.lastname}`,
+        grade_level: selectedStudent.current_yr_lvl,
+        school_year_id: selectedStudent.school_year_id,
+        subjects: formattedSubjects,
+        section_id: selectedStudent.section_id,
+        period: quarter.substring(1) // Extract the quarter number (1, 2, 3, 4) from q1, q2, q3, q4
+      });
+
+      if (response.data.success) {
+        alert(`${quarter.toUpperCase()} grades submitted successfully! These grades can no longer be edited.`);
+        
+        // Update submission state
+        const updatedSubjects = subjects.map(subject => ({
+          ...subject,
+          [`${quarter}_state`]: 'submitted'
+        }));
+        
+        setSubjects(updatedSubjects);
+        
+        // Update the submission state for this quarter and student
+        setQuarterSubmissionState(prevState => ({
+          ...prevState,
+          [quarter]: {
+            ...prevState[quarter],
+            [selectedStudent.student_id]: true
+          }
+        }));
+      } else {
+        alert("Failed to submit grades.");
+      }
+    } catch (error) {
+      console.error("Error submitting grades:", error.response?.data || error.message);
+      alert("Failed to submit grades.");
+    }
+  };
+
   return (
     <div className="grades-management-container">
       <div className="grades-management-header">
@@ -855,10 +1022,90 @@ function GradesManagement() {
                           <thead>
                             <tr>
                               <th>Subjects</th>
-                              <th>1st Grading</th>
-                              <th>2nd Grading</th>
-                              <th>3rd Grading</th>
-                              <th>4th Grading</th>
+                              <th>
+                                <div className="quarter-header">
+                                  <span>1st Grading</span>
+                                  {roleName === 'subject_teacher' && editingStudent !== null && (
+                                    <button 
+                                      className="quarter-submit-btn"
+                                      onClick={() => handleSubmitQuarter('q1')}
+                                      disabled={isQuarterSubmitted('q1') || !allSubjectsHaveGradesForQuarter('q1')}
+                                      title={
+                                        isQuarterSubmitted('q1') 
+                                          ? "Already submitted" 
+                                          : !allSubjectsHaveGradesForQuarter('q1')
+                                            ? "Fill all grades first"
+                                            : "Submit 1st quarter grades"
+                                      }
+                                    >
+                                      Submit
+                                    </button>
+                                  )}
+                                </div>
+                              </th>
+                              <th>
+                                <div className="quarter-header">
+                                  <span>2nd Grading</span>
+                                  {roleName === 'subject_teacher' && editingStudent !== null && (
+                                    <button 
+                                      className="quarter-submit-btn"
+                                      onClick={() => handleSubmitQuarter('q2')}
+                                      disabled={isQuarterSubmitted('q2') || !allSubjectsHaveGradesForQuarter('q2')}
+                                      title={
+                                        isQuarterSubmitted('q2') 
+                                          ? "Already submitted" 
+                                          : !allSubjectsHaveGradesForQuarter('q2')
+                                            ? "Fill all grades first"
+                                            : "Submit 2nd quarter grades"
+                                      }
+                                    >
+                                      Submit
+                                    </button>
+                                  )}
+                                </div>
+                              </th>
+                              <th>
+                                <div className="quarter-header">
+                                  <span>3rd Grading</span>
+                                  {roleName === 'subject_teacher' && editingStudent !== null && (
+                                    <button 
+                                      className="quarter-submit-btn"
+                                      onClick={() => handleSubmitQuarter('q3')}
+                                      disabled={isQuarterSubmitted('q3') || !allSubjectsHaveGradesForQuarter('q3')}
+                                      title={
+                                        isQuarterSubmitted('q3') 
+                                          ? "Already submitted" 
+                                          : !allSubjectsHaveGradesForQuarter('q3')
+                                            ? "Fill all grades first"
+                                            : "Submit 3rd quarter grades"
+                                      }
+                                    >
+                                      Submit
+                                    </button>
+                                  )}
+                                </div>
+                              </th>
+                              <th>
+                                <div className="quarter-header">
+                                  <span>4th Grading</span>
+                                  {roleName === 'subject_teacher' && editingStudent !== null && (
+                                    <button 
+                                      className="quarter-submit-btn"
+                                      onClick={() => handleSubmitQuarter('q4')}
+                                      disabled={isQuarterSubmitted('q4') || !allSubjectsHaveGradesForQuarter('q4')}
+                                      title={
+                                        isQuarterSubmitted('q4') 
+                                          ? "Already submitted" 
+                                          : !allSubjectsHaveGradesForQuarter('q4')
+                                            ? "Fill all grades first"
+                                            : "Submit 4th quarter grades"
+                                      }
+                                    >
+                                      Submit
+                                    </button>
+                                  )}
+                                </div>
+                              </th>
                               <th>Final Grade</th>
                               <th>Remarks</th>
                             </tr>
@@ -878,14 +1125,19 @@ function GradesManagement() {
                                         onChange={(e) => handleGradeChange(index, "q1", e.target.value)}
                                         placeholder="70-100"
                                         maxLength="3"
-                                        title="Enter a grade between 70 and 100"
+                                        title={subject.q1_state === 'submitted' ? "Grade has been submitted and cannot be edited" : "Enter a grade between 70 and 100"}
+                                        disabled={subject.q1_state === 'submitted'}
                                         style={{
-                                          border: subject.q1_invalid ? '2px solid #ff4444' : '1px solid #ccc',
-                                          backgroundColor: subject.q1_invalid ? '#fff0f0' : 'white'
+                                          border: subject.q1_invalid ? '2px solid #ff4444' : subject.q1_state === 'submitted' ? '1px solid #00b300' : '1px solid #ccc',
+                                          backgroundColor: subject.q1_invalid ? '#fff0f0' : subject.q1_state === 'submitted' ? '#f0fff0' : 'white'
                                         }}
+                                        className={subject.q1_state === 'submitted' ? 'submitted-grade' : ''}
                                       />
                                     ) : (
-                                      subject.q1 || "___"
+                                      <span className={subject.q1_state === 'submitted' ? 'submitted-grade' : ''}>
+                                        {subject.q1 || "___"}
+                                        {subject.q1_state === 'submitted' && <span className="submitted-icon" title="Grade submitted and locked">•</span>}
+                                      </span>
                                     )}
                                   </td>
                                   <td>
@@ -896,14 +1148,19 @@ function GradesManagement() {
                                         onChange={(e) => handleGradeChange(index, "q2", e.target.value)}
                                         placeholder="70-100"
                                         maxLength="3"
-                                        title="Enter a grade between 70 and 100"
+                                        title={subject.q2_state === 'submitted' ? "Grade has been submitted and cannot be edited" : "Enter a grade between 70 and 100"}
+                                        disabled={subject.q2_state === 'submitted'}
                                         style={{
-                                          border: subject.q2_invalid ? '2px solid #ff4444' : '1px solid #ccc',
-                                          backgroundColor: subject.q2_invalid ? '#fff0f0' : 'white'
+                                          border: subject.q2_invalid ? '2px solid #ff4444' : subject.q2_state === 'submitted' ? '1px solid #00b300' : '1px solid #ccc',
+                                          backgroundColor: subject.q2_invalid ? '#fff0f0' : subject.q2_state === 'submitted' ? '#f0fff0' : 'white'
                                         }}
+                                        className={subject.q2_state === 'submitted' ? 'submitted-grade' : ''}
                                       />
                                     ) : (
-                                      subject.q2 || "___"
+                                      <span className={subject.q2_state === 'submitted' ? 'submitted-grade' : ''}>
+                                        {subject.q2 || "___"}
+                                        {subject.q2_state === 'submitted' && <span className="submitted-icon" title="Grade submitted and locked">•</span>}
+                                      </span>
                                     )}
                                   </td>
                                   <td>
@@ -914,14 +1171,19 @@ function GradesManagement() {
                                         onChange={(e) => handleGradeChange(index, "q3", e.target.value)}
                                         placeholder="70-100"
                                         maxLength="3"
-                                        title="Enter a grade between 70 and 100"
+                                        title={subject.q3_state === 'submitted' ? "Grade has been submitted and cannot be edited" : "Enter a grade between 70 and 100"}
+                                        disabled={subject.q3_state === 'submitted'}
                                         style={{
-                                          border: subject.q3_invalid ? '2px solid #ff4444' : '1px solid #ccc',
-                                          backgroundColor: subject.q3_invalid ? '#fff0f0' : 'white'
+                                          border: subject.q3_invalid ? '2px solid #ff4444' : subject.q3_state === 'submitted' ? '1px solid #00b300' : '1px solid #ccc',
+                                          backgroundColor: subject.q3_invalid ? '#fff0f0' : subject.q3_state === 'submitted' ? '#f0fff0' : 'white'
                                         }}
+                                        className={subject.q3_state === 'submitted' ? 'submitted-grade' : ''}
                                       />
                                     ) : (
-                                      subject.q3 || "___"
+                                      <span className={subject.q3_state === 'submitted' ? 'submitted-grade' : ''}>
+                                        {subject.q3 || "___"}
+                                        {subject.q3_state === 'submitted' && <span className="submitted-icon" title="Grade submitted and locked">•</span>}
+                                      </span>
                                     )}
                                   </td>
                                   <td>
@@ -932,14 +1194,19 @@ function GradesManagement() {
                                         onChange={(e) => handleGradeChange(index, "q4", e.target.value)}
                                         placeholder="70-100"
                                         maxLength="3"
-                                        title="Enter a grade between 70 and 100"
+                                        title={subject.q4_state === 'submitted' ? "Grade has been submitted and cannot be edited" : "Enter a grade between 70 and 100"}
+                                        disabled={subject.q4_state === 'submitted'}
                                         style={{
-                                          border: subject.q4_invalid ? '2px solid #ff4444' : '1px solid #ccc',
-                                          backgroundColor: subject.q4_invalid ? '#fff0f0' : 'white'
+                                          border: subject.q4_invalid ? '2px solid #ff4444' : subject.q4_state === 'submitted' ? '1px solid #00b300' : '1px solid #ccc',
+                                          backgroundColor: subject.q4_invalid ? '#fff0f0' : subject.q4_state === 'submitted' ? '#f0fff0' : 'white'
                                         }}
+                                        className={subject.q4_state === 'submitted' ? 'submitted-grade' : ''}
                                       />
                                     ) : (
-                                      subject.q4 || "___"
+                                      <span className={subject.q4_state === 'submitted' ? 'submitted-grade' : ''}>
+                                        {subject.q4 || "___"}
+                                        {subject.q4_state === 'submitted' && <span className="submitted-icon" title="Grade submitted and locked">•</span>}
+                                      </span>
                                     )}
                                   </td>
                                   <td>
