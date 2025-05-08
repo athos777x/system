@@ -1193,9 +1193,10 @@ function GradesManagement() {
                                         disabled={subject.q1_state === 'submitted' && roleName !== 'registrar'}
                                         style={{
                                           border: subject.q1_invalid ? '2px solid #ff4444' : subject.q1_state === 'submitted' ? '1px solid #00b300' : '1px solid #ccc',
-                                          backgroundColor: subject.q1_invalid ? '#fff0f0' : subject.q1_state === 'submitted' ? '#f0fff0' : 'white'
+                                          backgroundColor: subject.q1_invalid ? '#fff0f0' : subject.q1_state === 'submitted' ? '#f0fff0' : 'white',
+                                          cursor: (subject.q1_state === 'submitted' && roleName !== 'registrar') ? 'not-allowed' : 'text'
                                         }}
-                                        className={subject.q1_state === 'submitted' ? 'submitted-grade' : ''}
+                                        className={subject.q1_state === 'submitted' && roleName !== 'registrar' ? 'submitted-grade' : ''}
                                       />
                                     ) : (
                                       <span className={subject.q1_state === 'submitted' ? 'submitted-grade' : ''}>
@@ -1223,9 +1224,11 @@ function GradesManagement() {
                                         style={{
                                           border: subject.q2_invalid ? '2px solid #ff4444' : subject.q2_state === 'submitted' ? '1px solid #00b300' : '1px solid #ccc',
                                           backgroundColor: subject.q2_invalid ? '#fff0f0' : subject.q2_state === 'submitted' ? '#f0fff0' : 
-                                            (roleName !== 'registrar' && subject.q1_state !== 'submitted') ? '#f0f0f0' : 'white'
+                                            (roleName !== 'registrar' && subject.q1_state !== 'submitted') ? '#f0f0f0' : 'white',
+                                          cursor: ((subject.q2_state === 'submitted' && roleName !== 'registrar') || 
+                                                 (roleName !== 'registrar' && subject.q1_state !== 'submitted')) ? 'not-allowed' : 'text'
                                         }}
-                                        className={subject.q2_state === 'submitted' ? 'submitted-grade' : ''}
+                                        className={subject.q2_state === 'submitted' && roleName !== 'registrar' ? 'submitted-grade' : ''}
                                       />
                                     ) : (
                                       <span className={subject.q2_state === 'submitted' ? 'submitted-grade' : ''}>
@@ -1253,9 +1256,11 @@ function GradesManagement() {
                                         style={{
                                           border: subject.q3_invalid ? '2px solid #ff4444' : subject.q3_state === 'submitted' ? '1px solid #00b300' : '1px solid #ccc',
                                           backgroundColor: subject.q3_invalid ? '#fff0f0' : subject.q3_state === 'submitted' ? '#f0fff0' : 
-                                            (roleName !== 'registrar' && (subject.q1_state !== 'submitted' || subject.q2_state !== 'submitted')) ? '#f0f0f0' : 'white'
+                                            (roleName !== 'registrar' && (subject.q1_state !== 'submitted' || subject.q2_state !== 'submitted')) ? '#f0f0f0' : 'white',
+                                          cursor: ((subject.q3_state === 'submitted' && roleName !== 'registrar') || 
+                                                (roleName !== 'registrar' && (subject.q1_state !== 'submitted' || subject.q2_state !== 'submitted'))) ? 'not-allowed' : 'text'
                                         }}
-                                        className={subject.q3_state === 'submitted' ? 'submitted-grade' : ''}
+                                        className={subject.q3_state === 'submitted' && roleName !== 'registrar' ? 'submitted-grade' : ''}
                                       />
                                     ) : (
                                       <span className={subject.q3_state === 'submitted' ? 'submitted-grade' : ''}>
@@ -1283,9 +1288,11 @@ function GradesManagement() {
                                         style={{
                                           border: subject.q4_invalid ? '2px solid #ff4444' : subject.q4_state === 'submitted' ? '1px solid #00b300' : '1px solid #ccc',
                                           backgroundColor: subject.q4_invalid ? '#fff0f0' : subject.q4_state === 'submitted' ? '#f0fff0' : 
-                                            (roleName !== 'registrar' && (subject.q1_state !== 'submitted' || subject.q2_state !== 'submitted' || subject.q3_state !== 'submitted')) ? '#f0f0f0' : 'white'
+                                            (roleName !== 'registrar' && (subject.q1_state !== 'submitted' || subject.q2_state !== 'submitted' || subject.q3_state !== 'submitted')) ? '#f0f0f0' : 'white',
+                                          cursor: ((subject.q4_state === 'submitted' && roleName !== 'registrar') || 
+                                                (roleName !== 'registrar' && (subject.q1_state !== 'submitted' || subject.q2_state !== 'submitted' || subject.q3_state !== 'submitted'))) ? 'not-allowed' : 'text'
                                         }}
-                                        className={subject.q4_state === 'submitted' ? 'submitted-grade' : ''}
+                                        className={subject.q4_state === 'submitted' && roleName !== 'registrar' ? 'submitted-grade' : ''}
                                       />
                                     ) : (
                                       <span className={subject.q4_state === 'submitted' ? 'submitted-grade' : ''}>
