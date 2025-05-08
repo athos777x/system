@@ -38,6 +38,12 @@ function GradesManagement() {
     q3: {},
     q4: {}
   });
+  // Add state for confirmation modal
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [confirmationData, setConfirmationData] = useState({
+    quarter: '',
+    action: null
+  });
 
   useEffect(() => {
     fetchAllSchoolYears();
@@ -416,10 +422,26 @@ function GradesManagement() {
     // Get the current subject
     const subject = subjects[index];
     
-    // Check if this period is already submitted
-    if (subject[`${period}_state`] === 'submitted') {
+    // Check if this period is already submitted - only restrict subject teachers, not registrars
+    if (subject[`${period}_state`] === 'submitted' && roleName !== 'registrar') {
       alert(`Cannot edit ${period.toUpperCase()} grade as it has already been submitted.`);
       return;
+    }
+    
+    // Check sequential submission requirement (except for registrars who can bypass)
+    if (roleName !== 'registrar') {
+      if (period === 'q2' && subject.q1_state !== 'submitted') {
+        alert("Cannot edit 2nd quarter grade until 1st quarter grade is submitted.");
+        return;
+      }
+      if (period === 'q3' && (subject.q1_state !== 'submitted' || subject.q2_state !== 'submitted')) {
+        alert("Cannot edit 3rd quarter grade until 1st and 2nd quarter grades are submitted.");
+        return;
+      }
+      if (period === 'q4' && (subject.q1_state !== 'submitted' || subject.q2_state !== 'submitted' || subject.q3_state !== 'submitted')) {
+        alert("Cannot edit 4th quarter grade until 1st, 2nd, and 3rd quarter grades are submitted.");
+        return;
+      }
     }
     
     // Allow empty value
@@ -736,13 +758,18 @@ function GradesManagement() {
       calculateQuarterAverage("q3") !== "___" && 
       calculateQuarterAverage("q4") !== "___";
     
-    const average = parseFloat(finalAverage);
+    // Check if all subjects have valid grades for all quarters
+    const allSubjectsComplete = subjects.every(subject => 
+      subject.q1 && subject.q2 && subject.q3 && subject.q4 &&
+      !subject.q1_invalid && !subject.q2_invalid && !subject.q3_invalid && !subject.q4_invalid
+    );
     
-    // If not all quarters have grades and current average is below passing
-    if (!hasAllQuarters && average < 75) {
+    // If not all quarters have grades or not all subjects have complete grades
+    if (!hasAllQuarters || !allSubjectsComplete) {
       return "incomplete";
     }
     
+    const average = parseFloat(finalAverage);
     return average >= 75 ? "passed" : "failed";
   };
 
@@ -757,13 +784,18 @@ function GradesManagement() {
       calculateQuarterAverage("q3") !== "___" && 
       calculateQuarterAverage("q4") !== "___";
     
-    const average = parseFloat(finalAverage);
+    // Check if all subjects have valid grades for all quarters
+    const allSubjectsComplete = subjects.every(subject => 
+      subject.q1 && subject.q2 && subject.q3 && subject.q4 &&
+      !subject.q1_invalid && !subject.q2_invalid && !subject.q3_invalid && !subject.q4_invalid
+    );
     
-    // If not all quarters have grades and current average is below passing
-    if (!hasAllQuarters && average < 75) {
+    // If not all quarters have grades or not all subjects have complete grades
+    if (!hasAllQuarters || !allSubjectsComplete) {
       return "Incomplete";
     }
     
+    const average = parseFloat(finalAverage);
     return average >= 75 ? "Passed" : "Failed";
   };
 
@@ -842,8 +874,25 @@ function GradesManagement() {
   // Function to handle submission of grades for a quarter
   const handleSubmitQuarter = async (quarter) => {
     try {
+      // Close the modal first
+      setShowConfirmModal(false);
+      
       if (!selectedStudent || subjects.length === 0) {
         alert("No student or subjects selected.");
+        return;
+      }
+
+      // Check sequential submission requirement
+      if (quarter === 'q2' && !isQuarterSubmitted('q1')) {
+        alert("Cannot submit 2nd quarter grades until 1st quarter grades are submitted.");
+        return;
+      }
+      if (quarter === 'q3' && (!isQuarterSubmitted('q1') || !isQuarterSubmitted('q2'))) {
+        alert("Cannot submit 3rd quarter grades until 1st and 2nd quarter grades are submitted.");
+        return;
+      }
+      if (quarter === 'q4' && (!isQuarterSubmitted('q1') || !isQuarterSubmitted('q2') || !isQuarterSubmitted('q3'))) {
+        alert("Cannot submit 4th quarter grades until 1st, 2nd, and 3rd quarter grades are submitted.");
         return;
       }
 
@@ -916,6 +965,15 @@ function GradesManagement() {
     }
   };
 
+  // Add this new function to handle opening the confirmation modal
+  const openConfirmModal = (quarter) => {
+    setConfirmationData({
+      quarter: quarter,
+      action: () => handleSubmitQuarter(quarter)
+    });
+    setShowConfirmModal(true);
+  };
+
   return (
     <div className="grades-management-container">
       <div className="grades-management-header">
@@ -963,7 +1021,7 @@ function GradesManagement() {
                           View
                         </button>
                       )}
-                      {(roleName !== 'principal' && roleName !== 'registrar' && roleName !== 'grade_level_coordinator' && roleName !== 'class_adviser') && (
+                      {(roleName !== 'principal' && roleName !== 'grade_level_coordinator' && roleName !== 'class_adviser') && (
                         <>
                         <button 
                           className={`grades-management-btn grades-management-btn-edit ${editingStudent && editingStudent.student_id === student.student_id ? 'cancel' : ''}`}
@@ -1028,7 +1086,7 @@ function GradesManagement() {
                                   {roleName === 'subject_teacher' && editingStudent !== null && (
                                     <button 
                                       className="quarter-submit-btn"
-                                      onClick={() => handleSubmitQuarter('q1')}
+                                      onClick={() => openConfirmModal('q1')}
                                       disabled={isQuarterSubmitted('q1') || !allSubjectsHaveGradesForQuarter('q1')}
                                       title={
                                         isQuarterSubmitted('q1') 
@@ -1049,11 +1107,13 @@ function GradesManagement() {
                                   {roleName === 'subject_teacher' && editingStudent !== null && (
                                     <button 
                                       className="quarter-submit-btn"
-                                      onClick={() => handleSubmitQuarter('q2')}
-                                      disabled={isQuarterSubmitted('q2') || !allSubjectsHaveGradesForQuarter('q2')}
+                                      onClick={() => openConfirmModal('q2')}
+                                      disabled={isQuarterSubmitted('q2') || !allSubjectsHaveGradesForQuarter('q2') || !isQuarterSubmitted('q1')}
                                       title={
                                         isQuarterSubmitted('q2') 
                                           ? "Already submitted" 
+                                          : !isQuarterSubmitted('q1')
+                                            ? "Submit 1st quarter grades first"
                                           : !allSubjectsHaveGradesForQuarter('q2')
                                             ? "Fill all grades first"
                                             : "Submit 2nd quarter grades"
@@ -1070,11 +1130,13 @@ function GradesManagement() {
                                   {roleName === 'subject_teacher' && editingStudent !== null && (
                                     <button 
                                       className="quarter-submit-btn"
-                                      onClick={() => handleSubmitQuarter('q3')}
-                                      disabled={isQuarterSubmitted('q3') || !allSubjectsHaveGradesForQuarter('q3')}
+                                      onClick={() => openConfirmModal('q3')}
+                                      disabled={isQuarterSubmitted('q3') || !allSubjectsHaveGradesForQuarter('q3') || !isQuarterSubmitted('q1') || !isQuarterSubmitted('q2')}
                                       title={
                                         isQuarterSubmitted('q3') 
                                           ? "Already submitted" 
+                                          : !isQuarterSubmitted('q1') || !isQuarterSubmitted('q2')
+                                            ? "Submit 1st and 2nd quarter grades first"
                                           : !allSubjectsHaveGradesForQuarter('q3')
                                             ? "Fill all grades first"
                                             : "Submit 3rd quarter grades"
@@ -1091,11 +1153,13 @@ function GradesManagement() {
                                   {roleName === 'subject_teacher' && editingStudent !== null && (
                                     <button 
                                       className="quarter-submit-btn"
-                                      onClick={() => handleSubmitQuarter('q4')}
-                                      disabled={isQuarterSubmitted('q4') || !allSubjectsHaveGradesForQuarter('q4')}
+                                      onClick={() => openConfirmModal('q4')}
+                                      disabled={isQuarterSubmitted('q4') || !allSubjectsHaveGradesForQuarter('q4') || !isQuarterSubmitted('q1') || !isQuarterSubmitted('q2') || !isQuarterSubmitted('q3')}
                                       title={
                                         isQuarterSubmitted('q4') 
                                           ? "Already submitted" 
+                                          : !isQuarterSubmitted('q1') || !isQuarterSubmitted('q2') || !isQuarterSubmitted('q3')
+                                            ? "Submit 1st, 2nd, and 3rd quarter grades first"
                                           : !allSubjectsHaveGradesForQuarter('q4')
                                             ? "Fill all grades first"
                                             : "Submit 4th quarter grades"
@@ -1125,8 +1189,8 @@ function GradesManagement() {
                                         onChange={(e) => handleGradeChange(index, "q1", e.target.value)}
                                         placeholder="70-100"
                                         maxLength="3"
-                                        title={subject.q1_state === 'submitted' ? "Grade has been submitted and cannot be edited" : "Enter a grade between 70 and 100"}
-                                        disabled={subject.q1_state === 'submitted'}
+                                        title={subject.q1_state === 'submitted' && roleName !== 'registrar' ? "Grade has been submitted and cannot be edited" : "Enter a grade between 70 and 100"}
+                                        disabled={subject.q1_state === 'submitted' && roleName !== 'registrar'}
                                         style={{
                                           border: subject.q1_invalid ? '2px solid #ff4444' : subject.q1_state === 'submitted' ? '1px solid #00b300' : '1px solid #ccc',
                                           backgroundColor: subject.q1_invalid ? '#fff0f0' : subject.q1_state === 'submitted' ? '#f0fff0' : 'white'
@@ -1136,7 +1200,6 @@ function GradesManagement() {
                                     ) : (
                                       <span className={subject.q1_state === 'submitted' ? 'submitted-grade' : ''}>
                                         {subject.q1 || "___"}
-                                        {subject.q1_state === 'submitted' && <span className="submitted-icon" title="Grade submitted and locked">•</span>}
                                       </span>
                                     )}
                                   </td>
@@ -1148,18 +1211,25 @@ function GradesManagement() {
                                         onChange={(e) => handleGradeChange(index, "q2", e.target.value)}
                                         placeholder="70-100"
                                         maxLength="3"
-                                        title={subject.q2_state === 'submitted' ? "Grade has been submitted and cannot be edited" : "Enter a grade between 70 and 100"}
-                                        disabled={subject.q2_state === 'submitted'}
+                                        title={
+                                          subject.q2_state === 'submitted' && roleName !== 'registrar' 
+                                            ? "Grade has been submitted and cannot be edited" 
+                                            : roleName !== 'registrar' && subject.q1_state !== 'submitted'
+                                            ? "1st quarter grade must be submitted first"
+                                            : "Enter a grade between 70 and 100"
+                                        }
+                                        disabled={(subject.q2_state === 'submitted' && roleName !== 'registrar') || 
+                                                 (roleName !== 'registrar' && subject.q1_state !== 'submitted')}
                                         style={{
                                           border: subject.q2_invalid ? '2px solid #ff4444' : subject.q2_state === 'submitted' ? '1px solid #00b300' : '1px solid #ccc',
-                                          backgroundColor: subject.q2_invalid ? '#fff0f0' : subject.q2_state === 'submitted' ? '#f0fff0' : 'white'
+                                          backgroundColor: subject.q2_invalid ? '#fff0f0' : subject.q2_state === 'submitted' ? '#f0fff0' : 
+                                            (roleName !== 'registrar' && subject.q1_state !== 'submitted') ? '#f0f0f0' : 'white'
                                         }}
                                         className={subject.q2_state === 'submitted' ? 'submitted-grade' : ''}
                                       />
                                     ) : (
                                       <span className={subject.q2_state === 'submitted' ? 'submitted-grade' : ''}>
                                         {subject.q2 || "___"}
-                                        {subject.q2_state === 'submitted' && <span className="submitted-icon" title="Grade submitted and locked">•</span>}
                                       </span>
                                     )}
                                   </td>
@@ -1171,18 +1241,25 @@ function GradesManagement() {
                                         onChange={(e) => handleGradeChange(index, "q3", e.target.value)}
                                         placeholder="70-100"
                                         maxLength="3"
-                                        title={subject.q3_state === 'submitted' ? "Grade has been submitted and cannot be edited" : "Enter a grade between 70 and 100"}
-                                        disabled={subject.q3_state === 'submitted'}
+                                        title={
+                                          subject.q3_state === 'submitted' && roleName !== 'registrar' 
+                                            ? "Grade has been submitted and cannot be edited" 
+                                            : roleName !== 'registrar' && (subject.q1_state !== 'submitted' || subject.q2_state !== 'submitted')
+                                            ? "1st and 2nd quarter grades must be submitted first"
+                                            : "Enter a grade between 70 and 100"
+                                        }
+                                        disabled={(subject.q3_state === 'submitted' && roleName !== 'registrar') || 
+                                                 (roleName !== 'registrar' && (subject.q1_state !== 'submitted' || subject.q2_state !== 'submitted'))}
                                         style={{
                                           border: subject.q3_invalid ? '2px solid #ff4444' : subject.q3_state === 'submitted' ? '1px solid #00b300' : '1px solid #ccc',
-                                          backgroundColor: subject.q3_invalid ? '#fff0f0' : subject.q3_state === 'submitted' ? '#f0fff0' : 'white'
+                                          backgroundColor: subject.q3_invalid ? '#fff0f0' : subject.q3_state === 'submitted' ? '#f0fff0' : 
+                                            (roleName !== 'registrar' && (subject.q1_state !== 'submitted' || subject.q2_state !== 'submitted')) ? '#f0f0f0' : 'white'
                                         }}
                                         className={subject.q3_state === 'submitted' ? 'submitted-grade' : ''}
                                       />
                                     ) : (
                                       <span className={subject.q3_state === 'submitted' ? 'submitted-grade' : ''}>
                                         {subject.q3 || "___"}
-                                        {subject.q3_state === 'submitted' && <span className="submitted-icon" title="Grade submitted and locked">•</span>}
                                       </span>
                                     )}
                                   </td>
@@ -1194,18 +1271,25 @@ function GradesManagement() {
                                         onChange={(e) => handleGradeChange(index, "q4", e.target.value)}
                                         placeholder="70-100"
                                         maxLength="3"
-                                        title={subject.q4_state === 'submitted' ? "Grade has been submitted and cannot be edited" : "Enter a grade between 70 and 100"}
-                                        disabled={subject.q4_state === 'submitted'}
+                                        title={
+                                          subject.q4_state === 'submitted' && roleName !== 'registrar' 
+                                            ? "Grade has been submitted and cannot be edited" 
+                                            : roleName !== 'registrar' && (subject.q1_state !== 'submitted' || subject.q2_state !== 'submitted' || subject.q3_state !== 'submitted')
+                                            ? "1st, 2nd, and 3rd quarter grades must be submitted first"
+                                            : "Enter a grade between 70 and 100"
+                                        }
+                                        disabled={(subject.q4_state === 'submitted' && roleName !== 'registrar') || 
+                                                 (roleName !== 'registrar' && (subject.q1_state !== 'submitted' || subject.q2_state !== 'submitted' || subject.q3_state !== 'submitted'))}
                                         style={{
                                           border: subject.q4_invalid ? '2px solid #ff4444' : subject.q4_state === 'submitted' ? '1px solid #00b300' : '1px solid #ccc',
-                                          backgroundColor: subject.q4_invalid ? '#fff0f0' : subject.q4_state === 'submitted' ? '#f0fff0' : 'white'
+                                          backgroundColor: subject.q4_invalid ? '#fff0f0' : subject.q4_state === 'submitted' ? '#f0fff0' : 
+                                            (roleName !== 'registrar' && (subject.q1_state !== 'submitted' || subject.q2_state !== 'submitted' || subject.q3_state !== 'submitted')) ? '#f0f0f0' : 'white'
                                         }}
                                         className={subject.q4_state === 'submitted' ? 'submitted-grade' : ''}
                                       />
                                     ) : (
                                       <span className={subject.q4_state === 'submitted' ? 'submitted-grade' : ''}>
                                         {subject.q4 || "___"}
-                                        {subject.q4_state === 'submitted' && <span className="submitted-icon" title="Grade submitted and locked">•</span>}
                                       </span>
                                     )}
                                   </td>
@@ -1263,6 +1347,31 @@ function GradesManagement() {
         currentPage={currentPage}
         onPageChange={paginate}
       />
+      
+      {/* Confirmation Modal */}
+      {showConfirmModal && (
+        <div className="confirmation-modal-overlay">
+          <div className="confirmation-modal">
+            <h3>Confirm Grade Submission</h3>
+            <p>Are you sure you want to submit {confirmationData.quarter.toUpperCase()} grades?</p>
+            <p className="warning-text">This action cannot be undone and grades will be locked for editing.</p>
+            <div className="confirmation-buttons">
+              <button 
+                className="cancel-btn"
+                onClick={() => setShowConfirmModal(false)}
+              >
+                Cancel
+              </button>
+              <button 
+                className="confirm-btn"
+                onClick={confirmationData.action}
+              >
+                Confirm Submission
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
