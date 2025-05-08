@@ -44,6 +44,8 @@ function GradesManagement() {
     quarter: '',
     action: null
   });
+  // Add state to track if the selected school year is active
+  const [isSchoolYearActive, setIsSchoolYearActive] = useState(false);
 
   useEffect(() => {
     fetchAllSchoolYears();
@@ -232,6 +234,7 @@ function GradesManagement() {
         setGradesFetched(false);
         setSelectedGradeLevel(null);
         setSelectedSchoolYear(null); // Reset school year when unselecting
+        setIsSchoolYearActive(false); // Reset school year status
         return;
     }
 
@@ -241,7 +244,7 @@ function GradesManagement() {
     
     const gradeLevel = student.current_yr_lvl;
     const schoolYearId = student.school_year_id; // Ensure schoolYearId is retrieved
-    const section_id = student.section_id
+    const section_id = student.section_id;
 
     setSelectedGradeLevel(gradeLevel);
     setSelectedSchoolYear(schoolYearId); // Set the selected school year
@@ -249,6 +252,15 @@ function GradesManagement() {
     if (!schoolYearId) {
         console.error("No school year found for the selected student.");
         return;
+    }
+
+    // Check if the school year is active
+    try {
+        const response = await axios.get(`http://localhost:3001/school-year-status/${schoolYearId}`);
+        setIsSchoolYearActive(response.data.status === 'active');
+    } catch (error) {
+        console.error("Error checking school year status:", error);
+        setIsSchoolYearActive(false); // Default to inactive if there's an error
     }
 
     // If role is subject_teacher and assignedSubjects is empty, fetch it first
@@ -428,6 +440,12 @@ function GradesManagement() {
       return;
     }
     
+    // Add condition to check if the school year is inactive for registrars and subject teachers
+    if ((roleName === 'registrar' || roleName === 'subject_teacher') && !isSchoolYearActive) {
+      alert(`Cannot edit grades for inactive school years.`);
+      return;
+    }
+    
     // Check sequential submission requirement (except for registrars who can bypass)
     if (roleName !== 'registrar') {
       if (period === 'q2' && subject.q1_state !== 'submitted') {
@@ -517,6 +535,12 @@ function GradesManagement() {
         return;
       }
 
+      // Prevent saving for inactive school years for registrars and subject teachers
+      if ((roleName === 'registrar' || roleName === 'subject_teacher') && !isSchoolYearActive) {
+        alert("Cannot save grades for inactive school years.");
+        return;
+      }
+
       // Check for invalid grades before proceeding
       const invalidGrades = subjects.some(subject => {
         return ['q1', 'q2', 'q3', 'q4'].some(quarter => {
@@ -578,6 +602,7 @@ function GradesManagement() {
         setGradesFetched(false);
         setSelectedGradeLevel(null);
         setSelectedSchoolYear(null); // Reset school year when unselecting
+        setIsSchoolYearActive(false); // Reset school year status
         return;
     }
 
@@ -596,6 +621,18 @@ function GradesManagement() {
         console.error("No school year found for the selected student.");
         return;
     }
+
+    // Check if the school year is active
+    try {
+        const response = await axios.get(`http://localhost:3001/school-year-status/${schoolYearId}`);
+        setIsSchoolYearActive(response.data.status === 'active');
+    } catch (error) {
+        console.error("Error checking school year status:", error);
+        setIsSchoolYearActive(false); // Default to inactive if there's an error
+    }
+    
+    // Fetch the student's school years to populate the dropdown correctly
+    await fetchSchoolYearsGrades(student.student_id);
 
     // If role is subject_teacher and assignedSubjects is empty, fetch it first
     if (roleName === 'subject_teacher' && assignedSubjects.length === 0) {
@@ -676,6 +713,15 @@ function GradesManagement() {
     const gradeLevel = selectedYear?.grade_level || student.current_yr_lvl;
     const section_id = selectedYear?.section_id || student.section_id;
   
+    // Check if the school year is active
+    try {
+        const response = await axios.get(`http://localhost:3001/school-year-status/${newSchoolYearId}`);
+        setIsSchoolYearActive(response.data.status === 'active');
+    } catch (error) {
+        console.error("Error checking school year status:", error);
+        setIsSchoolYearActive(false); // Default to inactive if there's an error
+    }
+
     // Important: We allow viewing ANY grade level for a specific student
     // even if the user is a grade level coordinator with a specific assigned grade
   
@@ -882,6 +928,12 @@ function GradesManagement() {
         return;
       }
 
+      // Prevent submission for inactive school years
+      if (!isSchoolYearActive) {
+        alert("Cannot submit grades for inactive school years.");
+        return;
+      }
+
       // Check sequential submission requirement
       if (quarter === 'q2' && !isQuarterSubmitted('q1')) {
         alert("Cannot submit 2nd quarter grades until 1st quarter grades are submitted.");
@@ -1074,6 +1126,11 @@ function GradesManagement() {
                                 </option>
                               ))}
                             </select>
+                            {(roleName === 'registrar' || roleName === 'subject_teacher') && !isSchoolYearActive && editingStudent && (
+                              <div className="inactive-school-year-warning">
+                                Inactive School Year - Grades cannot be edited
+                              </div>
+                            )}
                           </div>
                         </div>
                         <table className="grades-details-table">
@@ -1087,10 +1144,12 @@ function GradesManagement() {
                                     <button 
                                       className="quarter-submit-btn"
                                       onClick={() => openConfirmModal('q1')}
-                                      disabled={isQuarterSubmitted('q1') || !allSubjectsHaveGradesForQuarter('q1')}
+                                      disabled={isQuarterSubmitted('q1') || !allSubjectsHaveGradesForQuarter('q1') || !isSchoolYearActive}
                                       title={
                                         isQuarterSubmitted('q1') 
                                           ? "Already submitted" 
+                                          : !isSchoolYearActive
+                                            ? "Cannot submit grades for inactive school years"
                                           : !allSubjectsHaveGradesForQuarter('q1')
                                             ? "Fill all grades first"
                                             : "Submit 1st quarter grades"
@@ -1108,10 +1167,12 @@ function GradesManagement() {
                                     <button 
                                       className="quarter-submit-btn"
                                       onClick={() => openConfirmModal('q2')}
-                                      disabled={isQuarterSubmitted('q2') || !allSubjectsHaveGradesForQuarter('q2') || !isQuarterSubmitted('q1')}
+                                      disabled={isQuarterSubmitted('q2') || !allSubjectsHaveGradesForQuarter('q2') || !isQuarterSubmitted('q1') || !isSchoolYearActive}
                                       title={
                                         isQuarterSubmitted('q2') 
                                           ? "Already submitted" 
+                                          : !isSchoolYearActive
+                                            ? "Cannot submit grades for inactive school years"
                                           : !isQuarterSubmitted('q1')
                                             ? "Submit 1st quarter grades first"
                                           : !allSubjectsHaveGradesForQuarter('q2')
@@ -1131,10 +1192,12 @@ function GradesManagement() {
                                     <button 
                                       className="quarter-submit-btn"
                                       onClick={() => openConfirmModal('q3')}
-                                      disabled={isQuarterSubmitted('q3') || !allSubjectsHaveGradesForQuarter('q3') || !isQuarterSubmitted('q1') || !isQuarterSubmitted('q2')}
+                                      disabled={isQuarterSubmitted('q3') || !allSubjectsHaveGradesForQuarter('q3') || !isQuarterSubmitted('q1') || !isQuarterSubmitted('q2') || !isSchoolYearActive}
                                       title={
                                         isQuarterSubmitted('q3') 
                                           ? "Already submitted" 
+                                          : !isSchoolYearActive
+                                            ? "Cannot submit grades for inactive school years"
                                           : !isQuarterSubmitted('q1') || !isQuarterSubmitted('q2')
                                             ? "Submit 1st and 2nd quarter grades first"
                                           : !allSubjectsHaveGradesForQuarter('q3')
@@ -1154,10 +1217,12 @@ function GradesManagement() {
                                     <button 
                                       className="quarter-submit-btn"
                                       onClick={() => openConfirmModal('q4')}
-                                      disabled={isQuarterSubmitted('q4') || !allSubjectsHaveGradesForQuarter('q4') || !isQuarterSubmitted('q1') || !isQuarterSubmitted('q2') || !isQuarterSubmitted('q3')}
+                                      disabled={isQuarterSubmitted('q4') || !allSubjectsHaveGradesForQuarter('q4') || !isQuarterSubmitted('q1') || !isQuarterSubmitted('q2') || !isQuarterSubmitted('q3') || !isSchoolYearActive}
                                       title={
                                         isQuarterSubmitted('q4') 
                                           ? "Already submitted" 
+                                          : !isSchoolYearActive
+                                            ? "Cannot submit grades for inactive school years"
                                           : !isQuarterSubmitted('q1') || !isQuarterSubmitted('q2') || !isQuarterSubmitted('q3')
                                             ? "Submit 1st, 2nd, and 3rd quarter grades first"
                                           : !allSubjectsHaveGradesForQuarter('q4')
@@ -1189,12 +1254,21 @@ function GradesManagement() {
                                         onChange={(e) => handleGradeChange(index, "q1", e.target.value)}
                                         placeholder="70-100"
                                         maxLength="3"
-                                        title={subject.q1_state === 'submitted' && roleName !== 'registrar' ? "Grade has been submitted and cannot be edited" : "Enter a grade between 70 and 100"}
-                                        disabled={subject.q1_state === 'submitted' && roleName !== 'registrar'}
+                                        title={
+                                          !isSchoolYearActive 
+                                            ? "Cannot edit grades for inactive school years" 
+                                            : subject.q1_state === 'submitted' && roleName !== 'registrar'
+                                              ? "Grade has been submitted and cannot be edited" 
+                                              : "Enter a grade between 70 and 100"
+                                        }
+                                        disabled={
+                                          !isSchoolYearActive || 
+                                          (subject.q1_state === 'submitted' && roleName !== 'registrar')
+                                        }
                                         style={{
                                           border: subject.q1_invalid ? '2px solid #ff4444' : subject.q1_state === 'submitted' ? '1px solid #00b300' : '1px solid #ccc',
-                                          backgroundColor: subject.q1_invalid ? '#fff0f0' : subject.q1_state === 'submitted' ? '#f0fff0' : 'white',
-                                          cursor: (subject.q1_state === 'submitted' && roleName !== 'registrar') ? 'not-allowed' : 'text'
+                                          backgroundColor: !isSchoolYearActive ? '#f0f0f0' : subject.q1_invalid ? '#fff0f0' : subject.q1_state === 'submitted' ? '#f0fff0' : 'white',
+                                          cursor: (!isSchoolYearActive || (subject.q1_state === 'submitted' && roleName !== 'registrar')) ? 'not-allowed' : 'text'
                                         }}
                                         className={subject.q1_state === 'submitted' && roleName !== 'registrar' ? 'submitted-grade' : ''}
                                       />
@@ -1213,19 +1287,24 @@ function GradesManagement() {
                                         placeholder="70-100"
                                         maxLength="3"
                                         title={
-                                          subject.q2_state === 'submitted' && roleName !== 'registrar' 
-                                            ? "Grade has been submitted and cannot be edited" 
-                                            : roleName !== 'registrar' && subject.q1_state !== 'submitted'
-                                            ? "1st quarter grade must be submitted first"
-                                            : "Enter a grade between 70 and 100"
+                                          !isSchoolYearActive 
+                                            ? "Cannot edit grades for inactive school years" 
+                                            : subject.q2_state === 'submitted' && roleName !== 'registrar'
+                                              ? "Grade has been submitted and cannot be edited" 
+                                              : roleName !== 'registrar' && subject.q1_state !== 'submitted'
+                                                ? "1st quarter grade must be submitted first"
+                                                : "Enter a grade between 70 and 100"
                                         }
-                                        disabled={(subject.q2_state === 'submitted' && roleName !== 'registrar') || 
-                                                 (roleName !== 'registrar' && subject.q1_state !== 'submitted')}
+                                        disabled={
+                                          !isSchoolYearActive || 
+                                          (subject.q2_state === 'submitted' && roleName !== 'registrar') || 
+                                          (roleName !== 'registrar' && subject.q1_state !== 'submitted')
+                                        }
                                         style={{
                                           border: subject.q2_invalid ? '2px solid #ff4444' : subject.q2_state === 'submitted' ? '1px solid #00b300' : '1px solid #ccc',
-                                          backgroundColor: subject.q2_invalid ? '#fff0f0' : subject.q2_state === 'submitted' ? '#f0fff0' : 
+                                          backgroundColor: !isSchoolYearActive ? '#f0f0f0' : subject.q2_invalid ? '#fff0f0' : subject.q2_state === 'submitted' ? '#f0fff0' : 
                                             (roleName !== 'registrar' && subject.q1_state !== 'submitted') ? '#f0f0f0' : 'white',
-                                          cursor: ((subject.q2_state === 'submitted' && roleName !== 'registrar') || 
+                                          cursor: (!isSchoolYearActive || (subject.q2_state === 'submitted' && roleName !== 'registrar') || 
                                                  (roleName !== 'registrar' && subject.q1_state !== 'submitted')) ? 'not-allowed' : 'text'
                                         }}
                                         className={subject.q2_state === 'submitted' && roleName !== 'registrar' ? 'submitted-grade' : ''}
@@ -1245,19 +1324,24 @@ function GradesManagement() {
                                         placeholder="70-100"
                                         maxLength="3"
                                         title={
-                                          subject.q3_state === 'submitted' && roleName !== 'registrar' 
-                                            ? "Grade has been submitted and cannot be edited" 
-                                            : roleName !== 'registrar' && (subject.q1_state !== 'submitted' || subject.q2_state !== 'submitted')
-                                            ? "1st and 2nd quarter grades must be submitted first"
-                                            : "Enter a grade between 70 and 100"
+                                          !isSchoolYearActive 
+                                            ? "Cannot edit grades for inactive school years" 
+                                            : subject.q3_state === 'submitted' && roleName !== 'registrar'
+                                              ? "Grade has been submitted and cannot be edited" 
+                                              : roleName !== 'registrar' && (subject.q1_state !== 'submitted' || subject.q2_state !== 'submitted')
+                                                ? "1st and 2nd quarter grades must be submitted first"
+                                                : "Enter a grade between 70 and 100"
                                         }
-                                        disabled={(subject.q3_state === 'submitted' && roleName !== 'registrar') || 
-                                                 (roleName !== 'registrar' && (subject.q1_state !== 'submitted' || subject.q2_state !== 'submitted'))}
+                                        disabled={
+                                          !isSchoolYearActive || 
+                                          (subject.q3_state === 'submitted' && roleName !== 'registrar') || 
+                                          (roleName !== 'registrar' && (subject.q1_state !== 'submitted' || subject.q2_state !== 'submitted'))
+                                        }
                                         style={{
                                           border: subject.q3_invalid ? '2px solid #ff4444' : subject.q3_state === 'submitted' ? '1px solid #00b300' : '1px solid #ccc',
-                                          backgroundColor: subject.q3_invalid ? '#fff0f0' : subject.q3_state === 'submitted' ? '#f0fff0' : 
+                                          backgroundColor: !isSchoolYearActive ? '#f0f0f0' : subject.q3_invalid ? '#fff0f0' : subject.q3_state === 'submitted' ? '#f0fff0' : 
                                             (roleName !== 'registrar' && (subject.q1_state !== 'submitted' || subject.q2_state !== 'submitted')) ? '#f0f0f0' : 'white',
-                                          cursor: ((subject.q3_state === 'submitted' && roleName !== 'registrar') || 
+                                          cursor: (!isSchoolYearActive || (subject.q3_state === 'submitted' && roleName !== 'registrar') || 
                                                 (roleName !== 'registrar' && (subject.q1_state !== 'submitted' || subject.q2_state !== 'submitted'))) ? 'not-allowed' : 'text'
                                         }}
                                         className={subject.q3_state === 'submitted' && roleName !== 'registrar' ? 'submitted-grade' : ''}
@@ -1277,19 +1361,24 @@ function GradesManagement() {
                                         placeholder="70-100"
                                         maxLength="3"
                                         title={
-                                          subject.q4_state === 'submitted' && roleName !== 'registrar' 
-                                            ? "Grade has been submitted and cannot be edited" 
-                                            : roleName !== 'registrar' && (subject.q1_state !== 'submitted' || subject.q2_state !== 'submitted' || subject.q3_state !== 'submitted')
-                                            ? "1st, 2nd, and 3rd quarter grades must be submitted first"
-                                            : "Enter a grade between 70 and 100"
+                                          !isSchoolYearActive 
+                                            ? "Cannot edit grades for inactive school years" 
+                                            : subject.q4_state === 'submitted' && roleName !== 'registrar'
+                                              ? "Grade has been submitted and cannot be edited" 
+                                              : roleName !== 'registrar' && (subject.q1_state !== 'submitted' || subject.q2_state !== 'submitted' || subject.q3_state !== 'submitted')
+                                                ? "1st, 2nd, and 3rd quarter grades must be submitted first"
+                                                : "Enter a grade between 70 and 100"
                                         }
-                                        disabled={(subject.q4_state === 'submitted' && roleName !== 'registrar') || 
-                                                 (roleName !== 'registrar' && (subject.q1_state !== 'submitted' || subject.q2_state !== 'submitted' || subject.q3_state !== 'submitted'))}
+                                        disabled={
+                                          !isSchoolYearActive || 
+                                          (subject.q4_state === 'submitted' && roleName !== 'registrar') || 
+                                          (roleName !== 'registrar' && (subject.q1_state !== 'submitted' || subject.q2_state !== 'submitted' || subject.q3_state !== 'submitted'))
+                                        }
                                         style={{
                                           border: subject.q4_invalid ? '2px solid #ff4444' : subject.q4_state === 'submitted' ? '1px solid #00b300' : '1px solid #ccc',
-                                          backgroundColor: subject.q4_invalid ? '#fff0f0' : subject.q4_state === 'submitted' ? '#f0fff0' : 
+                                          backgroundColor: !isSchoolYearActive ? '#f0f0f0' : subject.q4_invalid ? '#fff0f0' : subject.q4_state === 'submitted' ? '#f0fff0' : 
                                             (roleName !== 'registrar' && (subject.q1_state !== 'submitted' || subject.q2_state !== 'submitted' || subject.q3_state !== 'submitted')) ? '#f0f0f0' : 'white',
-                                          cursor: ((subject.q4_state === 'submitted' && roleName !== 'registrar') || 
+                                          cursor: (!isSchoolYearActive || (subject.q4_state === 'submitted' && roleName !== 'registrar') || 
                                                 (roleName !== 'registrar' && (subject.q1_state !== 'submitted' || subject.q2_state !== 'submitted' || subject.q3_state !== 'submitted'))) ? 'not-allowed' : 'text'
                                         }}
                                         className={subject.q4_state === 'submitted' && roleName !== 'registrar' ? 'submitted-grade' : ''}

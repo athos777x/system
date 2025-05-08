@@ -177,4 +177,29 @@ router.get("/api/grade-submission-status", (req, res) => {
   });
 });
 
+// Endpoint to check if a school year is active
+router.get('/school-year-status/:id', (req, res) => {
+  const { id } = req.params;
+  const db = req.db;
+  
+  if (!id) {
+    return res.status(400).json({ error: 'School year ID is required' });
+  }
+  
+  const query = 'SELECT status FROM school_year WHERE school_year_id = ?';
+  
+  db.query(query, [id], (err, results) => {
+    if (err) {
+      console.error('Error fetching school year status:', err);
+      return res.status(500).json({ error: 'Database error' });
+    }
+    
+    if (results.length === 0) {
+      return res.status(404).json({ error: 'School year not found' });
+    }
+    
+    res.json({ status: results[0].status });
+  });
+});
+
 module.exports = router; 

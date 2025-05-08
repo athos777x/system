@@ -165,11 +165,11 @@ CREATE TABLE `grades` (
   KEY `fk_grades_school_year_id` (`school_year_id`),
   CONSTRAINT `grades_ibfk_1` FOREIGN KEY (`schedule_id`) REFERENCES `schedule` (`schedule_id`),
   CONSTRAINT `grades_ibfk_2` FOREIGN KEY (`enrollment_id`) REFERENCES `enrollment` (`enrollment_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=76 DEFAULT CHARSET=utf8;
 
 /*Data for the table `grades` */
 
-insert  into `grades`(`grades_id`,`schedule_id`,`enrollment_id`,`grade_level`,`subject_name`,`grade`,`period`,`remarks`,`student_id`,`student_name`,`school_year_id`,`section_id`,`grade_state`) values (1,NULL,NULL,7,'English 7',89,1,NULL,1,'Angel Bautista',1,1,NULL),(2,NULL,NULL,7,'English 7',85,2,NULL,1,'Angel Bautista',1,1,NULL),(3,NULL,NULL,7,'English 7',82,3,NULL,1,'Angel Bautista',1,1,NULL),(4,NULL,NULL,7,'English 7',72,4,NULL,1,'Angel Bautista',1,1,NULL),(5,NULL,NULL,7,'English 7',82,1,NULL,2,'Rephaim Celix Domapias',1,1,NULL),(6,NULL,NULL,7,'English 7',89,2,NULL,2,'Rephaim Celix Domapias',1,1,NULL),(7,NULL,NULL,7,'English 7',83,3,NULL,2,'Rephaim Celix Domapias',1,1,NULL),(8,NULL,NULL,7,'English 7',87,4,NULL,2,'Rephaim Celix Domapias',1,1,NULL),(9,NULL,NULL,7,'Physical Education 7',92,1,NULL,2,'Rephaim Celix Domapias',1,1,NULL),(10,NULL,NULL,7,'Physical Education 7',95,2,NULL,2,'Rephaim Celix Domapias',1,1,NULL),(11,NULL,NULL,7,'Physical Education 7',93,3,NULL,2,'Rephaim Celix Domapias',1,1,NULL),(12,NULL,NULL,7,'Physical Education 7',94,4,NULL,2,'Rephaim Celix Domapias',1,1,NULL),(13,NULL,NULL,7,'Physical Education 7',89,1,NULL,1,'Angel Bautista',1,1,NULL),(14,NULL,NULL,7,'Physical Education 7',95,2,NULL,1,'Angel Bautista',1,1,NULL),(15,NULL,NULL,7,'Physical Education 7',98,3,NULL,1,'Angel Bautista',1,1,NULL),(16,NULL,NULL,7,'Physical Education 7',89,4,NULL,1,'Angel Bautista',1,1,NULL),(17,NULL,NULL,7,'Spanish101',92,1,NULL,1,'Angel Bautista',1,1,NULL),(18,NULL,NULL,7,'Spanish101',86,2,NULL,1,'Angel Bautista',1,1,NULL),(19,NULL,NULL,7,'Spanish101',81,3,NULL,1,'Angel Bautista',1,1,NULL),(20,NULL,NULL,7,'Spanish101',83,4,NULL,1,'Angel Bautista',1,1,NULL),(21,NULL,NULL,7,'English 7',70,1,NULL,6,'Peligrino Noel',1,1,NULL);
+insert  into `grades`(`grades_id`,`schedule_id`,`enrollment_id`,`grade_level`,`subject_name`,`grade`,`period`,`remarks`,`student_id`,`student_name`,`school_year_id`,`section_id`,`grade_state`) values (1,NULL,NULL,7,'English 7',90,1,NULL,1,'Angel Bautista',1,1,'submitted'),(2,NULL,NULL,7,'English 7',85,2,NULL,1,'Angel Bautista',1,1,'submitted'),(3,NULL,NULL,7,'English 7',82,3,NULL,1,'Angel Bautista',1,1,NULL),(4,NULL,NULL,7,'English 7',72,4,NULL,1,'Angel Bautista',1,1,NULL),(5,NULL,NULL,7,'English 7',82,1,NULL,2,'Rephaim Celix Domapias',1,1,NULL),(6,NULL,NULL,7,'English 7',89,2,NULL,2,'Rephaim Celix Domapias',1,1,NULL),(7,NULL,NULL,7,'English 7',83,3,NULL,2,'Rephaim Celix Domapias',1,1,NULL),(8,NULL,NULL,7,'English 7',87,4,NULL,2,'Rephaim Celix Domapias',1,1,NULL),(9,NULL,NULL,7,'Physical Education 7',92,1,NULL,2,'Rephaim Celix Domapias',1,1,NULL),(10,NULL,NULL,7,'Physical Education 7',95,2,NULL,2,'Rephaim Celix Domapias',1,1,NULL),(11,NULL,NULL,7,'Physical Education 7',93,3,NULL,2,'Rephaim Celix Domapias',1,1,NULL),(12,NULL,NULL,7,'Physical Education 7',94,4,NULL,2,'Rephaim Celix Domapias',1,1,NULL),(13,NULL,NULL,7,'Physical Education 7',89,1,NULL,1,'Angel Bautista',1,1,NULL),(14,NULL,NULL,7,'Physical Education 7',95,2,NULL,1,'Angel Bautista',1,1,NULL),(15,NULL,NULL,7,'Physical Education 7',98,3,NULL,1,'Angel Bautista',1,1,NULL),(16,NULL,NULL,7,'Physical Education 7',89,4,NULL,1,'Angel Bautista',1,1,NULL),(17,NULL,NULL,7,'Spanish101',92,1,NULL,1,'Angel Bautista',1,1,NULL),(18,NULL,NULL,7,'Spanish101',86,2,NULL,1,'Angel Bautista',1,1,NULL),(19,NULL,NULL,7,'Spanish101',81,3,NULL,1,'Angel Bautista',1,1,NULL),(20,NULL,NULL,7,'Spanish101',83,4,NULL,1,'Angel Bautista',1,1,NULL),(21,NULL,NULL,7,'English 7',70,1,NULL,6,'Peligrino Noel',1,1,NULL),(22,NULL,NULL,7,'English 7',89,1,NULL,3,'Hannah Clerigo',1,1,'submitted'),(28,NULL,NULL,7,'Math 7',78,1,NULL,1,'Angel Bautista',1,1,'submitted'),(44,NULL,NULL,7,'Math 7',78,2,NULL,1,'Angel Bautista',1,1,'submitted'),(66,NULL,NULL,7,'Math 7',78,1,NULL,3,'Hannah Clerigo',1,1,'submitted'),(74,NULL,NULL,7,'English 7',78,2,NULL,3,'Hannah Clerigo',1,1,'submitted'),(75,NULL,NULL,7,'Math 7',97,2,NULL,3,'Hannah Clerigo',1,1,'submitted');
 
 /*Table structure for table `roles` */
 
@@ -209,11 +209,11 @@ CREATE TABLE `schedule` (
   KEY `fk_schedule_section_id` (`section_id`),
   CONSTRAINT `fk_schedule_section_id` FOREIGN KEY (`section_id`) REFERENCES `section` (`section_id`),
   CONSTRAINT `schedule_ibfk_1` FOREIGN KEY (`teacher_id`) REFERENCES `employee` (`employee_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8;
 
 /*Data for the table `schedule` */
 
-insert  into `schedule`(`schedule_id`,`teacher_id`,`subject_id`,`time_start`,`time_end`,`day`,`section_id`,`schedule_status`,`elective`,`grade_level`,`school_year_id`) values (5,2,1,'07:00','08:00','[\"Monday\",\"Tuesday\",\"Wednesday\",\"Thursday\",\"Friday\",\"Sunday\"]',1,'Approved',0,7,1),(6,8,3,'10:00','11:00','[\"Monday\",\"Tuesday\",\"Wednesday\",\"Thursday\",\"Friday\",\"Sunday\"]',1,'Approved',1,7,1),(7,8,2,'08:00','09:30','[\"Monday\",\"Tuesday\",\"Wednesday\",\"Thursday\",\"Friday\"]',1,'Approved',0,7,1);
+insert  into `schedule`(`schedule_id`,`teacher_id`,`subject_id`,`time_start`,`time_end`,`day`,`section_id`,`schedule_status`,`elective`,`grade_level`,`school_year_id`) values (5,2,1,'07:00','08:00','[\"Monday\",\"Tuesday\",\"Wednesday\",\"Thursday\",\"Friday\",\"Sunday\"]',1,'Approved',0,7,1),(6,8,3,'10:00','11:00','[\"Monday\",\"Tuesday\",\"Wednesday\",\"Thursday\",\"Friday\",\"Sunday\"]',1,'Approved',1,7,1),(7,8,2,'08:00','09:30','[\"Monday\",\"Tuesday\",\"Wednesday\",\"Thursday\",\"Friday\"]',1,'Approved',0,7,1),(8,2,5,'10:00','11:00','[\"Monday\",\"Tuesday\",\"Wednesday\",\"Thursday\",\"Friday\"]',1,'Approved',0,7,1);
 
 /*Table structure for table `school_year` */
 
@@ -432,11 +432,11 @@ CREATE TABLE `teacher_subject` (
   UNIQUE KEY `unique_subject_id` (`subject_id`),
   UNIQUE KEY `subject_id` (`subject_id`),
   UNIQUE KEY `unique_teacher_subject` (`subject_id`,`section_id`,`employee_id`,`school_year_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8;
 
 /*Data for the table `teacher_subject` */
 
-insert  into `teacher_subject`(`subject_assigned_id`,`subject_id`,`level`,`section_id`,`employee_id`,`elective`,`school_year_id`) values (5,1,7,1,2,0,1),(6,3,7,1,8,1,1),(7,2,7,1,8,0,1);
+insert  into `teacher_subject`(`subject_assigned_id`,`subject_id`,`level`,`section_id`,`employee_id`,`elective`,`school_year_id`) values (5,1,7,1,2,0,1),(6,3,7,1,8,1,1),(7,2,7,1,8,0,1),(8,5,7,1,2,0,1);
 
 /*Table structure for table `users` */
 
