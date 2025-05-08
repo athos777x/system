@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import '../TeacherPagesCss/GradesManagement.css';
 import Pagination from '../Utilities/pagination';
@@ -43,11 +43,11 @@ function GradesManagement() {
           fetchStudents({ grade: coordinatorGradeLevel.toString() });
         }
       } else {
-      fetchStudents(roleName);
-      if (roleName === 'subject_teacher') {
-        fetchAssignedSubjects();
+        fetchStudents(roleName);
+        if (roleName === 'subject_teacher') {
+          fetchAssignedSubjects();
+        }
       }
-    }
     }
   }, [roleName, coordinatorGradeLevel]);
 
@@ -238,14 +238,19 @@ function GradesManagement() {
         return;
     }
 
+    // If role is subject_teacher and assignedSubjects is empty, fetch it first
+    if (roleName === 'subject_teacher' && assignedSubjects.length === 0) {
+        await fetchAssignedSubjects();
+    }
+
     // Fetch subjects and grades with the correct school year
-    const fetchedSubjects = await fetchSubjects(student.student_id, gradeLevel, schoolYearId,section_id);
-    await fetchGrades(student.student_id, gradeLevel, fetchedSubjects, schoolYearId,section_id);
+    const fetchedSubjects = await fetchSubjects(student.student_id, gradeLevel, schoolYearId, section_id);
+    await fetchGrades(student.student_id, gradeLevel, fetchedSubjects, schoolYearId, section_id);
     await fetchSchoolYearsGrades(student.student_id); // Pass studentId here
 };
 
 
-  const fetchSubjects = async (studentId, gradeLevel, schoolYearId, section_id) => {
+  const fetchSubjects = useCallback(async (studentId, gradeLevel, schoolYearId, section_id) => {
     if (!studentId || !gradeLevel || !schoolYearId) return [];
 
     try {
@@ -257,14 +262,24 @@ function GradesManagement() {
           section_id
         },
       });
-      const subjectsData = response.data || [];
+      let subjectsData = response.data || [];
+      
+      // If the user is a subject teacher, filter subjects to only show assigned ones
+      if (roleName === 'subject_teacher' && assignedSubjects.length > 0) {
+        subjectsData = subjectsData.filter(subject => 
+          assignedSubjects.some(assignedSubject => 
+            assignedSubject.subject_name.toLowerCase().trim() === subject.subject_name.toLowerCase().trim()
+          )
+        );
+      }
+      
       setSubjects(subjectsData);
       return subjectsData;
     } catch (error) {
       console.error('Error fetching subjects:', error);
       return [];
     }
-};
+  }, [roleName, assignedSubjects]);
 
 
 
@@ -422,13 +437,18 @@ function GradesManagement() {
         return;
     }
 
+    // If role is subject_teacher and assignedSubjects is empty, fetch it first
+    if (roleName === 'subject_teacher' && assignedSubjects.length === 0) {
+        await fetchAssignedSubjects();
+    }
+
     // Fetch subjects and grades with the correct school year
     const fetchedSubjects = await fetchSubjects(student.student_id, gradeLevel, schoolYearId, section_id);
     await fetchGrades(student.student_id, gradeLevel, fetchedSubjects, schoolYearId, section_id);
   };
 
 
-  const fetchGrades = async (studentId, gradeLevel, existingSubjects, schoolYearId, section_id) => {
+  const fetchGrades = useCallback(async (studentId, gradeLevel, existingSubjects, schoolYearId, section_id) => {
     if (!studentId || !gradeLevel || !schoolYearId ) return;
 
     try {
@@ -493,7 +513,7 @@ function GradesManagement() {
     } catch (error) {
       console.error('Error fetching grades:', error);
     }
-  };
+  }, []);
 
   const handleSearch = (searchTerm) => {
     setFilters((prevFilters) => ({ ...prevFilters, searchTerm }));
@@ -567,6 +587,11 @@ function GradesManagement() {
     // Important: We allow viewing ANY grade level for a specific student
     // even if the user is a grade level coordinator with a specific assigned grade
   
+    // If role is subject_teacher and assignedSubjects is empty, fetch it first
+    if (roleName === 'subject_teacher' && assignedSubjects.length === 0) {
+      await fetchAssignedSubjects();
+    }
+
     // Fetch the subjects and grades for the selected student and new school year
     const fetchedSubjects = await fetchSubjects(student.student_id, gradeLevel, newSchoolYearId, section_id);
     await fetchGrades(student.student_id, gradeLevel, fetchedSubjects, newSchoolYearId, section_id);
@@ -693,6 +718,36 @@ function GradesManagement() {
       subject.subject_name.toLowerCase().trim() === subjectName.toLowerCase().trim()
     );
   };
+
+  // Add a new useEffect to handle when assignedSubjects changes
+  useEffect(() => {
+    // If the selected student exists and we're a subject teacher with newly loaded assignedSubjects
+    if (selectedStudent && roleName === 'subject_teacher' && assignedSubjects.length > 0) {
+      // Re-fetch subjects with the current student data to apply the filtering
+      const fetchData = async () => {
+        const gradeLevel = selectedStudent.current_yr_lvl;
+        const schoolYearId = selectedStudent.school_year_id;
+        const section_id = selectedStudent.section_id;
+        
+        const fetchedSubjects = await fetchSubjects(
+          selectedStudent.student_id, 
+          gradeLevel, 
+          schoolYearId,
+          section_id
+        );
+        
+        await fetchGrades(
+          selectedStudent.student_id, 
+          gradeLevel, 
+          fetchedSubjects, 
+          schoolYearId,
+          section_id
+        );
+      };
+      
+      fetchData();
+    }
+  }, [assignedSubjects, selectedStudent, fetchSubjects, fetchGrades, roleName]);
 
   return (
     <div className="grades-management-container">
