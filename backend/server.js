@@ -3462,8 +3462,7 @@ app.post('/subjects', (req, res) => {
   const isElective = subject_type === 'elective';
   const checkDuplicateQuery = `
     SELECT COUNT(*) AS count 
-    FROM ${isElective ? 'elective' : 'subject'} 
-    WHERE LOWER(${isElective ? 'name' : 'subject_name'}) = ?
+    FROM subject WHERE elective = 'Y' and subject_name = ?
   `;
 
   db.query(checkDuplicateQuery, [lowerName], (checkErr, checkResults) => {
