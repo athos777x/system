@@ -297,16 +297,78 @@ function Principal_SchedulePage() {
         teacher.subject_name === schedule.subject_name
       );
       
+      // Format time values to HH:MM format for input type="time"
+      let formattedTimeStart = schedule.time_start;
+      let formattedTimeEnd = schedule.time_end;
+      
+      // If times are in format like "07:00:00" or "07:00 AM", convert to "07:00" for the time input
+      if (formattedTimeStart) {
+        // Remove seconds if present
+        if (formattedTimeStart.includes(':')) {
+          const timeParts = formattedTimeStart.split(':');
+          if (timeParts.length > 2) {
+            formattedTimeStart = `${timeParts[0]}:${timeParts[1]}`;
+          }
+        }
+        
+        // Convert from AM/PM format if needed
+        if (formattedTimeStart.includes('AM') || formattedTimeStart.includes('PM')) {
+          const timeMatch = formattedTimeStart.match(/(\d+):(\d+)\s*(AM|PM)/i);
+          if (timeMatch) {
+            let hours = parseInt(timeMatch[1], 10);
+            const minutes = timeMatch[2];
+            const period = timeMatch[3].toUpperCase();
+            
+            if (period === 'PM' && hours < 12) hours += 12;
+            if (period === 'AM' && hours === 12) hours = 0;
+            
+            formattedTimeStart = `${hours.toString().padStart(2, '0')}:${minutes}`;
+          }
+        }
+      }
+      
+      // Do the same for end time
+      if (formattedTimeEnd) {
+        // Remove seconds if present
+        if (formattedTimeEnd.includes(':')) {
+          const timeParts = formattedTimeEnd.split(':');
+          if (timeParts.length > 2) {
+            formattedTimeEnd = `${timeParts[0]}:${timeParts[1]}`;
+          }
+        }
+        
+        // Convert from AM/PM format if needed
+        if (formattedTimeEnd.includes('AM') || formattedTimeEnd.includes('PM')) {
+          const timeMatch = formattedTimeEnd.match(/(\d+):(\d+)\s*(AM|PM)/i);
+          if (timeMatch) {
+            let hours = parseInt(timeMatch[1], 10);
+            const minutes = timeMatch[2];
+            const period = timeMatch[3].toUpperCase();
+            
+            if (period === 'PM' && hours < 12) hours += 12;
+            if (period === 'AM' && hours === 12) hours = 0;
+            
+            formattedTimeEnd = `${hours.toString().padStart(2, '0')}:${minutes}`;
+          }
+        }
+      }
+      
       // Set the editing state
       setIsEditing(true);
       
       // Make sure day is an array when starting to edit and set default time if not provided
       setEditFormData({
         ...schedule,
-        time_start: schedule.time_start || '07:00',
-        time_end: schedule.time_end || '07:00',
+        time_start: formattedTimeStart || '07:00',
+        time_end: formattedTimeEnd || '08:00',
         day: Array.isArray(schedule.day) ? schedule.day : JSON.parse(schedule.day),
         filteredTeachers: subjectTeachers.length > 0 ? subjectTeachers : teachersResponse.data // If no subject teachers found, show all teachers
+      });
+      
+      console.log('Edit form data:', {
+        ...schedule,
+        time_start: formattedTimeStart || '07:00',
+        time_end: formattedTimeEnd || '08:00'
       });
     } catch (error) {
       console.error('Error fetching teachers:', error);
@@ -412,6 +474,24 @@ function Principal_SchedulePage() {
     try {
       const { schedule_id, teacher_id, time_start, time_end, day, schedule_status } = editFormData;
       
+      // Validate required fields
+      if (!teacher_id || !time_start || !time_end || !day || day.length === 0) {
+        alert('Please fill in all required fields');
+        return;
+      }
+      
+      // Validate time range
+      if (!validateTime(time_start) || !validateTime(time_end)) {
+        alert('Please select a time between 7:00 AM and 6:00 PM');
+        return;
+      }
+      
+      // Validate end time is after start time
+      if (time_end <= time_start) {
+        alert('End time must be after start time');
+        return;
+      }
+      
       // Sort days before storing
       const sortedDays = sortDays([...day]);
 
@@ -426,6 +506,7 @@ function Principal_SchedulePage() {
       setIsEditing(false);
     } catch (error) {
       console.error('Error saving schedule details:', error);
+      alert('Error saving schedule. Please try again.');
     }
   };
 
@@ -728,6 +809,9 @@ function Principal_SchedulePage() {
                                             onBlur={(e) => handleTimeBlur(e, false)}
                                             min="07:00"
                                             max="18:00"
+                                            required
+                                            className="required-field"
+                                            style={{ color: '#1e293b' }}
                                           />
                                         </td>
                                         <td>
@@ -739,18 +823,23 @@ function Principal_SchedulePage() {
                                             onBlur={(e) => handleTimeBlur(e, false)}
                                             min="07:00"
                                             max="18:00"
+                                            required
+                                            className="required-field"
+                                            style={{ color: '#1e293b' }}
                                           />
                                         </td>
                                         <td>
-                                          <div className="day-checkboxes">
+                                          <div className="day-checkboxes required-field-container">
                                             {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].map(day => (
-                                              <label key={day} className="day-checkbox-label">
+                                              <label key={day} className="day-checkbox-label" style={{ color: '#1e293b' }}>
                                                 <input
                                                   type="checkbox"
                                                   name="day"
                                                   value={day}
                                                   checked={(editFormData.day || []).includes(day)}
                                                   onChange={handleEditChange}
+                                                  required
+                                                  style={{ accentColor: '#4CAF50' }}
                                                 />
                                                 {day}
                                               </label>
@@ -760,11 +849,12 @@ function Principal_SchedulePage() {
                                         <td>
                                           <select
                                             name="teacher_id"
-                                            value={editFormData.teacher_id}
+                                            value={editFormData.teacher_id || ""}
                                             onChange={handleEditChange}
                                             required
+                                            className={editFormData.teacher_id ? "required-field valid-selection" : "required-field"}
                                           >
-                                            <option value="">Select Teacher</option>
+                                            <option value="">Select Teacher *</option>
                                             {editFormData.filteredTeachers ? (
                                               editFormData.filteredTeachers.map((teacher) => (
                                                 <option key={teacher.employee_id} value={teacher.employee_id}>

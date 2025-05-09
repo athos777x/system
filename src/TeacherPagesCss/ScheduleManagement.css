@@ -599,4 +599,59 @@
   justify-content: center;
   gap: 0.25rem !important;
   flex-wrap: nowrap;
+}
+
+/* Required field styles */
+.required-field {
+  border: 1px solid #4CAF50 !important;
+  background-color: rgba(76, 175, 80, 0.05) !important;
+}
+
+/* Style for invalid required fields */
+select.required-field:invalid,
+input.required-field:invalid {
+  border: 1px solid #e53935 !important;
+  background-color: rgba(229, 57, 53, 0.05) !important;
+}
+
+/* Style for valid selections */
+select.required-field:valid,
+input.required-field:valid,
+.valid-selection {
+  border: 1px solid #4CAF50 !important;
+  background-color: rgba(76, 175, 80, 0.05) !important;
+  color: #1e293b !important;
+}
+
+/* Ensure dropdown option text color is correct */
+select option {
+  color: #1e293b !important;
+}
+
+/* Style for dropdown when open */
+select {
+  color: #1e293b !important;
+}
+
+select.required-field {
+  color: #1e293b !important;
+}
+
+.required-field-container {
+  border: 1px solid #4CAF50 !important;
+  background-color: rgba(76, 175, 80, 0.05) !important;
+}
+
+.day-field-label {
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: #2e7d32;
+  width: 100%;
+  border-bottom: 1px dashed #81c784;
+  padding-bottom: 0.5rem;
+}
+
+.field-required {
+  color: #e53935;
+  margin-left: 3px;
 } 
