@@ -31,6 +31,8 @@ function Principal_SchedulePage() {
   const [subjectteachers, setSubjectTeachers] = useState([]);
   const [roleName, setRoleName] = useState('');
   const [coordinatorGradeLevel, setCoordinatorGradeLevel] = useState(null);
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
 
   // Helper function to sort days in chronological order
   const sortDays = (days) => {
@@ -470,6 +472,16 @@ function Principal_SchedulePage() {
     }
   };
 
+  const displaySuccessMessage = (message) => {
+    setSuccessMessage(message);
+    setShowSuccessMessage(true);
+    
+    // Auto-hide the message after 3 seconds
+    setTimeout(() => {
+      setShowSuccessMessage(false);
+    }, 3000);
+  };
+
   const saveChanges = async () => {
     try {
       const { schedule_id, teacher_id, time_start, time_end, day, schedule_status } = editFormData;
@@ -504,6 +516,7 @@ function Principal_SchedulePage() {
       });
       fetchSectionSchedules(selectedSectionId);
       setIsEditing(false);
+      displaySuccessMessage('Schedule updated successfully!');
     } catch (error) {
       console.error('Error saving schedule details:', error);
       alert('Error saving schedule. Please try again.');
@@ -518,6 +531,7 @@ function Principal_SchedulePage() {
     try {
       await axios.put(`http://localhost:3001/schedules/${scheduleId}/approve`, { schedule_status: 'Approved' });
       fetchSectionSchedules(selectedSectionId);
+      displaySuccessMessage('Schedule approved successfully!');
     } catch (error) {
       console.error('There was an error approving the schedule!', error);
     }
@@ -533,6 +547,8 @@ function Principal_SchedulePage() {
         setSectionSchedules(prevSchedules => 
           prevSchedules.filter(schedule => schedule.schedule_id !== scheduleId)
         );
+        
+        displaySuccessMessage('Schedule deleted successfully!');
       }
     } catch (error) {
       console.error('There was an error deleting the schedule!', error);
@@ -600,6 +616,7 @@ function Principal_SchedulePage() {
   
       // Close the modal after successful submission
       setIsModalOpen(false);
+      displaySuccessMessage('New schedule added successfully!');
     } catch (error) {
       console.error('Error adding schedule:', error);
       alert('Error adding schedule. Please check all fields are filled correctly.');
@@ -678,6 +695,7 @@ function Principal_SchedulePage() {
       
       // Refresh the schedules
       await fetchSectionSchedules(sectionId);
+      displaySuccessMessage('All schedules approved successfully!');
     } catch (error) {
       console.error('Error approving schedules:', error);
       alert('Failed to approve all schedules. Please try again.');
@@ -686,6 +704,16 @@ function Principal_SchedulePage() {
 
   return (
     <div className="schedule-mgmt-container">
+      {/* Success Message Popup */}
+      {showSuccessMessage && (
+        <div className="success-message-popup">
+          <div className="success-message-content">
+            <span className="success-icon">✓</span>
+            <span>{successMessage}</span>
+          </div>
+        </div>
+      )}
+
       <div className="schedule-mgmt-header">
         <h1 className="schedule-mgmt-title">Schedule Management</h1>
         {(roleName === 'academic_coordinator') && (
