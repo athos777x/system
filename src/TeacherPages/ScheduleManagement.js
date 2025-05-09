@@ -284,17 +284,29 @@ function Principal_SchedulePage() {
 
   const startEditing = async (schedule) => {
     try {
+      // Get all teachers for reference
       const teachersResponse = await axios.get('http://localhost:3001/employees', {
         params: { status: 'active', archive_status: 'unarchive' }
       });
       setTeachers(teachersResponse.data);
+      
+      // Get subject-specific teachers
+      const subjectTeachers = subjectteachers.filter(teacher => 
+        // Match by subject ID or by subject name if IDs don't match
+        teacher.subject_id === schedule.subject_id || 
+        teacher.subject_name === schedule.subject_name
+      );
+      
+      // Set the editing state
       setIsEditing(true);
+      
       // Make sure day is an array when starting to edit and set default time if not provided
       setEditFormData({
         ...schedule,
         time_start: schedule.time_start || '07:00',
         time_end: schedule.time_end || '07:00',
-        day: Array.isArray(schedule.day) ? schedule.day : JSON.parse(schedule.day)
+        day: Array.isArray(schedule.day) ? schedule.day : JSON.parse(schedule.day),
+        filteredTeachers: subjectTeachers.length > 0 ? subjectTeachers : teachersResponse.data // If no subject teachers found, show all teachers
       });
     } catch (error) {
       console.error('Error fetching teachers:', error);
@@ -753,11 +765,21 @@ function Principal_SchedulePage() {
                                             required
                                           >
                                             <option value="">Select Teacher</option>
-                                            {teachers.map((teacher) => (
-                                              <option key={teacher.employee_id} value={teacher.employee_id}>
-                                                {teacher.firstname} {teacher.middlename ? `${teacher.middlename[0]}.` : ''} {teacher.lastname}
-                                              </option>
-                                            ))}
+                                            {editFormData.filteredTeachers ? (
+                                              editFormData.filteredTeachers.map((teacher) => (
+                                                <option key={teacher.employee_id} value={teacher.employee_id}>
+                                                  {teacher.firstname ? 
+                                                    `${teacher.firstname} ${teacher.middlename ? `${teacher.middlename[0]}.` : ''} ${teacher.lastname}` : 
+                                                    teacher.teacher}
+                                                </option>
+                                              ))
+                                            ) : (
+                                              teachers.map((teacher) => (
+                                                <option key={teacher.employee_id} value={teacher.employee_id}>
+                                                  {teacher.firstname} {teacher.middlename ? `${teacher.middlename[0]}.` : ''} {teacher.lastname}
+                                                </option>
+                                              ))
+                                            )}
                                           </select>
                                         </td>
                                         <td>
