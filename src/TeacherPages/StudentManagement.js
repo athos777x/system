@@ -131,6 +131,8 @@ function StudentManagement() {
     if (!income) return "";  // Income is optional
     const incomeNum = parseFloat(income);
     if (isNaN(incomeNum) || incomeNum < 0) return "Please enter a valid income amount";
+    // Add validation for maximum value to prevent database range errors
+    if (incomeNum > 9999999) return "Annual household income cannot exceed 9,999,999";
     return "";
   };
 
@@ -1019,7 +1021,10 @@ const handleArchive = () => {
       current_yr_lvl: editStudentData.current_yr_lvl, // Ensure grade level is kept as is
       birthdate: formattedBirthdate,
       section_id: formattedData.section_id, // now an int
-      annual_hshld_income: parseFloat(formattedData.annual_hshld_income?.replace(/,/g, '') || 0), // Format income to remove commas
+      // Properly format income value to avoid range errors
+      annual_hshld_income: formattedData.annual_hshld_income 
+        ? parseFloat(formattedData.annual_hshld_income.toString().replace(/,/g, '')) || 0 
+        : 0,
       brigada_eskwela: formattedData.brigada_eskwela || '0' // Default value for brigada_eskwela
     };
 
@@ -1027,6 +1032,8 @@ const handleArchive = () => {
     console.log('Full student data to be sent:', JSON.stringify(updatedStudentData, null, 2));
     console.log('Grade level value:', updatedStudentData.current_yr_lvl);
     console.log('Grade level type:', typeof updatedStudentData.current_yr_lvl);
+    console.log('Annual household income:', updatedStudentData.annual_hshld_income);
+    console.log('Annual household income type:', typeof updatedStudentData.annual_hshld_income);
 
     try {
         // Make the PUT request to the backend to update the student
