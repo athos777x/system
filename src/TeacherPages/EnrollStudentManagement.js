@@ -1121,63 +1121,148 @@ const handleArchive = () => {
   // Add function to fetch available students for enrollment
   const fetchAvailableStudents = async () => {
     try {
+      console.log('Fetching available students...');
       const response = await axios.get('http://localhost:3001/students/available-for-enrollment');
+      
+      console.log('Raw student data received:', response.data);
+      
+      if (!response.data || !Array.isArray(response.data)) {
+        console.error('Unexpected response format:', response.data);
+        setAvailableStudents([]);
+        setFilteredAvailableStudents([]);
+        return;
+      }
+      
+      // Normalize the student data to ensure consistent property naming
+      const normalizedStudents = response.data.map(student => {
+        // Create a normalized student object
+        const normalizedStudent = {
+          ...student,
+          // Ensure all required properties exist with fallbacks
+          student_id: student.student_id,
+          lastname: student.lastname || '',
+          firstname: student.firstname || '',
+          // Create student_name if it doesn't exist
+          student_name: student.student_name || 
+                       (student.lastname && student.firstname ? 
+                        `${student.lastname}, ${student.firstname}` : 
+                        'Unknown'),
+          // Handle both possible grade level property names
+          current_yr_lvl: student.current_yr_lvl || student.grade_level || '',
+          grade_level: student.grade_level || student.current_yr_lvl || ''
+        };
+        
+        return normalizedStudent;
+      });
+      
+      console.log('Normalized student data:', normalizedStudents);
   
-      // Sort students alphabetically by student_name
-      const sortedStudents = response.data.sort((a, b) =>
-        a.student_name.localeCompare(b.student_name)
+      // Sort students alphabetically by lastname
+      const sortedStudents = normalizedStudents.sort((a, b) =>
+        a.lastname.localeCompare(b.lastname) || a.firstname.localeCompare(b.firstname)
       );
       
       let filteredStudents = sortedStudents;
       
       // If user is a grade level coordinator, filter by their assigned grade level
       if (roleName === 'grade_level_coordinator' && coordinatorGradeLevel) {
-        filteredStudents = sortedStudents.filter(student => 
-          student.current_yr_lvl.toString() === coordinatorGradeLevel.toString()
-        );
+        filteredStudents = sortedStudents.filter(student => {
+          const studentGradeLevel = student.current_yr_lvl || student.grade_level;
+          return studentGradeLevel && studentGradeLevel.toString() === coordinatorGradeLevel.toString();
+        });
+        
         // Also set the selected grade level to the coordinator's assigned grade level
         setSelectedGradeLevel(coordinatorGradeLevel.toString());
       }
   
       setAvailableStudents(filteredStudents);
       setFilteredAvailableStudents(filteredStudents);
+      console.log('Available students loaded:', filteredStudents.length);
+      console.log('Sample student data:', filteredStudents[0]);
     } catch (error) {
       console.error('Error fetching available students:', error);
       alert('Error fetching available students for enrollment');
+      setAvailableStudents([]);
+      setFilteredAvailableStudents([]);
     }
   };
   
 
   // Function to filter available students based on search term and grade level
   const filterAvailableStudents = (searchTerm, gradeLevel) => {
+    // Check if availableStudents is defined and not empty
+    if (!availableStudents || availableStudents.length === 0) {
+      return;
+    }
+    
     let filtered = availableStudents;
     
     // Apply search term filter if it exists
-    if (searchTerm) {
-      filtered = filtered.filter(student => 
-        student.lastname.toLowerCase().includes(searchTerm) || 
-        student.firstname.toLowerCase().includes(searchTerm) ||
-        (student.student_id && student.student_id.toString().includes(searchTerm))
-      );
+    if (searchTerm && searchTerm.trim() !== '') {
+      // Log what we're searching for debugging
+      console.log('Searching for:', searchTerm);
+      
+      filtered = filtered.filter(student => {
+        if (!student) return false;
+        
+        // Check for student_name property first (combined name)
+        if (student.student_name && 
+            student.student_name.toLowerCase().includes(searchTerm)) {
+          return true;
+        }
+        
+        // Check lastname
+        if (student.lastname && 
+            student.lastname.toLowerCase().includes(searchTerm)) {
+          return true;
+        }
+        
+        // Check firstname
+        if (student.firstname && 
+            student.firstname.toLowerCase().includes(searchTerm)) {
+          return true;
+        }
+        
+        // Check combined lastname + firstname manually
+        const fullName = `${student.lastname}, ${student.firstname}`.toLowerCase();
+        if (fullName.includes(searchTerm)) {
+          return true;
+        }
+        
+        // Check ID
+        if (student.student_id && 
+            student.student_id.toString().includes(searchTerm)) {
+          return true;
+        }
+        
+        return false;
+      });
+      
+      // Log filtered results for debugging
+      console.log('Filtered results length:', filtered.length);
     }
     
     // For grade level coordinators, always filter by their assigned grade level
     if (roleName === 'grade_level_coordinator' && coordinatorGradeLevel) {
       filtered = filtered.filter(student => 
+        student && student.current_yr_lvl && 
         student.current_yr_lvl.toString() === coordinatorGradeLevel.toString()
       );
     } 
     // Otherwise, apply grade level filter if selected
     else if (gradeLevel) {
       filtered = filtered.filter(student => 
-        student.current_yr_lvl.toString() === gradeLevel
+        student && (student.current_yr_lvl || student.grade_level) && 
+        (student.current_yr_lvl?.toString() === gradeLevel || 
+         student.grade_level?.toString() === gradeLevel)
       );
     }
     
     // Sort alphabetically by last name
     filtered.sort((a, b) => {
+      if (!a.lastname || !b.lastname) return 0;
       return a.lastname.localeCompare(b.lastname) || 
-             a.firstname.localeCompare(b.firstname);
+             (a.firstname && b.firstname ? a.firstname.localeCompare(b.firstname) : 0);
     });
     
     setFilteredAvailableStudents(filtered);
@@ -1185,9 +1270,12 @@ const handleArchive = () => {
 
   // Function to handle the search in enrollment modal
   const handleEnrollmentSearch = (e) => {
-    const searchTerm = e.target.value.toLowerCase();
+    const searchTerm = e.target.value.trim().toLowerCase();
+    console.log('Search term entered:', searchTerm); // Debug log
+    
     setEnrollStudentSearchTerm(searchTerm);
     
+    // Call filterAvailableStudents with current search term and grade level
     filterAvailableStudents(searchTerm, selectedGradeLevel);
   };
 
@@ -1241,7 +1329,21 @@ const handleArchive = () => {
         const enrollmentPromises = selectedStudentsToEnroll.map(studentId => {
           // Find the student to get their current grade level
           const student = filteredAvailableStudents.find(s => s.student_id === studentId);
-          const nextGradeLevel = parseInt(student.grade_level) + 1;
+          
+          if (!student) {
+            console.error('Student not found:', studentId);
+            return Promise.reject(new Error(`Student with ID ${studentId} not found`));
+          }
+          
+          // Get grade level, checking both possible property names
+          const currentGradeLevel = student.grade_level || student.current_yr_lvl;
+          
+          if (!currentGradeLevel) {
+            console.error('Grade level missing for student:', student);
+            return Promise.reject(new Error(`Grade level information missing for student ${studentId}`));
+          }
+          
+          const nextGradeLevel = parseInt(currentGradeLevel) + 1;
           return enrollStudent(studentId, nextGradeLevel);
         });
         
@@ -1998,8 +2100,36 @@ const handleArchive = () => {
                   placeholder="Search by name or ID..."
                   value={enrollStudentSearchTerm}
                   onChange={handleEnrollmentSearch}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      // Prevent form submission if inside a form
+                      e.preventDefault();
+                      // Re-apply the filter explicitly when Enter is pressed
+                      filterAvailableStudents(enrollStudentSearchTerm, selectedGradeLevel);
+                    }
+                  }}
                   className="enroll-student-search-input"
                 />
+                {enrollStudentSearchTerm && (
+                  <button 
+                    className="clear-search-btn" 
+                    onClick={() => {
+                      setEnrollStudentSearchTerm('');
+                      filterAvailableStudents('', selectedGradeLevel);
+                    }}
+                    style={{
+                      position: 'absolute',
+                      right: '10px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'transparent',
+                      border: 'none',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    ✕
+                  </button>
+                )}
               </div>
               
               <div className="enroll-student-grade-filter">
@@ -2060,9 +2190,9 @@ const handleArchive = () => {
                         onClick={() => handleStudentSelection(student.student_id)}
                       >
                         <td>{student.student_id}</td>
-                        <td>{student.student_name}</td>
-                        <td>{student.grade_level}</td>
-                        <td>{parseInt(student.grade_level) + 1}</td>
+                        <td>{student.student_name || `${student.lastname}, ${student.firstname}`}</td>
+                        <td>{student.grade_level || student.current_yr_lvl}</td>
+                        <td>{parseInt(student.grade_level || student.current_yr_lvl) + 1}</td>
                         <td>
                           <input
                             type="checkbox"

@@ -6017,7 +6017,7 @@ app.get('/students/available-for-enrollment', (req, res) => {
       SELECT student_id
       FROM enrollment
       GROUP BY student_id
-      HAVING COUNT(*) > 1 
+      HAVING COUNT(*) >= 1 
   )
   AND NOT EXISTS (
       SELECT 1
