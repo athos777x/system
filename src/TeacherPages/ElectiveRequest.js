@@ -553,7 +553,7 @@ const handleConfirmApproval = async () => {
               </tr>
               <tr>
                 <th>Section</th>
-                <td>{editStudentData?.section_id || ''}</td>
+                <td>{editStudentData?.section_name || ''}</td>
               </tr>
               <tr>
                 <th>Status</th>
