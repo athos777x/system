@@ -859,7 +859,7 @@ function SectionManagement() {
           <div className="section-mgmt-modal-content">
             <h2>Add New Section</h2>
             <div className="section-mgmt-form-group">
-              <label>Section Name: <span className="required-field">*</span></label>
+              <label>Section Name: <span className="required-asterisk">*</span></label>
               <input
                 type="text"
                 name="section_name"
@@ -880,7 +880,7 @@ function SectionManagement() {
               )}
             </div>
             <div className="section-mgmt-form-group">
-              <label>Grade Level: <span className="required-field">*</span></label>
+              <label>Grade Level: <span className="required-asterisk">*</span></label>
               <select
                 name="grade_level"
                 value={newSectionData.grade_level}
@@ -893,7 +893,7 @@ function SectionManagement() {
               </select>
             </div>
             <div className="section-mgmt-form-group">
-              <label>Status: <span className="required-field">*</span></label>
+              <label>Status: <span className="required-asterisk">*</span></label>
               <select
                 name="status"
                 value={newSectionData.status}
@@ -904,7 +904,7 @@ function SectionManagement() {
               </select>
             </div>
             <div className="section-mgmt-form-group">
-              <label>Max Capacity: <span className="required-field">*</span></label>
+              <label>Max Capacity: <span className="required-asterisk">*</span></label>
               <input
                 type="text"
                 name="max_capacity"
@@ -926,7 +926,7 @@ function SectionManagement() {
               )}
             </div>
             <div className="section-mgmt-form-group">
-              <label>School Year: <span className="required-field">*</span></label>
+              <label>School Year: <span className="required-asterisk">*</span></label>
               <select
                 name="school_year_id"
                 value={newSectionData.school_year_id}
@@ -940,7 +940,7 @@ function SectionManagement() {
               </select>
             </div>
             <div className="section-mgmt-form-group">
-              <label>Room Number: <span className="required-field">*</span></label>
+              <label>Room Number: <span className="required-asterisk">*</span></label>
               <input
                 type="text"
                 name="room_number"
