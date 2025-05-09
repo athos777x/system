@@ -371,15 +371,15 @@ function TeacherManagement() {
       });
   
       if (response.status === 200) {
-        alert('Employee archived successfully');
+        alert('Employee status updated successfully');
         await fetchTeachers(); // Refresh the list
         closeArchiveModal();
       } else {
-        alert('Failed to archive employee. Please try again.');
+        alert('Failed to update employee status. Please try again.');
       }
     } catch (error) {
-      console.error('Error archiving employee:', error.response?.data || error.message);
-      alert(`Error archiving employee: ${error.response?.data?.error || 'Unknown error'}`);
+      console.error('Error updating employee status:', error.response?.data || error.message);
+      alert(`Error updating employee status: ${error.response?.data?.error || 'Unknown error'}`);
     }
   };
   
@@ -388,16 +388,26 @@ function TeacherManagement() {
   const [showArchiveModal, setShowArchiveModal] = useState(false);
   const [archiveEmployeeId, setArchiveEmployeeId] = useState(null);
   const [archiveStatus, setArchiveStatus] = useState('');
+  const [isUnarchiving, setIsUnarchiving] = useState(false);
 
-  const openArchiveModal = (employeeId) => {
+  const openArchiveModal = (employeeId, currentStatus) => {
     setArchiveEmployeeId(employeeId);
     setShowArchiveModal(true);
+    setIsUnarchiving(currentStatus !== 'active');
+    
+    // If unarchiving, set default status to 'active'
+    if (currentStatus !== 'active') {
+      setArchiveStatus('active');
+    } else {
+      setArchiveStatus('');
+    }
   };
 
   const closeArchiveModal = () => {
     setArchiveEmployeeId(null);
     setArchiveStatus('');
     setShowArchiveModal(false);
+    setIsUnarchiving(false);
   };
 
   const handleGradeLevelChange = async (gradeLevel) => {
@@ -1161,11 +1171,10 @@ useEffect(() => {
                           </button> 
                           )}
                           <button 
-                            className="teacher-mgmt-btn teacher-mgmt-btn-archive"
-                            onClick={() => openArchiveModal(teacher.employee_id)}
-                            disabled={teacher.status !== 'active'}
+                            className={`teacher-mgmt-btn ${teacher.status === 'active' ? 'teacher-mgmt-btn-archive' : 'teacher-mgmt-btn-view'}`}
+                            onClick={() => openArchiveModal(teacher.employee_id, teacher.status)}
                           >
-                            Archive Employee
+                            {teacher.status === 'active' ? 'Archive Employee' : 'Unarchive Employee'}
                           </button>
                         </div>
                       </div>
@@ -1188,34 +1197,38 @@ useEffect(() => {
       {showArchiveModal && (
         <div className="teacher-mgmt-modal">
           <div className="teacher-mgmt-modal-content">
-            <h2>Archive Employee</h2>
-            <div className="teacher-mgmt-form-group">
-              <label>Archive Status:</label>
-              <select
-                value={archiveStatus}
-                onChange={(e) => setArchiveStatus(e.target.value)}
-                required
-              >
-                <option value="">Select Status</option>
-                <option value="resigned">Resigned</option>
-                <option value="retired">Retired</option>
-              </select>
-            </div>
+            <h2>{isUnarchiving ? 'Unarchive Employee' : 'Archive Employee'}</h2>
+            {!isUnarchiving ? (
+              <div className="teacher-mgmt-form-group">
+                <label>Archive Status:</label>
+                <select
+                  value={archiveStatus}
+                  onChange={(e) => setArchiveStatus(e.target.value)}
+                  required
+                >
+                  <option value="">Select Status</option>
+                  <option value="resigned">Resigned</option>
+                  <option value="retired">Retired</option>
+                </select>
+              </div>
+            ) : (
+              <p className="archive-modal-message">Are you sure you want to unarchive this employee? Their status will be set to 'active'.</p>
+            )}
             <div className="teacher-mgmt-details-actions">
               <button
-                className="teacher-mgmt-btn teacher-mgmt-btn-archive"
+                className={`teacher-mgmt-btn ${isUnarchiving ? 'teacher-mgmt-btn-view' : 'teacher-mgmt-btn-archive'}`}
                 onClick={() => {
-                  if (!archiveStatus) {
+                  if (!isUnarchiving && !archiveStatus) {
                     alert('Please select an archive status.');
                     return;
                   }
                   archiveEmployee(archiveEmployeeId, archiveStatus);
                 }}
               >
-                Confirm
+                {isUnarchiving ? 'Confirm Unarchive' : 'Confirm Archive'}
               </button>
               <button 
-                className="teacher-mgmt-btn teacher-mgmt-btn-view"
+                className={`teacher-mgmt-btn ${isUnarchiving ? 'teacher-mgmt-btn-archive' : 'teacher-mgmt-btn-view'}`}
                 onClick={closeArchiveModal}
               >
                 Cancel
