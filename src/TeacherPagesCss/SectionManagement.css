@@ -389,7 +389,7 @@
   background: rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: center;
-  align-items: flex-start;
+  align-items: center;
   z-index: 1000;
   padding: 2rem;
   overflow-y: auto;
@@ -402,6 +402,9 @@
   width: 100%;
   max-width: 600px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  max-height: 90vh;
+  overflow-y: auto;
+  margin: auto;
 }
 
 .section-mgmt-modal-content h2 {
@@ -534,4 +537,50 @@
   border-color: #81c784;
   transform: translateY(-1px);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* Form validation styles */
+.error-message {
+  color: #e53935;
+  font-size: 0.8em;
+  margin-top: 5px;
+  font-weight: 500;
+}
+
+.input-error {
+  border-color: #e53935 !important;
+  background-color: rgba(229, 57, 53, 0.05) !important;
+}
+
+.input-error:focus {
+  box-shadow: 0 0 0 2px rgba(229, 57, 53, 0.2) !important;
+}
+
+.required-field {
+  color: #e53935;
+  margin-left: 3px;
+}
+
+/* Archive confirmation modal styles */
+.section-mgmt-confirmation-message {
+  margin-bottom: 1.5rem;
+  line-height: 1.5;
+  color: #333;
+  font-size: 1rem;
+}
+
+.section-mgmt-confirmation-message strong {
+  color: #2e7d32;
+  font-weight: 600;
+}
+
+.section-mgmt-archive-warning {
+  display: block;
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  background-color: #fff8e1;
+  border-left: 4px solid #ffc107;
+  color: #bf360c;
+  font-size: 0.9rem;
+  border-radius: 0 4px 4px 0;
 } 

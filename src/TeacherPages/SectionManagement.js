@@ -20,6 +20,12 @@ function SectionManagement() {
   const [isAdding, setIsAdding] = useState(false);
   const [editFormData, setEditFormData] = useState({});
   const [showModal, setShowModal] = useState(false);
+  const [showArchiveModal, setShowArchiveModal] = useState(false);
+  const [archiveAction, setArchiveAction] = useState({
+    sectionId: null,
+    currentStatus: '',
+    sectionName: ''
+  });
   const [newSectionData, setNewSectionData] = useState({
     section_name: '',
     grade_level: '7',
@@ -31,6 +37,16 @@ function SectionManagement() {
   });
   const [errors, setErrors] = useState({});
   const [isInitialized, setIsInitialized] = useState(false);
+  const [validations, setValidations] = useState({
+    section_name: true,
+    max_capacity: true,
+    room_number: true
+  });
+  const [editValidations, setEditValidations] = useState({
+    section_name: true,
+    max_capacity: true,
+    room_number: true
+  });
 
   const fetchActiveSchoolYear = useCallback(async () => {
     try {
@@ -171,6 +187,11 @@ function SectionManagement() {
     setSelectedSectionId(sectionId);
     setIsEditing(true);
     setErrors({});
+    setEditValidations({
+      section_name: true,
+      max_capacity: true,
+      room_number: true
+    });
     const section = sections.find(sec => sec.section_id === sectionId);
     setEditFormData(section);
   };
@@ -181,9 +202,87 @@ function SectionManagement() {
       ...prevFormData,
       [name]: value
     }));
+    
+    // Validate the field as it changes
+    validateEditField(name, value);
+  };
+  
+  const validateEditField = (name, value) => {
+    let isValid = true;
+    
+    switch(name) {
+      case 'section_name':
+        isValid = value && value.trim && value.trim() !== '';
+        break;
+      case 'max_capacity':
+        isValid = value && value.toString().trim() !== '' && (/^\d+$/.test(value.toString()) && parseInt(value) > 0);
+        break;
+      case 'room_number':
+        isValid = value && value.trim && value.trim() !== '' && /^[a-zA-Z0-9\s-]{1,10}$/.test(value);
+        break;
+      default:
+        break;
+    }
+    
+    setEditValidations(prev => ({
+      ...prev,
+      [name]: isValid
+    }));
+    
+    return isValid;
+  };
+  
+  const validateEditForm = () => {
+    let formIsValid = true;
+    let newValidations = { ...editValidations };
+    let newErrors = {};
+    
+    // Validate section_name (required)
+    if (!editFormData.section_name || (editFormData.section_name.trim && !editFormData.section_name.trim())) {
+      newValidations.section_name = false;
+      newErrors.section_name = 'Section name is required';
+      formIsValid = false;
+    } else {
+      newValidations.section_name = true;
+    }
+    
+    // Validate max_capacity (required and must be a positive number)
+    if (!editFormData.max_capacity) {
+      newValidations.max_capacity = false;
+      newErrors.max_capacity = 'Max capacity is required';
+      formIsValid = false;
+    } else if (!(/^\d+$/.test(editFormData.max_capacity.toString()) && parseInt(editFormData.max_capacity) > 0)) {
+      newValidations.max_capacity = false;
+      newErrors.max_capacity = 'Max capacity must be a positive number';
+      formIsValid = false;
+    } else {
+      newValidations.max_capacity = true;
+    }
+    
+    // Validate room_number (required and must follow format)
+    if (!editFormData.room_number || (editFormData.room_number.trim && !editFormData.room_number.trim())) {
+      newValidations.room_number = false;
+      newErrors.room_number = 'Room number is required';
+      formIsValid = false;
+    } else if (!/^[a-zA-Z0-9\s-]{1,10}$/.test(editFormData.room_number)) {
+      newValidations.room_number = false;
+      newErrors.room_number = 'Room number must be alphanumeric, max 10 characters';
+      formIsValid = false;
+    } else {
+      newValidations.room_number = true;
+    }
+    
+    setEditValidations(newValidations);
+    setErrors(newErrors);
+    
+    return formIsValid;
   };
 
   const saveChanges = async () => {
+    if (!validateEditForm()) {
+      return; // Stop if validation fails
+    }
+    
     try {
       // Create a copy of the edit form data without school_year field
       const { school_year, ...updateData } = editFormData;
@@ -203,6 +302,11 @@ function SectionManagement() {
       fetchSectionDetails(selectedSectionId);
       setIsEditing(false);
       setErrors({});
+      setEditValidations({
+        section_name: true,
+        max_capacity: true,
+        room_number: true
+      });
     } catch (error) {
       console.error('Error saving section details:', error);
       if (error.response?.data?.error === 'Section name already exists') {
@@ -219,14 +323,43 @@ function SectionManagement() {
       const newArchiveStatus = currentStatus === 'inactive' ? 'unarchive' : 'archive';
       await axios.put(`http://localhost:3001/sections/${sectionId}/archive`, { status: newStatus, archive_status: newArchiveStatus });
       fetchSections(activeSchoolYear);
+      // If the section being archived is currently selected, close the details view
+      if (selectedSectionId === sectionId) {
+        setSelectedSectionId(null);
+        setSectionDetails({});
+      }
+      setShowArchiveModal(false);
     } catch (error) {
       console.error(`Error changing status:`, error);
     }
   };
 
+  const openArchiveConfirmation = (sectionId, currentStatus, sectionName) => {
+    setArchiveAction({
+      sectionId,
+      currentStatus,
+      sectionName
+    });
+    setShowArchiveModal(true);
+  };
+
+  const cancelArchiveAction = () => {
+    setShowArchiveModal(false);
+    setArchiveAction({
+      sectionId: null,
+      currentStatus: '',
+      sectionName: ''
+    });
+  };
+
   const cancelEditing = () => {
     setIsEditing(false);
     setErrors({});
+    setEditValidations({
+      section_name: true,
+      max_capacity: true,
+      room_number: true
+    });
     fetchSectionDetails(selectedSectionId);
   };
 
@@ -251,15 +384,98 @@ function SectionManagement() {
       ...prevFormData,
       [name]: value
     }));
+    
+    // Validate the field as it changes
+    validateField(name, value);
+  };
+
+  const validateField = (name, value) => {
+    let isValid = true;
+    
+    switch(name) {
+      case 'section_name':
+        isValid = value.trim() !== '';
+        break;
+      case 'max_capacity':
+        isValid = value.trim() !== '' && (/^\d+$/.test(value) && parseInt(value) > 0);
+        break;
+      case 'room_number':
+        isValid = value.trim() !== '' && /^[a-zA-Z0-9\s-]{1,10}$/.test(value);
+        break;
+      default:
+        break;
+    }
+    
+    setValidations(prev => ({
+      ...prev,
+      [name]: isValid
+    }));
+    
+    return isValid;
+  };
+
+  const validateForm = () => {
+    let formIsValid = true;
+    let newValidations = { ...validations };
+    let newErrors = {};
+    
+    // Validate section_name (required)
+    if (!newSectionData.section_name.trim()) {
+      newValidations.section_name = false;
+      newErrors.section_name = 'Section name is required';
+      formIsValid = false;
+    } else {
+      newValidations.section_name = true;
+    }
+    
+    // Validate max_capacity (required and must be a positive number)
+    if (!newSectionData.max_capacity.trim()) {
+      newValidations.max_capacity = false;
+      newErrors.max_capacity = 'Max capacity is required';
+      formIsValid = false;
+    } else if (!(/^\d+$/.test(newSectionData.max_capacity) && parseInt(newSectionData.max_capacity) > 0)) {
+      newValidations.max_capacity = false;
+      newErrors.max_capacity = 'Max capacity must be a positive number';
+      formIsValid = false;
+    } else {
+      newValidations.max_capacity = true;
+    }
+    
+    // Validate room_number (required and must follow format)
+    if (!newSectionData.room_number.trim()) {
+      newValidations.room_number = false;
+      newErrors.room_number = 'Room number is required';
+      formIsValid = false;
+    } else if (!/^[a-zA-Z0-9\s-]{1,10}$/.test(newSectionData.room_number)) {
+      newValidations.room_number = false;
+      newErrors.room_number = 'Room number must be alphanumeric, max 10 characters';
+      formIsValid = false;
+    } else {
+      newValidations.room_number = true;
+    }
+    
+    setValidations(newValidations);
+    setErrors(newErrors);
+    
+    return formIsValid;
   };
 
   const saveNewSection = async () => {
+    if (!validateForm()) {
+      return; // Stop if validation fails
+    }
+    
     try {
       await axios.post('http://localhost:3001/sections', newSectionData);
       fetchSections(activeSchoolYear);
       setIsAdding(false);
       setShowModal(false);
       setErrors({});
+      setValidations({
+        section_name: true,
+        max_capacity: true,
+        room_number: true
+      });
     } catch (error) {
       console.error('Error adding new section:', error);
       if (error.response?.data?.error === 'Section name already exists') {
@@ -274,6 +490,11 @@ function SectionManagement() {
     setIsAdding(false);
     setShowModal(false);
     setErrors({});
+    setValidations({
+      section_name: true,
+      max_capacity: true,
+      room_number: true
+    });
   };
 
   const capitalizeStatus = (status) => {
@@ -430,7 +651,7 @@ function SectionManagement() {
                     {(roleName !== 'academic_coordinator') && (
                       <button
                         className="section-mgmt-btn section-mgmt-btn-archive"
-                        onClick={() => toggleArchiveStatus(section.section_id, section.status)}
+                        onClick={() => openArchiveConfirmation(section.section_id, section.status, section.section_name)}
                         disabled={section.hasSched === '1'}
                         style={{
                           opacity: section.hasSched === '1' ? 0.5 : 1,
@@ -474,11 +695,17 @@ function SectionManagement() {
                                       name="section_name"
                                       value={editFormData.section_name}
                                       onChange={handleEditChange}
+                                      className={!editValidations.section_name ? "input-error" : ""}
                                       required
                                     />
-                                    {errors.section_name && (
-                                      <div className="error-message" style={{ color: 'red', fontSize: '0.8em', marginTop: '5px' }}>
+                                    {!editValidations.section_name && errors.section_name && (
+                                      <div className="error-message">
                                         {errors.section_name}
+                                      </div>
+                                    )}
+                                    {!editValidations.section_name && !errors.section_name && (
+                                      <div className="error-message">
+                                        Section name is required
                                       </div>
                                     )}
                                   </>
@@ -529,12 +756,27 @@ function SectionManagement() {
                               <th>Max Capacity:</th>
                               <td>
                                 {isEditing ? (
-                                  <input
-                                    type="text"
-                                    name="max_capacity"
-                                    value={editFormData.max_capacity}
-                                    onChange={handleEditChange}
-                                  />
+                                  <>
+                                    <input
+                                      type="text"
+                                      name="max_capacity"
+                                      value={editFormData.max_capacity}
+                                      onChange={handleEditChange}
+                                      className={!editValidations.max_capacity ? "input-error" : ""}
+                                      placeholder="Enter a positive number"
+                                      required
+                                    />
+                                    {!editValidations.max_capacity && errors.max_capacity && (
+                                      <div className="error-message">
+                                        {errors.max_capacity}
+                                      </div>
+                                    )}
+                                    {!editValidations.max_capacity && !errors.max_capacity && (
+                                      <div className="error-message">
+                                        Max capacity must be a positive number
+                                      </div>
+                                    )}
+                                  </>
                                 ) : (
                                   sectionDetails.max_capacity
                                 )}
@@ -564,12 +806,27 @@ function SectionManagement() {
                               <th>Room Number:</th>
                               <td>
                                 {isEditing ? (
-                                  <input
-                                    type="text"
-                                    name="room_number"
-                                    value={editFormData.room_number || ''}
-                                    onChange={handleEditChange}
-                                  />
+                                  <>
+                                    <input
+                                      type="text"
+                                      name="room_number"
+                                      value={editFormData.room_number || ''}
+                                      onChange={handleEditChange}
+                                      className={!editValidations.room_number ? "input-error" : ""}
+                                      placeholder="Alphanumeric, max 10 chars"
+                                      required
+                                    />
+                                    {!editValidations.room_number && errors.room_number && (
+                                      <div className="error-message">
+                                        {errors.room_number}
+                                      </div>
+                                    )}
+                                    {!editValidations.room_number && !errors.room_number && (
+                                      <div className="error-message">
+                                        Room number must be alphanumeric, max 10 characters
+                                      </div>
+                                    )}
+                                  </>
                                 ) : (
                                   sectionDetails.room_number
                                 )}
@@ -602,22 +859,28 @@ function SectionManagement() {
           <div className="section-mgmt-modal-content">
             <h2>Add New Section</h2>
             <div className="section-mgmt-form-group">
-              <label>Section Name:</label>
+              <label>Section Name: <span className="required-field">*</span></label>
               <input
                 type="text"
                 name="section_name"
                 value={newSectionData.section_name}
                 onChange={handleAddChange}
+                className={!validations.section_name ? "input-error" : ""}
                 required
               />
+              {!validations.section_name && (
+                <div className="error-message">
+                  Section name is required
+                </div>
+              )}
               {errors.section_name && (
-                <div className="error-message" style={{ color: 'red', fontSize: '0.8em', marginTop: '5px' }}>
+                <div className="error-message">
                   {errors.section_name}
                 </div>
               )}
             </div>
             <div className="section-mgmt-form-group">
-              <label>Grade Level:</label>
+              <label>Grade Level: <span className="required-field">*</span></label>
               <select
                 name="grade_level"
                 value={newSectionData.grade_level}
@@ -630,7 +893,7 @@ function SectionManagement() {
               </select>
             </div>
             <div className="section-mgmt-form-group">
-              <label>Status:</label>
+              <label>Status: <span className="required-field">*</span></label>
               <select
                 name="status"
                 value={newSectionData.status}
@@ -641,16 +904,29 @@ function SectionManagement() {
               </select>
             </div>
             <div className="section-mgmt-form-group">
-              <label>Max Capacity:</label>
+              <label>Max Capacity: <span className="required-field">*</span></label>
               <input
                 type="text"
                 name="max_capacity"
                 value={newSectionData.max_capacity}
                 onChange={handleAddChange}
+                className={!validations.max_capacity ? "input-error" : ""}
+                placeholder="Enter a positive number"
+                required
               />
+              {!validations.max_capacity && errors.max_capacity && (
+                <div className="error-message">
+                  {errors.max_capacity}
+                </div>
+              )}
+              {!validations.max_capacity && !errors.max_capacity && (
+                <div className="error-message">
+                  Max capacity must be a positive number
+                </div>
+              )}
             </div>
             <div className="section-mgmt-form-group">
-              <label>School Year:</label>
+              <label>School Year: <span className="required-field">*</span></label>
               <select
                 name="school_year_id"
                 value={newSectionData.school_year_id}
@@ -664,19 +940,62 @@ function SectionManagement() {
               </select>
             </div>
             <div className="section-mgmt-form-group">
-              <label>Room Number:</label>
+              <label>Room Number: <span className="required-field">*</span></label>
               <input
                 type="text"
                 name="room_number"
                 value={newSectionData.room_number}
                 onChange={handleAddChange}
+                className={!validations.room_number ? "input-error" : ""}
+                placeholder="Alphanumeric, max 10 chars"
+                required
               />
+              {!validations.room_number && errors.room_number && (
+                <div className="error-message">
+                  {errors.room_number}
+                </div>
+              )}
+              {!validations.room_number && !errors.room_number && (
+                <div className="error-message">
+                  Room number must be alphanumeric, max 10 characters
+                </div>
+              )}
             </div>
             <div className="section-mgmt-modal-actions">
               <button className="section-mgmt-btn section-mgmt-btn-edit" onClick={saveNewSection}>
                 Save
               </button>
               <button className="section-mgmt-btn section-mgmt-btn-archive" onClick={cancelAdding}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showArchiveModal && (
+        <div className="section-mgmt-modal">
+          <div className="section-mgmt-modal-content">
+            <h2>{archiveAction.currentStatus === 'inactive' ? 'Unarchive' : 'Archive'} Section</h2>
+            <p className="section-mgmt-confirmation-message">
+              Are you sure you want to {archiveAction.currentStatus === 'inactive' ? 'unarchive' : 'archive'} the section <strong>{archiveAction.sectionName}</strong>?
+              {archiveAction.currentStatus !== 'inactive' && (
+                <span className="section-mgmt-archive-warning">
+                  Archived sections won't be available for scheduling and other operations.
+                </span>
+              )}
+            </p>
+            <div className="section-mgmt-modal-actions">
+              <button 
+                className="section-mgmt-btn section-mgmt-btn-edit" 
+                onClick={() => toggleArchiveStatus(archiveAction.sectionId, archiveAction.currentStatus)}
+              >
+                Confirm
+              </button>
+              <button 
+                className="section-mgmt-btn section-mgmt-btn-archive" 
+                onClick={cancelArchiveAction}
+              >
                 Cancel
               </button>
             </div>
