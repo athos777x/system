@@ -1411,16 +1411,27 @@ const handleArchive = () => {
                         <th>Status:</th>
                         <td>
                           {isEditing ? (
-                            <select
-                              name="active_status"
-                              value={editStudentData ? editStudentData.active_status || "" : ""}
-                              onChange={handleEditChange}
-                            >
-                              <option value="active">Active</option>
-                              <option value="inactive">Inactive</option>
-                              <option value="withdrawn">Withdrawn</option>
-                              <option value="transferred">Transferred</option>
-                            </select>
+                            roleName === 'registrar' ? (
+                              <select
+                                name="active_status"
+                                value={editStudentData ? editStudentData.active_status || "" : ""}
+                                onChange={handleEditChange}
+                              >
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                                <option value="withdrawn">Withdrawn</option>
+                                <option value="transferred">Transferred</option>
+                              </select>
+                            ) : (
+                              // For non-registrar roles, display the value instead of a dropdown
+                              <input
+                                type="text"
+                                name="active_status"
+                                value={editStudentData ? editStudentData.active_status || "" : ""}
+                                readOnly
+                                className="read-only"
+                              />
+                            )
                           ) : (
                             student.active_status
                           )}
@@ -1813,7 +1824,7 @@ const handleArchive = () => {
                                         Print
                                   </button>
                                   */}
-                                  {(roleName === 'registrar' || roleName === 'subject_teacher') && (
+                                  {roleName === 'registrar' && (
                               <button
                                       className="student-mgmt-btn student-mgmt-btn-archive"
                                       onClick={() => openArchiveModal(student.student_id)}
