@@ -21,6 +21,8 @@ function SectionManagement() {
   const [editFormData, setEditFormData] = useState({});
   const [showModal, setShowModal] = useState(false);
   const [showArchiveModal, setShowArchiveModal] = useState(false);
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
   const [archiveAction, setArchiveAction] = useState({
     sectionId: null,
     currentStatus: '',
@@ -278,6 +280,16 @@ function SectionManagement() {
     return formIsValid;
   };
 
+  const displaySuccessMessage = (message) => {
+    setSuccessMessage(message);
+    setShowSuccessMessage(true);
+    
+    // Auto-hide the message after 3 seconds
+    setTimeout(() => {
+      setShowSuccessMessage(false);
+    }, 3000);
+  };
+
   const saveChanges = async () => {
     if (!validateEditForm()) {
       return; // Stop if validation fails
@@ -307,6 +319,7 @@ function SectionManagement() {
         max_capacity: true,
         room_number: true
       });
+      displaySuccessMessage('Section updated successfully!');
     } catch (error) {
       console.error('Error saving section details:', error);
       if (error.response?.data?.error === 'Section name already exists') {
@@ -329,6 +342,9 @@ function SectionManagement() {
         setSectionDetails({});
       }
       setShowArchiveModal(false);
+      displaySuccessMessage(currentStatus === 'inactive' 
+        ? 'Section unarchived successfully!' 
+        : 'Section archived successfully!');
     } catch (error) {
       console.error(`Error changing status:`, error);
     }
@@ -476,6 +492,7 @@ function SectionManagement() {
         max_capacity: true,
         room_number: true
       });
+      displaySuccessMessage('Section added successfully!');
     } catch (error) {
       console.error('Error adding new section:', error);
       if (error.response?.data?.error === 'Section name already exists') {
@@ -556,6 +573,14 @@ function SectionManagement() {
 
   return (
     <div className="section-mgmt-container">
+      {showSuccessMessage && (
+        <div className="success-message-popup">
+          <div className="success-message-content">
+            <span className="success-icon">✓</span>
+            <span>{successMessage}</span>
+          </div>
+        </div>
+      )}
       <div className="section-mgmt-header">
         <h1 className="section-mgmt-title">Section Management</h1>
         {(roleName !== 'academic_coordinator') && (
@@ -859,7 +884,7 @@ function SectionManagement() {
           <div className="section-mgmt-modal-content">
             <h2>Add New Section</h2>
             <div className="section-mgmt-form-group">
-              <label>Section Name: <span className="required-field">*</span></label>
+              <label>Section Name: <span className="required-asterisk">*</span></label>
               <input
                 type="text"
                 name="section_name"
@@ -880,7 +905,7 @@ function SectionManagement() {
               )}
             </div>
             <div className="section-mgmt-form-group">
-              <label>Grade Level: <span className="required-field">*</span></label>
+              <label>Grade Level: <span className="required-asterisk">*</span></label>
               <select
                 name="grade_level"
                 value={newSectionData.grade_level}
@@ -893,7 +918,7 @@ function SectionManagement() {
               </select>
             </div>
             <div className="section-mgmt-form-group">
-              <label>Status: <span className="required-field">*</span></label>
+              <label>Status: <span className="required-asterisk">*</span></label>
               <select
                 name="status"
                 value={newSectionData.status}
@@ -904,7 +929,7 @@ function SectionManagement() {
               </select>
             </div>
             <div className="section-mgmt-form-group">
-              <label>Max Capacity: <span className="required-field">*</span></label>
+              <label>Max Capacity: <span className="required-asterisk">*</span></label>
               <input
                 type="text"
                 name="max_capacity"
@@ -926,7 +951,7 @@ function SectionManagement() {
               )}
             </div>
             <div className="section-mgmt-form-group">
-              <label>School Year: <span className="required-field">*</span></label>
+              <label>School Year: <span className="required-asterisk">*</span></label>
               <select
                 name="school_year_id"
                 value={newSectionData.school_year_id}
@@ -940,7 +965,7 @@ function SectionManagement() {
               </select>
             </div>
             <div className="section-mgmt-form-group">
-              <label>Room Number: <span className="required-field">*</span></label>
+              <label>Room Number: <span className="required-asterisk">*</span></label>
               <input
                 type="text"
                 name="room_number"
