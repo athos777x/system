@@ -9,6 +9,7 @@ function SectionManagement() {
   const [selectedSectionId, setSelectedSectionId] = useState(null);
   const [sectionDetails, setSectionDetails] = useState({});
   const [activeSchoolYear, setActiveSchoolYear] = useState(null);
+  const [activeSchoolYearId, setActiveSchoolYearId] = useState(null);
   const [schoolYears, setSchoolYears] = useState([]);
   const [filters, setFilters] = useState({
     searchTerm: '',
@@ -54,7 +55,10 @@ function SectionManagement() {
     try {
       const response = await axios.get('http://localhost:3001/school-years/active');
       console.log('Active school year response:', response.data); // Log the response
+      console.log('Setting activeSchoolYear to:', response.data.school_year);
+      console.log('Setting activeSchoolYearId to:', response.data.school_year_id);
       setActiveSchoolYear(response.data.school_year);
+      setActiveSchoolYearId(response.data.school_year_id);
       return response.data;
     } catch (error) {
       console.error('There was an error fetching the active school year!', error);
@@ -179,7 +183,15 @@ function SectionManagement() {
       const response = await axios.get(`http://localhost:3001/sections/${sectionId}`);
       console.log('Fetched section details:', response.data); // Log fetched details
       setSectionDetails(response.data);
-      setEditFormData(response.data);
+      
+      // Ensure school_year_id is properly set for the edit form
+      const sectionData = response.data;
+      const matchingSchoolYear = schoolYears.find(year => year.school_year === sectionData.school_year);
+      
+      setEditFormData({
+        ...sectionData,
+        school_year_id: matchingSchoolYear ? matchingSchoolYear.school_year_id : (activeSchoolYearId || '')
+      });
     } catch (error) {
       console.error('There was an error fetching the section details!', error);
     }
@@ -194,8 +206,16 @@ function SectionManagement() {
       max_capacity: true,
       room_number: true
     });
+    
     const section = sections.find(sec => sec.section_id === sectionId);
-    setEditFormData(section);
+    
+    // Find matching school year ID
+    const matchingSchoolYear = schoolYears.find(year => year.school_year === section.school_year);
+    
+    setEditFormData({
+      ...section,
+      school_year_id: matchingSchoolYear ? matchingSchoolYear.school_year_id : (activeSchoolYearId || '')
+    });
   };
 
   const handleEditChange = (event) => {
@@ -306,11 +326,12 @@ function SectionManagement() {
         status: updateData.status,
         max_capacity: updateData.max_capacity,
         room_number: updateData.room_number,
+        school_year_id: updateData.school_year_id, // Include school year ID
         archive_status: updateData.archive_status || 'unarchive'
       };
 
       await axios.put(`http://localhost:3001/sections/${selectedSectionId}`, dataToUpdate);
-      fetchSections(activeSchoolYear);
+      fetchSections(activeSchoolYearId);
       fetchSectionDetails(selectedSectionId);
       setIsEditing(false);
       setErrors({});
@@ -335,7 +356,7 @@ function SectionManagement() {
       const newStatus = currentStatus === 'inactive' ? 'active' : 'inactive';
       const newArchiveStatus = currentStatus === 'inactive' ? 'unarchive' : 'archive';
       await axios.put(`http://localhost:3001/sections/${sectionId}/archive`, { status: newStatus, archive_status: newArchiveStatus });
-      fetchSections(activeSchoolYear);
+      fetchSections(activeSchoolYearId);
       // If the section being archived is currently selected, close the details view
       if (selectedSectionId === sectionId) {
         setSelectedSectionId(null);
@@ -380,6 +401,23 @@ function SectionManagement() {
   };
 
   const startAdding = () => {
+    console.log("Starting Add New Section...");
+    console.log("Active School Year ID:", activeSchoolYearId);
+    console.log("School Years:", schoolYears);
+    console.log("Is Initialized:", isInitialized);
+    
+    // Find the school year with the highest ID (latest school year)
+    let latestSchoolYearId = '';
+    if (schoolYears.length > 0) {
+      const sortedYears = [...schoolYears].sort((a, b) => b.school_year_id - a.school_year_id);
+      latestSchoolYearId = sortedYears[0].school_year_id;
+      console.log("Latest School Year ID (sorted):", latestSchoolYearId);
+    }
+    
+    // Use activeSchoolYearId first, then latest school year ID, then fallback to first school year
+    const selectedSchoolYearId = activeSchoolYearId || latestSchoolYearId || (schoolYears.length > 0 ? schoolYears[0].school_year_id : '');
+    console.log("Selected School Year ID:", selectedSchoolYearId);
+    
     setIsAdding(true);
     setErrors({});
     setNewSectionData({
@@ -387,7 +425,7 @@ function SectionManagement() {
       grade_level: '7',
       status: 'active',
       max_capacity: '',
-      school_year_id: schoolYears.length > 0 ? schoolYears[0].school_year_id : '',
+      school_year_id: selectedSchoolYearId,
       room_number: '',
       archive_status: 'unarchive'
     });
@@ -483,7 +521,7 @@ function SectionManagement() {
     
     try {
       await axios.post('http://localhost:3001/sections', newSectionData);
-      fetchSections(activeSchoolYear);
+      fetchSections(activeSchoolYearId);
       setIsAdding(false);
       setShowModal(false);
       setErrors({});
@@ -522,16 +560,23 @@ function SectionManagement() {
   useEffect(() => {
     if (!isInitialized) {
       const initializeData = async () => {
+        console.log("Starting initialization...");
         await fetchSchoolYears(); // Fetch school years first
+        console.log("After fetchSchoolYears, schoolYears:", schoolYears);
+        
         const activeYear = await fetchActiveSchoolYear();
+        console.log("After fetchActiveSchoolYear, activeYear:", activeYear);
+        console.log("Current activeSchoolYearId:", activeSchoolYearId);
+        
         if (activeYear && roleName) {
-          console.log('Active school year:', activeYear.school_year); // Log active school year
-          setFilters(prevFilters => ({ ...prevFilters, school_year: activeYear.school_year })); // Set default school year
-          await fetchSections(activeYear.school_year_id, false);  // Fetch sections without filters initially
-          console.log('Applying filters with:', { ...filters, school_year: activeYear.school_year }); // Log filters being applied
-          
+          console.log('Active school year:', activeYear.school_year); 
+          console.log('Active school year ID:', activeYear.school_year_id);
+          setFilters(prevFilters => ({ ...prevFilters, school_year: activeYear.school_year })); 
+          await fetchSections(activeYear.school_year_id, false);
+          console.log('Applying filters with:', { ...filters, school_year: activeYear.school_year });
         }
-        setIsInitialized(true); // Mark as initialized
+        setIsInitialized(true);
+        console.log("Initialization complete, isInitialized set to true");
       };
 
       initializeData();
