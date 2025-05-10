@@ -84,4 +84,37 @@ router.put('/level-up-students', (req, res) => {
   });
 });
 
+// Endpoint to update enrollment status when school year becomes inactive
+router.put('/update-enrollment-status', (req, res) => {
+  // Update enrollment status for inactive school years
+  const updateEnrollmentQuery = `
+    UPDATE enrollment 
+    SET enrollment_status = 'inactive'
+    WHERE school_year_id IN (SELECT school_year_id FROM school_year WHERE status = 'inactive')
+  `;
+
+  // Update student_school_year status for inactive school years
+  const updateStudentSchoolYearQuery = `
+    UPDATE student_school_year 
+    SET status = 'inactive'
+    WHERE school_year_id IN (SELECT school_year_id FROM school_year WHERE status = 'inactive')
+  `;
+
+  req.db.query(updateEnrollmentQuery, (enrollmentErr) => {
+    if (enrollmentErr) {
+      console.error('Error updating enrollment statuses:', enrollmentErr);
+      return res.status(500).json({ error: 'Failed to update enrollment statuses' });
+    }
+
+    req.db.query(updateStudentSchoolYearQuery, (ssyErr) => {
+      if (ssyErr) {
+        console.error('Error updating student_school_year statuses:', ssyErr);
+        return res.status(500).json({ error: 'Failed to update student_school_year statuses' });
+      }
+
+      res.status(200).json({ message: 'Enrollment statuses updated successfully for inactive school years' });
+    });
+  });
+});
+
 module.exports = router; 

@@ -45,6 +45,74 @@ subjectCoordinatorRoutes(app, db);
 // Serve static files from the uploads directory
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// Function to check and update school year statuses
+const updateSchoolYearStatuses = () => {
+  console.log('Checking school year statuses...');
+  const currentDate = new Date();
+  
+  // Find school years that have ended but are still marked as active
+  const query = `
+    UPDATE school_year 
+    SET status = 'inactive' 
+    WHERE school_year_end < ? AND status = 'active'
+  `;
+  
+  db.query(query, [currentDate], (err, results) => {
+    if (err) {
+      console.error('Error updating school year statuses:', err);
+      return;
+    }
+    
+    if (results.affectedRows > 0) {
+      console.log(`${results.affectedRows} school year(s) marked as inactive`);
+      
+      // Update enrollment and student_school_year statuses for inactive school years
+      const updateEnrollmentQuery = `
+        UPDATE enrollment 
+        SET enrollment_status = 'inactive'
+        WHERE school_year_id IN (SELECT school_year_id FROM school_year WHERE status = 'inactive')
+      `;
+      
+      const updateStudentSchoolYearQuery = `
+        UPDATE student_school_year 
+        SET status = 'inactive'
+        WHERE school_year_id IN (SELECT school_year_id FROM school_year WHERE status = 'inactive')
+      `;
+      
+      db.query(updateEnrollmentQuery, (enrollmentErr) => {
+        if (enrollmentErr) {
+          console.error('Error updating enrollment statuses:', enrollmentErr);
+          return;
+        }
+        
+        db.query(updateStudentSchoolYearQuery, (ssyErr) => {
+          if (ssyErr) {
+            console.error('Error updating student_school_year statuses:', ssyErr);
+            return;
+          }
+          
+          console.log('Enrollment and student_school_year statuses updated successfully');
+        });
+      });
+    } else {
+      console.log('No school years need to be updated');
+    }
+  });
+};
+
+// Schedule daily check for school year status
+const setupDailySchoolYearCheck = () => {
+  // Run immediately on startup
+  updateSchoolYearStatuses();
+  
+  // Then schedule to run daily at midnight
+  const millisecondsInDay = 24 * 60 * 60 * 1000;
+  setInterval(updateSchoolYearStatuses, millisecondsInDay);
+};
+
+// Run the setup function
+setupDailySchoolYearCheck();
+
 // Configure multer for file uploads
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {

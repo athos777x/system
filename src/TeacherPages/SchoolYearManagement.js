@@ -45,12 +45,22 @@ function SchoolYearManagement() {
       });
       const sortedSchoolYears = response.data.sort((a, b) => a.school_year.localeCompare(b.school_year));
       const currentDate = new Date();
-      sortedSchoolYears.forEach(async (sy) => {
+      
+      // Check if any active school years need to be marked as inactive
+      let schoolYearStatusChanged = false;
+      
+      for (const sy of sortedSchoolYears) {
         if (new Date(sy.school_year_end) < currentDate && sy.status === 'active') {
           sy.status = 'inactive';
           await axios.put(`http://localhost:3001/school-years/${sy.school_year_id}`, { status: 'inactive' });
+          schoolYearStatusChanged = true;
         }
-      });
+      }
+      
+      // If any school year status was changed to inactive, update enrollment statuses
+      if (schoolYearStatusChanged) {
+        await axios.put('http://localhost:3001/update-enrollment-status');
+      }
       
       const allSchoolYearsResponse = await axios.get('http://localhost:3001/school-years');
       const hasActive = allSchoolYearsResponse.data.some(sy => sy.status === 'active');
@@ -223,7 +233,18 @@ function SchoolYearManagement() {
         enrollment_start: formatDateForBackend(editFormData.enrollment_start),
         enrollment_end: formatDateForBackend(editFormData.enrollment_end)
       };
+      
+      // Check if status is being changed to inactive
+      const currentSchoolYear = schoolYears.find(sy => sy.school_year_id === selectedSchoolYearId);
+      const isChangingToInactive = currentSchoolYear.status === 'active' && updatedData.status === 'inactive';
+      
       await axios.put(`http://localhost:3001/school-years/${selectedSchoolYearId}`, updatedData);
+      
+      // If status was changed to inactive, update enrollment statuses
+      if (isChangingToInactive) {
+        await axios.put('http://localhost:3001/update-enrollment-status');
+      }
+      
       fetchSchoolYears();
       setIsEditing(false);
       setSelectedSchoolYearId(selectedSchoolYearId);
