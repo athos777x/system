@@ -1117,7 +1117,7 @@ app.post('/validate-enrollment', (req, res) => {
         }
 
         // Update the enrollment status to 'inactive'
-        db.query(updateEnrollmentQuery, [studentId,schoolYearId], (err2, result2) => {
+        db.query(updateEnrollmentQuery, [studentId, schoolYearId], (err2, result2) => {
           if (err2) {
             console.error('Error updating enrollment:', err2.message);
             return res.status(500).json({ error: 'Database error: ' + err2.message });
@@ -1127,7 +1127,6 @@ app.post('/validate-enrollment', (req, res) => {
           return res.status(200).json({ message: 'Enrollment rejected successfully.' });
         });
       });
-
     } else if (action === 'approve') {
       // Step for Approve: Perform all the steps except rejection
       const updateStudentSchoolYearQuery = `UPDATE student_school_year SET status = 'active' WHERE student_id = ?;`;
@@ -1148,7 +1147,7 @@ app.post('/validate-enrollment', (req, res) => {
         // Step 2: Update enrollment table to 'active' and include school_year_id
         const updateEnrollmentQuery = `UPDATE enrollment SET enrollment_status = 'active' WHERE student_id = ? AND school_year_id = ? ;`;
 
-        db.query(updateEnrollmentQuery, [studentId,schoolYearId], (err2, result2) => {
+        db.query(updateEnrollmentQuery, [studentId, schoolYearId], (err2, result2) => {
           if (err2) {
             console.error('Error updating enrollment:', err2.message);
             return res.status(500).json({ error: 'Database error: ' + err2.message });
@@ -1249,23 +1248,34 @@ app.post('/validate-enrollment', (req, res) => {
               });
             });
           } else {
-            console.log(`Student ID: ${studentId} already has a section ID: ${sectionId}`);
+            console.log(`Student ID: ${studentId} with section ID: ${sectionId}`);
             
-            // Update enrollment table with provided sectionId
-            const updateEnrollmentWithProvidedSectionQuery = `UPDATE enrollment SET section_id = ? WHERE student_id = ? AND school_year_id = ?;`;
-
-            db.query(updateEnrollmentWithProvidedSectionQuery, [sectionId, studentId, schoolYearId], (err7, result7) => {
-              if (err7) {
-                console.error('Error updating enrollment with provided section:', err7.message);
-                return res.status(500).json({ error: 'Database error: ' + err7.message });
+            // Update student table with provided sectionId
+            const updateStudentSectionQuery = `UPDATE student SET section_id = ? WHERE student_id = ?;`;
+            
+            db.query(updateStudentSectionQuery, [sectionId, studentId], (err6, result6) => {
+              if (err6) {
+                console.error('Error updating student section:', err6.message);
+                return res.status(500).json({ error: 'Database error: ' + err6.message });
               }
-
-              res.status(200).json({ message: 'Enrollment approved, section updated successfully' });
+              
+              console.log(`Updated student ID: ${studentId} with section ID: ${sectionId} in student table`);
+              
+              // Update enrollment table with provided sectionId
+              const updateEnrollmentWithProvidedSectionQuery = `UPDATE enrollment SET section_id = ? WHERE student_id = ? AND school_year_id = ?;`;
+          
+              db.query(updateEnrollmentWithProvidedSectionQuery, [sectionId, studentId, schoolYearId], (err7, result7) => {
+                if (err7) {
+                  console.error('Error updating enrollment with provided section:', err7.message);
+                  return res.status(500).json({ error: 'Database error: ' + err7.message });
+                }
+          
+                res.status(200).json({ message: 'Enrollment approved, student and enrollment section updated successfully' });
+              });
             });
           }
         });
       });
-
     } else {
       return res.status(400).json({ error: 'Invalid action' });
     }
@@ -6178,15 +6188,28 @@ app.put('/students/:studentId/enroll-student', (req, res) => {
             console.error('Error creating student_school_year:', err);
             return res.status(500).json({ error: 'Database error during student_school_year insert' });
           }
-
-          console.log(`Successfully enrolled student ID: ${studentId}`);
-          return res.json({ message: 'Student enrolled successfully' });
+        
+          // Update the student's current_yr_lvl in the student table
+          const updateStudentQuery = `
+            UPDATE student 
+            SET current_yr_lvl = ? 
+            WHERE student_id = ?
+          `;
+        
+          db.query(updateStudentQuery, [grade_level, studentId], (err) => {
+            if (err) {
+              console.error('Error updating student grade level:', err);
+              return res.status(500).json({ error: 'Database error during student update' });
+            }
+        
+            console.log(`Successfully enrolled student ID: ${studentId} and updated grade level to: ${grade_level}`);
+            return res.json({ message: 'Student enrolled successfully' });
+          });
         });
       });
     });
   });
 });
-
 
 
 app.get('/list-subject-teacher', (req, res) => {
