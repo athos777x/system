@@ -1146,26 +1146,30 @@ useEffect(() => {
                         <div className="teacher-mgmt-details-actions">
                           {teacher.role_id === 4 && (
                             <button 
-                              className="teacher-mgmt-btn teacher-mgmt-btn-view"
+                              className={`teacher-mgmt-btn ${teacher.status !== 'active' ? 'teacher-mgmt-btn-disabled' : 'teacher-mgmt-btn-view'}`}
                               onClick={() => handleAssignSection(teacher.employee_id)}
+                              disabled={teacher.status !== 'active'}
+                              title={teacher.status !== 'active' ? "Cannot assign section to archived employee" : ""}
                             >
                               Assign Section
                             </button>
                           )}
                           {teacher.role_id === 5 && (
                             <button 
-                              className={`teacher-mgmt-btn ${teacherGradeLevel && teacherGradeLevel.length > 0 ? 'teacher-mgmt-btn-disabled' : 'teacher-mgmt-btn-view'}`}
+                              className={`teacher-mgmt-btn ${teacherGradeLevel && teacherGradeLevel.length > 0 ? 'teacher-mgmt-btn-disabled' : teacher.status !== 'active' ? 'teacher-mgmt-btn-disabled' : 'teacher-mgmt-btn-view'}`}
                               onClick={() => handleAssignGradeLevel(teacher.employee_id)}
-                              disabled={teacherGradeLevel && teacherGradeLevel.length > 0}
-                              title={teacherGradeLevel && teacherGradeLevel.length > 0 ? "This coordinator already has an assigned grade level" : ""}
+                              disabled={(teacherGradeLevel && teacherGradeLevel.length > 0) || teacher.status !== 'active'}
+                              title={teacher.status !== 'active' ? "Cannot assign grade level to archived employee" : teacherGradeLevel && teacherGradeLevel.length > 0 ? "This coordinator already has an assigned grade level" : ""}
                             >
                               {teacherGradeLevel && teacherGradeLevel.length > 0 ? "Grade Level Assigned" : "Assign Grade Level"}
                             </button>
                           )}
                           {teacher.role_id === 8 && (
                           <button 
-                              className="teacher-mgmt-btn teacher-mgmt-btn-view"
+                              className={`teacher-mgmt-btn ${teacher.status !== 'active' ? 'teacher-mgmt-btn-disabled' : 'teacher-mgmt-btn-view'}`}
                               onClick={() => handleAssignSubject(teacher.employee_id)}
+                              disabled={teacher.status !== 'active'}
+                              title={teacher.status !== 'active' ? "Cannot assign subject to archived employee" : ""}
                             >
                               Assign Subject
                           </button> 
