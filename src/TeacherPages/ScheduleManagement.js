@@ -884,7 +884,15 @@ function Principal_SchedulePage() {
                                           >
                                             <option value="">Select Teacher *</option>
                                             {editFormData.filteredTeachers ? (
-                                              editFormData.filteredTeachers.map((teacher) => (
+                                              [...editFormData.filteredTeachers].sort((a, b) => {
+                                                const nameA = a.firstname 
+                                                  ? `${a.firstname} ${a.lastname}` 
+                                                  : a.teacher;
+                                                const nameB = b.firstname 
+                                                  ? `${b.firstname} ${b.lastname}` 
+                                                  : b.teacher;
+                                                return nameA.localeCompare(nameB);
+                                              }).map((teacher) => (
                                                 <option key={teacher.employee_id} value={teacher.employee_id}>
                                                   {teacher.firstname ? 
                                                     `${teacher.firstname} ${teacher.middlename ? `${teacher.middlename[0]}.` : ''} ${teacher.lastname}` : 
@@ -892,7 +900,11 @@ function Principal_SchedulePage() {
                                                 </option>
                                               ))
                                             ) : (
-                                              teachers.map((teacher) => (
+                                              [...teachers].sort((a, b) => {
+                                                const nameA = `${a.firstname} ${a.lastname}`;
+                                                const nameB = `${b.firstname} ${b.lastname}`;
+                                                return nameA.localeCompare(nameB);
+                                              }).map((teacher) => (
                                                 <option key={teacher.employee_id} value={teacher.employee_id}>
                                                   {teacher.firstname} {teacher.middlename ? `${teacher.middlename[0]}.` : ''} {teacher.lastname}
                                                 </option>
@@ -1068,7 +1080,7 @@ function Principal_SchedulePage() {
               required
             >
               <option value="">Select Teacher</option>
-              {subjectteachers.map((teacherObj) => (
+              {[...subjectteachers].sort((a, b) => a.teacher.localeCompare(b.teacher)).map((teacherObj) => (
                 <option key={teacherObj.employee_id} value={teacherObj.employee_id}>
                   {teacherObj.teacher}
                 </option>
