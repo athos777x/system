@@ -45,6 +45,10 @@ subjectCoordinatorRoutes(app, db);
 const sectionRoutes = require('./routes/section-endpoints');
 sectionRoutes(app, db);
 
+// Import and initialize grade level endpoints
+const gradeLevelRoutes = require('./routes/gradelevel-endpoints');
+gradeLevelRoutes(app, db);
+
 // Serve static files from the uploads directory
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
