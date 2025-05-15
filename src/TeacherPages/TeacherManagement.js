@@ -576,7 +576,22 @@ function TeacherManagement() {
   const handleAssignSection = (employeeId) => {
     setCurrentTeacherId(employeeId);
     setShowAssignSectionModal(true);
-    handleGradeLevelChangeForSection('7');
+    
+    // If the teacher already has a section assigned, pre-select it
+    if (teacherSection && teacherSection.length > 0) {
+      const currentAssignment = teacherSection[0]; // Get the first assignment
+      setSelectedGradeLevelForSection(currentAssignment.grade_level);
+      handleGradeLevelChangeForSection(currentAssignment.grade_level);
+      
+      // We'll set the selected section after the sections are loaded
+      setTimeout(() => {
+        setSelectedSection(currentAssignment.section_id);
+      }, 500);
+    } else {
+      // Default to grade 7 for new assignments
+      setSelectedGradeLevelForSection('7');
+      handleGradeLevelChangeForSection('7');
+    }
   };
 
   const handleSectionAssignment = async () => {
@@ -593,19 +608,26 @@ function TeacherManagement() {
         schoolYearId: selectedSchoolYear,
       });
   
-      const response = await axios.post(`http://localhost:3001/assign-section/${currentTeacherId}`, {
+      // Check if teacher already has a section assigned for this school year
+      const isEditing = teacherSection && teacherSection.length > 0;
+      
+      // Use PUT for updating, POST for new assignment
+      const method = isEditing ? 'put' : 'post';
+      const endpoint = `http://localhost:3001/assign-section/${currentTeacherId}`;
+      
+      const response = await axios[method](endpoint, {
         section_id: selectedSection,
         grade_level: selectedGradeLevelForSection,
         school_year_id: selectedSchoolYear,
       });
   
       if (response.status === 200) {
-        alert('Section assigned successfully');
+        alert(isEditing ? 'Section updated successfully' : 'Section assigned successfully');
         setShowAssignSectionModal(false);
         setSelectedSection('');
         setSelectedGradeLevelForSection('7');
         setSectionsByGrade([]);
-        fetchTeacherSection(currentTeacherId,selectedSection,selectedGradeLevelForSection,selectedSchoolYear);
+        fetchTeacherSection(currentTeacherId, selectedSchoolYear);
       }
     } catch (error) {
       console.error('Error assigning section:', error);
@@ -1151,7 +1173,7 @@ useEffect(() => {
                               disabled={teacher.status !== 'active'}
                               title={teacher.status !== 'active' ? "Cannot assign section to archived employee" : ""}
                             >
-                              Assign Section
+                              {teacherSection && teacherSection.length > 0 ? "Edit Section" : "Assign Section"}
                             </button>
                           )}
                           {teacher.role_id === 5 && (
@@ -1393,7 +1415,9 @@ useEffect(() => {
         <div className="teacher-mgmt-modal">
           <div className="teacher-mgmt-modal-content compact teacher-mgmt-section-modal">
             <div className="teacher-mgmt-modal-header">
-              <h2 className="teacher-mgmt-modal-title">Assign Section</h2>
+              <h2 className="teacher-mgmt-modal-title">
+                {teacherSection && teacherSection.length > 0 ? 'Edit Section' : 'Assign Section'}
+              </h2>
             </div>
 
             <div className="teacher-mgmt-form-field">
@@ -1453,7 +1477,7 @@ useEffect(() => {
                 onClick={handleSectionAssignment}
                 disabled={!selectedSection}
               >
-                Assign Section
+                {teacherSection && teacherSection.length > 0 ? 'Update Section' : 'Assign Section'}
               </button>
               <button 
                 className="teacher-mgmt-btn teacher-mgmt-btn-archive teacher-mgmt-modal-button"

@@ -42,6 +42,9 @@ app.use('/', cronRoutes);
 const subjectCoordinatorRoutes = require('./routes/subject-coordinator-endpoints');
 subjectCoordinatorRoutes(app, db);
 
+const sectionRoutes = require('./routes/section-endpoints');
+sectionRoutes(app, db);
+
 // Serve static files from the uploads directory
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
