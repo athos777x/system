@@ -308,4 +308,96 @@ module.exports = function(app, db) {
       });
     });
   });
+
+  // Endpoint to update a subject assignment for a coordinator
+  // Function: Updates which subject is assigned to a coordinator
+  app.put('/assign-subject-to-coordinator', (req, res) => {
+    const { subject_id, employee_id, school_year_id } = req.body;
+    
+    if (!subject_id || !employee_id || !school_year_id) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    // Check if the employee is a subject coordinator
+    const checkRoleQuery = `
+      SELECT u.role_id 
+      FROM employee e
+      JOIN users u ON e.user_id = u.user_id
+      WHERE e.employee_id = ?
+    `;
+
+    db.query(checkRoleQuery, [employee_id], (err, results) => {
+      if (err) {
+        console.error('Error checking employee role:', err);
+        return res.status(500).json({ error: 'Database error' });
+      }
+
+      if (results.length === 0) {
+        return res.status(404).json({ error: 'Employee not found' });
+      }
+
+      const role_id = results[0].role_id;
+      if (role_id !== 8) { // 8 is subject_coordinator role_id
+        return res.status(403).json({ error: 'Employee is not a subject coordinator' });
+      }
+
+      // First, find the existing assignment for this coordinator and school year
+      const findExistingQuery = `
+        SELECT * FROM subject_assigned 
+        WHERE employee_id = ? AND school_year_id = ?
+      `;
+
+      db.query(findExistingQuery, [employee_id, school_year_id], (err, existingResults) => {
+        if (err) {
+          console.error('Error finding existing assignment:', err);
+          return res.status(500).json({ error: 'Database error' });
+        }
+
+        if (existingResults.length === 0) {
+          return res.status(404).json({ error: 'No existing assignment found to update' });
+        }
+
+        const existingAssignment = existingResults[0];
+        
+        // Check if the new subject is already assigned to another coordinator
+        const checkNewSubjectQuery = `
+          SELECT * FROM subject_assigned 
+          WHERE subject_id = ? AND school_year_id = ? AND employee_id <> ?
+        `;
+
+        db.query(checkNewSubjectQuery, [subject_id, school_year_id, employee_id], (err, newSubjectResults) => {
+          if (err) {
+            console.error('Error checking new subject assignment:', err);
+            return res.status(500).json({ error: 'Database error' });
+          }
+
+          if (newSubjectResults.length > 0) {
+            return res.status(409).json({ 
+              error: 'This subject is already assigned to another coordinator',
+              existing: newSubjectResults[0] 
+            });
+          }
+
+          // Update the assignment
+          const updateQuery = `
+            UPDATE subject_assigned 
+            SET subject_id = ? 
+            WHERE subjectcoordinator_assigned_id = ?
+          `;
+
+          db.query(updateQuery, [subject_id, existingAssignment.subjectcoordinator_assigned_id], (err, updateResults) => {
+            if (err) {
+              console.error('Error updating subject assignment:', err);
+              return res.status(500).json({ error: 'Failed to update subject assignment' });
+            }
+
+            res.json({ 
+              message: 'Subject assignment updated successfully',
+              assignment_id: existingAssignment.subjectcoordinator_assigned_id
+            });
+          });
+        });
+      });
+    });
+  });
 }; 

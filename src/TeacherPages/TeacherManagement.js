@@ -435,9 +435,21 @@ function TeacherManagement() {
       // We'll call this after a school year is selected
       setIsSubjectCoordinator(true);
       
+      // Check if the teacher already has subjects assigned
+      const hasAssignedSubjects = teacherSubjects && teacherSubjects.length > 0;
+      
       // If a school year is already selected, fetch unassigned subjects
       if (selectedSchoolYear) {
         fetchUnassignedSubjects();
+        
+        // If editing existing assignment, display a message
+        if (hasAssignedSubjects) {
+          // Set modal title to reflect editing mode
+          const modalTitleElement = document.querySelector('.teacher-mgmt-modal-title');
+          if (modalTitleElement) {
+            modalTitleElement.textContent = 'Edit Assigned Subject';
+          }
+        }
       } else {
         // Clear subjects until school year is selected
         setSubjectsByGrade([]);
@@ -479,6 +491,7 @@ function TeacherManagement() {
   const handleSubjectAssignment = async () => {
     const currentTeacher = teachers.find(t => t.employee_id === currentTeacherId);
     const isSubjectCoordinator = currentTeacher && currentTeacher.role_id === 8;
+    const isEditing = isSubjectCoordinator && teacherSubjects && teacherSubjects.length > 0;
     
     // Validation differs based on role
     if (isSubjectCoordinator) {
@@ -526,7 +539,7 @@ function TeacherManagement() {
             school_year_id: selectedSchoolYear,
           };
 
-      console.log('Assigning subject with:', {
+      console.log(`${isEditing ? 'Updating' : 'Assigning'} subject with:`, {
         teacherId: currentTeacherId,
         ...requestData
       });
@@ -536,10 +549,12 @@ function TeacherManagement() {
         ? 'http://localhost:3001/assign-subject-to-coordinator'
         : `http://localhost:3001/assign-subject/${currentTeacherId}`;
 
-      const response = await axios.post(endpoint, requestData);
+      // Use PUT for updates, POST for new assignments (for coordinator only)
+      const method = isEditing && isSubjectCoordinator ? 'put' : 'post';
+      const response = await axios[method](endpoint, requestData);
 
       if (response.status === 200 || response.status === 201) {
-        alert(response.data.message || 'Subject assigned successfully');
+        alert(response.data.message || `Subject ${isEditing ? 'updated' : 'assigned'} successfully`);
         fetchTeacherSubjects(currentTeacherId, selectedSchoolYear, isSubjectCoordinator ? 8 : null);
 
         setShowAssignSubjectModal(false);
@@ -553,7 +568,7 @@ function TeacherManagement() {
       }
     } catch (error) { 
       console.error('Error assigning subject:', error);
-      alert('Error assigning subject: ' + (error.response?.data?.error || error.message));
+      alert(`Error ${isEditing ? 'updating' : 'assigning'} subject: ` + (error.response?.data?.error || error.message));
     }
   };
   
@@ -1204,7 +1219,7 @@ useEffect(() => {
                               disabled={teacher.status !== 'active'}
                               title={teacher.status !== 'active' ? "Cannot assign subject to archived employee" : ""}
                             >
-                              Assign Subject
+                              {teacherSubjects && teacherSubjects.length > 0 ? "Edit Assigned Subject" : "Assign Subject"}
                           </button> 
                           )}
                           {teacher.role_id === 5 && (
@@ -1519,7 +1534,11 @@ useEffect(() => {
         <div className="teacher-mgmt-modal">
           <div className="teacher-mgmt-modal-content compact teacher-mgmt-section-modal">
             <div className="teacher-mgmt-modal-header">
-              <h2 className="teacher-mgmt-modal-title">Assign Subject</h2>
+              <h2 className="teacher-mgmt-modal-title">
+                {isSubjectCoordinator && teacherSubjects && teacherSubjects.length > 0 
+                  ? 'Edit Assigned Subject' 
+                  : 'Assign Subject'}
+              </h2>
             </div>
 
             <div className="teacher-mgmt-form-field">
@@ -1622,7 +1641,9 @@ useEffect(() => {
                     : !selectedSection || !selectedSubject
                 }
               >
-                Assign Subject
+                {isSubjectCoordinator && teacherSubjects && teacherSubjects.length > 0 
+                  ? 'Update Subject' 
+                  : 'Assign Subject'}
               </button>
               <button 
                 className="teacher-mgmt-btn teacher-mgmt-btn-archive teacher-mgmt-modal-button"

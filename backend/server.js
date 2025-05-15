@@ -49,6 +49,7 @@ sectionRoutes(app, db);
 const gradeLevelRoutes = require('./routes/gradelevel-endpoints');
 gradeLevelRoutes(app, db);
 
+
 // Serve static files from the uploads directory
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
