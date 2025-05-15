@@ -435,9 +435,21 @@ function TeacherManagement() {
       // We'll call this after a school year is selected
       setIsSubjectCoordinator(true);
       
+      // Check if the teacher already has subjects assigned
+      const hasAssignedSubjects = teacherSubjects && teacherSubjects.length > 0;
+      
       // If a school year is already selected, fetch unassigned subjects
       if (selectedSchoolYear) {
         fetchUnassignedSubjects();
+        
+        // If editing existing assignment, display a message
+        if (hasAssignedSubjects) {
+          // Set modal title to reflect editing mode
+          const modalTitleElement = document.querySelector('.teacher-mgmt-modal-title');
+          if (modalTitleElement) {
+            modalTitleElement.textContent = 'Edit Assigned Subject';
+          }
+        }
       } else {
         // Clear subjects until school year is selected
         setSubjectsByGrade([]);
@@ -479,6 +491,7 @@ function TeacherManagement() {
   const handleSubjectAssignment = async () => {
     const currentTeacher = teachers.find(t => t.employee_id === currentTeacherId);
     const isSubjectCoordinator = currentTeacher && currentTeacher.role_id === 8;
+    const isEditing = isSubjectCoordinator && teacherSubjects && teacherSubjects.length > 0;
     
     // Validation differs based on role
     if (isSubjectCoordinator) {
@@ -526,7 +539,7 @@ function TeacherManagement() {
             school_year_id: selectedSchoolYear,
           };
 
-      console.log('Assigning subject with:', {
+      console.log(`${isEditing ? 'Updating' : 'Assigning'} subject with:`, {
         teacherId: currentTeacherId,
         ...requestData
       });
@@ -536,10 +549,12 @@ function TeacherManagement() {
         ? 'http://localhost:3001/assign-subject-to-coordinator'
         : `http://localhost:3001/assign-subject/${currentTeacherId}`;
 
-      const response = await axios.post(endpoint, requestData);
+      // Use PUT for updates, POST for new assignments (for coordinator only)
+      const method = isEditing && isSubjectCoordinator ? 'put' : 'post';
+      const response = await axios[method](endpoint, requestData);
 
       if (response.status === 200 || response.status === 201) {
-        alert(response.data.message || 'Subject assigned successfully');
+        alert(response.data.message || `Subject ${isEditing ? 'updated' : 'assigned'} successfully`);
         fetchTeacherSubjects(currentTeacherId, selectedSchoolYear, isSubjectCoordinator ? 8 : null);
 
         setShowAssignSubjectModal(false);
@@ -553,7 +568,7 @@ function TeacherManagement() {
       }
     } catch (error) { 
       console.error('Error assigning subject:', error);
-      alert('Error assigning subject: ' + (error.response?.data?.error || error.message));
+      alert(`Error ${isEditing ? 'updating' : 'assigning'} subject: ` + (error.response?.data?.error || error.message));
     }
   };
   
@@ -576,7 +591,22 @@ function TeacherManagement() {
   const handleAssignSection = (employeeId) => {
     setCurrentTeacherId(employeeId);
     setShowAssignSectionModal(true);
-    handleGradeLevelChangeForSection('7');
+    
+    // If the teacher already has a section assigned, pre-select it
+    if (teacherSection && teacherSection.length > 0) {
+      const currentAssignment = teacherSection[0]; // Get the first assignment
+      setSelectedGradeLevelForSection(currentAssignment.grade_level);
+      handleGradeLevelChangeForSection(currentAssignment.grade_level);
+      
+      // We'll set the selected section after the sections are loaded
+      setTimeout(() => {
+        setSelectedSection(currentAssignment.section_id);
+      }, 500);
+    } else {
+      // Default to grade 7 for new assignments
+      setSelectedGradeLevelForSection('7');
+      handleGradeLevelChangeForSection('7');
+    }
   };
 
   const handleSectionAssignment = async () => {
@@ -593,19 +623,26 @@ function TeacherManagement() {
         schoolYearId: selectedSchoolYear,
       });
   
-      const response = await axios.post(`http://localhost:3001/assign-section/${currentTeacherId}`, {
+      // Check if teacher already has a section assigned for this school year
+      const isEditing = teacherSection && teacherSection.length > 0;
+      
+      // Use PUT for updating, POST for new assignment
+      const method = isEditing ? 'put' : 'post';
+      const endpoint = `http://localhost:3001/assign-section/${currentTeacherId}`;
+      
+      const response = await axios[method](endpoint, {
         section_id: selectedSection,
         grade_level: selectedGradeLevelForSection,
         school_year_id: selectedSchoolYear,
       });
   
       if (response.status === 200) {
-        alert('Section assigned successfully');
+        alert(isEditing ? 'Section updated successfully' : 'Section assigned successfully');
         setShowAssignSectionModal(false);
         setSelectedSection('');
         setSelectedGradeLevelForSection('7');
         setSectionsByGrade([]);
-        fetchTeacherSection(currentTeacherId,selectedSection,selectedGradeLevelForSection,selectedSchoolYear);
+        fetchTeacherSection(currentTeacherId, selectedSchoolYear);
       }
     } catch (error) {
       console.error('Error assigning section:', error);
@@ -659,7 +696,17 @@ function TeacherManagement() {
   const handleAssignGradeLevel = (employeeId) => {
     setCurrentTeacherId(employeeId);
     setShowAssignGradeLevelModal(true);
-    setSelectedGradeLevelForCoordinator('7');
+    
+    // If the coordinator already has a grade level assigned, pre-select it
+    if (teacherGradeLevel && teacherGradeLevel.length > 0) {
+      const currentAssignment = teacherGradeLevel[0]; // Get the first assignment
+      // Remove "Grade " prefix and convert to string
+      const gradeLevel = currentAssignment.grade_level.replace('Grade ', '');
+      setSelectedGradeLevelForCoordinator(gradeLevel);
+    } else {
+      // Default to grade 7 for new assignments
+      setSelectedGradeLevelForCoordinator('7');
+    }
   };
 
   const handleGradeLevelAssignment = async () => {
@@ -668,26 +715,22 @@ function TeacherManagement() {
       return;
     }
     
-    // Check if this coordinator already has a grade level assigned
-    if (teacherGradeLevel && teacherGradeLevel.length > 0) {
-      alert('This coordinator already has a grade level assigned for this school year');
-      return;
-    }
+    const isEditing = teacherGradeLevel && teacherGradeLevel.length > 0;
   
     try {
-      console.log('Assigning grade level with:', {
+      console.log(`${isEditing ? 'Updating' : 'Assigning'} grade level with:`, {
         teacherId: currentTeacherId,
         gradeLevel: selectedGradeLevelForCoordinator,
         schoolYearId: selectedSchoolYear,
       });
   
-      const response = await axios.post(`http://localhost:3001/assign-grade-level/${currentTeacherId}`, {
+      const response = await axios[isEditing ? 'put' : 'post'](`http://localhost:3001/assign-grade-level/${currentTeacherId}`, {
         grade_level: selectedGradeLevelForCoordinator,
         school_year_id: selectedSchoolYear,
       });
   
       if (response.status === 200) {
-        alert('Grade level assigned successfully');
+        alert(isEditing ? 'Grade level updated successfully' : 'Grade level assigned successfully');
         setShowAssignGradeLevelModal(false);
         setSelectedGradeLevelForCoordinator('7');
         fetchTeacherGradeLevel(currentTeacherId, selectedSchoolYear);
@@ -868,9 +911,24 @@ useEffect(() => {
 
   const handleSubjectsSchoolYearChange = (schoolYearId) => {
     setSelectedSubjectsSchoolYear(schoolYearId);
-    fetchTeacherSubjects(selectedTeacherId, schoolYearId);
-    fetchTeacherSection(selectedTeacherId, schoolYearId);
-    fetchTeacherGradeLevel(selectedTeacherId, schoolYearId);
+    // Fetch teacher subjects for the selected school year if a teacher is selected
+    if (selectedTeacherId) {
+      // Get the teacher's role ID
+      const teacher = filteredTeachers.find(t => t.employee_id === selectedTeacherId);
+      if (teacher) {
+        fetchTeacherSubjects(selectedTeacherId, schoolYearId, teacher.role_id);
+        
+        // Fetch teacher section if the teacher is a section adviser
+        if (teacher.role_id === 4) {
+          fetchTeacherSection(selectedTeacherId, schoolYearId);
+        }
+        
+        // Fetch teacher grade level if the teacher is a grade level coordinator
+        if (teacher.role_id === 5) {
+          fetchTeacherGradeLevel(selectedTeacherId, schoolYearId);
+        }
+      }
+    }
   };
 
   // Add a useEffect to refresh the subjects list when the school year changes
@@ -1129,9 +1187,9 @@ useEffect(() => {
                                     </tr>
                                   </thead>
                                   <tbody>
-                                    {teacherGradeLevel.map((level, index) => (
+                                    {teacherGradeLevel.map((gradeLevel, index) => (
                                       <tr key={index}>
-                                        <td>{level.grade_level}</td>
+                                        <td>{gradeLevel.grade_level}</td>
                                       </tr>
                                     ))}
                                   </tbody>
@@ -1146,29 +1204,33 @@ useEffect(() => {
                         <div className="teacher-mgmt-details-actions">
                           {teacher.role_id === 4 && (
                             <button 
-                              className="teacher-mgmt-btn teacher-mgmt-btn-view"
+                              className={`teacher-mgmt-btn ${teacher.status !== 'active' ? 'teacher-mgmt-btn-disabled' : 'teacher-mgmt-btn-view'}`}
                               onClick={() => handleAssignSection(teacher.employee_id)}
+                              disabled={teacher.status !== 'active'}
+                              title={teacher.status !== 'active' ? "Cannot assign section to archived employee" : ""}
                             >
-                              Assign Section
-                            </button>
-                          )}
-                          {teacher.role_id === 5 && (
-                            <button 
-                              className={`teacher-mgmt-btn ${teacherGradeLevel && teacherGradeLevel.length > 0 ? 'teacher-mgmt-btn-disabled' : 'teacher-mgmt-btn-view'}`}
-                              onClick={() => handleAssignGradeLevel(teacher.employee_id)}
-                              disabled={teacherGradeLevel && teacherGradeLevel.length > 0}
-                              title={teacherGradeLevel && teacherGradeLevel.length > 0 ? "This coordinator already has an assigned grade level" : ""}
-                            >
-                              {teacherGradeLevel && teacherGradeLevel.length > 0 ? "Grade Level Assigned" : "Assign Grade Level"}
+                              {teacherSection && teacherSection.length > 0 ? "Edit Section" : "Assign Section"}
                             </button>
                           )}
                           {teacher.role_id === 8 && (
                           <button 
-                              className="teacher-mgmt-btn teacher-mgmt-btn-view"
+                              className={`teacher-mgmt-btn ${teacher.status !== 'active' ? 'teacher-mgmt-btn-disabled' : 'teacher-mgmt-btn-view'}`}
                               onClick={() => handleAssignSubject(teacher.employee_id)}
+                              disabled={teacher.status !== 'active'}
+                              title={teacher.status !== 'active' ? "Cannot assign subject to archived employee" : ""}
                             >
-                              Assign Subject
+                              {teacherSubjects && teacherSubjects.length > 0 ? "Edit Assigned Subject" : "Assign Subject"}
                           </button> 
+                          )}
+                          {teacher.role_id === 5 && (
+                            <button 
+                              className={`teacher-mgmt-btn ${teacher.status !== 'active' ? 'teacher-mgmt-btn-disabled' : 'teacher-mgmt-btn-view'}`}
+                              onClick={() => handleAssignGradeLevel(teacher.employee_id)}
+                              disabled={teacher.status !== 'active'}
+                              title={teacher.status !== 'active' ? "Cannot assign grade level to archived employee" : ""}
+                            >
+                              {teacherGradeLevel && teacherGradeLevel.length > 0 ? "Edit Grade Level" : "Assign Grade Level"}
+                            </button>
                           )}
                           <button 
                             className={`teacher-mgmt-btn ${teacher.status === 'active' ? 'teacher-mgmt-btn-archive' : 'teacher-mgmt-btn-view'}`}
@@ -1389,7 +1451,9 @@ useEffect(() => {
         <div className="teacher-mgmt-modal">
           <div className="teacher-mgmt-modal-content compact teacher-mgmt-section-modal">
             <div className="teacher-mgmt-modal-header">
-              <h2 className="teacher-mgmt-modal-title">Assign Section</h2>
+              <h2 className="teacher-mgmt-modal-title">
+                {teacherSection && teacherSection.length > 0 ? 'Edit Section' : 'Assign Section'}
+              </h2>
             </div>
 
             <div className="teacher-mgmt-form-field">
@@ -1449,7 +1513,7 @@ useEffect(() => {
                 onClick={handleSectionAssignment}
                 disabled={!selectedSection}
               >
-                Assign Section
+                {teacherSection && teacherSection.length > 0 ? 'Update Section' : 'Assign Section'}
               </button>
               <button 
                 className="teacher-mgmt-btn teacher-mgmt-btn-archive teacher-mgmt-modal-button"
@@ -1470,7 +1534,11 @@ useEffect(() => {
         <div className="teacher-mgmt-modal">
           <div className="teacher-mgmt-modal-content compact teacher-mgmt-section-modal">
             <div className="teacher-mgmt-modal-header">
-              <h2 className="teacher-mgmt-modal-title">Assign Subject</h2>
+              <h2 className="teacher-mgmt-modal-title">
+                {isSubjectCoordinator && teacherSubjects && teacherSubjects.length > 0 
+                  ? 'Edit Assigned Subject' 
+                  : 'Assign Subject'}
+              </h2>
             </div>
 
             <div className="teacher-mgmt-form-field">
@@ -1573,7 +1641,9 @@ useEffect(() => {
                     : !selectedSection || !selectedSubject
                 }
               >
-                Assign Subject
+                {isSubjectCoordinator && teacherSubjects && teacherSubjects.length > 0 
+                  ? 'Update Subject' 
+                  : 'Assign Subject'}
               </button>
               <button 
                 className="teacher-mgmt-btn teacher-mgmt-btn-archive teacher-mgmt-modal-button"
@@ -1711,7 +1781,9 @@ useEffect(() => {
         <div className="teacher-mgmt-modal">
           <div className="teacher-mgmt-modal-content compact teacher-mgmt-section-modal">
             <div className="teacher-mgmt-modal-header">
-              <h2 className="teacher-mgmt-modal-title">Assign Grade Level</h2>
+              <h2 className="teacher-mgmt-modal-title">
+                {teacherGradeLevel && teacherGradeLevel.length > 0 ? 'Edit Grade Level' : 'Assign Grade Level'}
+              </h2>
             </div>
 
             <div className="teacher-mgmt-form-field">
@@ -1749,7 +1821,7 @@ useEffect(() => {
                 className="teacher-mgmt-btn teacher-mgmt-btn-view teacher-mgmt-modal-button"
                 onClick={handleGradeLevelAssignment}
               >
-                Assign Grade Level
+                {teacherGradeLevel && teacherGradeLevel.length > 0 ? 'Update Grade Level' : 'Assign Grade Level'}
               </button>
               <button 
                 className="teacher-mgmt-btn teacher-mgmt-btn-archive teacher-mgmt-modal-button"

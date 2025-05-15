@@ -299,6 +299,37 @@ function Principal_SchedulePage() {
         teacher.subject_name === schedule.subject_name
       );
       
+      // Process teachers for consistent format (both subjectTeachers and regular teachers)
+      const processTeachers = (teachers) => {
+        return teachers.map(teacher => {
+          // For teachers with firstname/lastname properties
+          if (teacher.firstname) {
+            return {
+              ...teacher,
+              displayName: `${teacher.lastname}, ${teacher.firstname} ${teacher.middlename || ''}`
+            };
+          }
+          // For teachers with just a 'teacher' property (likely already formatted)
+          else if (teacher.teacher) {
+            const nameParts = teacher.teacher.split(' ');
+            if (nameParts.length >= 2) {
+              const lastName = nameParts[nameParts.length - 1];
+              const firstName = nameParts[0];
+              const middleName = nameParts.slice(1, -1).join(' ');
+              return {
+                ...teacher,
+                displayName: `${lastName}, ${firstName} ${middleName}`
+              };
+            }
+            return {
+              ...teacher,
+              displayName: teacher.teacher
+            };
+          }
+          return teacher;
+        });
+      };
+      
       // Format time values to HH:MM format for input type="time"
       let formattedTimeStart = schedule.time_start;
       let formattedTimeEnd = schedule.time_end;
@@ -355,6 +386,11 @@ function Principal_SchedulePage() {
         }
       }
       
+      // Process and format the teachers
+      let formattedTeachers = subjectTeachers.length > 0 
+        ? processTeachers(subjectTeachers) 
+        : processTeachers(teachersResponse.data);
+      
       // Set the editing state
       setIsEditing(true);
       
@@ -364,13 +400,14 @@ function Principal_SchedulePage() {
         time_start: formattedTimeStart || '07:00',
         time_end: formattedTimeEnd || '08:00',
         day: Array.isArray(schedule.day) ? schedule.day : JSON.parse(schedule.day),
-        filteredTeachers: subjectTeachers.length > 0 ? subjectTeachers : teachersResponse.data // If no subject teachers found, show all teachers
+        filteredTeachers: formattedTeachers // Now properly formatted teachers
       });
       
       console.log('Edit form data:', {
         ...schedule,
         time_start: formattedTimeStart || '07:00',
-        time_end: formattedTimeEnd || '08:00'
+        time_end: formattedTimeEnd || '08:00',
+        filteredTeachers: formattedTeachers
       });
     } catch (error) {
       console.error('Error fetching teachers:', error);
@@ -884,17 +921,25 @@ function Principal_SchedulePage() {
                                           >
                                             <option value="">Select Teacher *</option>
                                             {editFormData.filteredTeachers ? (
-                                              editFormData.filteredTeachers.map((teacher) => (
+                                              [...editFormData.filteredTeachers].sort((a, b) => {
+                                                const lastNameA = a.lastname || (a.teacher ? a.teacher.split(' ').pop() : '');
+                                                const lastNameB = b.lastname || (b.teacher ? b.teacher.split(' ').pop() : '');
+                                                return lastNameA.localeCompare(lastNameB);
+                                              }).map((teacher) => (
                                                 <option key={teacher.employee_id} value={teacher.employee_id}>
-                                                  {teacher.firstname ? 
-                                                    `${teacher.firstname} ${teacher.middlename ? `${teacher.middlename[0]}.` : ''} ${teacher.lastname}` : 
-                                                    teacher.teacher}
+                                                  {teacher.displayName || (teacher.firstname ? 
+                                                    `${teacher.lastname}, ${teacher.firstname} ${teacher.middlename || ''}` : 
+                                                    teacher.teacher)}
                                                 </option>
                                               ))
                                             ) : (
-                                              teachers.map((teacher) => (
+                                              [...teachers].sort((a, b) => {
+                                                const lastNameA = a.lastname;
+                                                const lastNameB = b.lastname;
+                                                return lastNameA.localeCompare(lastNameB);
+                                              }).map((teacher) => (
                                                 <option key={teacher.employee_id} value={teacher.employee_id}>
-                                                  {teacher.firstname} {teacher.middlename ? `${teacher.middlename[0]}.` : ''} {teacher.lastname}
+                                                  {`${teacher.lastname}, ${teacher.firstname} ${teacher.middlename || ''}`}
                                                 </option>
                                               ))
                                             )}
@@ -920,7 +965,22 @@ function Principal_SchedulePage() {
                                         <td>{schedule.time_start}</td>
                                         <td>{schedule.time_end}</td>
                                         <td>{Array.isArray(schedule.day) ? schedule.day.join(', ') : schedule.day}</td>
-                                        <td>{schedule.teacher_name}</td>
+                                        <td>
+                                          {(() => {
+                                            // Try to reformat the teacher name if it's in "Firstname Lastname" format
+                                            if (schedule.teacher_name) {
+                                              const nameParts = schedule.teacher_name.split(' ');
+                                              if (nameParts.length >= 2) {
+                                                const lastName = nameParts[nameParts.length - 1];
+                                                const firstName = nameParts[0];
+                                                const middleParts = nameParts.slice(1, -1);
+                                                const middleName = middleParts.length > 0 ? middleParts.join(' ') : '';
+                                                return `${lastName}, ${firstName} ${middleName}`;
+                                              }
+                                            }
+                                            return schedule.teacher_name;
+                                          })()}
+                                        </td>
                                         <td>
                                           <span className={`status-${schedule.schedule_status.toLowerCase().replace(' ', '-')}`}>
                                             {schedule.schedule_status}
@@ -1068,11 +1128,35 @@ function Principal_SchedulePage() {
               required
             >
               <option value="">Select Teacher</option>
-              {subjectteachers.map((teacherObj) => (
-                <option key={teacherObj.employee_id} value={teacherObj.employee_id}>
-                  {teacherObj.teacher}
-                </option>
-              ))}
+              {[...subjectteachers].sort((a, b) => {
+                // Extract last names from teacher string (assuming format might not be consistent)
+                const getLastName = (teacherName) => {
+                  const parts = teacherName.split(' ');
+                  return parts[parts.length - 1]; // Last part is likely the last name
+                };
+                
+                const lastNameA = getLastName(a.teacher);
+                const lastNameB = getLastName(b.teacher);
+                return lastNameA.localeCompare(lastNameB);
+              }).map((teacherObj) => {
+                // Attempt to reformat the name if possible
+                let formattedName = teacherObj.teacher;
+                const nameParts = teacherObj.teacher.split(' ');
+                
+                if (nameParts.length >= 2) {
+                  // Assume last element is lastname, first element is firstname
+                  const lastName = nameParts[nameParts.length - 1];
+                  const firstName = nameParts[0];
+                  const middleName = nameParts.slice(1, -1).join(' ');
+                  formattedName = `${lastName}, ${firstName} ${middleName}`;
+                }
+                
+                return (
+                  <option key={teacherObj.employee_id} value={teacherObj.employee_id}>
+                    {formattedName}
+                  </option>
+                );
+              })}
             </select>
 
             <div className="schedule-mgmt-modal-actions">
