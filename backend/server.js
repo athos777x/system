@@ -6465,29 +6465,30 @@ app.get('/api/reports/class-honor-roll', (req, res) => {
   `;
 
   const honorRollQuery = `
-    SELECT 
-      b.lrn, 
-      CONCAT(b.lastname, ', ', b.firstname, ' ', LEFT(IFNULL(b.middlename, ''), 1)) AS stud_name, 
-      IF(b.gender = 'Male', 'M', 'F') AS sex, 
-      AVG(c.grade) AS general_average,
-      CASE
-        WHEN AVG(c.grade) >= 90 THEN 'With Highest Honor'
-        WHEN AVG(c.grade) >= 85 THEN 'With High Honor'
-        WHEN AVG(c.grade) >= 80 THEN 'With Honors'
-        ELSE 'No Honors'
-      END AS remarks
-    FROM 
-      enrollment a 
-    LEFT JOIN student b ON a.student_id = b.student_id
-    LEFT JOIN grades c ON a.student_id = c.student_id
-    WHERE 
-      a.grade_level = ? AND 
-      a.section_id = ? AND 
-      a.school_year_id = ? AND 
-      c.period = ?
-    GROUP BY a.student_id
-    ORDER BY general_average DESC
-  `;
+  SELECT 
+    b.lrn, 
+    CONCAT(b.lastname, ', ', b.firstname, ' ', LEFT(IFNULL(b.middlename, ''), 1)) AS stud_name, 
+    IF(b.gender = 'Male', 'M', 'F') AS sex, 
+    AVG(c.grade) AS general_average,
+    CASE
+      WHEN AVG(c.grade) >= 98 THEN 'With Highest Honors'
+      WHEN AVG(c.grade) >= 95 THEN 'With High Honors'
+      WHEN AVG(c.grade) >= 90 THEN 'With Honors'
+      ELSE 'No Honors'
+    END AS remarks
+  FROM 
+    enrollment a 
+  LEFT JOIN student b ON a.student_id = b.student_id
+  LEFT JOIN grades c ON a.student_id = c.student_id
+  WHERE 
+    a.grade_level = ? AND 
+    a.section_id = ? AND 
+    a.school_year_id = ? AND 
+    c.period = ?
+  GROUP BY a.student_id
+  HAVING remarks != 'No Honors'
+  ORDER BY general_average DESC
+`;
 
   db.query(headerQuery, [school_year_id, grade_level, section_id], (err, headerResults) => {
     if (err) {
