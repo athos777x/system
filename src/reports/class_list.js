@@ -13,7 +13,7 @@ function ClassList() {
 
   const [schoolData, setSchoolData] = useState({
     schoolName: "Lourdes National High School",
-    schoolId: "0192381",
+    schoolId: "123456",
     district: "Dauis",
     division: "Bohol",
     region: "VII",
@@ -180,7 +180,7 @@ function ClassList() {
           </div>
           <div className="class-list-info-item">
             <span className="class-list-info-label">Class Adviser:</span>
-            <span>{adviser}</span>
+            <span>{schoolData.adviser}</span>
           </div>
           <div className="class-list-info-item">
             <span className="class-list-info-label">Date Generated:</span>
@@ -244,13 +244,13 @@ function ClassList() {
               <div className="f137-name">{adviser || "[Adviser Name]"}</div>
               <div className="class-list-signature-line"></div>
               <div className="class-list-signature-name">Class Adviser</div>
-              <div className="class-list-signature-title">Teacher</div>
+              <div className="class-list-signature-title">Teacher III</div>
             </div>
             <div className="class-list-signature">
               <div className="f137-name">{principal || "[Principal Name]"}</div>
               <div className="class-list-signature-line"></div>
               <div className="class-list-signature-name">School Principal</div>
-              <div className="class-list-signature-title">Principal</div>
+              <div className="class-list-signature-title">Principal III</div>
             </div>
           </div>
         </div>
