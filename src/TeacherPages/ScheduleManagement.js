@@ -20,7 +20,7 @@ function Principal_SchedulePage() {
   const [newSchedule, setNewSchedule] = useState({
     subject_id: '',
     time_start: '07:00',
-    time_end: '18:00',
+    time_end: '12:00',
     day: [],
     teacher_id: '',
     section_id: ''
@@ -33,6 +33,7 @@ function Principal_SchedulePage() {
   const [coordinatorGradeLevel, setCoordinatorGradeLevel] = useState(null);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const [selectedGradeLevel, setSelectedGradeLevel] = useState(null);
 
   // Helper function to sort days in chronological order
   const sortDays = (days) => {
@@ -260,7 +261,7 @@ function Principal_SchedulePage() {
       setNewSchedule({
         subject_id: '',
         time_start: '07:00',
-        time_end: '18:00',
+        time_end: '12:00',
         day: [],
         teacher_id: '',
         section_id: ''
@@ -386,6 +387,19 @@ function Principal_SchedulePage() {
         }
       }
       
+      // Set default times based on grade level if times are missing
+      const grade_level = schedule.grade_level ? Number(schedule.grade_level) : null;
+      
+      // Default start time based on grade level
+      if (!formattedTimeStart) {
+        formattedTimeStart = grade_level === 10 ? '12:00' : '06:00';
+      }
+      
+      // Default end time based on grade level
+      if (!formattedTimeEnd) {
+        formattedTimeEnd = grade_level === 10 ? '18:00' : '12:00';
+      }
+      
       // Process and format the teachers
       let formattedTeachers = subjectTeachers.length > 0 
         ? processTeachers(subjectTeachers) 
@@ -397,39 +411,66 @@ function Principal_SchedulePage() {
       // Make sure day is an array when starting to edit and set default time if not provided
       setEditFormData({
         ...schedule,
-        time_start: formattedTimeStart || '07:00',
-        time_end: formattedTimeEnd || '08:00',
+        time_start: formattedTimeStart,
+        time_end: formattedTimeEnd,
         day: Array.isArray(schedule.day) ? schedule.day : JSON.parse(schedule.day),
-        filteredTeachers: formattedTeachers // Now properly formatted teachers
+        filteredTeachers: formattedTeachers, // Now properly formatted teachers
+        grade_level: grade_level // Store grade level for time validation
       });
       
       console.log('Edit form data:', {
         ...schedule,
-        time_start: formattedTimeStart || '07:00',
-        time_end: formattedTimeEnd || '08:00',
-        filteredTeachers: formattedTeachers
+        time_start: formattedTimeStart,
+        time_end: formattedTimeEnd,
+        filteredTeachers: formattedTeachers,
+        grade_level: grade_level
       });
     } catch (error) {
       console.error('Error fetching teachers:', error);
     }
   };
 
-  const validateTime = (timeValue) => {
+  const validateTime = (timeValue, gradeLevel) => {
     // Convert time to 24-hour format for comparison
     const [hours, minutes] = timeValue.split(':');
     const time24 = `${hours.padStart(2, '0')}:${minutes}`;
-    return time24 >= '07:00' && time24 <= '18:00';
+    
+    // Different time range validation based on grade level
+    if (gradeLevel === 10) {
+      // Grade 10: 12PM to 6PM (12:00 to 18:00)
+      return time24 >= '12:00' && time24 <= '18:00';
+    } else {
+      // Grades 7, 8, 9: 6AM to 12PM (06:00 to 12:00)
+      return time24 >= '06:00' && time24 <= '12:00';
+    }
   };
 
   const handleTimeBlur = (e, isNewSchedule = true) => {
     const { name, value } = e.target;
+    
+    // Get the correct grade level and values based on whether we're editing or adding
+    const gradeLevel = isNewSchedule 
+      ? selectedGradeLevel 
+      : (editFormData.grade_level || null);
+    
     const startTime = isNewSchedule ? newSchedule.time_start : editFormData.time_start;
     const endTime = isNewSchedule ? newSchedule.time_end : editFormData.time_end;
 
-    if (!validateTime(value)) {
-      alert('Please select a time between 7:00 AM and 6:00 PM');
-      // Reset to default value
-      const defaultValue = name === 'time_start' ? '07:00' : '18:00';
+    if (!validateTime(value, gradeLevel)) {
+      const gradeSpecificMessage = gradeLevel === 10 
+        ? 'Please select a time between 12:00 PM and 6:00 PM for Grade 10'
+        : 'Please select a time between 6:00 AM and 12:00 PM for Grades 7-9';
+      
+      alert(gradeSpecificMessage);
+      
+      // Reset to appropriate default value based on grade
+      let defaultValue;
+      if (name === 'time_start') {
+        defaultValue = gradeLevel === 10 ? '12:00' : '06:00';
+      } else { // time_end
+        defaultValue = gradeLevel === 10 ? '18:00' : '12:00';
+      }
+      
       if (isNewSchedule) {
         setNewSchedule(prev => ({ ...prev, [name]: defaultValue }));
       } else {
@@ -437,8 +478,8 @@ function Principal_SchedulePage() {
       }
     } else if (name === 'time_end' && endTime < startTime) {
       alert('End time cannot be earlier than start time');
-      // Reset end time to default
-      const defaultValue = '18:00';
+      // Reset end time to default based on grade
+      const defaultValue = gradeLevel === 10 ? '18:00' : '12:00';
       if (isNewSchedule) {
         setNewSchedule(prev => ({ ...prev, time_end: defaultValue }));
       } else {
@@ -467,17 +508,30 @@ function Principal_SchedulePage() {
       setNewSchedule({ ...newSchedule, [name]: value });
     }
   
-    // When section is selected, filter subjects by grade level
+    // When section is selected, filter subjects by grade level and update time defaults
     if (name === 'section_id' && value) {
       const selectedSection = sections.find(section => section.section_id === Number(value));
       if (selectedSection) {
         const sectionGrade = selectedSection.grade_level;
+        setSelectedGradeLevel(Number(sectionGrade));
+        
+        // Set default times based on grade level
+        const defaultStartTime = Number(sectionGrade) === 10 ? '12:00' : '06:00';
+        const defaultEndTime = Number(sectionGrade) === 10 ? '18:00' : '12:00';
+        
+        setNewSchedule(prev => ({
+          ...prev,
+          time_start: defaultStartTime,
+          time_end: defaultEndTime
+        }));
+        
         const filteredSubjects = subjects.filter(subject => 
           String(subject.grade_level) === String(sectionGrade)
         );
         setFilteredSubjects(filteredSubjects);
       } else {
         setFilteredSubjects([]);
+        setSelectedGradeLevel(null);
       }
     }
   };
@@ -521,7 +575,7 @@ function Principal_SchedulePage() {
 
   const saveChanges = async () => {
     try {
-      const { schedule_id, teacher_id, time_start, time_end, day, schedule_status } = editFormData;
+      const { schedule_id, teacher_id, time_start, time_end, day, schedule_status, grade_level } = editFormData;
       
       // Validate required fields
       if (!teacher_id || !time_start || !time_end || !day || day.length === 0) {
@@ -529,9 +583,12 @@ function Principal_SchedulePage() {
         return;
       }
       
-      // Validate time range
-      if (!validateTime(time_start) || !validateTime(time_end)) {
-        alert('Please select a time between 7:00 AM and 6:00 PM');
+      // Validate time range based on grade level
+      if (!validateTime(time_start, grade_level) || !validateTime(time_end, grade_level)) {
+        const gradeSpecificMessage = grade_level === 10 
+          ? 'Please select a time between 12:00 PM and 6:00 PM for Grade 10'
+          : 'Please select a time between 6:00 AM and 12:00 PM for Grades 7-9';
+        alert(gradeSpecificMessage);
         return;
       }
       
@@ -617,6 +674,21 @@ function Principal_SchedulePage() {
   
       if (!grade_level) {
         alert('Grade level information is missing for the selected section.');
+        return;
+      }
+      
+      // Validate time range based on grade level
+      if (!validateTime(newSchedule.time_start, grade_level) || !validateTime(newSchedule.time_end, grade_level)) {
+        const gradeSpecificMessage = grade_level === 10 
+          ? 'Please select a time between 12:00 PM and 6:00 PM for Grade 10'
+          : 'Please select a time between 6:00 AM and 12:00 PM for Grades 7-9';
+        alert(gradeSpecificMessage);
+        return;
+      }
+      
+      // Validate end time is after start time
+      if (newSchedule.time_end <= newSchedule.time_start) {
+        alert('End time must be after start time');
         return;
       }
   
@@ -872,8 +944,8 @@ function Principal_SchedulePage() {
                                             value={editFormData.time_start}
                                             onChange={handleEditChange}
                                             onBlur={(e) => handleTimeBlur(e, false)}
-                                            min="07:00"
-                                            max="18:00"
+                                            min={editFormData.grade_level === 10 ? "12:00" : "06:00"}
+                                            max={editFormData.grade_level === 10 ? "18:00" : "12:00"}
                                             required
                                             className="required-field"
                                             style={{ color: '#1e293b' }}
@@ -886,8 +958,8 @@ function Principal_SchedulePage() {
                                             value={editFormData.time_end}
                                             onChange={handleEditChange}
                                             onBlur={(e) => handleTimeBlur(e, false)}
-                                            min="07:00"
-                                            max="18:00"
+                                            min={editFormData.grade_level === 10 ? "12:00" : "06:00"}
+                                            max={editFormData.grade_level === 10 ? "18:00" : "12:00"}
                                             required
                                             className="required-field"
                                             style={{ color: '#1e293b' }}
@@ -1092,8 +1164,8 @@ function Principal_SchedulePage() {
               value={newSchedule.time_start}
               onChange={handleInputChange}
               onBlur={(e) => handleTimeBlur(e, true)}
-              min="07:00"
-              max="18:00"
+              min={selectedGradeLevel === 10 ? "12:00" : "06:00"}
+              max={selectedGradeLevel === 10 ? "18:00" : "12:00"}
             />
             <input
               type="time"
@@ -1102,8 +1174,8 @@ function Principal_SchedulePage() {
               value={newSchedule.time_end}
               onChange={handleInputChange}
               onBlur={(e) => handleTimeBlur(e, true)}
-              min="07:00"
-              max="18:00"
+              min={selectedGradeLevel === 10 ? "12:00" : "06:00"}
+              max={selectedGradeLevel === 10 ? "18:00" : "12:00"}
             />
 
             <div className="day-checkboxes">
