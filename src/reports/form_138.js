@@ -12,20 +12,29 @@ function Form138() {
   const [studentData, setStudentData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [adviser, setAdviser] = useState("");
+  const [principal, setPrincipal] = useState("");
 
   // Fetch data when the component mounts
   useEffect(() => {
     if (student) {
       fetchStudentData();
+      fetchAdviser({
+        student_id: student.student_id,
+        grade_level: student.grade_level,
+        section_id: student.section,
+      });
+      fetchPrincipal();
     } else {
       setError("No student data provided");
       setLoading(false);
     }
   }, [student]);
+  
 
   const fetchStudentData = async () => {
     try {
-      const { school_year_id, grade_level, section, student_last_name } = student;
+      const { school_year_id, grade_level, section, student_last_name, studentId } = student;
 
       const response = await axios.get("http://localhost:3001/api/student-grades", {
         params: {
@@ -33,6 +42,7 @@ function Form138() {
           grade: grade_level,
           section,
           studentName: student_last_name,
+          student_id: studentId
         },
       });
 
@@ -44,6 +54,34 @@ function Form138() {
       setLoading(false);
     }
   };
+
+  const fetchAdviser = async ({ student_id, grade_level, section_id }) => {
+    try {
+      const response = await axios.get("http://localhost:3001/api/enrollment/adviser-info", {
+        params: { student_id, grade_level, section_id },
+      });
+  
+      if (response.data && response.data.adviser) {
+        setAdviser(response.data.adviser);
+      }
+    } catch (err) {
+      console.error("Error fetching adviser:", err);
+    }
+  };
+  
+  
+  const fetchPrincipal = async () => {
+    try {
+      const response = await axios.get("http://localhost:3001/api/enrollment/principal");
+  
+      if (response.data && response.data.principal) {
+        setPrincipal(response.data.principal);
+      }
+    } catch (err) {
+      console.error("Error fetching principal:", err);
+    }
+  };
+
 
   const handlePrintPDF = () => {
     const doc = new jsPDF({
@@ -236,10 +274,12 @@ function Form138() {
 
         <div className="f138-signature-section">
           <div className="f138-signature-box">
+            <div className="f137-name">{adviser || "[Adviser Name]"}</div>
             <div className="f138-signature-line"></div>
             <p>Class Adviser</p>
           </div>
           <div className="f138-signature-box">
+            <div className="f137-name">{principal || "[Principal Name]"}</div>
             <div className="f138-signature-line"></div>
             <p>School Principal</p>
           </div>

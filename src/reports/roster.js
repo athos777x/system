@@ -25,14 +25,18 @@ function Roster() {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [adviser, setAdviser] = useState("");
+  const [principal, setPrincipal] = useState("");
 
   useEffect(() => {
+    fetchPrincipal();
+  
     if (!schoolYear || !grade || !section) {
       console.warn("Missing required parameters. Redirecting...");
       navigate('/select-roster-filters');
       return;
     }
-
+  
     fetchRosterData(schoolYear, grade, section);
     setSchoolData(prev => ({
       ...prev,
@@ -40,7 +44,12 @@ function Roster() {
       grade,
       section,
     }));
+    fetchAdviser({
+      grade_level: grade,
+      section_id: section,
+    });
   }, [schoolYear, grade, section]);
+  
 
   const fetchRosterData = async (schoolYearId, gradeLevel, sectionId) => {
     setLoading(true);
@@ -83,6 +92,33 @@ function Roster() {
       setError("Failed to fetch roster data.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchAdviser = async ({ grade_level, section_id }) => {
+    try {
+      const response = await axios.get("http://localhost:3001/api/enrollment/adviser-info", {
+        params: { grade_level, section_id },
+      });
+  
+      if (response.data && response.data.adviser) {
+        setAdviser(response.data.adviser);
+      }
+    } catch (err) {
+      console.error("Error fetching adviser:", err);
+    }
+  };
+  
+  
+  const fetchPrincipal = async () => {
+    try {
+      const response = await axios.get("http://localhost:3001/api/enrollment/principal");
+  
+      if (response.data && response.data.principal) {
+        setPrincipal(response.data.principal);
+      }
+    } catch (err) {
+      console.error("Error fetching principal:", err);
     }
   };
 
@@ -174,8 +210,8 @@ function Roster() {
                     <td>{student.gender}</td>
                     <td>{student.birthdate}</td>
                     <td>{student.age}</td>
-                    <td>{student.address}</td>
-                    <td>{student.contact}</td>
+                    <td>{student.home_address}</td>
+                    <td>{student.contact_number}</td>
                     <td>{student.enrollment_date}</td>
                     <td>{student.enrollment_status}</td>
                   </tr>
@@ -209,11 +245,12 @@ function Roster() {
         <div className="roster-footer">
           <div className="roster-signature-section">
             <div className="roster-signature">
+              <div className="f137-name">{adviser || "[Adviser Name]"}</div>
               <div className="roster-signature-line"></div>
-              <div className="roster-signature-name">{schoolData.adviser || "Class Adviser"}</div>
               <div className="roster-signature-title">Teacher III</div>
             </div>
             <div className="roster-signature">
+              <div className="f137-name">{principal || "[Principal Name]"}</div>
               <div className="roster-signature-line"></div>
               <div className="roster-signature-name">School Principal</div>
               <div className="roster-signature-title">Principal III</div>

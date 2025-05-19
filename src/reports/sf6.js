@@ -20,6 +20,8 @@ function SF6() {
 
   const [schoolYearName, setSchoolYearName] = useState(schoolYear);
   const [summaryData, setSummaryData] = useState(null);
+  const [registrar, setRegistrar] = useState("");
+  const [principal, setPrincipal] = useState("");
 
   useEffect(() => {
     const fetchSummaryData = async () => {
@@ -47,9 +49,34 @@ function SF6() {
         console.error("Error fetching summary data:", error);
       }
     };
-
+    fetchRegistrar();
+    fetchPrincipal();
     fetchSummaryData();
   }, [grade, schoolYear]);
+
+  const fetchPrincipal = async () => {
+    try {
+      const response = await axios.get("http://localhost:3001/api/enrollment/principal");
+  
+      if (response.data && response.data.principal) {
+        setPrincipal(response.data.principal);
+      }
+    } catch (err) {
+      console.error("Error fetching principal:", err);
+    }
+  };
+
+  const fetchRegistrar = async () => {
+    try {
+      const response = await axios.get("http://localhost:3001/api/enrollment/registrar");
+  
+      if (response.data && response.data.registrar) {
+        setRegistrar(response.data.registrar);
+      }
+    } catch (err) {
+      console.error("Error fetching registrar:", err);
+    }
+  };
 
   const handlePrintPDF = () => {
     const doc = new jsPDF({
@@ -190,11 +217,13 @@ function SF6() {
           <div className="sf6-signature-section">
             <div className="sf6-signature">
               <div className="sf6-signature-line">Prepared by:</div>
+              <div className="f137-name">{registrar || "[Registrar Name]"}</div>
               <div className="sf6-signature-name">REGISTRAR'S NAME</div>
               <div className="sf6-signature-title">School Registrar</div>
             </div>
             <div className="sf6-signature">
               <div className="sf6-signature-line">Certified Correct:</div>
+              <div className="f137-name">{principal || "[Principal Name]"}</div>
               <div className="sf6-signature-name">PRINCIPAL'S NAME</div>
               <div className="sf6-signature-title">School Principal</div>
             </div>

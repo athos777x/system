@@ -29,10 +29,13 @@ function ClassList() {
   const [totalStudents, setTotalStudents] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [adviser, setAdviser] = useState("");
+  const [principal, setPrincipal] = useState("");
 
   useEffect(() => {
     if (schoolYear && grade && section) {
       fetchClassListData(schoolYear, grade, section);
+      fetchPrincipal();
     }
   }, [schoolYear, grade, section]);
 
@@ -70,6 +73,13 @@ function ClassList() {
         grade: gradeLevel,
         section: classInfo?.grade_section?.split(' - ')[1] || prevData.section
       }));
+
+      if (classInfo?.grade_level && classInfo?.section_id) {
+        fetchAdviser({ grade_level: classInfo.grade_level, section_id: classInfo.section_id });
+      } else {
+        fetchAdviser({ grade_level: gradeLevel, section_id: sectionId });
+      }
+      
   
       setLoading(false);
     } catch (error) {
@@ -79,6 +89,33 @@ function ClassList() {
     }
   };
   
+  const fetchAdviser = async ({ student_id, grade_level, section_id }) => {
+    try {
+      const response = await axios.get("http://localhost:3001/api/enrollment/adviser-info", {
+        params: { student_id, grade_level, section_id },
+      });
+  
+      if (response.data && response.data.adviser) {
+        setAdviser(response.data.adviser);
+      }
+    } catch (err) {
+      console.error("Error fetching adviser:", err);
+    }
+  };
+  
+  
+  const fetchPrincipal = async () => {
+    try {
+      const response = await axios.get("http://localhost:3001/api/enrollment/principal");
+  
+      if (response.data && response.data.principal) {
+        setPrincipal(response.data.principal);
+      }
+    } catch (err) {
+      console.error("Error fetching principal:", err);
+    }
+  };
+
 
   const handlePrintPDF = () => {
     const doc = new jsPDF({
@@ -204,11 +241,13 @@ function ClassList() {
         <div className="class-list-footer">
           <div className="class-list-signature-section">
             <div className="class-list-signature">
+              <div className="f137-name">{adviser || "[Adviser Name]"}</div>
               <div className="class-list-signature-line"></div>
               <div className="class-list-signature-name">Class Adviser</div>
               <div className="class-list-signature-title">Teacher III</div>
             </div>
             <div className="class-list-signature">
+              <div className="f137-name">{principal || "[Principal Name]"}</div>
               <div className="class-list-signature-line"></div>
               <div className="class-list-signature-name">School Principal</div>
               <div className="class-list-signature-title">Principal III</div>
