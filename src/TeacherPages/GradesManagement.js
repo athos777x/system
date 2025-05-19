@@ -22,6 +22,7 @@ function GradesManagement() {
   const [selectedSchoolYear, setSelectedSchoolYear] = useState({});
   const [assignedSubjects, setAssignedSubjects] = useState([]);
   const [coordinatorGradeLevel, setCoordinatorGradeLevel] = useState(null);
+  const [activityLogs, setActivityLogs] = useState([]);
   const [filters, setFilters] = useState({
     searchTerm: '',
     school_year: '',
@@ -235,6 +236,7 @@ function GradesManagement() {
         setSelectedGradeLevel(null);
         setSelectedSchoolYear(null); // Reset school year when unselecting
         setIsSchoolYearActive(false); // Reset school year status
+        setActivityLogs([]); // Clear activity logs
         return;
     }
 
@@ -272,6 +274,9 @@ function GradesManagement() {
     const fetchedSubjects = await fetchSubjects(student.student_id, gradeLevel, schoolYearId, section_id);
     await fetchGrades(student.student_id, gradeLevel, fetchedSubjects, schoolYearId, section_id);
     await fetchSchoolYearsGrades(student.student_id); // Pass studentId here
+    
+    // Fetch activity logs for the student
+    await fetchStudentGradeLogs(student.student_id, schoolYearId);
 };
 
 
@@ -603,6 +608,7 @@ function GradesManagement() {
         setSelectedGradeLevel(null);
         setSelectedSchoolYear(null); // Reset school year when unselecting
         setIsSchoolYearActive(false); // Reset school year status
+        setActivityLogs([]); // Clear activity logs
         return;
     }
 
@@ -1026,6 +1032,34 @@ function GradesManagement() {
     setShowConfirmModal(true);
   };
 
+  // Add function to fetch student grade logs
+  const fetchStudentGradeLogs = async (studentId, schoolYearId) => {
+    try {
+      const response = await axios.get(`http://localhost:3001/api/grade-logs/${studentId}`, {
+        params: { schoolYearId }
+      });
+      
+      if (response.data && response.data.logs) {
+        // Sort logs by timestamp, newest first
+        const sortedLogs = response.data.logs.sort((a, b) => 
+          new Date(b.timestamp) - new Date(a.timestamp)
+        );
+        setActivityLogs(sortedLogs);
+      } else {
+        setActivityLogs([]);
+      }
+    } catch (error) {
+      console.error('Error fetching grade logs:', error);
+      setActivityLogs([]);
+    }
+  };
+
+  // Function to format timestamp for display
+  const formatTimestamp = (timestamp) => {
+    const date = new Date(timestamp);
+    return date.toLocaleString();
+  };
+
   return (
     <div className="grades-management-container">
       <div className="grades-management-header">
@@ -1427,6 +1461,41 @@ function GradesManagement() {
                             )}
                           </tbody>
                         </table>
+                        
+                        {/* Grade Activity Logs Section */}
+                        <div className="grade-logs-section">
+                          <h4 className="grade-logs-title">Grade Activity Logs</h4>
+                          {activityLogs.length > 0 ? (
+                            <div className="grade-logs-container">
+                              <table className="grade-logs-table">
+                                <thead>
+                                  <tr>
+                                    <th>Date & Time</th>
+                                    <th>Action</th>
+                                    <th>Subject</th>
+                                    <th>Quarter</th>
+                                    <th>User</th>
+                                    <th>Details</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {activityLogs.map((log, index) => (
+                                    <tr key={index}>
+                                      <td>{formatTimestamp(log.timestamp)}</td>
+                                      <td className={`log-action ${log.action.toLowerCase()}`}>{log.action}</td>
+                                      <td>{log.subject_name || 'All Subjects'}</td>
+                                      <td>{log.quarter || 'N/A'}</td>
+                                      <td>{log.user_name}</td>
+                                      <td>{log.details}</td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          ) : (
+                            <div className="no-logs-message">No grade activity logs available.</div>
+                          )}
+                        </div>
                       </div>
                     </td>
                   </tr>
