@@ -233,7 +233,6 @@ function GradesManagement() {
 
   const handleStudentClick = async (student) => {
     if (selectedStudent && selectedStudent.student_id === student.student_id) {
-      // Unselect student and reset states
       setSelectedStudent(null);
       setSubjects([]);
       setGradesFetched(false);
@@ -260,7 +259,6 @@ function GradesManagement() {
       return;
     }
   
-    // Check if the school year is active
     try {
       const response = await axios.get(`http://localhost:3001/school-year-status/${schoolYearId}`);
       setIsSchoolYearActive(response.data.status === 'active');
@@ -269,17 +267,18 @@ function GradesManagement() {
       setIsSchoolYearActive(false);
     }
   
-    // If role is subject_teacher and assignedSubjects is empty, fetch it first
     if (roleName === 'subject_teacher' && assignedSubjects.length === 0) {
       await fetchAssignedSubjects();
     }
   
-    // Fetch subjects and grades with the correct school year
     const fetchedSubjects = await fetchSubjects(student.student_id, gradeLevel, schoolYearId, section_id);
     await fetchGrades(student.student_id, gradeLevel, fetchedSubjects, schoolYearId, section_id);
     await fetchSchoolYearsGrades(student.student_id);
   
+    const logs = await fetchGradeActivityLogs(student.student_id);
+    setActivityLogs(logs);
   };
+  
   
 
 
@@ -536,38 +535,30 @@ function GradesManagement() {
     });
   };
 
-  const fetchGradeActivityLogs = (studentId, setActivityLogs, setLoading, setError) => {
-    if (!studentId) return;
+  const fetchGradeActivityLogs = async (studentId) => {
+    if (!studentId) return [];
   
-    setLoading(true);
-    setError(null);
-  
-    axios.get(`http://localhost:3001/api/grade-logs/${studentId}`)
-      .then(response => {
-        if (response.data.success) {
-          const logs = response.data.data.map(log => ({
-            timestamp: log.log_date,
-            action: log.role_name, // Adjust if needed
-            subject_name: log.subject_name,
-            quarter: log.quarter,
-            user_name: log.emp_name,
-            details: log.grade,
-          }));
-          setActivityLogs(logs);
-        } else {
-          setActivityLogs([]);
-          setError("Failed to load grade activity logs.");
-        }
-      })
-      .catch(error => {
-        setActivityLogs([]);
-        setError("Error fetching grade activity logs.");
-        console.error(error);
-      })
-      .finally(() => {
-        setLoading(false);
-      });
+    try {
+      const response = await axios.get(`http://localhost:3001/api/grade-logs/${studentId}`);
+      if (response.data.success) {
+        return response.data.data.map(log => ({
+          timestamp: log.log_date,
+          action: log.role_name, // Adjust if needed
+          subject_name: log.subject_name,
+          quarter: log.quarter,
+          user_name: log.emp_name,
+          details: log.grade,
+        }));
+      } else {
+        console.error("Failed to load grade activity logs.");
+        return [];
+      }
+    } catch (error) {
+      console.error("Error fetching grade activity logs:", error);
+      return [];
+    }
   };
+  
 
   const handleSaveChanges = async () => {
     try {
@@ -687,6 +678,9 @@ function GradesManagement() {
     // Fetch subjects and grades with the correct school year
     const fetchedSubjects = await fetchSubjects(student.student_id, gradeLevel, schoolYearId, section_id);
     await fetchGrades(student.student_id, gradeLevel, fetchedSubjects, schoolYearId, section_id);
+
+    const logs = await fetchGradeActivityLogs(student.student_id);
+    setActivityLogs(logs);
   };
 
   const handleSearch = (searchTerm) => {
@@ -914,20 +908,24 @@ function GradesManagement() {
 
   // Add a new useEffect to handle when assignedSubjects changes
   useEffect(() => {
-    if (selectedStudent && roleName === 'subject_teacher' && assignedSubjects.length > 0) {
-      const fetchData = async () => {
+  if (selectedStudent && roleName === 'subject_teacher' && assignedSubjects.length > 0) {
+    const fetchData = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
         const gradeLevel = selectedStudent.current_yr_lvl;
         const schoolYearId = selectedStudent.school_year_id;
         const section_id = selectedStudent.section_id;
         const studentId = selectedStudent.student_id;
-  
+
         const fetchedSubjects = await fetchSubjects(
           studentId,
           gradeLevel,
           schoolYearId,
           section_id
         );
-  
+
         await fetchGrades(
           studentId,
           gradeLevel,
@@ -935,14 +933,20 @@ function GradesManagement() {
           schoolYearId,
           section_id
         );
-  
-        // Fetch grade activity logs here
-        fetchGradeActivityLogs(studentId, setActivityLogs, setLoading, setError);
-      };
-  
-      fetchData();
-    }
-  }, [assignedSubjects, selectedStudent, fetchSubjects, fetchGrades, roleName]);
+
+        const logs = await fetchGradeActivityLogs(studentId);
+        setActivityLogs(logs);
+      } catch (err) {
+        setError("Failed to fetch student grades or activity logs.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }
+}, [assignedSubjects, selectedStudent, fetchSubjects, fetchGrades, roleName]);
+
   
 
   
