@@ -8,7 +8,7 @@ import "../CssFiles/report_buttons.css";
 function ClassHonorRoll() {
   const location = useLocation();
   const navigate = useNavigate();
-  const filters = location.state || {}; // get passed values
+  const { schoolYear, grade, section, quarter} = location.state || {};
 
   const [schoolData, setSchoolData] = useState({
     schoolName: "Lourdes National High School",
@@ -16,30 +16,38 @@ function ClassHonorRoll() {
     district: "Dauis",
     division: "Bohol",
     region: "VII",
-    schoolYear: filters.schoolYear || "2023-2024",
-    quarter: filters.quarter || "1st",
-    grade: filters.grade || "9",
-    section: filters.section || "Rizal",
-    adviser: filters.adviser || "Maria Santos"
+    schoolYear: "",
+    quarter: "",
+    grade: "",
+    section: "",
   });
 
   const [honorRoll, setHonorRoll] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [adviser, setAdviser] = useState("");
+  const [principal, setPrincipal] = useState("");
 
   useEffect(() => {
-    fetchHonorRollData();
-  }, []);
+    if (schoolYear && grade && section && quarter) {
+      fetchHonorRollData(schoolYear, grade, section, quarter);
+      fetchPrincipal();
+  
+      // Optional fallback if header doesn't provide adviser
+      fetchAdviser({ grade_level: grade, section_id: section });
+    }
+  }, [schoolYear, grade, section, quarter]);
+  
 
-  const fetchHonorRollData = async () => {
+  const fetchHonorRollData = async (schoolYearId, gradeLevel, sectionId, quarter) => {
     setLoading(true);
     try {
       const response = await axios.get('http://localhost:3001/api/reports/class-honor-roll', {
         params: {
-          school_year_id: filters.schoolYearId || '1',
-          grade_level: filters.grade || '9',
-          section_id: filters.sectionId || '1',
-          quarter: filters.quarter || '1st'
+          school_year_id: schoolYearId,
+          grade_level: gradeLevel,
+          section_id: sectionId,
+          quarter,
         }
       });
   
@@ -65,9 +73,12 @@ function ClassHonorRoll() {
           grade: header.grade_section.split(" - ")[0].replace("Grade ", ""),
           section: header.grade_section.split(" - ")[1],
           adviser: header.class_adviser,
-          dateGenerated: header.date_generated
+          dateGenerated: header.date_generated,
+          quarter: quarter 
         }));
       }
+
+      
     } catch (error) {
       console.error("Error fetching honor roll data:", error);
       setError("Failed to fetch honor roll data");
@@ -85,6 +96,36 @@ function ClassHonorRoll() {
       default: return 'N/A';
     }
   };
+
+  
+
+  const fetchAdviser = async ({ grade_level, section_id }) => {
+    try {
+      const response = await axios.get("http://localhost:3001/api/enrollment/adviser-info", {
+        params: { grade_level, section_id },
+      });
+  
+      if (response.data && response.data.adviser) {
+        setAdviser(response.data.adviser);
+      }
+    } catch (err) {
+      console.error("Error fetching adviser:", err);
+    }
+  };
+  
+  
+  const fetchPrincipal = async () => {
+    try {
+      const response = await axios.get("http://localhost:3001/api/enrollment/principal");
+  
+      if (response.data && response.data.principal) {
+        setPrincipal(response.data.principal);
+      }
+    } catch (err) {
+      console.error("Error fetching principal:", err);
+    }
+  };
+
 
   const handlePrintPDF = () => {
     const doc = new jsPDF({
@@ -208,11 +249,12 @@ function ClassHonorRoll() {
         <div className="class-honor-roll-footer">
           <div className="class-honor-roll-signature-section">
             <div className="class-honor-roll-signature">
+              <div className="f137-name">{adviser || "[Adviser Name]"}</div>
               <div className="class-honor-roll-signature-line"></div>
-              <div className="class-honor-roll-signature-name">{schoolData.adviser}</div>
               <div className="class-honor-roll-signature-title">Class Adviser</div>
             </div>
             <div className="class-honor-roll-signature">
+              <div className="f137-name">{principal || "[Principal Name]"}</div>
               <div className="class-honor-roll-signature-line"></div>
               <div className="class-honor-roll-signature-name">School Principal</div>
               <div className="class-honor-roll-signature-title">Principal III</div>

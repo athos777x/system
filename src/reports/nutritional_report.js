@@ -37,13 +37,17 @@ function NutritionalReport() {
   const [nutritionalData, setNutritionalData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [principal, setPrincipal] = useState("");
 
   useEffect(() => {
+    fetchPrincipal();
     if (!schoolYear || !grade || !section) {
       setError("Missing required parameters for the report.");
       setLoading(false);
       return;
     }
+
+
 
     const fetchData = async () => {
       try {
@@ -115,6 +119,18 @@ function NutritionalReport() {
 
     fetchData();
   }, [schoolYear, grade, section]);
+
+  const fetchPrincipal = async () => {
+    try {
+      const response = await axios.get("http://localhost:3001/api/enrollment/principal");
+  
+      if (response.data && response.data.principal) {
+        setPrincipal(response.data.principal);
+      }
+    } catch (err) {
+      console.error("Error fetching principal:", err);
+    }
+  };
 
   const handlePrintPDF = () => {
     const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
@@ -227,12 +243,13 @@ function NutritionalReport() {
 
         <div className="nutritional-report-footer">
           <div className="nutritional-report-signature-section">
-            <div className="nutritional-report-signature">
+            {/* <div className="nutritional-report-signature">
               <div className="nutritional-report-signature-line"></div>
               <div className="nutritional-report-signature-name">School Nurse</div>
               <div className="nutritional-report-signature-title">RN</div>
-            </div>
+            </div> */}
             <div className="nutritional-report-signature">
+              <div className="f137-name">{principal || "[Principal Name]"}</div>
               <div className="nutritional-report-signature-line"></div>
               <div className="nutritional-report-signature-name">School Principal</div>
               <div className="nutritional-report-signature-title">Principal III</div>

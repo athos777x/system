@@ -30,11 +30,16 @@ function EarlyEnrollment() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [registrar, setRegistrar] = useState("");
+  const [principal, setPrincipal] = useState("");
+
 
   useEffect(() => {
     if (schoolYear && grade && section) {
       fetchEnrollmentData(schoolYear, grade, section);
     }
+    fetchRegistrar();
+    fetchPrincipal();
   }, [schoolYear, grade, section]);
 
   const fetchEnrollmentData = async (schoolYear, grade, section) => {
@@ -91,6 +96,29 @@ function EarlyEnrollment() {
     }
   };
   
+  const fetchPrincipal = async () => {
+    try {
+      const response = await axios.get("http://localhost:3001/api/enrollment/principal");
+  
+      if (response.data && response.data.principal) {
+        setPrincipal(response.data.principal);
+      }
+    } catch (err) {
+      console.error("Error fetching principal:", err);
+    }
+  };
+
+  const fetchRegistrar = async () => {
+    try {
+      const response = await axios.get("http://localhost:3001/api/enrollment/registrar");
+  
+      if (response.data && response.data.registrar) {
+        setRegistrar(response.data.registrar);
+      }
+    } catch (err) {
+      console.error("Error fetching registrar:", err);
+    }
+  };
 
   const handlePrintPDF = () => {
     const doc = new jsPDF({
@@ -202,11 +230,13 @@ function EarlyEnrollment() {
         <div className="early-enrollment-footer">
           <div className="early-enrollment-signature-section">
             <div className="early-enrollment-signature">
+              <div className="f137-name">{registrar || "[Registrar Name]"}</div>
               <div className="early-enrollment-signature-line"></div>
               <div className="early-enrollment-signature-name">School Registrar</div>
               <div className="early-enrollment-signature-title">Teacher III</div>
             </div>
             <div className="early-enrollment-signature">
+              <div className="f137-name">{principal || "[Principal Name]"}</div>
               <div className="early-enrollment-signature-line"></div>
               <div className="early-enrollment-signature-name">School Principal</div>
               <div className="early-enrollment-signature-title">Principal III</div>

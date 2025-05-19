@@ -12,6 +12,7 @@ function GoodMoral() {
   const [studentDetails, setStudentDetails] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const [principal, setPrincipal] = useState("");
 
   const fetchStudentDetails = async () => {
     if (student) {
@@ -32,6 +33,18 @@ function GoodMoral() {
       } finally {
         setLoading(false);
       }
+    }
+  };
+
+  const fetchPrincipal = async () => {
+    try {
+      const response = await axios.get("http://localhost:3001/api/enrollment/principal");
+  
+      if (response.data && response.data.principal) {
+        setPrincipal(response.data.principal);
+      }
+    } catch (err) {
+      console.error("Error fetching principal:", err);
     }
   };
 
@@ -59,6 +72,7 @@ function GoodMoral() {
   useEffect(() => {
     if (student) {
       fetchStudentDetails();
+      fetchPrincipal();
     }
   }, [student]);
 
@@ -114,7 +128,7 @@ function GoodMoral() {
             <p>
               <strong>__________________________</strong>
               <br />
-              {student?.principalName || "Principal Name"}
+              {principal || "[Principal Name]"}
               <br />
               Principal
             </p>

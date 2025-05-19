@@ -6825,6 +6825,7 @@ app.get('/api/student-grades', (req, res) => {
         }
 
         res.json({
+          studentId: studentId,
           studentInfo: studentInfoResults[0],
           grades: gradesResults,
           attendance: attendanceResults
@@ -7183,5 +7184,90 @@ app.put('/students/section/:id', (req, res) => {
         res.json({ message: 'Student and enrollment section updated successfully' });
       });
     });
+  });
+});
+
+
+app.get('/api/enrollment/adviser-info', (req, res) => {
+  const { student_id, grade_level, section_id } = req.query;
+
+  const query = `
+    SELECT 
+      CONCAT(b.firstname, ' ', LEFT(IFNULL(b.middlename, ''), 1), '. ', b.lastname) AS adviser,
+      e.grade_level,
+      e.section_id
+    FROM enrollment e
+    LEFT JOIN section_assigned sa 
+      ON e.grade_level = sa.level AND e.section_id = sa.section_id
+    LEFT JOIN employee b 
+      ON sa.employee_id = b.employee_id
+    WHERE 
+      (? IS NOT NULL AND e.student_id = ?)
+      OR
+      (? IS NULL AND e.grade_level = ? AND e.section_id = ?)
+    LIMIT 1;
+  `;
+
+  db.query(
+    query,
+    [student_id, student_id, student_id, grade_level, section_id],
+    (err, results) => {
+      if (err) {
+        console.error('Error fetching adviser info:', err);
+        return res.status(500).json({ error: 'Internal server error' });
+      }
+
+      if (results.length === 0) {
+        return res.status(404).json({ error: 'Adviser not found' });
+      }
+
+      res.json(results[0]);
+    }
+  );
+});
+
+
+app.get('/api/enrollment/principal', (req, res) => {
+  const query = `
+    SELECT 
+      CONCAT(a.firstname, ' ', LEFT(IFNULL(a.middlename, ''), 1), '. ', a.lastname) AS principal
+    FROM employee a
+    WHERE a.role_name = 'principal' AND a.status = 'active'
+    LIMIT 1;
+  `;
+
+  db.query(query, (err, results) => {
+    if (err) {
+      return res.status(500).json({ error: "Database query failed", details: err.message });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ error: "No principal found" });
+    }
+
+    res.json(results[0]); // Return the principal's name
+  });
+});
+
+
+app.get('/api/enrollment/registrar', (req, res) => {
+  const query = `
+    SELECT 
+      CONCAT(a.firstname, ' ', LEFT(IFNULL(a.middlename, ''), 1), '. ', a.lastname) AS registrar
+    FROM employee a
+    WHERE a.role_name = 'registrar' AND a.status = 'active'
+    LIMIT 1;
+  `;
+
+  db.query(query, (err, results) => {
+    if (err) {
+      return res.status(500).json({ error: "Database query failed", details: err.message });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ error: "No principal found" });
+    }
+
+    res.json(results[0]); // Return the principal's name
   });
 });

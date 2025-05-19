@@ -32,6 +32,8 @@ function SF5() {
   });
 
   const navigate = useNavigate();
+  const [adviser, setAdviser] = useState("");
+  const [principal, setPrincipal] = useState("");
 
   useEffect(() => {
     axios.get('http://localhost:3001/api/reports/subject-statistics', {
@@ -103,7 +105,39 @@ function SF5() {
     });
   }, []);
   
-  
+  useEffect(() => {
+    const fetchAdviser = async () => {
+      try {
+        const response = await axios.get("http://localhost:3001/api/enrollment/adviser-info", {
+          params: {
+            grade_level: grade,
+            section_id: section
+          }
+        });
+
+        if (response.data && response.data.adviser) {
+          setAdviser(response.data.adviser);
+        }
+      } catch (err) {
+        console.error("Error fetching adviser:", err);
+      }
+    };
+
+    const fetchPrincipal = async () => {
+      try {
+        const response = await axios.get("http://localhost:3001/api/enrollment/principal");
+
+        if (response.data && response.data.principal) {
+          setPrincipal(response.data.principal);
+        }
+      } catch (err) {
+        console.error("Error fetching principal:", err);
+      }
+    };
+
+    fetchAdviser();
+    fetchPrincipal();
+  }, [grade, section]);
 
   const handlePrintPDF = () => {
     const doc = new jsPDF({
@@ -254,11 +288,13 @@ function SF5() {
           <div className="sf5-signature-section">
             <div className="sf5-signature">
               <div className="sf5-signature-line">Prepared by:</div>
+              <div className="f137-name">{adviser || "[Adviser Name]"}</div>
               <div className="sf5-signature-name">TEACHER'S NAME</div>
               <div className="sf5-signature-title">Class Adviser</div>
             </div>
-            <div className="sf5-signature">
+            <div className="sf5-signature">           
               <div className="sf5-signature-line">Certified Correct:</div>
+              <div className="f137-name">{principal || "[Principal Name]"}</div>
               <div className="sf5-signature-name">PRINCIPAL'S NAME</div>
               <div className="sf5-signature-title">School Principal</div>
             </div>

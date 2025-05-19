@@ -9,6 +9,8 @@ function QuarterlyAssessment() {
   const location = useLocation();
   const navigate = useNavigate();
   const { schoolYear, grade, section, quarter } = location.state || {};
+  const [adviser, setAdviser] = useState("");
+  const [principal, setPrincipal] = useState("");
 
   const [schoolData, setSchoolData] = useState({
     schoolName: "Lourdes National High School",
@@ -35,6 +37,7 @@ function QuarterlyAssessment() {
   useEffect(() => {
     if (schoolYear && grade && section && quarter) {
       fetchAssessmentData();
+      fetchPrincipal();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -102,6 +105,34 @@ function QuarterlyAssessment() {
       setLoading(false);
     }
   };
+
+  const fetchAdviser = async ({ student_id, grade_level, section_id }) => {
+    try {
+      const response = await axios.get("http://localhost:3001/api/enrollment/adviser-info", {
+        params: { student_id, grade_level, section_id },
+      });
+  
+      if (response.data && response.data.adviser) {
+        setAdviser(response.data.adviser);
+      }
+    } catch (err) {
+      console.error("Error fetching adviser:", err);
+    }
+  };
+  
+  
+  const fetchPrincipal = async () => {
+    try {
+      const response = await axios.get("http://localhost:3001/api/enrollment/principal");
+  
+      if (response.data && response.data.principal) {
+        setPrincipal(response.data.principal);
+      }
+    } catch (err) {
+      console.error("Error fetching principal:", err);
+    }
+  };
+
 
   const handlePrintPDF = () => {
     const doc = new jsPDF({
@@ -233,6 +264,7 @@ function QuarterlyAssessment() {
         <div className="quarterly-assessment-footer">
           <div className="quarterly-assessment-signature-section">
             <div className="quarterly-assessment-signature">
+              <div className="f137-name">{principal || "[Principal Name]"}</div>
               <div className="quarterly-assessment-signature-line"></div>
               <span>Signature</span>
             </div>
