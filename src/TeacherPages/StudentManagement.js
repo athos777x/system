@@ -17,9 +17,6 @@ function StudentManagement() {
   const [showAddCancelModal, setShowAddCancelModal] = useState(false); // New state for add form cancel confirmation
   const [errors, setErrors] = useState({});
   const [roleName, setRoleName] = useState('');
-  // Add success message state
-  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
-  const [successMessage, setSuccessMessage] = useState('');
 
   const [schoolYears, setSchoolYears] = useState([]);
   const [sections, setSections] = useState([]);
@@ -29,8 +26,7 @@ function StudentManagement() {
     school_year: '',
     grade: '',
     section: '',
-    status: '',
-    showArchive: 'unarchive' // Default to showing unarchived students
+    status: ''
   });
   
   // Add state for coordinator's grade level
@@ -197,11 +193,6 @@ function StudentManagement() {
       // Apply grade level restriction for grade level coordinators
       if (roleName === 'grade_level_coordinator' && coordinatorGradeLevel) {
         filteredParams.grade = coordinatorGradeLevel.toString();
-      }
-
-      // Make sure archive filter is included with default if not specified
-      if (!filteredParams.showArchive) {
-        filteredParams.showArchive = 'unarchive';
       }
   
       // ✅ Determine the endpoint based on roleName
@@ -714,61 +705,25 @@ const approveElective = async (studentElectiveId) => {
       alert('An error occurred while approving the elective.');
   }
 };
-
-// Function to display success messages
-const displaySuccessMessage = (message) => {
-  setSuccessMessage(message);
-  setShowSuccessMessage(true);
-  
-  // Auto-hide the message after 3 seconds
-  setTimeout(() => {
-    setShowSuccessMessage(false);
-  }, 3000);
-};
-
-// Modify the archiveStudent function to handle both archive and unarchive
-const toggleArchiveStatus = async (studentId, currentStatus) => {
+const archiveStudent = async (studentId, status) => {
   try {
-    console.log('Toggling archive status for student ID:', studentId, 'with current status:', currentStatus);
-    
-    // Determine the new status based on the current status
-    const newArchiveStatus = currentStatus === 'archived' ? 'unarchive' : 'archived';
-    
-    const response = await axios.put(`http://localhost:3001/students/${studentId}/archive`, { 
-      active_status: newArchiveStatus 
-    });
+    console.log('Archiving student ID:', studentId, 'with status:', status);
+
+    const response = await axios.put(`http://localhost:3001/students/${studentId}/archive`, { status });
 
     if (response.status === 200) {
-      // Display appropriate success message
-      displaySuccessMessage(
-        currentStatus === 'archived' 
-          ? 'Student unarchived successfully!' 
-          : 'Student archived successfully!'
-      );
-      
-      await fetchStudents({ ...filters }); // Refresh the student list with current filters
-      
-      // If the student being archived is currently selected, close the details view
-      if (selectedStudentId === studentId) {
-        setSelectedStudentId(null);
-      }
-      
-      setShowArchiveModal(false);
-      setArchiveAction({
-        studentId: null,
-        currentStatus: '',
-        studentName: ''
-      });
+      alert('Student archived successfully');
+      await fetchStudents(); // Refresh the student list after archiving
     } else {
-      console.warn('Failed to change student archive status, non-200 response:', response);
-      alert('Failed to update student archive status.');
+      console.warn('Failed to archive student, non-200 response:', response);
+      alert('Failed to archive student.');
     }
   } catch (error) {
     if (error.response) {
       console.error('Error response:', error.response.data);
-      alert('Error changing student archive status: ' + (error.response.data.error || 'Unknown error'));
+      alert('Error archiving the student: ' + (error.response.data.error || 'Unknown error'));
     } else if (error.request) {
-      console.error('No response received from server. Request:', error.request);
+      console.error('No response from server:', error.request);
       alert('No response from the server. Please check your connection.');
     } else {
       console.error('Error setting up request:', error.message);
@@ -777,109 +732,108 @@ const toggleArchiveStatus = async (studentId, currentStatus) => {
   }
 };
 
-// New Modal State for archive/unarchive action
+// New Modal State
 const [showArchiveModal, setShowArchiveModal] = useState(false);
-const [archiveAction, setArchiveAction] = useState({
-  studentId: null,
-  currentStatus: '',
-  studentName: ''
-});
+const [archiveStudentId, setArchiveStudentId] = useState(null);
+const [archiveStatus, setArchiveStatus] = useState('');
 
-const openArchiveConfirmation = (studentId, currentStatus, studentName) => {
-  setArchiveAction({
-    studentId,
-    currentStatus,
-    studentName
-  });
+const openArchiveModal = (studentId) => {
+  setArchiveStudentId(studentId);
   setShowArchiveModal(true);
 };
 
-const cancelArchiveAction = () => {
+const closeArchiveModal = () => {
+  setArchiveStudentId(null);
+  setArchiveStatus('');
   setShowArchiveModal(false);
-  setArchiveAction({
-    studentId: null,
-    currentStatus: '',
-    studentName: ''
-  });
 };
 
-const formatDate = (isoString) => {
-  const date = new Date(isoString);
-  return date.toLocaleDateString();
-};
-
-const toggleStudentDetails = (studentId) => {
-  setSelectedStudentId(selectedStudentId === studentId ? null : studentId);
-  if (selectedStudentId === studentId) {
-    // If we're closing the details, also exit edit mode and clear errors
-    setIsEditing(false);
-    setEditStudentData(null);
-    setErrors({}); // Reset errors when closing the details view
-  } else {
-    // Reset errors when opening the details view
-    setErrors({});
+const handleArchive = () => {
+  if (!archiveStatus) {
+    alert('Please select an archive status.');
+    return;
   }
+  archiveStudent(archiveStudentId, archiveStatus);
+  closeArchiveModal();
 };
 
-const handleEditClick = (studentId) => {
-  const student = currentStudents.find((s) => s.student_id === studentId);
-  setEditStudentData(student);
-  setIsEditing(true);
-  setSelectedStudentId(studentId); // Ensure details are expanded
-  setErrors({}); // Reset errors when starting edit mode
-  setIsAdding(false); // Ensure add mode is not active
-};
+  const formatDate = (isoString) => {
+    const date = new Date(isoString);
+    return date.toLocaleDateString();
+  };
 
-const paginate = (pageNumber) => {
-  setCurrentPage(pageNumber);
-};
+  const toggleStudentDetails = (studentId) => {
+    setSelectedStudentId(selectedStudentId === studentId ? null : studentId);
+    if (selectedStudentId === studentId) {
+      // If we're closing the details, also exit edit mode and clear errors
+      setIsEditing(false);
+      setEditStudentData(null);
+      setErrors({}); // Reset errors when closing the details view
+    } else {
+      // Reset errors when opening the details view
+      setErrors({});
+    }
+  };
 
-const indexOfLastStudent = currentPage * studentsPerPage;
-const indexOfFirstStudent = indexOfLastStudent - studentsPerPage;
-const currentStudents = filteredStudents.slice(indexOfFirstStudent, indexOfLastStudent);
+  const handleEditClick = (studentId) => {
+    const student = currentStudents.find((s) => s.student_id === studentId);
+    setEditStudentData(student);
+    setIsEditing(true);
+    setSelectedStudentId(studentId); // Ensure details are expanded
+    setErrors({}); // Reset errors when starting edit mode
+    setIsAdding(false); // Ensure add mode is not active
+  };
 
-const totalPages = Math.ceil(filteredStudents.length / studentsPerPage);
+  const paginate = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
 
-const fetchUserRole = async (userId) => {
-  try {
-    console.log(`Fetching role for user ID: ${userId}`); // Debugging log
-    const response = await axios.get(`http://localhost:3001/user-role/${userId}`);
-    if (response.status === 200) {
-      console.log('Response received:', response.data); // Debugging log
-      setRoleName(response.data.role_name);
-      console.log('Role name set to:', response.data.role_name); // Debugging log
-      
-      // If user is a grade level coordinator, fetch their assigned grade level
-      if (response.data.role_name === 'grade_level_coordinator') {
-        fetchCoordinatorGradeLevel(userId);
+  const indexOfLastStudent = currentPage * studentsPerPage;
+  const indexOfFirstStudent = indexOfLastStudent - studentsPerPage;
+  const currentStudents = filteredStudents.slice(indexOfFirstStudent, indexOfLastStudent);
+
+  const totalPages = Math.ceil(filteredStudents.length / studentsPerPage);
+
+  const fetchUserRole = async (userId) => {
+    try {
+      console.log(`Fetching role for user ID: ${userId}`); // Debugging log
+      const response = await axios.get(`http://localhost:3001/user-role/${userId}`);
+      if (response.status === 200) {
+        console.log('Response received:', response.data); // Debugging log
+        setRoleName(response.data.role_name);
+        console.log('Role name set to:', response.data.role_name); // Debugging log
+        
+        // If user is a grade level coordinator, fetch their assigned grade level
+        if (response.data.role_name === 'grade_level_coordinator') {
+          fetchCoordinatorGradeLevel(userId);
+        }
+      } else {
+        console.error('Failed to fetch role name. Response status:', response.status);
       }
-    } else {
-      console.error('Failed to fetch role name. Response status:', response.status);
+    } catch (error) {
+      if (error.response) {
+        console.error('Error response from server:', error.response.data);
+      } else if (error.request) {
+        console.error('No response received from server. Request:', error.request);
+      } else {
+        console.error('Error setting up request:', error.message);
+      }
     }
-  } catch (error) {
-    if (error.response) {
-      console.error('Error response from server:', error.response.data);
-    } else if (error.request) {
-      console.error('No response received from server. Request:', error.request);
-    } else {
-      console.error('Error setting up request:', error.message);
-    }
-  }
-};
+  };
 
-const fetchCoordinatorGradeLevel = async (userId) => {
-  try {
-    const response = await axios.get(`http://localhost:3001/coordinator-grade-level/${userId}`);
-    if (response.status === 200 && response.data.gradeLevel) {
-      console.log('Coordinator grade level:', response.data.gradeLevel);
-      setCoordinatorGradeLevel(response.data.gradeLevel);
-      // Auto-set the grade filter to the coordinator's assigned grade level
-      setFilters(prev => ({ ...prev, grade: response.data.gradeLevel.toString() }));
+  const fetchCoordinatorGradeLevel = async (userId) => {
+    try {
+      const response = await axios.get(`http://localhost:3001/coordinator-grade-level/${userId}`);
+      if (response.status === 200 && response.data.gradeLevel) {
+        console.log('Coordinator grade level:', response.data.gradeLevel);
+        setCoordinatorGradeLevel(response.data.gradeLevel);
+        // Auto-set the grade filter to the coordinator's assigned grade level
+        setFilters(prev => ({ ...prev, grade: response.data.gradeLevel.toString() }));
+      }
+    } catch (error) {
+      console.error('Error fetching coordinator grade level:', error);
     }
-  } catch (error) {
-    console.error('Error fetching coordinator grade level:', error);
-  }
-};
+  };
 
 
   // Handle changes in editable fields
@@ -1217,16 +1171,6 @@ const fetchCoordinatorGradeLevel = async (userId) => {
 
   return (
     <div className="student-mgmt-container">
-      {/* Success Message Popup */}
-      {showSuccessMessage && (
-        <div className="success-message-popup">
-          <div className="success-message-content">
-            <span className="success-icon">✓</span>
-            <span>{successMessage}</span>
-          </div>
-        </div>
-      )}
-      
       <div className="student-mgmt-header">
         <h1 className="student-mgmt-title">Students</h1>
         {(roleName === 'registrar' || roleName === 'subject_teacher' || roleName === 'class_adviser' || roleName === 'grade_level_coordinator') && (
@@ -1285,18 +1229,17 @@ const fetchCoordinatorGradeLevel = async (userId) => {
                     Edit
                   </button>
                   )}
-                    {(roleName === 'registrar') && (
+                    {/* {(roleName === 'registrar' && student.active_status === null) && (
                     <button 
-                        className="student-mgmt-btn student-mgmt-btn-archive"
-                      onClick={() => openArchiveConfirmation(
-                        student.student_id, 
-                        student.active_status, 
-                        student.firstname + ' ' + student.lastname
-                      )}
+                        className="student-mgmt-btn student-mgmt-btn-register"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        enrollStudent(student.student_id);
+                      }}
                     >
-                      {student.active_status === 'archived' ? 'Unarchive' : 'Archive'}
+                      Register
                     </button> 
-                  )}
+                  )} */}
                 </td>
               </tr>
 
@@ -1891,13 +1834,9 @@ const fetchCoordinatorGradeLevel = async (userId) => {
                                   {roleName === 'registrar' && (
                               <button
                                       className="student-mgmt-btn student-mgmt-btn-archive"
-                                      onClick={() => openArchiveConfirmation(
-                                        student.student_id, 
-                                        student.active_status, 
-                                        student.firstname + ' ' + student.lastname
-                                      )}
+                                      onClick={() => openArchiveModal(student.student_id)}
                               >
-                                      {student.active_status === 'archived' ? 'Unarchive' : 'Archive'}
+                                      Archive
                               </button>
                           )}
                         </>
@@ -1923,37 +1862,6 @@ const fetchCoordinatorGradeLevel = async (userId) => {
         onPageChange={paginate}
       />
     </div>
-
-      {/* Archive Confirmation Modal */}
-      {showArchiveModal && (
-        <div className="student-mgmt-modal">
-          <div className="student-mgmt-modal-content">
-            <h2>{archiveAction.currentStatus === 'archived' ? 'Unarchive' : 'Archive'} Student</h2>
-            <p className="student-mgmt-confirmation-message">
-              Are you sure you want to {archiveAction.currentStatus === 'archived' ? 'unarchive' : 'archive'} the student <strong>{archiveAction.studentName}</strong>?
-              {archiveAction.currentStatus !== 'archived' && (
-                <span className="student-mgmt-archive-warning">
-                  Archived students won't be available for scheduling and other operations.
-                </span>
-              )}
-            </p>
-            <div className="student-mgmt-modal-actions">
-              <button 
-                className="student-mgmt-btn student-mgmt-btn-edit" 
-                onClick={() => toggleArchiveStatus(archiveAction.studentId, archiveAction.currentStatus)}
-              >
-                Confirm
-              </button>
-              <button 
-                className="student-mgmt-btn student-mgmt-btn-archive" 
-                onClick={cancelArchiveAction}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Modals */}
     {showCancelModal && (
@@ -1998,6 +1906,45 @@ const fetchCoordinatorGradeLevel = async (userId) => {
         </div>
       </div>
     )}
+
+      {showArchiveModal && (
+        <div className="student-mgmt-modal">
+          <div className="student-mgmt-modal-content">
+            <div className="student-mgmt-modal-header">
+            <h2>Archive Student</h2>
+              <p>Please select a status to archive this student. This action cannot be undone.</p>
+            </div>
+            
+            <select
+              className="student-mgmt-modal-select"
+              value={archiveStatus}
+              onChange={(e) => setArchiveStatus(e.target.value)}
+              required
+            >
+              <option value="">Select archive status</option>
+              <option value="inactive">Inactive</option>
+              <option value="withdrawn">Withdrawn</option>
+              <option value="transferred">Transferred</option>
+            </select>
+
+            <div className="student-mgmt-modal-actions">
+              <button 
+                className="student-mgmt-modal-btn student-mgmt-modal-btn-cancel"
+                onClick={closeArchiveModal}
+              >
+                Cancel
+              </button>
+              <button 
+                className="student-mgmt-modal-btn student-mgmt-modal-btn-confirm"
+                onClick={handleArchive}
+                disabled={!archiveStatus}
+              >
+                Archive
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showModal && (
         <div className="student-mgmt-modal">

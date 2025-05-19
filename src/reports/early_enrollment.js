@@ -233,12 +233,13 @@ function EarlyEnrollment() {
               <div className="f137-name">{registrar || "[Registrar Name]"}</div>
               <div className="early-enrollment-signature-line"></div>
               <div className="early-enrollment-signature-name">School Registrar</div>
-              <div className="early-enrollment-signature-title">Teacher</div>
+              <div className="early-enrollment-signature-title">Teacher III</div>
             </div>
             <div className="early-enrollment-signature">
               <div className="f137-name">{principal || "[Principal Name]"}</div>
               <div className="early-enrollment-signature-line"></div>
-              <div className="early-enrollment-signature-title">Principal</div>
+              <div className="early-enrollment-signature-name">School Principal</div>
+              <div className="early-enrollment-signature-title">Principal III</div>
             </div>
           </div>
         </div>

@@ -6,8 +6,7 @@ function StudentSearchFilter({ students, fetchStudents, setFilteredStudents, set
     searchTerm: '',
     school_year: '',
     grade: '',
-    section: '',
-    showArchive: 'unarchive' // Add default value for archive filter
+    section: ''
   });
 
   // Store temporary filters without applying immediately
@@ -88,10 +87,6 @@ function StudentSearchFilter({ students, fetchStudents, setFilteredStudents, set
         return firstName.includes(filters.searchTerm.toLowerCase()) || 
                lastName.includes(filters.searchTerm.toLowerCase());
       });
-    }
-    // Apply archive filter
-    if (filters.showArchive) {
-      filtered = filtered.filter(student => student.active_status === filters.showArchive);
     }
 
     setFilteredStudents(filtered);
@@ -176,16 +171,6 @@ function StudentSearchFilter({ students, fetchStudents, setFilteredStudents, set
               {section.section_name}
             </option>
           ))}
-        </select>
-
-        {/* Archive Status Filter */}
-        <select
-          name="showArchive"
-          value={tempFilters.showArchive}
-          onChange={(e) => handleFilterChange('showArchive', e.target.value)}
-        >
-          <option value="unarchive">Unarchived</option>
-          <option value="archived">Archived</option>
         </select>
       </div>
 

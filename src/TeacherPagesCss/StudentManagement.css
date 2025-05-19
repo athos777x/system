@@ -1024,49 +1024,4 @@
 .student-details-view-table input.error,
 .student-details-view-table select.error {
   border-color: #ef5350 !important;
-}
-
-/* Add success message popup styles */
-.success-message-popup {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  z-index: 1000;
-  animation: fadeInOut 3s forwards;
-}
-
-.success-message-content {
-  background-color: #4CAF50;
-  color: white;
-  padding: 15px 20px;
-  border-radius: 4px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.success-icon {
-  font-size: 18px;
-  font-weight: bold;
-}
-
-@keyframes fadeInOut {
-  0% { opacity: 0; transform: translateY(-20px); }
-  10% { opacity: 1; transform: translateY(0); }
-  90% { opacity: 1; transform: translateY(0); }
-  100% { opacity: 0; transform: translateY(-20px); }
-}
-
-/* Add confirmation message styles */
-.student-mgmt-confirmation-message {
-  margin-bottom: 20px;
-  line-height: 1.5;
-}
-
-.student-mgmt-archive-warning {
-  display: block;
-  margin-top: 10px;
-  color: #e74c3c;
-  font-size: 0.9em;
 } 
