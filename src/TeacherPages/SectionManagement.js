@@ -240,7 +240,7 @@ function SectionManagement() {
         isValid = value && value.toString().trim() !== '' && (/^\d+$/.test(value.toString()) && parseInt(value) > 0);
         break;
       case 'room_number':
-        isValid = value && value.trim && value.trim() !== '' && /^[a-zA-Z0-9\s-]{1,10}$/.test(value);
+        isValid = value && value.trim && value.trim() !== '' && /^\d{1,3}$/.test(value);
         break;
       default:
         break;
@@ -286,9 +286,9 @@ function SectionManagement() {
       newValidations.room_number = false;
       newErrors.room_number = 'Room number is required';
       formIsValid = false;
-    } else if (!/^[a-zA-Z0-9\s-]{1,10}$/.test(editFormData.room_number)) {
+    } else if (!/^\d{1,3}$/.test(editFormData.room_number)) {
       newValidations.room_number = false;
-      newErrors.room_number = 'Room number must be alphanumeric, max 10 characters';
+      newErrors.room_number = 'Room number must be 1-3 digits only';
       formIsValid = false;
     } else {
       newValidations.room_number = true;
@@ -454,7 +454,7 @@ function SectionManagement() {
         isValid = value.trim() !== '' && (/^\d+$/.test(value) && parseInt(value) > 0);
         break;
       case 'room_number':
-        isValid = value.trim() !== '' && /^[a-zA-Z0-9\s-]{1,10}$/.test(value);
+        isValid = value.trim() !== '' && /^\d{1,3}$/.test(value);
         break;
       default:
         break;
@@ -500,9 +500,9 @@ function SectionManagement() {
       newValidations.room_number = false;
       newErrors.room_number = 'Room number is required';
       formIsValid = false;
-    } else if (!/^[a-zA-Z0-9\s-]{1,10}$/.test(newSectionData.room_number)) {
+    } else if (!/^\d{1,3}$/.test(newSectionData.room_number)) {
       newValidations.room_number = false;
-      newErrors.room_number = 'Room number must be alphanumeric, max 10 characters';
+      newErrors.room_number = 'Room number must be 1-3 digits only';
       formIsValid = false;
     } else {
       newValidations.room_number = true;
@@ -883,7 +883,7 @@ function SectionManagement() {
                                       value={editFormData.room_number || ''}
                                       onChange={handleEditChange}
                                       className={!editValidations.room_number ? "input-error" : ""}
-                                      placeholder="Alphanumeric, max 10 chars"
+                                      placeholder="Enter 1-3 digits"
                                       required
                                     />
                                     {!editValidations.room_number && errors.room_number && (
@@ -893,7 +893,7 @@ function SectionManagement() {
                                     )}
                                     {!editValidations.room_number && !errors.room_number && (
                                       <div className="error-message">
-                                        Room number must be alphanumeric, max 10 characters
+                                        Room number must be 1-3 digits only
                                       </div>
                                     )}
                                   </>
@@ -1017,7 +1017,7 @@ function SectionManagement() {
                 value={newSectionData.room_number}
                 onChange={handleAddChange}
                 className={!validations.room_number ? "input-error" : ""}
-                placeholder="Alphanumeric, max 10 chars"
+                placeholder="Enter 1-3 digits"
                 required
               />
               {!validations.room_number && errors.room_number && (
@@ -1027,7 +1027,7 @@ function SectionManagement() {
               )}
               {!validations.room_number && !errors.room_number && (
                 <div className="error-message">
-                  Room number must be alphanumeric, max 10 characters
+                  Room number must be 1-3 digits only
                 </div>
               )}
             </div>
