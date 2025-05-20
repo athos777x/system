@@ -244,13 +244,13 @@ function ClassList() {
               <div className="f137-name">{adviser || "[Adviser Name]"}</div>
               <div className="class-list-signature-line"></div>
               <div className="class-list-signature-name">Class Adviser</div>
-              <div className="class-list-signature-title">Teacher III</div>
+              <div className="class-list-signature-title">Teacher</div>
             </div>
             <div className="class-list-signature">
               <div className="f137-name">{principal || "[Principal Name]"}</div>
               <div className="class-list-signature-line"></div>
               <div className="class-list-signature-name">School Principal</div>
-              <div className="class-list-signature-title">Principal III</div>
+              <div className="class-list-signature-title">Principal</div>
             </div>
           </div>
         </div>
