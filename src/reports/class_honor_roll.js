@@ -251,13 +251,12 @@ function ClassHonorRoll() {
             <div className="class-honor-roll-signature">
               <div className="f137-name">{adviser || "[Adviser Name]"}</div>
               <div className="class-honor-roll-signature-line"></div>
-              <div className="class-honor-roll-signature-title">Class Adviser</div>
+              <div className="class-honor-roll-signature-name">Class Adviser</div>
             </div>
             <div className="class-honor-roll-signature">
               <div className="f137-name">{principal || "[Principal Name]"}</div>
               <div className="class-honor-roll-signature-line"></div>
-              <div className="class-honor-roll-signature-name">School Principal</div>
-              <div className="class-honor-roll-signature-title">Principal III</div>
+              <div className="class-honor-roll-signature-name">School Principal</div> 
             </div>
           </div>
         </div>

@@ -3406,7 +3406,7 @@ app.put('/schedules/:scheduleId', (req, res) => {
   const { teacher_id, time_start, time_end, day, schedule_status } = req.body;
 
   // First check if the schedule is already approved
-  const checkQuery = 'SELECT schedule_status FROM schedule WHERE schedule_id = ?';
+  const checkQuery = 'SELECT schedule_status, section_id FROM schedule WHERE schedule_id = ?';
   db.query(checkQuery, [scheduleId], (checkErr, checkResults) => {
     if (checkErr) {
       console.error('Error checking schedule status:', checkErr);
@@ -3421,18 +3421,107 @@ app.put('/schedules/:scheduleId', (req, res) => {
       return res.status(403).json({ error: 'Cannot edit approved schedules' });
     }
 
-    // If schedule is not approved, proceed with the update
-    const query = 'UPDATE schedule SET teacher_id = ?, time_start = ?, time_end = ?, day = ?, schedule_status = ? WHERE schedule_id = ?';
-    db.query(query, [teacher_id, time_start, time_end, day, schedule_status, scheduleId], (err, results) => {
+    // Get section_id from the existing schedule
+    const section_id = checkResults[0].section_id;
+
+    // Get active school year
+    const getActiveSchoolYearQuery = `SELECT school_year_id FROM school_year WHERE status = 'active' LIMIT 1`;
+    db.query(getActiveSchoolYearQuery, (err, schoolYearResult) => {
       if (err) {
-        console.error('Error updating schedule details:', err);
-        return res.status(500).json({ error: 'Internal server error' });
+        console.error('Error fetching active school year:', err);
+        return res.status(500).json({ error: 'Failed to fetch active school year', details: err.message });
       }
-      if (results.affectedRows > 0) {
-        res.json({ message: 'Schedule updated successfully' });
-      } else {
-        res.status(404).json({ error: 'Schedule not found' });
+
+      if (schoolYearResult.length === 0) {
+        return res.status(400).json({ error: 'No active school year found' });
       }
+
+      const school_year_id = schoolYearResult[0].school_year_id;
+
+      // Parse days to check for conflicts
+      let days = [];
+      try {
+        days = typeof day === 'string' && day.startsWith('[') ? JSON.parse(day) : [day];
+      } catch (error) {
+        console.error('Error parsing days:', error);
+        return res.status(400).json({ error: 'Invalid day format' });
+      }
+
+      // Check for conflicts with existing schedules
+      const checkConflictsQuery = `
+        SELECT 
+          sc.schedule_id, 
+          sc.time_start, 
+          sc.time_end, 
+          sc.day,
+          sb.subject_name
+        FROM schedule sc 
+        LEFT JOIN subject sb ON sc.subject_id = sb.subject_id
+        WHERE 
+          sc.section_id = ? AND 
+          sc.school_year_id = ? AND
+          sc.schedule_id != ?
+      `;
+
+      db.query(checkConflictsQuery, [section_id, school_year_id, scheduleId], (err, existingSchedules) => {
+        if (err) {
+          console.error('Error checking for schedule conflicts:', err);
+          return res.status(500).json({ error: 'Failed to check for schedule conflicts', details: err.message });
+        }
+
+        // Process each existing schedule to check for conflicts
+        for (const schedule of existingSchedules) {
+          let scheduleDays = [];
+          try {
+            scheduleDays = typeof schedule.day === 'string' && schedule.day.startsWith('[') ? 
+                          JSON.parse(schedule.day) : [schedule.day];
+          } catch (error) {
+            console.error('Error parsing days from existing schedule:', error);
+            scheduleDays = [schedule.day]; // Fallback to treating as a single day
+          }
+
+          // Check for day overlap
+          const hasOverlappingDay = days.some(d => scheduleDays.includes(d));
+          
+          if (hasOverlappingDay) {
+            // Check for time overlap
+            // Convert times to comparable format (e.g., minutes since midnight)
+            const newStartMinutes = convertTimeToMinutes(time_start);
+            const newEndMinutes = convertTimeToMinutes(time_end);
+            const scheduleStartMinutes = convertTimeToMinutes(schedule.time_start);
+            const scheduleEndMinutes = convertTimeToMinutes(schedule.time_end);
+
+            // Time overlap occurs when:
+            // (new start time is during existing schedule) OR (new end time is during existing schedule) OR 
+            // (new schedule entirely contains existing schedule)
+            const timeOverlap = 
+              (newStartMinutes >= scheduleStartMinutes && newStartMinutes < scheduleEndMinutes) || 
+              (newEndMinutes > scheduleStartMinutes && newEndMinutes <= scheduleEndMinutes) ||
+              (newStartMinutes <= scheduleStartMinutes && newEndMinutes >= scheduleEndMinutes);
+
+            if (timeOverlap) {
+              return res.status(409).json({ 
+                error: 'Schedule conflict detected', 
+                details: `There is a conflict with the subject "${schedule.subject_name}" on ${scheduleDays.join(', ')} from ${schedule.time_start} to ${schedule.time_end}.` 
+              });
+            }
+          }
+        }
+
+        // If schedule is not approved and no conflicts, proceed with the update
+        const query = 'UPDATE schedule SET teacher_id = ?, time_start = ?, time_end = ?, day = ?, schedule_status = ? WHERE schedule_id = ?';
+        db.query(query, [teacher_id, time_start, time_end, day, schedule_status, scheduleId], (err, results) => {
+          if (err) {
+            console.error('Error updating schedule details:', err);
+            return res.status(500).json({ error: 'Internal server error' });
+          }
+          if (results.affectedRows > 0) {
+            res.json({ message: 'Schedule updated successfully' });
+          } else {
+            res.status(404).json({ error: 'Schedule not found' });
+          }
+        });
+      });
     });
   });
 });
@@ -5002,72 +5091,162 @@ app.post('/api/schedules', (req, res) => {
 
     const school_year_id = schoolYearResult[0].school_year_id;
 
-    const insertScheduleQuery = `
-      INSERT INTO schedule 
-      (subject_id, teacher_id, time_start, time_end, day, section_id, schedule_status, grade_level, school_year_id, elective)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    // Parse days to check for conflicts
+    let days = [];
+    try {
+      days = typeof day === 'string' && day.startsWith('[') ? JSON.parse(day) : [day];
+    } catch (error) {
+      console.error('Error parsing days:', error);
+      return res.status(400).json({ error: 'Invalid day format' });
+    }
+
+    // Check for conflicts with existing schedules
+    const checkConflictsQuery = `
+      SELECT 
+        sc.schedule_id, 
+        sc.time_start, 
+        sc.time_end, 
+        sc.day,
+        sb.subject_name
+      FROM schedule sc 
+      LEFT JOIN subject sb ON sc.subject_id = sb.subject_id
+      WHERE 
+        sc.section_id = ? AND 
+        sc.school_year_id = ?
     `;
 
-    db.query(
-      insertScheduleQuery,
-      [
-        subject_id,
-        teacher_id,
-        time_start,
-        time_end,
-        day,
-        section_id,
-        schedule_status,
-        grade_level,
-        school_year_id,
-        elective,
-      ],
-      (err, result) => {
-        if (err) {
-          console.error('Error adding schedule:', err);
-          return res.status(500).json({ error: 'Failed to insert schedule', details: err.message });
+    db.query(checkConflictsQuery, [section_id, school_year_id], (err, existingSchedules) => {
+      if (err) {
+        console.error('Error checking for schedule conflicts:', err);
+        return res.status(500).json({ error: 'Failed to check for schedule conflicts', details: err.message });
+      }
+
+      // Process each existing schedule to check for conflicts
+      for (const schedule of existingSchedules) {
+        let scheduleDays = [];
+        try {
+          scheduleDays = typeof schedule.day === 'string' && schedule.day.startsWith('[') ? 
+                         JSON.parse(schedule.day) : [schedule.day];
+        } catch (error) {
+          console.error('Error parsing days from existing schedule:', error);
+          scheduleDays = [schedule.day]; // Fallback to treating as a single day
         }
 
-        const scheduleId = result.insertId;
+        // Check for day overlap
+        const hasOverlappingDay = days.some(d => scheduleDays.includes(d));
+        
+        if (hasOverlappingDay) {
+          // Check for time overlap
+          // Convert times to comparable format (e.g., minutes since midnight)
+          const newStartMinutes = convertTimeToMinutes(time_start);
+          const newEndMinutes = convertTimeToMinutes(time_end);
+          const scheduleStartMinutes = convertTimeToMinutes(schedule.time_start);
+          const scheduleEndMinutes = convertTimeToMinutes(schedule.time_end);
 
-        const insertOrUpdateTeacherSubjectQuery = `
-          INSERT INTO teacher_subject 
-          (subject_id, LEVEL, section_id, employee_id, elective, school_year_id)
-          VALUES (?, ?, ?, ?, ?, ?)
-          ON DUPLICATE KEY UPDATE
-            subject_id = VALUES(subject_id),
-            LEVEL = VALUES(LEVEL),
-            section_id = VALUES(section_id),
-            employee_id = VALUES(employee_id),
-            elective = VALUES(elective),
-            school_year_id = VALUES(school_year_id)
-        `;
+          // Time overlap occurs when:
+          // (new start time is during existing schedule) OR (new end time is during existing schedule) OR 
+          // (new schedule entirely contains existing schedule)
+          const timeOverlap = 
+            (newStartMinutes >= scheduleStartMinutes && newStartMinutes < scheduleEndMinutes) || 
+            (newEndMinutes > scheduleStartMinutes && newEndMinutes <= scheduleEndMinutes) ||
+            (newStartMinutes <= scheduleStartMinutes && newEndMinutes >= scheduleEndMinutes);
 
-        db.query(
-          insertOrUpdateTeacherSubjectQuery,
-          [
-            subject_id,
-            grade_level,
-            section_id,
-            teacher_id,
-            elective,
-            school_year_id,
-          ],
-          (err2) => {
-            if (err2) {
-              console.error('Error inserting/updating teacher_subject:', err2);
-              return res.status(500).json({ error: 'Schedule inserted but failed to link teacher and subject', details: err2.message });
-            }
-
-            res.status(201).json({ message: 'Schedule and teacher-subject entry added/updated successfully', scheduleId });
+          if (timeOverlap) {
+            return res.status(409).json({ 
+              error: 'Schedule conflict detected', 
+              details: `There is a conflict with the subject "${schedule.subject_name}" on ${scheduleDays.join(', ')} from ${schedule.time_start} to ${schedule.time_end}.` 
+            });
           }
-        );
+        }
       }
-    );
+
+      // If no conflicts, proceed with schedule insertion
+      const insertScheduleQuery = `
+        INSERT INTO schedule 
+        (subject_id, teacher_id, time_start, time_end, day, section_id, schedule_status, grade_level, school_year_id, elective)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `;
+
+      db.query(
+        insertScheduleQuery,
+        [
+          subject_id,
+          teacher_id,
+          time_start,
+          time_end,
+          day,
+          section_id,
+          schedule_status,
+          grade_level,
+          school_year_id,
+          elective,
+        ],
+        (err, result) => {
+          if (err) {
+            console.error('Error adding schedule:', err);
+            return res.status(500).json({ error: 'Failed to insert schedule', details: err.message });
+          }
+
+          const scheduleId = result.insertId;
+
+          const insertOrUpdateTeacherSubjectQuery = `
+            INSERT INTO teacher_subject 
+            (subject_id, LEVEL, section_id, employee_id, elective, school_year_id)
+            VALUES (?, ?, ?, ?, ?, ?)
+            ON DUPLICATE KEY UPDATE
+              subject_id = VALUES(subject_id),
+              LEVEL = VALUES(LEVEL),
+              section_id = VALUES(section_id),
+              employee_id = VALUES(employee_id),
+              elective = VALUES(elective),
+              school_year_id = VALUES(school_year_id)
+          `;
+
+          db.query(
+            insertOrUpdateTeacherSubjectQuery,
+            [
+              subject_id,
+              grade_level,
+              section_id,
+              teacher_id,
+              elective,
+              school_year_id,
+            ],
+            (err2) => {
+              if (err2) {
+                console.error('Error inserting/updating teacher_subject:', err2);
+                return res.status(500).json({ error: 'Schedule inserted but failed to link teacher and subject', details: err2.message });
+              }
+
+              res.status(201).json({ message: 'Schedule and teacher-subject entry added/updated successfully', scheduleId });
+            }
+          );
+        }
+      );
+    });
   });
 });
 
-
+// Helper function to convert time string (HH:MM) to minutes since midnight
+function convertTimeToMinutes(timeStr) {
+  // Handle AM/PM format
+  if (timeStr.includes('AM') || timeStr.includes('PM')) {
+    const [time, period] = timeStr.split(' ');
+    const [hours, minutes] = time.split(':').map(Number);
+    
+    if (period === 'PM' && hours < 12) {
+      return (hours + 12) * 60 + minutes;
+    } else if (period === 'AM' && hours === 12) {
+      return minutes; // 12 AM = 00:00
+    } else {
+      return hours * 60 + minutes;
+    }
+  }
+  
+  // Handle 24-hour format
+  const [hours, minutes] = timeStr.split(':').map(Number);
+  return hours * 60 + minutes;
+}
 
 app.post("/api/save-grade", (req, res) => {
   const { student_id, student_name, grade_level, school_year_id, subjects, section_id, UserId } = req.body;
@@ -5181,7 +5360,7 @@ app.post('/api/upload-profile-picture', upload.single('profilePicture'), (req, r
         imageUrl: fileUrl
       });
     });
-  } catch (error) {
+    } catch (error) {
     console.error('Error in profile picture upload:', error);
     res.status(500).json({ error: 'Server error during file upload' });
   }
@@ -5686,13 +5865,13 @@ app.get('/sections/:sectionId/schedules/by-adviser', (req, res) => {
 
     // Modified query that handles both regular subjects and elective subjects directly
     const scheduleQuery = `
-    SELECT 
-      sc.schedule_id, 
+      SELECT 
+        sc.schedule_id, 
       sc.teacher_id, 
       sb.subject_name, 
       TIME_FORMAT(sc.time_start, '%h:%i %p') AS time_start, 
       TIME_FORMAT(sc.time_end, '%h:%i %p') AS time_end, 
-      sc.day, 
+        sc.day,
       sc.section_id, 
       s.section_name, 
       sc.schedule_status,
@@ -5702,8 +5881,8 @@ app.get('/sections/:sectionId/schedules/by-adviser', (req, res) => {
           CONCAT(LEFT(emp.middlename, 1), '. '), ''), 
         emp.lastname
       ) AS teacher_name
-    FROM schedule sc
-    LEFT JOIN subject sb ON sc.subject_id = sb.subject_id
+      FROM schedule sc 
+      LEFT JOIN subject sb ON sc.subject_id = sb.subject_id
     LEFT JOIN employee emp ON sc.teacher_id = emp.employee_id
     LEFT JOIN section s ON sc.section_id = s.section_id
     WHERE sc.section_id = ?
@@ -6445,7 +6624,7 @@ app.get('/api/subject-statistics', (req, res) => {
     FROM grades a
     LEFT JOIN subject b ON a.subject_name = b.subject_name
     LEFT JOIN section c ON a.section_id = c.section_id
-    WHERE 
+      WHERE 
         a.grade_level = ?
         AND a.section_id = ?
         AND a.school_year_id = ?
@@ -6455,7 +6634,7 @@ app.get('/api/subject-statistics', (req, res) => {
 
   // Run metaInfoQuery first
   db.query(metaInfoQuery, [section_id, grade_level, school_year_id], (err, metaResults) => {
-    if (err) {
+      if (err) {
       console.error('Meta info error:', err);
       return res.status(500).json({ error: 'Meta info query failed.' });
     }

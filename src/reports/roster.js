@@ -247,13 +247,13 @@ function Roster() {
             <div className="roster-signature">
               <div className="f137-name">{adviser || "[Adviser Name]"}</div>
               <div className="roster-signature-line"></div>
-              <div className="roster-signature-title">Teacher III</div>
+              <div className="roster-signature-title">Teacher</div>
             </div>
             <div className="roster-signature">
               <div className="f137-name">{principal || "[Principal Name]"}</div>
               <div className="roster-signature-line"></div>
               <div className="roster-signature-name">School Principal</div>
-              <div className="roster-signature-title">Principal III</div>
+              <div className="roster-signature-title">Principal</div>
             </div>
           </div>
         </div>

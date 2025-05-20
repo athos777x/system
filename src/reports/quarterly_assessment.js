@@ -266,7 +266,7 @@ function QuarterlyAssessment() {
             <div className="quarterly-assessment-signature">
               <div className="f137-name">{principal || "[Principal Name]"}</div>
               <div className="quarterly-assessment-signature-line"></div>
-              <span>Signature</span>
+              <span>Principal</span>
             </div>
           </div>
         </div>

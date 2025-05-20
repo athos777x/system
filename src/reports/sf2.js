@@ -769,11 +769,12 @@ const calculateSummary = () => {
             <div className="sf2-signature">
               <div className="f137-name">{adviser || "[Adviser Name]"}</div>
               <div className="sf2-signature-line"></div>
-              <p>Attested by:</p>
+              <p>Registrar:</p>
             </div>
             <div className="sf2-signature">
               <div className="f137-name">{principal || "[Principal Name]"}</div>
               <div className="sf2-signature-line"></div>
+              <p>Principal:</p>
             </div>
           </div>
         </div>

@@ -242,13 +242,11 @@ function SF1() {
           <div className="sf1-signature-section">
             <div className="sf1-signature">
             <div className="f137-name">{adviser || "[Adviser Name]"}</div>
-              <div className="sf1-signature-line">Prepared by:</div>
               <div className="sf1-signature-name">TEACHER'S NAME</div>
               <div className="sf1-signature-title">Class Adviser</div>
             </div>
             <div className="sf1-signature">
-              <div className="f137-name">{principal || "[Principal Name]"}</div>
-              <div className="sf1-signature-line">Certified Correct:</div>
+              <div className="f137-name">{principal || "[Principal Name]"}</div>  
               <div className="sf1-signature-name">PRINCIPAL'S NAME</div>
               <div className="sf1-signature-title">School Principal</div>
             </div>

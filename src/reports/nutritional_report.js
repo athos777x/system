@@ -252,7 +252,7 @@ function NutritionalReport() {
               <div className="f137-name">{principal || "[Principal Name]"}</div>
               <div className="nutritional-report-signature-line"></div>
               <div className="nutritional-report-signature-name">School Principal</div>
-              <div className="nutritional-report-signature-title">Principal III</div>
+              <div className="nutritional-report-signature-title">Principal</div>
             </div>
           </div>
         </div>
