@@ -613,7 +613,12 @@ function Principal_SchedulePage() {
       displaySuccessMessage('Schedule updated successfully!');
     } catch (error) {
       console.error('Error saving schedule details:', error);
-      alert('Error saving schedule. Please try again.');
+      // Check for conflict errors (HTTP 409)
+      if (error.response && error.response.status === 409) {
+        alert(`Schedule conflict detected: ${error.response.data.details}`);
+      } else {
+        alert('Error saving schedule. Please try again.');
+      }
     }
   };
 
@@ -728,7 +733,13 @@ function Principal_SchedulePage() {
       displaySuccessMessage('New schedule added successfully!');
     } catch (error) {
       console.error('Error adding schedule:', error);
-      alert('Error adding schedule. Please check all fields are filled correctly.');
+      
+      // Check for conflict errors (HTTP 409)
+      if (error.response && error.response.status === 409) {
+        alert(`Schedule conflict detected: ${error.response.data.details}`);
+      } else {
+        alert('Error adding schedule. Please check all fields are filled correctly.');
+      }
     }
   };
   
