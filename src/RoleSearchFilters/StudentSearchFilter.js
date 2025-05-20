@@ -6,7 +6,8 @@ function StudentSearchFilter({ students, fetchStudents, setFilteredStudents, set
     searchTerm: '',
     school_year: '',
     grade: '',
-    section: ''
+    section: '',
+    archived: ''
   });
 
   // Store temporary filters without applying immediately
@@ -88,6 +89,10 @@ function StudentSearchFilter({ students, fetchStudents, setFilteredStudents, set
                lastName.includes(filters.searchTerm.toLowerCase());
       });
     }
+    if (filters.archived) {
+      filtered = filtered.filter(student => student.is_archived === filters.archived);
+    }
+    
 
     setFilteredStudents(filtered);
     setCurrentPage(1); 
@@ -172,6 +177,17 @@ function StudentSearchFilter({ students, fetchStudents, setFilteredStudents, set
             </option>
           ))}
         </select>
+
+        <select 
+          name="archived"
+          value={tempFilters.archived}
+          onChange={(e) => handleFilterChange('archived', e.target.value)}
+        >
+          <option value="unarchive">Unarchived</option>
+          <option value="archived">Archived</option>
+        </select>
+
+
       </div>
 
       {/* Apply Filters Button */}

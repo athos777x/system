@@ -13,19 +13,28 @@ function Form137() {
   const [academicRecords, setAcademicRecords] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [adviser, setAdviser] = useState("");
+  const [principal, setPrincipal] = useState("");
+
 
   useEffect(() => {
     if (student) {
-      if (!studentDetails) { // Ensure student details aren't already fetched
+      if (!studentDetails) {
         fetchStudentDetails();
-      } else if (studentDetails && academicRecords.length === 0) {
-        fetchAcademicRecords(studentDetails.student_id);
+      } else {
+        if (academicRecords.length === 0) {
+          fetchAcademicRecords(studentDetails.student_id);
+        }
+  
+        fetchAdviser(studentDetails.student_id);
+        fetchPrincipal();
       }
     } else {
       setError("No student data provided");
       setLoading(false);
     }
   }, [student, studentDetails, academicRecords.length]);
+  
   
   const fetchStudentDetails = async () => {
     try {
@@ -69,6 +78,33 @@ function Form137() {
       setLoading(false);
     }
   };
+
+  const fetchAdviser = async (studentId) => {
+    try {
+      const response = await axios.get("http://localhost:3001/api/enrollment/adviser-info", {
+        params: { student_id: studentId },
+      });
+  
+      if (response.data && response.data.adviser) {
+        setAdviser(response.data.adviser);
+      }
+    } catch (err) {
+      console.error("Error fetching adviser:", err);
+    }
+  };
+  
+  const fetchPrincipal = async () => {
+    try {
+      const response = await axios.get("http://localhost:3001/api/enrollment/principal");
+  
+      if (response.data && response.data.principal) {
+        setPrincipal(response.data.principal);
+      }
+    } catch (err) {
+      console.error("Error fetching principal:", err);
+    }
+  };
+  
   
   const handlePrintPDF = () => {
     const doc = new jsPDF({
@@ -234,10 +270,12 @@ function Form137() {
 
         <div className="f137-signature-section">
           <div className="f137-signature-box">
+            <div className="f137-name">{adviser || "[Adviser Name]"}</div>
             <div className="f137-signature-line"></div>
             <p>Class Adviser</p>
           </div>
           <div className="f137-signature-box">
+            <div className="f137-name">{principal || "[Principal Name]"}</div>
             <div className="f137-signature-line"></div>
             <p>Principal</p>
           </div>

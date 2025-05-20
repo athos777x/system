@@ -17,6 +17,7 @@ function StudentManagement() {
   const [showAddCancelModal, setShowAddCancelModal] = useState(false); // New state for add form cancel confirmation
   const [errors, setErrors] = useState({});
   const [roleName, setRoleName] = useState('');
+  const [selectedStudent, setSelectedStudent] = useState(null);
 
   const [schoolYears, setSchoolYears] = useState([]);
   const [sections, setSections] = useState([]);
@@ -712,16 +713,17 @@ const archiveStudent = async (studentId, status) => {
     const response = await axios.put(`http://localhost:3001/students/${studentId}/archive`, { status });
 
     if (response.status === 200) {
-      alert('Student archived successfully');
-      await fetchStudents(); // Refresh the student list after archiving
+      // Use backend message for alert
+      alert(response.data.message || (status === 'active' ? 'Student unarchived successfully' : 'Student archived successfully'));
+      await fetchStudents(); // Refresh the student list after archiving/unarchiving
     } else {
       console.warn('Failed to archive student, non-200 response:', response);
-      alert('Failed to archive student.');
+      alert('Failed to update student status.');
     }
   } catch (error) {
     if (error.response) {
       console.error('Error response:', error.response.data);
-      alert('Error archiving the student: ' + (error.response.data.error || 'Unknown error'));
+      alert('Error updating the student: ' + (error.response.data.error || 'Unknown error'));
     } else if (error.request) {
       console.error('No response from server:', error.request);
       alert('No response from the server. Please check your connection.');
@@ -732,15 +734,18 @@ const archiveStudent = async (studentId, status) => {
   }
 };
 
+
 // New Modal State
 const [showArchiveModal, setShowArchiveModal] = useState(false);
 const [archiveStudentId, setArchiveStudentId] = useState(null);
 const [archiveStatus, setArchiveStatus] = useState('');
 
-const openArchiveModal = (studentId) => {
-  setArchiveStudentId(studentId);
+const openArchiveModal = (student) => {
+  setSelectedStudent(student);
+  setArchiveStudentId(student.student_id);
   setShowArchiveModal(true);
 };
+
 
 const closeArchiveModal = () => {
   setArchiveStudentId(null);
@@ -749,13 +754,21 @@ const closeArchiveModal = () => {
 };
 
 const handleArchive = () => {
-  if (!archiveStatus) {
-    alert('Please select an archive status.');
-    return;
+  if (selectedStudent.archive_status === 'archived') {
+    // Unarchive: no archiveStatus needed, set status to 'active'
+    archiveStudent(archiveStudentId, 'active');
+    closeArchiveModal();
+  } else {
+    // Archive: require archiveStatus to be selected
+    if (!archiveStatus) {
+      alert('Please select an archive status.');
+      return;
+    }
+    archiveStudent(archiveStudentId, archiveStatus);
+    closeArchiveModal();
   }
-  archiveStudent(archiveStudentId, archiveStatus);
-  closeArchiveModal();
 };
+
 
   const formatDate = (isoString) => {
     const date = new Date(isoString);
@@ -1833,11 +1846,11 @@ const handleArchive = () => {
                                   */}
                                   {roleName === 'registrar' && (
                               <button
-                                      className="student-mgmt-btn student-mgmt-btn-archive"
-                                      onClick={() => openArchiveModal(student.student_id)}
-                              >
-                                      Archive
-                              </button>
+                              className="student-mgmt-btn student-mgmt-btn-archive"
+                              onClick={() => openArchiveModal(student)}
+                            >
+                              {student.archive_status === 'archived' ? 'Unarchive' : 'Archive'}
+                            </button>
                           )}
                         </>
                       )}
@@ -1911,21 +1924,28 @@ const handleArchive = () => {
         <div className="student-mgmt-modal">
           <div className="student-mgmt-modal-content">
             <div className="student-mgmt-modal-header">
-            <h2>Archive Student</h2>
-              <p>Please select a status to archive this student. This action cannot be undone.</p>
+              <h2>{selectedStudent?.archive_status === 'archived' ? 'Unarchive Student' : 'Archive Student'}</h2>
+              <p>
+                {selectedStudent?.archive_status === 'archived'
+                  ? 'This will reactivate the student and set their status to active.'
+                  : 'Please select a reason for archiving this student. This action cannot be undone.'}
+              </p>
             </div>
-            
-            <select
-              className="student-mgmt-modal-select"
-              value={archiveStatus}
-              onChange={(e) => setArchiveStatus(e.target.value)}
-              required
-            >
-              <option value="">Select archive status</option>
-              <option value="inactive">Inactive</option>
-              <option value="withdrawn">Withdrawn</option>
-              <option value="transferred">Transferred</option>
-            </select>
+
+            {/* Show select only when archiving */}
+            {selectedStudent?.archive_status !== 'archived' && (
+              <select
+                className="student-mgmt-modal-select"
+                value={archiveStatus}
+                onChange={(e) => setArchiveStatus(e.target.value)}
+                required
+              >
+                <option value="">Select archive status</option>
+                <option value="inactive">Inactive</option>
+                <option value="withdrawn">Withdrawn</option>
+                <option value="transferred">Transferred</option>
+              </select>
+            )}
 
             <div className="student-mgmt-modal-actions">
               <button 
@@ -1937,14 +1957,15 @@ const handleArchive = () => {
               <button 
                 className="student-mgmt-modal-btn student-mgmt-modal-btn-confirm"
                 onClick={handleArchive}
-                disabled={!archiveStatus}
+                disabled={selectedStudent?.archive_status !== 'archived' && !archiveStatus}
               >
-                Archive
+                {selectedStudent?.archive_status === 'archived' ? 'Unarchive' : 'Archive'}
               </button>
             </div>
           </div>
         </div>
       )}
+
 
       {showModal && (
         <div className="student-mgmt-modal">

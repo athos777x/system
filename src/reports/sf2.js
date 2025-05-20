@@ -30,6 +30,8 @@ function SF2() {
     sectionName: '',
     schoolYearName: ''
   });
+  const [adviser, setAdviser] = useState("");
+  const [principal, setPrincipal] = useState("");
 
   const navigate = useNavigate();
 
@@ -52,8 +54,12 @@ function SF2() {
   };
 
   useEffect(() => {
+    if (!gradeLevel || !section) return;
+
     fetchSectionInfo();
-  }, []);
+    fetchAdviser({ grade_level: gradeLevel, section_id: section });
+    fetchPrincipal();
+  }, [gradeLevel, section]);
 
 
   useEffect(() => {
@@ -103,6 +109,34 @@ function SF2() {
 
     fetchAttendanceData();
   }, [selectedMonth, grade, section, selectedYear]);
+
+  const fetchAdviser = async ({ student_id, grade_level, section_id }) => {
+    try {
+      const response = await axios.get("http://localhost:3001/api/enrollment/adviser-info", {
+        params: { student_id, grade_level, section_id },
+      });
+  
+      if (response.data && response.data.adviser) {
+        setAdviser(response.data.adviser);
+      }
+    } catch (err) {
+      console.error("Error fetching adviser:", err);
+    }
+  };
+  
+  
+  const fetchPrincipal = async () => {
+    try {
+      const response = await axios.get("http://localhost:3001/api/enrollment/principal");
+  
+      if (response.data && response.data.principal) {
+        setPrincipal(response.data.principal);
+      }
+    } catch (err) {
+      console.error("Error fetching principal:", err);
+    }
+  };
+
 
   const handlePrintPDF = () => {
     const doc = new jsPDF({
@@ -733,13 +767,13 @@ const calculateSummary = () => {
           <p>I certify that this is a true and correct report.</p>
           <div className="sf2-signatures">
             <div className="sf2-signature">
+              <div className="f137-name">{adviser || "[Adviser Name]"}</div>
               <div className="sf2-signature-line"></div>
-              <p>(Signature of Teacher over Printed Name)</p>
               <p>Attested by:</p>
             </div>
             <div className="sf2-signature">
+              <div className="f137-name">{principal || "[Principal Name]"}</div>
               <div className="sf2-signature-line"></div>
-              <p>(Signature of School Head over Printed Name)</p>
             </div>
           </div>
         </div>

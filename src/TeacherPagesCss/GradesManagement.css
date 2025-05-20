@@ -578,4 +578,104 @@ input.submitted-grade {
 
 .confirm-btn:hover {
   background: #388e3c;
+}
+
+/* Grade Activity Logs Styles */
+.grade-logs-section {
+  margin-top: 2rem;
+  border-top: 1px solid #c8e6c9;
+  padding-top: 1rem;
+}
+
+.grade-logs-title {
+  font-size: 1.1rem;
+  color: #2e7d32;
+  margin: 0 0 1rem 0;
+  display: flex;
+  align-items: center;
+}
+
+
+.grade-logs-container {
+  overflow-x: auto;
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+}
+
+.grade-logs-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.grade-logs-table th {
+  background: #e8f5e9;
+  color: #2e7d32;
+  font-weight: 600;
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 2px solid #c8e6c9;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.grade-logs-table td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid #f0f0f0;
+  color: #333;
+}
+
+.grade-logs-table tr:hover {
+  background-color: #f9f9f9;
+}
+
+.no-logs-message {
+  padding: 1rem;
+  text-align: center;
+  color: #757575;
+  font-style: italic;
+  background: #f5f5f5;
+  border-radius: 8px;
+}
+
+/* Action type styling */
+.log-action {
+  font-weight: 500;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.log-action.submitted {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+
+.log-action.updated {
+  background-color: #e3f2fd;
+  color: #1565c0;
+}
+
+.log-action.created {
+  background-color: #f3e5f5;
+  color: #7b1fa2;
+}
+
+.log-action.deleted {
+  background-color: #ffebee;
+  color: #c62828;
+}
+
+@media (max-width: 992px) {
+  .grade-logs-container {
+    max-height: 400px;
+  }
+  
+  .grade-logs-table {
+    min-width: 800px;
+  }
 } 

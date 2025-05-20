@@ -17,6 +17,9 @@ function SF1() {
   const [schoolYearId, setSchoolYearId] = useState(schoolYear || '');
   const [gradeLevel, setGradeLevel] = useState(grade || '');
   const [sectionId, setSectionId] = useState(section || '');
+  const [adviser, setAdviser] = useState("");
+  const [principal, setPrincipal] = useState("");
+
 
   const [schoolData, setSchoolData] = useState({
     schoolName: "Lourdes National High School",
@@ -40,7 +43,11 @@ function SF1() {
     const fetchClassList = async () => {
       try {
         const response = await axios.get("http://localhost:3001/api/class_list", {
-          params: { school_year_id: schoolYear, grade_level: grade, section_id: section }
+          params: {
+            school_year_id: schoolYearId,
+            grade_level: gradeLevel,
+            section_id: sectionId,
+          },
         });
   
         const classInfoData = response.data.classInfo;
@@ -51,15 +58,27 @@ function SF1() {
             schoolYear: classInfoData.school_year,
             adviser: classInfoData.class_adviser,
             dateGenerated: classInfoData.date_generated || new Date().toLocaleDateString(),
-            grade_section: classInfoData.grade_section
+            grade_section: classInfoData.grade_section,
           }));
           setClassInfo(classInfoData);
+  
+          // Fetch adviser and principal AFTER classInfo is set
+          if (classInfoData.class_adviser) {
+            setAdviser(classInfoData.class_adviser);
+          } else {
+            fetchAdviser({
+              student_id: null,  // or any necessary param if needed
+              grade_level: gradeLevel,
+              section_id: sectionId,
+            });
+          }
+          fetchPrincipal();
         }
   
         setStudents(response.data.students || []);
         setLoading(false);
       } catch (err) {
-        setError('Error fetching class list data');
+        setError("Error fetching class list data");
         setLoading(false);
       }
     };
@@ -67,7 +86,33 @@ function SF1() {
     fetchClassList();
   }, [schoolYearId, gradeLevel, sectionId]);
   
+  const fetchAdviser = async ({ student_id, grade_level, section_id }) => {
+    try {
+      const response = await axios.get("http://localhost:3001/api/enrollment/adviser-info", {
+        params: { student_id, grade_level, section_id },
+      });
   
+      if (response.data && response.data.adviser) {
+        setAdviser(response.data.adviser);
+      }
+    } catch (err) {
+      console.error("Error fetching adviser:", err);
+    }
+  };
+  
+  
+  const fetchPrincipal = async () => {
+    try {
+      const response = await axios.get("http://localhost:3001/api/enrollment/principal");
+  
+      if (response.data && response.data.principal) {
+        setPrincipal(response.data.principal);
+      }
+    } catch (err) {
+      console.error("Error fetching principal:", err);
+    }
+  };
+
 
   const handlePrintPDF = () => {
     const doc = new jsPDF({
@@ -196,11 +241,13 @@ function SF1() {
         <div className="sf1-footer">
           <div className="sf1-signature-section">
             <div className="sf1-signature">
+            <div className="f137-name">{adviser || "[Adviser Name]"}</div>
               <div className="sf1-signature-line">Prepared by:</div>
               <div className="sf1-signature-name">TEACHER'S NAME</div>
               <div className="sf1-signature-title">Class Adviser</div>
             </div>
             <div className="sf1-signature">
+              <div className="f137-name">{principal || "[Principal Name]"}</div>
               <div className="sf1-signature-line">Certified Correct:</div>
               <div className="sf1-signature-name">PRINCIPAL'S NAME</div>
               <div className="sf1-signature-title">School Principal</div>

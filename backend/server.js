@@ -253,13 +253,12 @@ app.get('/users/:userId', (req, res) => {
 // ATTENDANCE PAGE
 // STUDENTS PAGE
 app.get('/students', (req, res) => {
-  const { searchID, searchTerm, grade, section, school_year } = req.query;
+  const { searchID, searchTerm, grade, section, school_year, archived } = req.query;
 
-  console.log('Received filters:', { searchID, searchTerm, grade, section, school_year });
+  console.log('Received filters:', { searchID, searchTerm, grade, section, school_year, archived });
 
-  // Query to fetch the active school year (ONLY IF school_year is not provided AND searchID is also not provided)
-  let latestSchoolYear = school_year; // Default to user-provided school_year
-  if (!school_year && !searchID) { // Only fetch active year if no school_year is selected AND no searchID
+  let latestSchoolYear = school_year;
+  if (!school_year && !searchID) {
     const getActiveSchoolYearQuery = `SELECT school_year FROM school_year WHERE status = 'active' LIMIT 1`;
 
     db.query(getActiveSchoolYearQuery, (err, results) => {
@@ -295,7 +294,7 @@ app.get('/students', (req, res) => {
       s.mother_occupation, FORMAT(s.annual_hshld_income,2) AS annual_hshld_income, s.number_of_siblings, 
       s.father_educ_lvl, s.mother_educ_lvl, s.father_contact_number, 
       s.mother_contact_number, bd.brigada_status AS brigada_eskwela, s.brigada_id,
-      s.emergency_number, s.emergency_contactperson,
+      s.emergency_number, s.emergency_contactperson, s.active_status as archive_status,
       (SELECT ss.enrollment_status FROM enrollment ss
       JOIN school_year sy ON ss.school_year_id = sy.school_year_id
       WHERE ss.student_id = s.student_id AND sy.status = 'active' LIMIT 1) as active_status,
@@ -306,18 +305,22 @@ app.get('/students', (req, res) => {
       LEFT JOIN student_school_year ss ON s.student_id = ss.student_id
       LEFT JOIN school_year sy ON ss.school_year_id = sy.school_year_id
       LEFT JOIN brigada_details bd ON s.brigada_id=bd.brigada_id
-      WHERE s.active_status = 'unarchive'
+      WHERE 1
     `;
 
     const queryParams = [];
     const conditions = [];
 
-    // ✅ If searchID is used, it should work independently
+    // ✅ Add archive filter if provided
+    if (archived === 'archived' || archived === 'unarchive') {
+      conditions.push(`s.active_status = ?`);
+      queryParams.push(archived);
+    }
+
     if (searchID) {
       conditions.push(`s.student_id = ?`);
       queryParams.push(searchID);
     } else {
-      // ✅ Apply filters only if searchID is NOT used
       if (searchTerm) {
         conditions.push(`(s.firstname LIKE ? OR s.lastname LIKE ? OR s.student_id LIKE ? )`);
         queryParams.push(`%${searchTerm}%`, `%${searchTerm}%`, `%${searchTerm}%`);
@@ -340,13 +343,11 @@ app.get('/students', (req, res) => {
       query += ' AND ' + conditions.join(' AND ');
     }
 
-    // ✅ Move GROUP BY to the end before ORDER BY
     query += ' GROUP BY s.student_id ORDER BY s.lastname ASC';
 
     console.log('Final SQL Query:', query);
     console.log('With parameters:', queryParams);
 
-    // ✅ Execute the main query
     db.query(query, queryParams, (err, results) => {
       if (err) {
         console.error('Error fetching students:', err);
@@ -357,6 +358,7 @@ app.get('/students', (req, res) => {
     });
   }
 });
+
 
 app.get('/students/active', (req, res) => {
   const { searchID, searchTerm, grade, section, school_year } = req.query;
@@ -3197,35 +3199,58 @@ app.post('/sections', (req, res) => {
 // ENDPOINT USED:
 // STUDENTS PAGE
 app.put('/students/:studentId/archive', (req, res) => {
-  const { studentId } = req.params; // Extract the student ID from the URL
-  const { status } = req.body; // Extract the new status from the request body
+  const { studentId } = req.params;
+  const { status } = req.body; // status could be 'inactive', 'withdrawn', 'transferred', or 'active' (for unarchive)
 
-  // Validate the status
-  if (!status || !['inactive', 'withdrawn', 'transferred'].includes(status)) {
+  // Allowed archive statuses (excluding 'active' which is for unarchive)
+  const archiveStatuses = ['inactive', 'withdrawn', 'transferred'];
+
+  // Handle unarchive case
+  if (status === 'active') {
+    const query = `
+      UPDATE student
+      SET status = 'active', active_status = 'unarchive'
+      WHERE student_id = ?;
+    `;
+
+    db.query(query, [studentId], (err, result) => {
+      if (err) {
+        console.error('Error unarchiving student:', err);
+        return res.status(500).json({ error: 'Failed to unarchive student' });
+      }
+      if (result.affectedRows > 0) {
+        return res.status(200).json({ message: 'Student unarchived successfully' });
+      } else {
+        return res.status(404).json({ error: 'Student not found' });
+      }
+    });
+  } 
+  // Handle archive case
+  else if (archiveStatuses.includes(status)) {
+    const query = `
+      UPDATE student
+      SET status = ?, active_status = 'archived'
+      WHERE student_id = ?;
+    `;
+
+    db.query(query, [status, studentId], (err, result) => {
+      if (err) {
+        console.error('Error archiving student:', err);
+        return res.status(500).json({ error: 'Failed to archive student' });
+      }
+      if (result.affectedRows > 0) {
+        return res.status(200).json({ message: 'Student archived successfully' });
+      } else {
+        return res.status(404).json({ error: 'Student not found' });
+      }
+    });
+  } 
+  // Invalid status
+  else {
     return res.status(400).json({ error: 'Invalid status provided' });
   }
-
-  // SQL query to update the student's status and active_status
-  const query = `
-    UPDATE student
-    SET status = ?, active_status = 'archived'
-    WHERE student_id = ?;
-  `;
-
-  // Execute the query with parameterized inputs
-  db.query(query, [status, studentId], (err, result) => {
-    if (err) {
-      console.error('Error archiving student:', err);
-      return res.status(500).json({ error: 'Failed to archive student' });
-    }
-
-    if (result.affectedRows > 0) {
-      res.status(200).json({ message: 'Student archived successfully' });
-    } else {
-      res.status(404).json({ error: 'Student not found' });
-    }
-  });
 });
+
 
 //ENDPOINT USED:
 // STUDENTS PAGE
@@ -5045,13 +5070,12 @@ app.post('/api/schedules', (req, res) => {
 
 
 app.post("/api/save-grade", (req, res) => {
-  const { student_id, student_name, grade_level, school_year_id, subjects, section_id } = req.body;
+  const { student_id, student_name, grade_level, school_year_id, subjects, section_id, UserId } = req.body;
 
   if (!student_id || !subjects || subjects.length === 0) {
     return res.status(400).json({ success: false, message: "Invalid request data." });
   }
 
-  // SQL query for inserting/updating grades
   const query = `
     INSERT INTO grades (
       grade_level,
@@ -5061,8 +5085,10 @@ app.post("/api/save-grade", (req, res) => {
       student_id,
       student_name,
       school_year_id,
-      section_id
-    ) 
+      section_id,
+      logs,
+      log_date
+    )
     VALUES ?
     ON DUPLICATE KEY UPDATE 
       grade = VALUES(grade),
@@ -5070,24 +5096,25 @@ app.post("/api/save-grade", (req, res) => {
       subject_name = VALUES(subject_name),
       student_name = VALUES(student_name),
       school_year_id = VALUES(school_year_id),
-      section_id = VALUES(section_id)
+      section_id = VALUES(section_id),
+      logs = IF(grade <> VALUES(grade), VALUES(logs), logs),
+      log_date = IF(grade <> VALUES(grade), VALUES(log_date), log_date)
   `;
 
-  // Prepare the values array
-  let values = [];
+  const now = new Date();
+  const values = [];
 
   subjects.forEach(subject => {
-    if (subject.q1 !== null) values.push([grade_level, subject.subject_name, subject.q1, 1, student_id, student_name, school_year_id,section_id]);
-    if (subject.q2 !== null) values.push([grade_level, subject.subject_name, subject.q2, 2, student_id, student_name, school_year_id,section_id]);
-    if (subject.q3 !== null) values.push([grade_level, subject.subject_name, subject.q3, 3, student_id, student_name, school_year_id,section_id]);
-    if (subject.q4 !== null) values.push([grade_level, subject.subject_name, subject.q4, 4, student_id, student_name, school_year_id,section_id]);
+    if (subject.q1 !== null) values.push([grade_level, subject.subject_name, subject.q1, 1, student_id, student_name, school_year_id, section_id, UserId, now]);
+    if (subject.q2 !== null) values.push([grade_level, subject.subject_name, subject.q2, 2, student_id, student_name, school_year_id, section_id, UserId, now]);
+    if (subject.q3 !== null) values.push([grade_level, subject.subject_name, subject.q3, 3, student_id, student_name, school_year_id, section_id, UserId, now]);
+    if (subject.q4 !== null) values.push([grade_level, subject.subject_name, subject.q4, 4, student_id, student_name, school_year_id, section_id, UserId, now]);
   });
 
   if (values.length === 0) {
     return res.status(400).json({ success: false, message: "No valid grades to insert." });
   }
 
-  // Execute the query
   db.query(query, [values], (err, result) => {
     if (err) {
       console.error("Error inserting/updating grades:", err);
@@ -6825,6 +6852,7 @@ app.get('/api/student-grades', (req, res) => {
         }
 
         res.json({
+          studentId: studentId,
           studentInfo: studentInfoResults[0],
           grades: gradesResults,
           attendance: attendanceResults
@@ -7185,3 +7213,121 @@ app.put('/students/section/:id', (req, res) => {
     });
   });
 });
+
+
+app.get('/api/enrollment/adviser-info', (req, res) => {
+  const { student_id, grade_level, section_id } = req.query;
+
+  const query = `
+    SELECT 
+      CONCAT(b.firstname, ' ', LEFT(IFNULL(b.middlename, ''), 1), '. ', b.lastname) AS adviser,
+      e.grade_level,
+      e.section_id
+    FROM enrollment e
+    LEFT JOIN section_assigned sa 
+      ON e.grade_level = sa.level AND e.section_id = sa.section_id
+    LEFT JOIN employee b 
+      ON sa.employee_id = b.employee_id
+    WHERE 
+      (? IS NOT NULL AND e.student_id = ?)
+      OR
+      (? IS NULL AND e.grade_level = ? AND e.section_id = ?)
+    LIMIT 1;
+  `;
+
+  db.query(
+    query,
+    [student_id, student_id, student_id, grade_level, section_id],
+    (err, results) => {
+      if (err) {
+        console.error('Error fetching adviser info:', err);
+        return res.status(500).json({ error: 'Internal server error' });
+      }
+
+      if (results.length === 0) {
+        return res.status(404).json({ error: 'Adviser not found' });
+      }
+
+      res.json(results[0]);
+    }
+  );
+});
+
+
+app.get('/api/enrollment/principal', (req, res) => {
+  const query = `
+    SELECT 
+      CONCAT(a.firstname, ' ', LEFT(IFNULL(a.middlename, ''), 1), '. ', a.lastname) AS principal
+    FROM employee a
+    WHERE a.role_name = 'principal' AND a.status = 'active'
+    LIMIT 1;
+  `;
+
+  db.query(query, (err, results) => {
+    if (err) {
+      return res.status(500).json({ error: "Database query failed", details: err.message });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ error: "No principal found" });
+    }
+
+    res.json(results[0]); // Return the principal's name
+  });
+});
+
+
+app.get('/api/enrollment/registrar', (req, res) => {
+  const query = `
+    SELECT 
+      CONCAT(a.firstname, ' ', LEFT(IFNULL(a.middlename, ''), 1), '. ', a.lastname) AS registrar
+    FROM employee a
+    WHERE a.role_name = 'registrar' AND a.status = 'active'
+    LIMIT 1;
+  `;
+
+  db.query(query, (err, results) => {
+    if (err) {
+      return res.status(500).json({ error: "Database query failed", details: err.message });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ error: "No principal found" });
+    }
+
+    res.json(results[0]); // Return the principal's name
+  });
+});
+
+
+app.get("/api/grade-logs/:studentId", (req, res) => {
+  const studentId = req.params.studentId;
+
+  if (!studentId) {
+    return res.status(400).json({ success: false, message: "Student ID is required." });
+  }
+
+  const query = `
+    SELECT 
+      CONCAT(c.firstname, ' ', LEFT(IFNULL(c.middlename, ''), 1), '. ', c.lastname) AS emp_name,
+      b.role_name,
+      a.log_date,
+      a.subject_name,
+      IF(a.period = 1, '1st Quarter', IF(a.period = 2, '2nd Quarter', IF(a.period = 3, '3rd Quarter', '4th Quarter'))) AS quarter,
+      a.grade
+    FROM grades a
+    LEFT JOIN users b ON a.logs = b.user_id
+    LEFT JOIN employee c ON b.user_id = c.user_id
+    WHERE b.role_name = 'registrar' AND a.student_id = ?
+    ORDER BY a.log_date DESC
+  `;
+
+  db.query(query, [studentId], (err, results) => {
+    if (err) {
+      console.error("Error fetching grade logs:", err);
+      return res.status(500).json({ success: false, message: "Failed to fetch grade logs." });
+    }
+    res.json({ success: true, data: results });
+  });
+});
+

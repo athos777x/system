@@ -22,6 +22,9 @@ function GradesManagement() {
   const [selectedSchoolYear, setSelectedSchoolYear] = useState({});
   const [assignedSubjects, setAssignedSubjects] = useState([]);
   const [coordinatorGradeLevel, setCoordinatorGradeLevel] = useState(null);
+  const [activityLogs, setActivityLogs] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [filters, setFilters] = useState({
     searchTerm: '',
     school_year: '',
@@ -101,6 +104,7 @@ function GradesManagement() {
       console.error('No userId found in localStorage');
     }
   }, []);
+  
 
   const fetchUserRole = async (userId) => {
     try {
@@ -229,50 +233,53 @@ function GradesManagement() {
 
   const handleStudentClick = async (student) => {
     if (selectedStudent && selectedStudent.student_id === student.student_id) {
-        setSelectedStudent(null);
-        setSubjects([]);
-        setGradesFetched(false);
-        setSelectedGradeLevel(null);
-        setSelectedSchoolYear(null); // Reset school year when unselecting
-        setIsSchoolYearActive(false); // Reset school year status
-        return;
+      setSelectedStudent(null);
+      setSubjects([]);
+      setGradesFetched(false);
+      setSelectedGradeLevel(null);
+      setSelectedSchoolYear(null);
+      setIsSchoolYearActive(false);
+      setActivityLogs([]);
+      return;
     }
-
+  
     setSelectedStudent(student);
     setEditingStudent(null);
     setGradesFetched(false);
-    
+  
     const gradeLevel = student.current_yr_lvl;
-    const schoolYearId = student.school_year_id; // Ensure schoolYearId is retrieved
+    const schoolYearId = student.school_year_id;
     const section_id = student.section_id;
-
+  
     setSelectedGradeLevel(gradeLevel);
-    setSelectedSchoolYear(schoolYearId); // Set the selected school year
-
+    setSelectedSchoolYear(schoolYearId);
+  
     if (!schoolYearId) {
-        console.error("No school year found for the selected student.");
-        return;
+      console.error("No school year found for the selected student.");
+      return;
     }
-
-    // Check if the school year is active
+  
     try {
-        const response = await axios.get(`http://localhost:3001/school-year-status/${schoolYearId}`);
-        setIsSchoolYearActive(response.data.status === 'active');
+      const response = await axios.get(`http://localhost:3001/school-year-status/${schoolYearId}`);
+      setIsSchoolYearActive(response.data.status === 'active');
     } catch (error) {
-        console.error("Error checking school year status:", error);
-        setIsSchoolYearActive(false); // Default to inactive if there's an error
+      console.error("Error checking school year status:", error);
+      setIsSchoolYearActive(false);
     }
-
-    // If role is subject_teacher and assignedSubjects is empty, fetch it first
+  
     if (roleName === 'subject_teacher' && assignedSubjects.length === 0) {
-        await fetchAssignedSubjects();
+      await fetchAssignedSubjects();
     }
-
-    // Fetch subjects and grades with the correct school year
+  
     const fetchedSubjects = await fetchSubjects(student.student_id, gradeLevel, schoolYearId, section_id);
     await fetchGrades(student.student_id, gradeLevel, fetchedSubjects, schoolYearId, section_id);
-    await fetchSchoolYearsGrades(student.student_id); // Pass studentId here
-};
+    await fetchSchoolYearsGrades(student.student_id);
+  
+    const logs = await fetchGradeActivityLogs(student.student_id);
+    setActivityLogs(logs);
+  };
+  
+  
 
 
   const fetchSubjects = useCallback(async (studentId, gradeLevel, schoolYearId, section_id) => {
@@ -528,6 +535,31 @@ function GradesManagement() {
     });
   };
 
+  const fetchGradeActivityLogs = async (studentId) => {
+    if (!studentId) return [];
+  
+    try {
+      const response = await axios.get(`http://localhost:3001/api/grade-logs/${studentId}`);
+      if (response.data.success) {
+        return response.data.data.map(log => ({
+          timestamp: log.log_date,
+          action: log.role_name, // Adjust if needed
+          subject_name: log.subject_name,
+          quarter: log.quarter,
+          user_name: log.emp_name,
+          details: log.grade,
+        }));
+      } else {
+        console.error("Failed to load grade activity logs.");
+        return [];
+      }
+    } catch (error) {
+      console.error("Error fetching grade activity logs:", error);
+      return [];
+    }
+  };
+  
+
   const handleSaveChanges = async () => {
     try {
       if (!selectedStudent || subjects.length === 0) {
@@ -554,6 +586,7 @@ function GradesManagement() {
         return;
       }
 
+      const userId = localStorage.getItem('userId');  // get userId first
       // Filter to only include the subjects that the teacher is assigned to
       const formattedSubjects = subjects
         .filter(subject => roleName !== 'subject_teacher' || isSubjectAssigned(subject.subject_name))
@@ -562,7 +595,7 @@ function GradesManagement() {
           q1: subject.q1 || null,
           q2: subject.q2 || null,
           q3: subject.q3 || null,
-          q4: subject.q4 || null,
+          q4: subject.q4 || null
         }));
 
       if (formattedSubjects.length === 0) {
@@ -576,8 +609,10 @@ function GradesManagement() {
         grade_level: selectedStudent.current_yr_lvl,
         school_year_id: selectedStudent.school_year_id,
         subjects: formattedSubjects,
-        section_id: selectedStudent.section_id
+        section_id: selectedStudent.section_id,
+        UserId: userId
       });
+
 
       if (response.data.success) {
         alert("Grades updated successfully!");
@@ -592,7 +627,7 @@ function GradesManagement() {
       console.error("Error saving grades:", error.response?.data || error.message);
       alert("Failed to save grades.");
     }
-  };
+  };  
 
   const handleEditClick = async (student) => {
     if (editingStudent && editingStudent.student_id === student.student_id) {
@@ -603,6 +638,7 @@ function GradesManagement() {
         setSelectedGradeLevel(null);
         setSelectedSchoolYear(null); // Reset school year when unselecting
         setIsSchoolYearActive(false); // Reset school year status
+        setActivityLogs([]); // Clear activity logs
         return;
     }
 
@@ -642,6 +678,9 @@ function GradesManagement() {
     // Fetch subjects and grades with the correct school year
     const fetchedSubjects = await fetchSubjects(student.student_id, gradeLevel, schoolYearId, section_id);
     await fetchGrades(student.student_id, gradeLevel, fetchedSubjects, schoolYearId, section_id);
+
+    const logs = await fetchGradeActivityLogs(student.student_id);
+    setActivityLogs(logs);
   };
 
   const handleSearch = (searchTerm) => {
@@ -869,34 +908,48 @@ function GradesManagement() {
 
   // Add a new useEffect to handle when assignedSubjects changes
   useEffect(() => {
-    // If the selected student exists and we're a subject teacher with newly loaded assignedSubjects
-    if (selectedStudent && roleName === 'subject_teacher' && assignedSubjects.length > 0) {
-      // Re-fetch subjects with the current student data to apply the filtering
-      const fetchData = async () => {
+  if (selectedStudent && roleName === 'subject_teacher' && assignedSubjects.length > 0) {
+    const fetchData = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
         const gradeLevel = selectedStudent.current_yr_lvl;
         const schoolYearId = selectedStudent.school_year_id;
         const section_id = selectedStudent.section_id;
-        
-        const fetchedSubjects = await fetchSubjects(
-          selectedStudent.student_id, 
-          gradeLevel, 
-          schoolYearId,
-          section_id
-        );
-        
-        await fetchGrades(
-          selectedStudent.student_id, 
-          gradeLevel, 
-          fetchedSubjects, 
-          schoolYearId,
-          section_id
-        );
-      };
-      
-      fetchData();
-    }
-  }, [assignedSubjects, selectedStudent, fetchSubjects, fetchGrades, roleName]);
+        const studentId = selectedStudent.student_id;
 
+        const fetchedSubjects = await fetchSubjects(
+          studentId,
+          gradeLevel,
+          schoolYearId,
+          section_id
+        );
+
+        await fetchGrades(
+          studentId,
+          gradeLevel,
+          fetchedSubjects,
+          schoolYearId,
+          section_id
+        );
+
+        const logs = await fetchGradeActivityLogs(studentId);
+        setActivityLogs(logs);
+      } catch (err) {
+        setError("Failed to fetch student grades or activity logs.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }
+}, [assignedSubjects, selectedStudent, fetchSubjects, fetchGrades, roleName]);
+
+  
+
+  
   // Check if all subjects have grades for a specific quarter
   const allSubjectsHaveGradesForQuarter = (quarter) => {
     if (!subjects || subjects.length === 0) return false;
@@ -1024,6 +1077,34 @@ function GradesManagement() {
       action: () => handleSubmitQuarter(quarter)
     });
     setShowConfirmModal(true);
+  };
+
+  // Add function to fetch student grade logs
+  const fetchStudentGradeLogs = async (studentId, schoolYearId) => {
+    try {
+      const response = await axios.get(`http://localhost:3001/api/grade-logs/${studentId}`, {
+        params: { schoolYearId }
+      });
+      
+      if (response.data && response.data.logs) {
+        // Sort logs by timestamp, newest first
+        const sortedLogs = response.data.logs.sort((a, b) => 
+          new Date(b.timestamp) - new Date(a.timestamp)
+        );
+        setActivityLogs(sortedLogs);
+      } else {
+        setActivityLogs([]);
+      }
+    } catch (error) {
+      console.error('Error fetching grade logs:', error);
+      setActivityLogs([]);
+    }
+  };
+
+  // Function to format timestamp for display
+  const formatTimestamp = (timestamp) => {
+    const date = new Date(timestamp);
+    return date.toLocaleString();
   };
 
   return (
@@ -1427,6 +1508,46 @@ function GradesManagement() {
                             )}
                           </tbody>
                         </table>
+                        
+                        {/* Grade Activity Logs Section */}
+                        <div className="grade-logs-section">
+                        <h4 className="grade-logs-title">Grade Activity Logs</h4>
+                        {loading && <p>Loading logs...</p>}
+                        {error && <p className="error-message">{error}</p>}
+                        {!loading && !error && (
+                          activityLogs.length > 0 ? (
+                            <div className="grade-logs-container">
+                              <table className="grade-logs-table">
+                                <thead>
+                                  <tr>
+                                    <th>Name</th>
+                                    <th>Subject</th>
+                                    <th>Quarter</th>
+                                    <th>Grade</th>
+                                    <th>Role</th>
+                                    <th>Date & Time</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {activityLogs.map((log, index) => (
+                                    <tr key={index}>
+                                      <td>{log.user_name}</td>
+                                      <td>{log.subject_name || 'All Subjects'}</td>
+                                      <td>{log.quarter || 'N/A'}</td>
+                                      <td>{log.details}</td>
+                                      <td>{log.action}</td>
+                                      <td>{formatTimestamp(log.timestamp)}</td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          ) : (
+                            <div className="no-logs-message">No grade activity logs available.</div>
+                          )
+                        )}
+                      </div>
+
                       </div>
                     </td>
                   </tr>
