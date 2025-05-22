@@ -239,19 +239,20 @@ function ClassList() {
         </div>
 
         <div className="class-list-footer">
-          <div className="class-list-signature-section">
-            <div className="class-list-signature">
-              <div className="f137-name">{adviser || "[Adviser Name]"}</div>
-              <div className="class-list-signature-line"></div>
-              <div className="class-list-signature-name">Class Adviser</div>
-              <div className="class-list-signature-title">Teacher</div>
+          <div className="signature-section">
+            <div className="signature">
+              <div className="signatory-name">{adviser || "[Adviser Name]"}</div>
+              <div className="signatory-title">TEACHER'S NAME</div>
+              <div className="signatory-position">Class Adviser</div>
             </div>
-            <div className="class-list-signature">
-              <div className="f137-name">{principal || "[Principal Name]"}</div>
-              <div className="class-list-signature-line"></div>
-              <div className="class-list-signature-name">School Principal</div>
-              <div className="class-list-signature-title">Principal</div>
+            <div className="signature">
+              <div className="signatory-name">{principal || "[Principal Name]"}</div>
+              <div className="signatory-title">PRINCIPAL'S NAME</div>
+              <div className="signatory-position">School Principal</div>
             </div>
+          </div>
+          <div className="report-date">
+            <p>Date: {new Date().toLocaleDateString()}</p>
           </div>
         </div>
       </div>

@@ -247,17 +247,20 @@ function ClassHonorRoll() {
         </div>
 
         <div className="class-honor-roll-footer">
-          <div className="class-honor-roll-signature-section">
-            <div className="class-honor-roll-signature">
-              <div className="f137-name">{adviser || "[Adviser Name]"}</div>
-              <div className="class-honor-roll-signature-line"></div>
-              <div className="class-honor-roll-signature-name">Class Adviser</div>
+          <div className="signature-section">
+            <div className="signature">
+              <div className="signatory-name">{adviser || "[Adviser Name]"}</div>
+              <div className="signatory-title">TEACHER'S NAME</div>
+              <div className="signatory-position">Class Adviser</div>
             </div>
-            <div className="class-honor-roll-signature">
-              <div className="f137-name">{principal || "[Principal Name]"}</div>
-              <div className="class-honor-roll-signature-line"></div>
-              <div className="class-honor-roll-signature-name">School Principal</div> 
+            <div className="signature">
+              <div className="signatory-name">{principal || "[Principal Name]"}</div>
+              <div className="signatory-title">PRINCIPAL'S NAME</div>
+              <div className="signatory-position">School Principal</div>
             </div>
+          </div>
+          <div className="report-date">
+            <p>Date: {new Date().toLocaleDateString()}</p>
           </div>
         </div>
       </div>

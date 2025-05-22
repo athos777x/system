@@ -765,16 +765,16 @@ const calculateSummary = () => {
 
         <div className="sf2-certification">
           <p>I certify that this is a true and correct report.</p>
-          <div className="sf2-signatures">
-            <div className="sf2-signature">
-              <div className="f137-name">{adviser || "[Adviser Name]"}</div>
-              <div className="sf2-signature-line"></div>
-              <p>Registrar:</p>
+          <div className="signature-section">
+            <div className="signature">
+              <div className="signatory-name">{adviser || "[Adviser Name]"}</div>
+              <div className="signatory-title">TEACHER'S NAME</div>
+              <div className="signatory-position">Class Adviser</div>
             </div>
-            <div className="sf2-signature">
-              <div className="f137-name">{principal || "[Principal Name]"}</div>
-              <div className="sf2-signature-line"></div>
-              <p>Principal:</p>
+            <div className="signature">
+              <div className="signatory-name">{principal || "[Principal Name]"}</div>
+              <div className="signatory-title">PRINCIPAL'S NAME</div>
+              <div className="signatory-position">School Principal</div>
             </div>
           </div>
         </div>

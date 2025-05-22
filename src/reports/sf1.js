@@ -239,16 +239,16 @@ function SF1() {
         </div>
 
         <div className="sf1-footer">
-          <div className="sf1-signature-section">
-            <div className="sf1-signature">
-            <div className="f137-name">{adviser || "[Adviser Name]"}</div>
-              <div className="sf1-signature-name">TEACHER'S NAME</div>
-              <div className="sf1-signature-title">Class Adviser</div>
+          <div className="signature-section">
+            <div className="signature">
+              <div className="signatory-name">{adviser || "[Adviser Name]"}</div>
+              <div className="signatory-title">TEACHER'S NAME</div>
+              <div className="signatory-position">Class Adviser</div>
             </div>
-            <div className="sf1-signature">
-              <div className="f137-name">{principal || "[Principal Name]"}</div>  
-              <div className="sf1-signature-name">PRINCIPAL'S NAME</div>
-              <div className="sf1-signature-title">School Principal</div>
+            <div className="signature">
+              <div className="signatory-name">{principal || "[Principal Name]"}</div>
+              <div className="signatory-title">PRINCIPAL'S NAME</div>
+              <div className="signatory-position">School Principal</div>
             </div>
           </div>
         </div>

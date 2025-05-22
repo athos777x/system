@@ -285,21 +285,19 @@ function SF5() {
         </div>
 
         <div className="sf5-footer">
-          <div className="sf5-signature-section">
-            <div className="sf5-signature">
-              <div className="sf5-signature-line">Prepared by:</div>
-              <div className="f137-name">{adviser || "[Adviser Name]"}</div>
-              <div className="sf5-signature-name">TEACHER'S NAME</div>
-              <div className="sf5-signature-title">Class Adviser</div>
+          <div className="signature-section">
+            <div className="signature">
+              <div className="signatory-name">{adviser || "[Adviser Name]"}</div>
+              <div className="signatory-title">TEACHER'S NAME</div>
+              <div className="signatory-position">Class Adviser</div>
             </div>
-            <div className="sf5-signature">           
-              <div className="sf5-signature-line">Certified Correct:</div>
-              <div className="f137-name">{principal || "[Principal Name]"}</div>
-              <div className="sf5-signature-name">PRINCIPAL'S NAME</div>
-              <div className="sf5-signature-title">School Principal</div>
+            <div className="signature">
+              <div className="signatory-name">{principal || "[Principal Name]"}</div>
+              <div className="signatory-title">PRINCIPAL'S NAME</div>
+              <div className="signatory-position">School Principal</div>
             </div>
           </div>
-          <div className="sf5-date">
+          <div className="report-date">
             <p>Date: {new Date().toLocaleDateString()}</p>
           </div>
         </div>

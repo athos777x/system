@@ -243,17 +243,16 @@ function Roster() {
         </div>
 
         <div className="roster-footer">
-          <div className="roster-signature-section">
-            <div className="roster-signature">
-              <div className="f137-name">{adviser || "[Adviser Name]"}</div>
-              <div className="roster-signature-line"></div>
-              <div className="roster-signature-title">Teacher</div>
+          <div className="signature-section">
+            <div className="signature">
+              <div className="signatory-name">{adviser || "[Adviser Name]"}</div>
+              <div className="signatory-title">TEACHER'S NAME</div>
+              <div className="signatory-position">Class Adviser</div>
             </div>
-            <div className="roster-signature">
-              <div className="f137-name">{principal || "[Principal Name]"}</div>
-              <div className="roster-signature-line"></div>
-              <div className="roster-signature-name">School Principal</div>
-              <div className="roster-signature-title">Principal</div>
+            <div className="signature">
+              <div className="signatory-name">{principal || "[Principal Name]"}</div>
+              <div className="signatory-title">PRINCIPAL'S NAME</div>
+              <div className="signatory-position">School Principal</div>
             </div>
           </div>
         </div>
