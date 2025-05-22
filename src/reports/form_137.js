@@ -268,16 +268,16 @@ function Form137() {
           </p>
         </div>
 
-        <div className="f137-signature-section">
-          <div className="f137-signature-box">
-            <div className="f137-name">{adviser || "[Adviser Name]"}</div>
-            <div className="f137-signature-line"></div>
-            <p>Class Adviser</p>
+        <div className="signature-section">
+          <div className="signature">
+            <div className="signatory-name">{adviser || "[Adviser Name]"}</div>
+            <div className="signatory-title">TEACHER'S NAME</div>
+            <div className="signatory-position">Class Adviser</div>
           </div>
-          <div className="f137-signature-box">
-            <div className="f137-name">{principal || "[Principal Name]"}</div>
-            <div className="f137-signature-line"></div>
-            <p>Principal</p>
+          <div className="signature">
+            <div className="signatory-name">{principal || "[Principal Name]"}</div>
+            <div className="signatory-title">PRINCIPAL'S NAME</div>
+            <div className="signatory-position">School Principal</div>
           </div>
         </div>
       </div>

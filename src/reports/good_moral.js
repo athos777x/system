@@ -124,14 +124,13 @@ function GoodMoral() {
 
           <div className="certificate-footer">
             <p>Given this {date} at {student?.schoolAddress || "______________________"}.</p>
-            <br />
-            <p>
-              <strong>__________________________</strong>
-              <br />
-              {principal || "[Principal Name]"}
-              <br />
-              Principal
-            </p>
+            <div className="signature-section single-signature">
+              <div className="signature">
+                <div className="signatory-name">{principal || "[Principal Name]"}</div>
+                <div className="signatory-title">PRINCIPAL'S NAME</div>
+                <div className="signatory-position">School Principal</div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

@@ -214,21 +214,19 @@ function SF6() {
         </div>
 
         <div className="sf6-footer">
-          <div className="sf6-signature-section">
-            <div className="sf6-signature">
-              <div className="sf6-signature-line">Prepared by:</div>
-              <div className="f137-name">{registrar || "[Registrar Name]"}</div>
-              <div className="sf6-signature-name">REGISTRAR'S NAME</div>
-              <div className="sf6-signature-title">School Registrar</div>
+          <div className="signature-section">
+            <div className="signature">
+              <div className="signatory-name">{registrar || "[Registrar Name]"}</div>
+              <div className="signatory-title">REGISTRAR'S NAME</div>
+              <div className="signatory-position">School Registrar</div>
             </div>
-            <div className="sf6-signature">
-              <div className="sf6-signature-line">Certified Correct:</div>
-              <div className="f137-name">{principal || "[Principal Name]"}</div>
-              <div className="sf6-signature-name">PRINCIPAL'S NAME</div>
-              <div className="sf6-signature-title">School Principal</div>
+            <div className="signature">
+              <div className="signatory-name">{principal || "[Principal Name]"}</div>
+              <div className="signatory-title">PRINCIPAL'S NAME</div>
+              <div className="signatory-position">School Principal</div>
             </div>
           </div>
-          <div className="sf6-date">
+          <div className="report-date">
             <p>Date: {new Date().toLocaleDateString()}</p>
           </div>
         </div>

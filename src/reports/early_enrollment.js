@@ -228,19 +228,20 @@ function EarlyEnrollment() {
         </div>
 
         <div className="early-enrollment-footer">
-          <div className="early-enrollment-signature-section">
-            <div className="early-enrollment-signature">
-              <div className="f137-name">{registrar || "[Registrar Name]"}</div>
-              <div className="early-enrollment-signature-line"></div>
-              <div className="early-enrollment-signature-name">School Registrar</div>
-              <div className="early-enrollment-signature-title">Teacher</div>
+          <div className="signature-section">
+            <div className="signature">
+              <div className="signatory-name">{registrar || "[Registrar Name]"}</div>
+              <div className="signatory-title">REGISTRAR'S NAME</div>
+              <div className="signatory-position">School Registrar</div>
             </div>
-            <div className="early-enrollment-signature">
-              <div className="f137-name">{principal || "[Principal Name]"}</div>
-              <div className="early-enrollment-signature-line"></div>
-              <div className="early-enrollment-signature-name">School Principal</div>
-              <div className="early-enrollment-signature-title">Principal</div>
+            <div className="signature">
+              <div className="signatory-name">{principal || "[Principal Name]"}</div>
+              <div className="signatory-title">PRINCIPAL'S NAME</div>
+              <div className="signatory-position">School Principal</div>
             </div>
+          </div>
+          <div className="report-date">
+            <p>Date: {new Date().toLocaleDateString()}</p>
           </div>
         </div>
       </div>

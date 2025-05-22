@@ -120,7 +120,6 @@ function QuarterlyAssessment() {
     }
   };
   
-  
   const fetchPrincipal = async () => {
     try {
       const response = await axios.get("http://localhost:3001/api/enrollment/principal");
@@ -132,7 +131,6 @@ function QuarterlyAssessment() {
       console.error("Error fetching principal:", err);
     }
   };
-
 
   const handlePrintPDF = () => {
     const doc = new jsPDF({
@@ -168,8 +166,6 @@ function QuarterlyAssessment() {
       default: return 'N/A';
     }
   };
-
-  
 
   return (
     <div className="report-page quarterly-assessment-page">
@@ -262,11 +258,11 @@ function QuarterlyAssessment() {
         </div>
 
         <div className="quarterly-assessment-footer">
-          <div className="quarterly-assessment-signature-section">
-            <div className="quarterly-assessment-signature">
-              <div className="f137-name">{principal || "[Principal Name]"}</div>
-              <div className="quarterly-assessment-signature-line"></div>
-              <span>Principal</span>
+          <div className="signature-section">
+            <div className="signature">
+              <div className="signatory-name">{principal || "[Principal Name]"}</div>
+              <div className="signatory-title">PRINCIPAL'S NAME</div>
+              <div className="signatory-position">School Principal</div>
             </div>
           </div>
         </div>

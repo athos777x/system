@@ -114,37 +114,54 @@
   margin-top: 40px;
 }
 
-.sf6-signature-section {
+/* Signature section container */
+.signature-section {
   display: flex;
-  justify-content: space-around;
-  margin-bottom: 30px;
+  justify-content: space-between;
+  margin-top: 2rem;
+  width: 100%;
+  padding: 0 2rem;
 }
 
-.sf6-signature {
+/* Individual signature block */
+.signature {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 250px;
   text-align: center;
-  width: 200px;
 }
 
-.sf6-signature-line {
-  margin-bottom: 20px;
-}
-
-.sf6-signature-name {
+/* Signatory name (the actual name) */
+.signatory-name {
   font-weight: bold;
-  border-top: 1px solid #000;
-  padding-top: 5px;
+  border-bottom: 1px solid #000;
+  padding-bottom: 5px;
+  width: 100%;
+  text-align: center;
   margin-bottom: 5px;
 }
 
-.sf6-signature-title {
-  font-style: italic;
-  color: #666;
+/* Signatory title (REGISTRAR'S NAME, PRINCIPAL'S NAME, etc.) */
+.signatory-title {
+  font-weight: bold;
+  text-transform: uppercase;
+  font-size: 0.9rem;
+  margin-bottom: 3px;
 }
 
-.sf6-date {
+/* Signatory position (School Registrar, School Principal, etc.) */
+.signatory-position {
+  font-style: italic;
+  font-size: 0.85rem;
+}
+
+/* Date section */
+.report-date {
   text-align: right;
-  margin-top: 20px;
-  font-size: 14px;
+  margin-top: 1.5rem;
+  padding-right: 2rem;
+  font-style: italic;
 }
 
 .sf6-buttons {

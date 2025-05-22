@@ -242,18 +242,15 @@ function NutritionalReport() {
         </div>
 
         <div className="nutritional-report-footer">
-          <div className="nutritional-report-signature-section">
-            {/* <div className="nutritional-report-signature">
-              <div className="nutritional-report-signature-line"></div>
-              <div className="nutritional-report-signature-name">School Nurse</div>
-              <div className="nutritional-report-signature-title">RN</div>
-            </div> */}
-            <div className="nutritional-report-signature">
-              <div className="f137-name">{principal || "[Principal Name]"}</div>
-              <div className="nutritional-report-signature-line"></div>
-              <div className="nutritional-report-signature-name">School Principal</div>
-              <div className="nutritional-report-signature-title">Principal</div>
+          <div className="signature-section single-signature">
+            <div className="signature">
+              <div className="signatory-name">{principal || "[Principal Name]"}</div>
+              <div className="signatory-title">PRINCIPAL'S NAME</div>
+              <div className="signatory-position">School Principal</div>
             </div>
+          </div>
+          <div className="report-date">
+            <p>Date: {new Date().toLocaleDateString()}</p>
           </div>
         </div>
       </div>
